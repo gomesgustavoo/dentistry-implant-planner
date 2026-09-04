@@ -793,20 +793,30 @@ main#settings { max-width: var(--page-narrow); }
    -- so `drawPanoramic` sets `--pan-aspect` from the published `pixel_mm` once the
    image is in hand. The fallback is only for the frame before that happens. */
 .pan-wrap {
-  /* Was clamp(140px, 26vh, 320px) -- 217 px on the user's 836 px window, a third of the
-     whole picture column, for a strip the code itself calls a locator. Cut to 15vh, and
-     the 92 px it gives up land in the cross-section, which is the surface the implant is
-     actually placed and angled on. At 125 px the strip still shows 124 mm of arch at
-     0.54 mm/px, which is what finding a site needs. The 96 px floor keeps it from
-     vanishing at the harness's 640x900; the 190 px ceiling stops a tall monitor spending
-     the whole gain back on it. */
-  height: clamp(96px, 15vh, 190px);
+  /* 320px -> 190 -> 120, in three passes, each time because watching the plan tab
+     actually being used showed the strip doing less than it costs. It is a LOCATOR: you
+     click along it to move the cross-section, and then you never look at it again --
+     through a whole placement, angulation and grading sequence it is the one pane that
+     never changes. Every pixel it holds comes out of the two panes that do.
+     At 9vh (70 px on an 836 px window) it still shows the full 124 mm of arch at about
+     0.95 mm/px, which is more than enough to pick a site by eye. The 64 px floor keeps
+     it from vanishing at the harness's 640x900.
+     Mesiodistal angulation IS only visible here, and that is what `#panPaneBtn` (key
+     `p`) is for -- a mode the reader asks for, rather than a permanent tax on the
+     cross-section for a thing they do occasionally. */
+  height: clamp(64px, 9vh, 120px);
   aspect-ratio: var(--pan-aspect, 1.8);
   /* `width: auto` with a definite height and an aspect-ratio gives a DEFINITE width,
      which a grid happily treats as a min-content floor and propagates all the way up to
      the workspace -- that is how the page came to be 36 px wider than the window at
      1100. `min-width: 0` lets it yield; `max-width: 100%` keeps it inside the column. */
-  width: auto; min-width: 0; max-width: 100%; justify-self: center;
+  /* LEFT, not centred. Centring made sense while the strip was 600 px wide and filled
+     the row. Shrunk to a locator it is ~140 px, and `aspect-ratio` derives the width from
+     the height -- so a smaller strip is a NARROWER strip, and a narrow box centred in a
+     800 px row reads as something that failed to load rather than as a deliberately
+     compact control. Against the left edge it lines up with the cross-section beneath it
+     and the space to its right is margin. */
+  width: auto; min-width: 0; max-width: 100%; justify-self: start;
 }
 /* WORKING height, when the reader asks for it (`#panPaneBtn`, key `p`).
    The strip is the only plane mesiodistal angulation is visible in, and an angle is not
