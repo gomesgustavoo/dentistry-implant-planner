@@ -31,8 +31,16 @@ sys.path.insert(0, str(ROOT))
 CONTRACT_VERSION = 1
 N_SAMPLED = 40
 
-# Eight poses spanning both jaws, the tilt clamp in both directions, and the yaw branch
-# Python implements and the browser refuses -- so the refusal itself is pinned.
+# Thirteen poses spanning both jaws, the tilt clamp in both directions, and -- since
+# 2026-09-04 -- yaw and roll, which the frame has always implemented and no vector ever
+# exercised. The previous comment claimed the set "spans both jaws" and every pose in it
+# was mandibular, and claimed it pinned "the yaw branch" while every `yaw_deg` was 0.0.
+#
+# Yaw is the one that needed pinning most: it is the only branch that reads `tangents`,
+# and the browser ignored it entirely until this file gained a pose that would have
+# caught that. Roll changes no measurement -- the solid is a body of revolution -- but it
+# rotates `(e1, e2)`, so the capsule's own ring vertices move, and that IS comparable
+# across the two languages.
 POSES = [
     {"jaw": "mandible", "s_mm": -36.5, "t_mm": 0.0, "z_mm": 44.8,
      "tilt_deg": 0.0, "yaw_deg": 0.0, "length_mm": 10.0, "diameter_mm": 4.1},
@@ -50,6 +58,21 @@ POSES = [
      "tilt_deg": 5.0, "yaw_deg": 0.0, "length_mm": 14.0, "diameter_mm": 5.0},
     {"jaw": "mandible", "s_mm": -57.0, "t_mm": 1.0, "z_mm": 47.8,
      "tilt_deg": -25.0, "yaw_deg": 0.0, "length_mm": 10.0, "diameter_mm": 4.3},
+    # --- yaw: the branch that reads `tangents` -------------------------------------
+    {"jaw": "mandible", "s_mm": -30.0, "t_mm": 0.0, "z_mm": 44.0,
+     "tilt_deg": 0.0, "yaw_deg": 12.0, "length_mm": 10.0, "diameter_mm": 4.1},
+    {"jaw": "mandible", "s_mm": 22.0, "t_mm": -1.5, "z_mm": 42.0,
+     "tilt_deg": 10.0, "yaw_deg": -18.0, "length_mm": 13.0, "diameter_mm": 4.8},
+    # --- roll: no measurement moves, the ring vertices do ---------------------------
+    {"jaw": "mandible", "s_mm": -36.5, "t_mm": 0.0, "z_mm": 44.8,
+     "tilt_deg": 0.0, "yaw_deg": 0.0, "roll_deg": 37.0,
+     "length_mm": 10.0, "diameter_mm": 4.1},
+    # --- the maxilla, which had NO pose at all, and all three angles at once ---------
+    {"jaw": "maxilla", "s_mm": -30.0, "t_mm": 0.0, "z_mm": 24.0,
+     "tilt_deg": 0.0, "yaw_deg": 0.0, "length_mm": 10.0, "diameter_mm": 4.1},
+    {"jaw": "maxilla", "s_mm": 18.0, "t_mm": 1.0, "z_mm": 22.0,
+     "tilt_deg": -12.0, "yaw_deg": 8.0, "roll_deg": -120.0,
+     "length_mm": 11.5, "diameter_mm": 3.75},
 ]
 
 

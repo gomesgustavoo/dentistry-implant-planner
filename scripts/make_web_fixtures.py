@@ -132,6 +132,25 @@ MEASURE_IMPLANTS = [
 ]
 
 
+#: A synthetic hand correction, for the SECOND measure fixture.
+#:
+#: The pack on disk has no edits -- these three examples were never corrected -- so a
+#: fixture generated from it can never exercise the widened error budget, the "corrected
+#: by hand" sentence or the per-field penalty table. Injected into a COPY of the pack
+#: header rather than written to disk, and shaped exactly as
+#: `worker/planning_pack.rebuild_label_fields` writes it: 0.60 mm is the display voxel
+#: on a 0.30 mm case at a downsample factor of 2, which is the real number on all three.
+EDIT_STUB = [{
+    "id": "fixture-edit",
+    "at": "2026-09-04T10:00:00Z",
+    "voxels": 1840,
+    "full_voxels": 14720,
+    "quantisation_mm": 0.6,
+    "fields": ["canal"],
+    "structures": {"3": {"added": 1200, "removed": 640}},
+}]
+
+
 def _measure(results: Path, arch: dict, pick: list) -> None:
     from api import planning_cache
     from api.routes import plans as R
@@ -143,31 +162,51 @@ def _measure(results: Path, arch: dict, pick: list) -> None:
         quality = (json.loads(report.read_text()).get("quality") or {})
 
     body = [R.ImplantIn(**i) for i in MEASURE_IMPLANTS]
-    out = {
-        "implants": [R._measure_one(pack, i, arch, quality) for i in body],
-        "pairs": [],
-        "pack": {"version": pack.header.get("version"),
-                 "step_mm": pack.header.get("step_mm")},
-        "priors": {
-            "inward_p95_mm": R.PS.MODEL_INWARD_P95_MM,
-            "worst_measured_inward_mm": R.PS.MODEL_INWARD_WORST_MM,
-            "margin_mm": R.PS.SAFETY_MARGIN_MM,
-            "adjacent_margin_mm": R.PS.ADJACENT_MARGIN_MM,
-            "inter_implant_margin_mm": R.PS.INTER_IMPLANT_MARGIN_MM,
-            "by_structure": R.PS.STRUCTURE_PRIORS,
-            "source": "20 held-out annotated cases; not a measurement of YOUR scan"},
-        "notice": R.PS.NO_GUIDE_NOTICE,
-    }
-    d = R.PM.inter_implant_distance(MEASURE_IMPLANTS[0], MEASURE_IMPLANTS[1],
-                                    arch.get("jaws") or {})
-    out["pairs"] = [{"a": "i1", "b": "i2", "distance": d.as_dict(),
-                     "verdict": R.PS.inter_implant_verdict(d, "i1", "i2").as_dict()}]
+
+    def reply(edits):
+        out = {
+            "implants": [R._measure_one(pack, i, arch, quality, edits) for i in body],
+            "pairs": [],
+            "pack": {"version": pack.header.get("version"),
+                     "step_mm": pack.header.get("step_mm")},
+            "priors": {
+                "inward_p95_mm": R.PS.MODEL_INWARD_P95_MM,
+                "worst_measured_inward_mm": R.PS.MODEL_INWARD_WORST_MM,
+                "margin_mm": R.PS.SAFETY_MARGIN_MM,
+                "adjacent_margin_mm": R.PS.ADJACENT_MARGIN_MM,
+                "inter_implant_margin_mm": R.PS.INTER_IMPLANT_MARGIN_MM,
+                "by_structure": R.PS.STRUCTURE_PRIORS,
+                "source": "20 held-out annotated cases; not a measurement of YOUR scan"},
+            "edits": [{"id": e.get("id"), "at": e.get("at"), "voxels": e.get("voxels"),
+                       "fields": e.get("fields") or [],
+                       "quantisation_mm": e.get("quantisation_mm"),
+                       "structures": e.get("structures") or {}} for e in (edits or [])],
+            "edit_penalty": {f: R.PS.edit_penalty(f, edits)
+                             for f in ("canal", "accessory_canal", "tooth")
+                             if R.PS.edit_penalty(f, edits)},
+            "notice": R.PS.NO_GUIDE_NOTICE,
+        }
+        d = R.PM.inter_implant_distance(MEASURE_IMPLANTS[0], MEASURE_IMPLANTS[1],
+                                        arch.get("jaws") or {})
+        out["pairs"] = [{"a": "i1", "b": "i2", "distance": d.as_dict(),
+                         "verdict": R.PS.inter_implant_verdict(d, "i1", "i2").as_dict()}]
+        return out
+
+    out = reply(None)
+    edited = reply(EDIT_STUB)
     pack.close()
 
     (ASSETS / "measure-mandible.json").write_text(json.dumps(out, separators=(",", ":")))
+    (ASSETS / "measure-mandible-edited.json").write_text(
+        json.dumps(edited, separators=(",", ":")))
     lv = [i["verdict"]["level"] for i in out["implants"]]
     print(f"measure-mandible.json  {(ASSETS / 'measure-mandible.json').stat().st_size} bytes")
     print(f"  implants {len(out['implants'])}, verdicts {lv}, pairs {len(out['pairs'])}")
+    p95 = ((edited["implants"][0].get("verdict") or {}).get("numbers") or {})
+    print(f"measure-mandible-edited.json  "
+          f"{(ASSETS / 'measure-mandible-edited.json').stat().st_size} bytes")
+    print(f"  canal budget {p95.get('model_p95_mm')} + edit -> "
+          f"{p95.get('inward_p95_mm')} mm deducted")
 
 
 if __name__ == "__main__":

@@ -27,6 +27,7 @@
 
   <nav class="nav" id="nav" aria-label="Views">
     <a class="nav-item" data-view="cases" href="#/cases">Cases</a>
+    <a class="nav-item" data-view="contact" href="#/contact">Custom models</a>
     <a class="nav-item" data-view="settings" href="#/settings">Settings</a>
   </nav>
 
@@ -52,6 +53,11 @@
       </div>
 
       <div class="stage-tools">
+        <!-- Correcting the mask. OFF by default and it has to be: the tools take the
+             primary mouse button, and a viewer whose left button paints instead of
+             windowing is a viewer somebody edits by accident. -->
+        <button class="iconbtn" id="editBtn" type="button" aria-pressed="false"
+                title="Correct the segmentation mask  ( e )">&#9998;</button>
         <div class="seg" id="layoutPicker" role="group" aria-label="Pane layout">
           <button class="segb on" data-layout="grid" type="button" title="Four panes  ( 0 )">&#9636;</button>
           <button class="segb" data-layout="focus" type="button" title="One large, three small  ( 1-4 )">&#9647;</button>
@@ -166,6 +172,49 @@
         <div class="upbar" id="upbar" hidden><div class="upbar-fill" id="upbarFill"></div></div>
       </div>
       <p class="notice" id="uploadNotice" hidden></p>
+      <!-- What the NEXT upload will actually run, from the picker below. A choice made
+           in one panel and spent in another needs saying in the panel that spends it. -->
+      <p class="uploadplan" id="uploadPlan"></p>
+    </section>
+
+    <!-- ============================================== which models run on your scan
+         The board has been configurable per DEPLOYMENT since it was built -- one base
+         model plus specialists that each overwrite only the ids they own -- and there
+         was no way for the person uploading the scan to see it, let alone choose. This
+         is that, made visible: what each model is authoritative for, what is measured
+         about it, and whether it is even installed here.
+
+         The 3-D pane is a SCHEMATIC. There is no scan on this page, so there is nothing
+         real to draw, and rendering an example case's meshes would put a picture of
+         somebody's anatomy behind a question about your upload. It says so on the pane.
+    -->
+    <section class="panel" id="modelsPanel">
+      <div class="panel-head">
+        <h2>Which models segment your scan</h2>
+        <div class="panel-tools">
+          <span class="hint" id="modelsHint">choose before you upload</span>
+          <button class="iconbtn" id="modelsReset" type="button"
+                  title="Back to the defaults">reset</button>
+        </div>
+      </div>
+      <div class="models">
+        <div class="models-3d">
+          <div class="models-canvas" id="modelPreview"></div>
+          <p class="models-note">
+            A schematic dentition, drawn from a curve &mdash; <b>not</b> a segmentation,
+            and not your scan. Hover a model to see which structures it is authoritative
+            for.
+          </p>
+        </div>
+        <div class="models-list" id="modelList">
+          <p class="empty">loading the model list&hellip;</p>
+        </div>
+      </div>
+      <p class="models-train">
+        Want a model trained on <b>your</b> structures &mdash; a class this taxonomy
+        does not have, or your own annotation protocol?
+        <a href="#/contact">What that takes, and how to ask</a>
+      </p>
     </section>
 
     <section class="panel" id="examplesPanel" hidden>
@@ -202,6 +251,64 @@
         Research preview &mdash; not a medical device, and not for diagnostic use.
       </p>
     </footer>
+  </main>
+
+  <!-- ===================================================== view: contact -->
+  <!-- Its own view rather than a mailto on a button: "can you train a model on my
+       structures" is a real question with a real answer, and the answer is what has to
+       be on the page -- what it needs, what it costs in data, and what this service
+       will not claim. A bare address invites the question and answers none of it. -->
+  <main id="contact" hidden>
+    <section class="panel contactcard">
+      <div class="panel-head"><h2>A model for your structures</h2></div>
+      <div class="contactgrid">
+        <div>
+          <p class="lede">
+            The taxonomy this service ships is 47 structures, and it is somebody
+            else&rsquo;s taxonomy &mdash; ToothFairy3&rsquo;s, plus a specialist for the
+            anterior canals. If the class you need is not in it, or your annotation
+            protocol differs from theirs, the answer is a model trained on your data
+            rather than a relabelling of this one.
+          </p>
+          <h3>What that takes</h3>
+          <ul class="contactlist">
+            <li><b>Annotated cases.</b> Below about 40 there is nothing to hold back for
+              a holdout, and without a holdout no accuracy claim about the result is
+              measurable &mdash; which is the one thing this service does that its
+              competitors do not.</li>
+            <li><b>One protocol, written down.</b> Where a structure starts and stops.
+              Two annotators disagreeing by 1 mm is a 1 mm error budget you can never
+              get back.</li>
+            <li><b>A held-out split you do not touch.</b> The numbers on this site
+              &mdash; strict Dice 0.8292, HD95 1.235&nbsp;mm, challenge Dice 0.8965
+              &mdash; are 20 cases the model never saw.</li>
+            <li><b>Time on a GPU.</b> The production model is an nnU-Net with a U-Mamba2
+              bottleneck; a fine-tune from these weights is days, not hours.</li>
+          </ul>
+          <h3>What this is not</h3>
+          <p class="contactsmall">
+            Not a medical device, and not for diagnostic use. The segmentation weights
+            here are ToothFairy3-derived and carry <b>CC BY-NC-SA 4.0</b> &mdash;
+            research and non-commercial use only &mdash; so a model trained from them
+            inherits that, and a commercially usable model has to start from data and
+            weights that allow it. That is a licensing question before it is a technical
+            one, and it is worth settling first.
+          </p>
+        </div>
+        <aside class="contactme">
+          <h3>Get in touch</h3>
+          <p class="contactwho" id="contactWho"></p>
+          <ul class="contactlinks" id="contactLinks"></ul>
+          <p class="contactsmall">
+            Bring the structure list and roughly how many annotated cases you have.
+            Those two decide whether the answer is a fine-tune, a new class on top of
+            this taxonomy, or that there is not enough data yet &mdash; and the third
+            answer is a real one.
+          </p>
+          <a class="btn" href="#/cases">Back to cases</a>
+        </aside>
+      </div>
+    </section>
   </main>
 
   <!-- ==================================================== view: settings -->
@@ -323,6 +430,11 @@
            which is every upload. Sits between Findings and Structures deliberately --
            it qualifies the Findings above it and captions the rail below it. -->
       <div class="card" id="accuracyCard" hidden></div>
+      <!-- Hand corrections to this case's mask, from `report.edits`. In the rail rather
+           than in the editing bar because it is the case's HISTORY, not a control: it
+           survives a reload, a new session and a different browser, and the sentence
+           about the display grid travels with it into the printed sheet. -->
+      <div class="card" id="editsCard" hidden></div>
 
       <!-- The holdout error budget: a PRIOR about the model, never a measurement of
            this scan. Deliberately a separate card from #accuracyCard (which only ever
@@ -380,6 +492,36 @@
           <div class="spinner" aria-hidden="true"></div>
           <span id="mprMeta">loading volume&hellip;</span>
         </div>
+
+        <!-- The editing toolbar. OVER the panes rather than a row above them: it is a
+             mode, and a mode should not cost the pictures 44 px whenever it is off.
+             Built by `renderEditBar`, which is also what keeps the counters honest --
+             every number in it is read back from the labelmap, not accumulated. -->
+        <div class="editbar" id="editBar" hidden>
+          <div class="editbar-row">
+            <label class="editpick">
+              <span>paint</span>
+              <select id="editSegment" aria-label="Which structure the tools write"></select>
+            </label>
+            <div class="seg" id="editTools" role="group" aria-label="Editing tool"></div>
+            <label class="editsize">
+              <span id="editSizeLabel">2.0 mm</span>
+              <input type="range" id="editSize" min="0.3" max="8" step="0.1" value="2"
+                     aria-label="Brush radius in millimetres">
+            </label>
+            <button class="iconbtn" id="editUndo" type="button"
+                    title="Undo the last stroke  ( &#8984;Z )">&#8630;</button>
+            <button class="iconbtn" id="editRedo" type="button"
+                    title="Redo  ( &#8984;&#8679;Z )">&#8631;</button>
+          </div>
+          <div class="editbar-row editbar-foot">
+            <span class="editcount" id="editCount"></span>
+            <button class="link" id="editDiscard" type="button">discard</button>
+            <button class="btn btn--primary btn--sm" id="editApply" type="button">
+              Apply &amp; recompute</button>
+          </div>
+          <p class="editnote" id="editNote"></p>
+        </div>
       </div>
 
       <!-- The pre-rendered tiles: instant, and the fastest way to scrub. -->
@@ -434,6 +576,17 @@
                it again. -->
           <button class="iconbtn ovbtn" id="xsFitBtn" type="button"
                   title="How much of the section to show  ( z )">view: site</button>
+          <!-- Brightness and contrast of the rendered JPEG. A DISPLAY control: every
+               millimetre is measured server-side on the full-resolution volume, so this
+               cannot move a number, and the filter is applied around `drawImage` alone
+               so no overlay is dimmed with the picture. -->
+          <button class="iconbtn ovbtn" id="xsPicBtn" type="button">picture: as rendered</button>
+          <!-- The panoramic at working height. It is the only plane mesiodistal
+               angulation is visible in, and 104 px of locator strip is not enough to
+               set an angle on -- but it is also 92 px the section wants, so it is a
+               mode the reader asks for rather than a default. -->
+          <button class="iconbtn ovbtn" id="panPaneBtn" type="button"
+                  aria-pressed="false">mesiodistal</button>
           <span class="planhint" id="planArcHint"></span>
           <!-- The worst verdict per implant, and it survives the sidebar collapsing.
                A collapse that hides the verdict is worse than no collapse. -->
@@ -447,13 +600,20 @@
             <div class="toolhint-body">
               <b>&larr;&rarr;</b> buccolingual &middot; <b>&uarr;&darr;</b> depth
               &middot; <b>Shift</b> 1 mm steps<br>
-              <b>,</b> <b>.</b> angulation &middot; <b>+</b> <b>&minus;</b> length
-              &middot; <b>Shift</b> <b>+</b> <b>&minus;</b> diameter<br>
-              <b>C</b> re-seat on the ridge &middot; <b>D</b> duplicate &middot;
-              <b>Tab</b> next implant &middot; <b>&#8984;Z</b> undo<br>
+              <b>,</b> <b>.</b> buccolingual angulation &middot;
+              <b>;</b> <b>'</b> mesiodistal angulation &middot;
+              <b>R</b> clocking (changes no measurement)<br>
+              <b>+</b> <b>&minus;</b> length &middot;
+              <b>Shift</b> <b>+</b> <b>&minus;</b> diameter &middot;
+              <b>C</b> re-seat on the ridge &middot; <b>D</b> duplicate<br>
+              <b>Tab</b> next implant &middot; <b>&#8984;Z</b> undo &middot;
               <b>Del</b> remove &middot; <b>O</b> outlines &middot; <b>Z</b> crop
-              &middot; <b>]</b> panel &middot; <b>[</b> rail
-              &middot; drag the apex to angulate, Shift to lengthen
+              &middot; <b>P</b> mesiodistal pane &middot;
+              <b>]</b> panel &middot; <b>[</b> rail<br>
+              On the section: drag the body to move, the apex to angulate
+              buccolingually, <b>Shift</b>+apex to lengthen, scroll to zoom.
+              On the panoramic: drag the body along the arch, the apex to angulate
+              mesiodistally.
             </div>
           </details>
           <button class="iconbtn" id="sideToggle" type="button"

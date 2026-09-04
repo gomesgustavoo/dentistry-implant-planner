@@ -6,12 +6,13 @@ single-job routes go through `deps.load_owned`, which 404s another tenant's id.
 
 from __future__ import annotations
 
+import json
 import logging
 import shutil
 import uuid
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
+from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 from fastapi.responses import JSONResponse
 from sqlalchemy.orm import Session
 
@@ -52,12 +53,23 @@ def job_dict(j: db.Job) -> dict:
         "attempts": j.attempts,
         "error": j.error,
         "submitted_by": j.submitted_by_user_id,
+        # What was ASKED FOR. `null` means "the deployment default at the time", which
+        # is the truth about every job that predates the picker, and it must not be
+        # rendered as a set of models nobody chose. What actually RAN is in
+        # `reports.models` and `reports.board`.
+        "options": j.options,
     }
 
 
 @router.post("", status_code=201)
 async def create_job(
     file: UploadFile = File(...),
+    # The uploader's model choice, as a JSON object `{model key: mode}` out of
+    # `dentistry.models.CATALOGUE`. A FORM FIELD rather than a JSON body because the
+    # request is already `multipart/form-data` carrying a 300 MB volume, and it is
+    # optional because "no choice" is a real answer that has to keep working: every job
+    # uploaded before the picker existed has none.
+    config: str | None = Form(default=None),
     s: Session = Depends(get_session),
     caller: Caller = Depends(current_caller),
 ) -> dict:
@@ -69,6 +81,26 @@ async def create_job(
             "Upload a volume (" + ", ".join(ALLOWED_SUFFIXES[:-1])
             + ") or a DICOM series as .zip — got " + repr(name),
         )
+
+    # VALIDATE THE CONFIG FIRST, before a byte is written and before the quota is
+    # touched. A request naming a model this deployment does not have must be refused
+    # while the reader still has something to change -- not accepted, uploaded, queued
+    # and then quietly segmented by a different set of models. `resolve_config` refuses
+    # rather than falling back for exactly that reason.
+    options = None
+    if config:
+        from dentistry import models as M
+
+        try:
+            asked = json.loads(config)
+        except ValueError as exc:
+            raise HTTPException(400, f"`config` is not JSON: {exc}") from exc
+        if not isinstance(asked, dict):
+            raise HTTPException(400, "`config` must be an object of {model: mode}")
+        try:
+            options = M.resolve_config(asked, M.read_inventory(settings.DATA_DIR))
+        except M.ConfigRefused as exc:
+            raise HTTPException(400, str(exc)) from exc
 
     # Check the quota BEFORE writing 300 MB to disk. The lock is taken here and held
     # through the ledger insert below, so two simultaneous uploads cannot both pass
@@ -112,6 +144,7 @@ async def create_job(
         bytes_in=written,
         state=db.QUEUED,
         stage="queued",
+        options=options,
     )
     s.add(job)
     quota.record(s, caller.tenant_id, job_id)

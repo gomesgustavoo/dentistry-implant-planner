@@ -78,7 +78,9 @@ import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
+import * as editing from './editing.js';
 import * as implants from './implants.js';
+import * as preview from './preview.js';
 
 // `GeometryType` is destructured and never used. It is transcribed anyway: it appears
 // exactly once in the whole 4 MB artifact, which makes it provably dead code that the
@@ -262,8 +264,13 @@ async function ensureInit() {
   await coreInit();
   await toolsInit({ addons: { polySeg: POLYSEG_STUB } });
   assertCornerstoneApi();
-  [PanTool, ZoomTool, StackScrollTool, WindowLevelTool, TrackballRotateTool]
+  [PanTool, ZoomTool, StackScrollTool, WindowLevelTool, TrackballRotateTool,
+   ...editing.EDIT_TOOL_CLASSES]
     .forEach(addTool);
+  // The editing surface, asserted here rather than at the first brush stroke. Same
+  // reason `assertCornerstoneApi` runs at init: a renamed helper that surfaces only
+  // when a specialist tries to correct a canal roof looks like a rendering bug.
+  editing.assertEditApi();
   imageLoader.registerImageLoader(LOADER_SCHEME, loadLocalImage);
   // Process-wide, and it stays that way: this makes the dentistry loader the fallback
   // for EVERY unrecognised scheme, which is fine here because nothing else on the page
@@ -606,7 +613,12 @@ export async function mount(elements, meta, imageBuffer, labelBuffer, element3d)
   let mprGroup = ToolGroupManager.getToolGroup(MPR_TOOL_GROUP);
   if (!mprGroup) {
     mprGroup = ToolGroupManager.createToolGroup(MPR_TOOL_GROUP);
-    [PanTool, ZoomTool, StackScrollTool, WindowLevelTool]
+    // The editing tools are ADDED to the group and left passive. Adding them here
+    // rather than on first use means the group's binding table is complete from the
+    // start, which is what lets `setEditTool` read back whatever currently owns the
+    // primary button instead of hard-coding that it is WindowLevel.
+    [PanTool, ZoomTool, StackScrollTool, WindowLevelTool,
+     ...editing.EDIT_TOOL_CLASSES]
       .forEach((t) => mprGroup.addTool(t.toolName));
     mprGroup.setToolActive(WindowLevelTool.toolName,
       { bindings: [{ mouseButton: MouseBindings.Primary }] });
@@ -682,6 +694,11 @@ export async function mount(elements, meta, imageBuffer, labelBuffer, element3d)
     archCentre: archCentreFromTeeth(centroids, meta.colors || {}),
   };
   implants.attach({ engine, viewportId: VIEWPORT_3D, isMounted: () => !!state });
+  // The editing layer takes a COPY of the labelmap as shipped, so a diff is always
+  // "what changed since the worker drew it" rather than a delta on a delta.
+  editing.attach({ engine, toolGroupId: MPR_TOOL_GROUP, segId, segVolumeId,
+                   viewportIds: mprIds, meta }, labelBuffer);
+  editing.setBrushMm(editing.BRUSH_MM.default);
   return {
     viewportIds: mprIds,
     allIds,
@@ -1250,6 +1267,11 @@ export async function unmount() {
   // Implants have their own registry and must be torn down with the rest, or their
   // actors survive into the next case.
   implants.teardown();
+  // ...and the editing layer holds a 5.7 MB baseline copy of the labelmap and an
+  // eventTarget listener. Both have to go with the case, or the next one diffs against
+  // the previous one's segmentation.
+  try { editing.setEditTool(null); } catch { /* the group went first */ }
+  editing.detach();
 
   [state.volumeId, state.segVolumeId].forEach((id) => {
     try {
@@ -1272,8 +1294,9 @@ export const planes = MPR_VIEWPORTS.map((v) => ({ id: v.id, label: v.label }));
 export const viewport3dId = VIEWPORT_3D;
 
 // A bundle revision counter, NOT a Cornerstone version. 5 was the shipped value; 6 adds
-// the implant API below.
-export const version = '6';
+// the implant API below; 7 adds the labelmap editing tools and the model-picker
+// schematic, and makes all three implant angles reach the 3-D pane.
+export const version = '7';
 
 export const {
   setImplantArch,
@@ -1284,3 +1307,32 @@ export const {
   focusImplant,
   implantGeometryForTest,
 } = implants;
+
+export const {
+  editWriteForTest,
+  setEditTool,
+  editTool,
+  setEditSegment,
+  editSegment,
+  setBrushMm,
+  brushMm,
+  editUndo,
+  editRedo,
+  editHistory,
+  editDiff,
+  editStats,
+  resetEdits,
+  commitBaseline,
+  editDebug,
+  EDIT_TOOLS,
+  BRUSH_MM,
+} = editing;
+
+export const {
+  mountModelPreview,
+  highlightGroups,
+  resizeModelPreview,
+  spinModelPreview,
+  disposeModelPreview,
+  previewDebug,
+} = preview;

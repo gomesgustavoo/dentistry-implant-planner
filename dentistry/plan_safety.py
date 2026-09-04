@@ -83,7 +83,51 @@ STRUCTURE_PRIORS = {
 }
 
 
-def prior(field: str) -> dict:
+def edit_penalty(field: str, edits) -> dict | None:
+    """The extra boundary uncertainty a HAND EDIT puts on one measurement field.
+
+    A specialist correcting a contour is the point of the editing tools, and it does not
+    make the contour exact. The mask a browser can edit is the DISPLAY volume, which
+    `worker/volume_pack.py` downsamples so its longest axis is at most 256 -- 0.6 mm
+    voxels on a real dental CBCT, against the 0.3 mm grid every millimetre here is
+    measured on. So the boundary of an edited contour is quantised at the display
+    voxel, and the one-sided term that belongs in an INWARD budget is half of it.
+
+    THREE THINGS THIS DOES NOT DO, each because doing it would overstate the result:
+
+    * It does not replace the model's prior. Only part of a structure is edited, and the
+      nearest point to an implant may be in a region nobody touched, so the model's own
+      under-draw still applies there. The two terms ADD.
+    * It does not claim the observer is exact. Where a person believes a cortical wall
+      sits carries its own error and this codebase has not measured it -- so it is
+      STATED as unquantified rather than assigned a number, which is the same rule the
+      density metric follows about Hounsfield units.
+    * It does not suppress the verdict. Refusing to grade an edited contour would make
+      the editing tools useless, which is worse than grading it with a wider budget and
+      saying so.
+
+    `edits` is `planning/pack/header.json`'s own `edits` list, written by
+    `worker/planning_pack.rebuild_label_fields`, which records WHICH fields each
+    correction actually reached. A correction to a tooth does not widen the canal's
+    budget.
+    """
+    hits = [e for e in (edits or []) if field in (e.get("fields") or [])]
+    if not hits:
+        return None
+    q = max(float(e.get("quantisation_mm") or 0.0) for e in hits)
+    if q <= 0:
+        return None
+    return {"add_p95_mm": round(q / 2.0, 3),
+            "quantisation_mm": round(q, 3),
+            "edits": len(hits),
+            "note": (f"this contour was corrected by hand on a {q:.2f} mm display grid, "
+                     f"so its boundary carries {q / 2.0:.2f} mm of quantisation on top "
+                     f"of the model's own error. How accurately a person can place a "
+                     f"cortical boundary is not something we have measured, so it is "
+                     f"not in this budget at all.")}
+
+
+def prior(field: str, edits=None) -> dict:
     """The error budget for one measurement field. Falls back to the WORST known.
 
     Falling back to the worst rather than to the canal's is deliberate: an unknown
@@ -91,10 +135,17 @@ def prior(field: str) -> dict:
     clearance is to assume more under-draw, not less.
     """
     p = STRUCTURE_PRIORS.get(field)
-    if p is not None:
-        return p
-    worst = max(STRUCTURE_PRIORS.values(), key=lambda v: v["p95_mm"])
-    return {**worst, "label": f"{field} (no measured prior; the worst known is used)"}
+    if p is None:
+        worst = max(STRUCTURE_PRIORS.values(), key=lambda v: v["p95_mm"])
+        p = {**worst, "label": f"{field} (no measured prior; the worst known is used)"}
+    pen = edit_penalty(field, edits)
+    if pen:
+        p = {**p,
+             "p95_mm": round(p["p95_mm"] + pen["add_p95_mm"], 3),
+             "model_p95_mm": p["p95_mm"],
+             "edit": pen,
+             "source": p["source"] + "; widened for a hand correction, see `edit`"}
+    return p
 
 
 @dataclass
@@ -108,7 +159,8 @@ class Verdict:
         return asdict(self)
 
 
-def budget_for(clearance_mm: float | None, field: str, margin_mm: float) -> dict:
+def budget_for(clearance_mm: float | None, field: str, margin_mm: float,
+               edits=None) -> dict:
     """`budget()` generalised over the structure being cleared and its own margin.
 
     Every term is named, and the model's error comes from `STRUCTURE_PRIORS[field]` --
@@ -118,21 +170,27 @@ def budget_for(clearance_mm: float | None, field: str, margin_mm: float) -> dict
     """
     if clearance_mm is None:
         return {"clearance_mm": None, "field": field, "margin_mm": margin_mm}
-    pr = prior(field)
+    pr = prior(field, edits)
     informed = clearance_mm - pr["p95_mm"]
-    return {"clearance_mm": round(clearance_mm, 2),
-            "field": field,
-            "measured_against": pr["label"],
-            "inward_p95_mm": pr["p95_mm"],
-            "informed_mm": round(informed, 2),
-            "margin_mm": margin_mm,
-            "headroom_mm": round(informed - margin_mm, 2),
-            "worst_measured_inward_mm": pr["worst_mm"],
-            "prior_source": pr["source"]}
+    out = {"clearance_mm": round(clearance_mm, 2),
+           "field": field,
+           "measured_against": pr["label"],
+           "inward_p95_mm": pr["p95_mm"],
+           "informed_mm": round(informed, 2),
+           "margin_mm": margin_mm,
+           "headroom_mm": round(informed - margin_mm, 2),
+           "worst_measured_inward_mm": pr["worst_mm"],
+           "prior_source": pr["source"]}
+    if pr.get("edit"):
+        # Both terms, separately. "0.76 mm was deducted" is not an answer a reader can
+        # check; "0.46 the model may under-draw plus 0.30 of edit quantisation" is.
+        out["model_p95_mm"] = pr["model_p95_mm"]
+        out["edit"] = pr["edit"]
+    return out
 
 
 def structure_verdict(m, field: str, margin_mm: float, *,
-                      headline_noun: str | None = None) -> Verdict:
+                      headline_noun: str | None = None, edits=None) -> Verdict:
     """Grade one clearance against one margin, with that structure's own error budget.
 
     Shares `canal_verdict`'s bands and its refusal discipline: a non-empty `caveats` on
@@ -141,7 +199,7 @@ def structure_verdict(m, field: str, margin_mm: float, *,
     nothing at all.
     """
     noun = headline_noun or prior(field)["label"]
-    b = budget_for(m.value if m else None, field, margin_mm)
+    b = budget_for(m.value if m else None, field, margin_mm, edits)
 
     # A SATURATED field is a bound, not a gap in the measurement. If even the bound,
     # less this structure's own inward error, clears the margin, the answer is known --
@@ -149,7 +207,7 @@ def structure_verdict(m, field: str, margin_mm: float, *,
     det = (m.detail if m else None) or {}
     if m is not None and m.value is None and det.get("saturated"):
         at_least = float(det.get("at_least_mm") or 0.0)
-        pr = prior(field)
+        pr = prior(field, edits)
         informed = at_least - pr["p95_mm"]
         nums = {**b, "at_least_mm": round(at_least, 2), "saturated": True,
                 "inward_p95_mm": pr["p95_mm"],
@@ -177,7 +235,7 @@ def structure_verdict(m, field: str, margin_mm: float, *,
         return Verdict("no_verdict",
                        f"{b['clearance_mm']:.2f} mm to the drawn {noun} — not graded.",
                        list(m.caveats) + [m.basis], b)
-    pr = prior(field)
+    pr = prior(field, edits)
     head = b["headroom_mm"]
     if head < 0:
         level, headline = "breach", (
@@ -191,14 +249,17 @@ def structure_verdict(m, field: str, margin_mm: float, *,
         level, headline = "clear", (
             f"{b['clearance_mm']:.2f} mm to the {noun} — {head:.2f} mm of headroom "
             f"beyond the {margin_mm:.1f} mm margin.")
-    return Verdict(level, headline, [
+    because = [
         f"The drawn wall may sit up to {pr['p95_mm']:.2f} mm inside the true one at the "
         f"95th percentile; the worst single point we have measured is "
         f"{pr['worst_mm']:.2f} mm ({pr['source']}).",
-        m.basis], b)
+        m.basis]
+    if pr.get("edit"):
+        because.insert(1, pr["edit"]["note"])
+    return Verdict(level, headline, because, b)
 
 
-def budget(clearance_mm: float | None) -> dict:
+def budget(clearance_mm: float | None, edits=None) -> dict:
     """The arithmetic the clearance bar draws, with every term named.
 
         measured clearance                                  3.10 mm
@@ -212,26 +273,22 @@ def budget(clearance_mm: float | None) -> dict:
     """
     if clearance_mm is None:
         return {"clearance_mm": None}
-    informed = clearance_mm - MODEL_INWARD_P95_MM
-    return {"clearance_mm": round(clearance_mm, 2),
-            "inward_p95_mm": MODEL_INWARD_P95_MM,
-            "informed_mm": round(informed, 2),
-            "margin_mm": SAFETY_MARGIN_MM,
-            "headroom_mm": round(informed - SAFETY_MARGIN_MM, 2),
-            "worst_measured_inward_mm": MODEL_INWARD_WORST_MM,
-            "field": "canal",
-            "measured_against": STRUCTURE_PRIORS["canal"]["label"]}
+    # Through `budget_for` so the CANAL's budget and every other structure's are the
+    # same arithmetic, and so a hand correction widens this one too. It used to deduct
+    # `MODEL_INWARD_P95_MM` directly, which meant an edited canal was graded against the
+    # model's error alone -- the one field where getting it wrong matters most.
+    return budget_for(clearance_mm, "canal", SAFETY_MARGIN_MM, edits)
 
 
 def canal_verdict(clearance, canal_block: dict | None, quality: dict | None,
-                  jaw: str) -> Verdict:
+                  jaw: str, edits=None) -> Verdict:
     """A level, or an explicit refusal with the raw millimetres still shown.
 
     Refusing is not the same as having nothing to say: `numbers` is populated in every
     branch, because hiding a measurement because it could not be graded is how a user
     ends up with no information at all.
     """
-    b = budget(clearance.value if clearance else None)
+    b = budget(clearance.value if clearance else None, edits)
     because = []
 
     if jaw == "maxilla":
@@ -256,7 +313,7 @@ def canal_verdict(clearance, canal_block: dict | None, quality: dict | None,
             and (clearance.detail or {}).get("saturated"):
         # See `structure_verdict`: a bound beyond the margin is an answer.
         return structure_verdict(clearance, "canal", SAFETY_MARGIN_MM,
-                                 headline_noun="inferior alveolar canal")
+                                 headline_noun="inferior alveolar canal", edits=edits)
 
     if clearance is not None and (clearance.detail or {}).get("canal_terminal"):
         detail = clearance.detail or {}
@@ -317,10 +374,16 @@ def canal_verdict(clearance, canal_block: dict | None, quality: dict | None,
         level, headline = "clear", (
             f"{b['clearance_mm']:.2f} mm — {head:.2f} mm of headroom beyond the "
             f"{SAFETY_MARGIN_MM:.1f} mm margin.")
+    # From the BUDGET, not from the module constant: on an edited canal the deduction
+    # is the model's p95 plus the edit quantisation, and quoting the constant here
+    # would have printed 0.46 beside a bar drawn at 0.76.
     because.append(
-        f"The drawn wall may sit up to {MODEL_INWARD_P95_MM:.2f} mm inside the true one "
+        f"The drawn wall may sit up to {b['inward_p95_mm']:.2f} mm inside the true one "
         f"at the 95th percentile; the worst single point we have measured is "
         f"{MODEL_INWARD_WORST_MM:.2f} mm, on one case out of twenty.")
+    pen = edit_penalty("canal", edits)
+    if pen:
+        because.append(pen["note"])
     if because_note:
         because.append(because_note)
     because.append(clearance.basis)

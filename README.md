@@ -24,6 +24,34 @@ a threaded screw **strictly inside** that capsule — asserted, not asserted-by-
 every drawn vertex is inside the measured envelope to 4e-6 mm, and the thread crest
 touches it to 2e-8 mm. So the picture can only ever occupy less space than the number.
 
+## What it lets you do
+
+**Place an implant and get graded distances.** Buccolingual and mesiodistal angulation
+plus clocking, in the two planes each one is visible in: the cross-section draws the
+buccolingual angle at true angle and the mesiodistal one foreshortened by exactly
+`cos(yaw)` — the orthogonal projection of a capsule is a capsule, so that is exact
+rather than approximate — and the panoramic is the other way round. Clocking is carried,
+drawn, and **stated to change no measurement**, because the measured solid is a body of
+revolution about the axis.
+
+**Correct the mask, and every number is recomputed from the correction.** Cornerstone's
+labelmap tools on the MPR panes; on apply, the worker rebuilds the distance fields, the
+meshes, the outlines, the structure set and the per-site bone heights. What it does not
+rebuild is stated in the artifact rather than assumed: the arch curve and the section
+list are frozen so a saved plan's coordinates keep meaning the same place, and the
+greyscale is the scan. And because the mask a browser can edit is the downsampled display
+copy, an edited contour's error budget is **widened by half a display voxel** — 0.46 mm
+of model error plus 0.30 mm of grid quantisation on a real case — with the arithmetic
+printed beside the number. A hand-drawn contour is not automatically a more accurate one.
+
+**Choose which models run on your upload.** A base model paints the whole taxonomy and
+specialists overwrite only the Task-1 ids they own, with every voxel outside a
+specialist's region asserted byte-identical to the base prediction on every case. The
+picker shows what each model owns, what is measured about it, and whether it is installed
+at all — availability is reported by the worker, never guessed — and a request for a model
+this deployment does not have is **refused before the upload is written** rather than
+quietly downgraded.
+
 ## Layout
 
 | | |
@@ -43,7 +71,7 @@ Nothing here is asserted by comment if it can be asserted by a check.
 ```bash
 ./venv/bin/python -m pytest tests/test_phantom.py -q   # geometry and safety, numpy-free API included
 node web-auth/check-app.js                             # static wiring, palettes, CSS contracts
-node web-auth/check-rail.mjs                           # 113 rendered states in real Chrome
+node web-auth/check-rail.mjs                           # 114 rendered states in real Chrome
 node web-auth/check-rail.mjs --prove                   # every assertion proven to fail when broken
 node web-auth/check-rail.mjs --selftest                # the JS coordinate map against Python's vectors
 node viewer/check-bundle.mjs                           # the bundle kept every behaviour it had

@@ -120,7 +120,7 @@ def _quota_denied(request: Request, exc: quota.QuotaDenied) -> JSONResponse:
                         content={"detail": exc.body()})
 
 from api.routes import (  # noqa: E402
-    billing, examples, files, jobs, me, plans, system, teams,
+    billing, edits, examples, files, jobs, me, plans, system, teams,
 )
 
 app.include_router(system.router)
@@ -136,5 +136,8 @@ app.include_router(jobs.router)
 # plans before files, for the same reason: /v1/jobs/{id}/plans and /v1/jobs/{id}/measure
 # are literal paths under the same prefix as the artifact catch-all.
 app.include_router(plans.router)
+# edits before files, for the same reason plans is: /v1/jobs/{id}/edits is a literal
+# path under the same prefix as the artifact catch-all.
+app.include_router(edits.router)
 app.include_router(files.router)
 app.include_router(billing.router)

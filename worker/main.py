@@ -80,7 +80,7 @@ def _segment_three_model(vol, work, rep, job_id):
         "inventing history rather than recovering it. Set DENT_PIPELINE=toothfairy3.")
 
 
-def _segment_toothfairy3(vol, rep, job_id):
+def _segment_toothfairy3(vol, rep, job_id, config=None):
     """One base model plus the board. Returns `(merged, reports, None, gpu_s, wait_s)`.
 
     The segmentation itself lives in `worker/pipeline.py` so that `scripts/tf3_predict.py`
@@ -93,7 +93,7 @@ def _segment_toothfairy3(vol, rep, job_id):
     from worker import pipeline
 
     res = pipeline.segment_task1(vol.image, settings, rep=rep, use_lock=True,
-                                 load_labels=_load_labels)
+                                 config=config, load_labels=_load_labels)
     reports = res.reports
     seg_case = res.seg
     gpu_seconds, wait_seconds = res.gpu_seconds, res.wait_seconds
@@ -146,7 +146,7 @@ def _run(job: dict) -> None:
 
     if settings.PIPELINE == "toothfairy3":
         merged, extra, conflicts, gpu_seconds, wait_seconds = _segment_toothfairy3(
-            vol, rep, job_id)
+            vol, rep, job_id, job.get("options"))
     else:
         merged, extra, conflicts, gpu_seconds, wait_seconds = _segment_three_model(
             vol, work, rep, job_id)
@@ -254,6 +254,76 @@ def _run(job: dict) -> None:
              job_id[:8], gpu_seconds or 0, freed / 1e6)
 
 
+def _run_edit(edit: dict) -> None:
+    """Apply one hand correction to a case's mask and rebuild what depends on it.
+
+    Deliberately NOT inside `_run`'s try/except shape: a failed re-derive must leave the
+    JOB alone. The case is still done, its segmentation is still the one the model drew,
+    and the only thing that failed is one correction -- which is recorded on the edit row
+    with its reason, where the person who made it can see it.
+    """
+    from dentistry import db, storage
+    from worker import rederive
+
+    # Already coerced by `claim_next_edit`; restated because this function is also the
+    # one a future caller would reach for, and `[:8]` on a UUID object is a crash.
+    edit_id = str(edit["id"])
+    rep = _EditReporter(edit_id)
+    if edit.get("job_state") != db.DONE:
+        jobs.fail_edit(edit_id, f"the case is {edit.get('job_state')}, not done")
+        return
+    if edit.get("results_expired"):
+        jobs.fail_edit(edit_id,
+                       "this case's results expired and were deleted, so there is no "
+                       "segmentation left to correct")
+        return
+    results = storage.resolve(edit["tenant_id"], "results", edit["job_id"])
+    diff_path = results / "edits" / f"{edit_id}.json"
+    if not diff_path.is_file():
+        jobs.fail_edit(edit_id, "the stored correction is missing from disk")
+        return
+    with db.SessionLocal() as s:
+        row = s.get(db.Job, edit["job_id"])
+        job_row = {"id": row.id, "tenant_id": row.tenant_id,
+                   "reports": dict(row.reports or {})} if row else None
+    if job_row is None:
+        jobs.fail_edit(edit_id, "the case no longer exists")
+        return
+    try:
+        diff = json.loads(diff_path.read_text())
+        reports, result = rederive.run(job_row, edit, diff, rep=rep)
+    except rederive.RederiveRefused as exc:
+        log.warning("[edit %s] refused: %s", edit_id[:8], exc)
+        jobs.fail_edit(edit_id, str(exc))
+        return
+    except Exception as exc:  # noqa: BLE001
+        log.exception("[edit %s] failed", edit_id[:8])
+        jobs.fail_edit(edit_id, f"{type(exc).__name__}: {exc}\n"
+                                f"{traceback.format_exc(limit=6)}")
+        return
+    jobs.finish_edit(edit_id, edit["job_id"], reports, result)
+    log.info("[edit %s] applied: %d display voxels, %d full-resolution voxels",
+             edit_id[:8], result.get("voxels", 0), result.get("full_voxels", 0))
+
+
+class _EditReporter:
+    """Progress and a heartbeat for a re-derive. No cancel: it is under a minute and
+    every step is idempotent, so there is nothing worth stopping halfway."""
+
+    def __init__(self, edit_id: str, min_interval: float = 2.0):
+        self.edit_id = edit_id
+        self.min_interval = min_interval
+        self._last = 0.0
+
+    def __call__(self, fraction: float, message: str) -> None:
+        now = time.monotonic()
+        if now - self._last < self.min_interval and fraction < 1.0:
+            return
+        self._last = now
+        jobs.edit_heartbeat(self.edit_id)
+        log.info("[edit %s] %.0f%% %s", self.edit_id[:8], fraction * 100, message)
+
+
 def _looks_like_dicom_dir(path: Path) -> bool:
     if not path.is_dir():
         return False
@@ -287,10 +357,64 @@ def main() -> int:
     log.info("torch %s cuda=%s device=%s", torch.__version__, torch.cuda.is_available(),
              torch.cuda.get_device_name(0) if torch.cuda.is_available() else "cpu")
 
+    # WHICH MODELS THIS WORKER ACTUALLY HAS, into the shared data directory.
+    #
+    # The API pod mounts no model store and carries no DENT_TF3_* environment, so it
+    # cannot know, and `GET /v1/models` would otherwise have to guess -- offering a
+    # specialist that is not on disk, accepting an upload against it, and failing forty
+    # seconds into the job with the volume already written. `installed` here is the
+    # setting resolved against MODEL_STORE with dataset.json, plans.json and the named
+    # checkpoint all present, so a half-mounted store is caught at the picker.
+    try:
+        from dentistry import models as model_menu
+
+        inv = model_menu.write_inventory(settings)
+        have = [k for k, v in inv["models"].items() if v.get("installed")]
+        log.info("model inventory written: %d of %d installed (%s)",
+                 len(have), len(inv["models"]), ", ".join(sorted(have)) or "none")
+    except Exception:  # noqa: BLE001
+        # A missing inventory costs the picker its list, never the worker its queue.
+        log.exception("could not write the model inventory")
+
     idle = True
     while not _STOP:
+        # A crashed worker must not leave a correction stuck in `applying` with no way
+        # to retry it. Re-running a re-derive from the start is safe -- it reads the
+        # stored segmentation and rewrites derived artifacts -- so this is a requeue
+        # rather than a failure.
+        try:
+            back = jobs.requeue_stale_edits()
+            if back:
+                log.info("requeued %d stale edit(s)", back)
+        except Exception:  # noqa: BLE001
+            log.exception("could not requeue stale edits")
+
         job = jobs.claim_next()
         if job is None:
+            # SEGMENTATION FIRST, corrections second. A re-derive is CPU-only and takes
+            # under a minute; a queued upload is holding a person waiting on a GPU.
+            edit = jobs.claim_next_edit()
+            if edit is not None:
+                idle = True
+                # WRAPPED, and not only because `_run_edit` has its own guard: this
+                # branch's own bookkeeping can raise too, and a raise here exits the
+                # loop and takes the SEGMENTATION queue down with it. Measured live --
+                # a `UUID` object where a string was expected, in the log line below,
+                # crashed the worker and left the correction stuck in `applying`. A
+                # failed correction must cost that correction and nothing else.
+                try:
+                    log.info("[edit %s] claimed for case %s", str(edit["id"])[:8],
+                             str(edit["job_id"])[:8])
+                    _run_edit(edit)
+                except Exception as exc:  # noqa: BLE001
+                    log.exception("[edit %s] the edit branch raised",
+                                  str(edit.get("id"))[:8])
+                    try:
+                        jobs.fail_edit(str(edit["id"]),
+                                       f"{type(exc).__name__}: {exc}")
+                    except Exception:  # noqa: BLE001
+                        log.exception("could not record the failure")
+                continue
             if idle:
                 # Hand the card back before settling. The predictor cache parks its
                 # networks on the CPU between jobs, but PyTorch's allocator keeps the

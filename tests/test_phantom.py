@@ -510,10 +510,12 @@ def implant_frame_checks() -> bool:
     worst = 0.0
     for jaw in ("mandible", "maxilla"):
         for tilt in (0.0, 5.0, 10.0, 20.0, 35.0, -35.0):
-            for yaw in (0.0, 8.0, -15.0):
+            for yaw, roll in ((0.0, 0.0), (8.0, 0.0), (-15.0, 0.0),
+                              (0.0, 137.0), (8.0, -42.0)):
                 imp = {"jaw": jaw, "s_mm": 4.0, "t_mm": 1.5,
                        "z_mm": float(info["occlusal_z_mm"]), "tilt_deg": tilt,
-                       "yaw_deg": yaw, "length_mm": L, "diameter_mm": D}
+                       "yaw_deg": yaw, "roll_deg": roll,
+                       "length_mm": L, "diameter_mm": D}
                 origin, e1, e2, ax = G.implant_frame(imp, withtan)
                 tris = G.implant_triangles_lps(imp, withtan)
                 d = [tuple(v[k] - origin[k] for k in range(3))
@@ -534,7 +536,7 @@ def implant_frame_checks() -> bool:
     ok &= check("the implant frame is rigid at every tilt and yaw",
                 worst < 1e-9,
                 f"worst orthonormality/planarity/length/radius error {worst:.2e} "
-                f"over 36 poses")
+                f"over 60 poses")
 
     # The pose must be the SAME pose plan_metrics measures: its axis() is stated in
     # (s, t, z) components, which map to (tangent, buccal normal, up).
@@ -584,6 +586,63 @@ def implant_frame_checks() -> bool:
                      "tilt_deg": 20.0, "yaw_deg": 0.0, "length_mm": L,
                      "diameter_mm": D}, info)) > 0)
 
+    # CLOCKING IS A ROTATION OF THE FRAME AND OF NOTHING ELSE.
+    #
+    # Two things have to be true and they are different things. The axis must not move,
+    # because every measured distance is computed from it -- if roll touched `ax` a
+    # control advertised as changing no number would change all of them. And the
+    # exported SOLID must be the same solid, which it is because a body of revolution
+    # is invariant under rotation about its own axis: the vertices move, their
+    # cylindrical coordinates about `ax` do not. The second is what would catch a
+    # future non-symmetric solid being adopted while the invariance claim stayed in the
+    # docstring.
+    roll_ax = 0.0
+    roll_solid = 0.0
+    for jaw in ("mandible", "maxilla"):
+        for tilt, yaw in ((0.0, 0.0), (20.0, 0.0), (-15.0, 8.0)):
+            base = {"jaw": jaw, "s_mm": 4.0, "t_mm": 1.5,
+                    "z_mm": float(info["occlusal_z_mm"]), "tilt_deg": tilt,
+                    "yaw_deg": yaw, "length_mm": L, "diameter_mm": D}
+            o0, _, _, ax0 = G.implant_frame(dict(base, roll_deg=0.0), withtan)
+            cyl = {}
+            for roll in (0.0, 15.0, 137.0, -42.0, 360.0):
+                o1, _, _, ax1 = G.implant_frame(dict(base, roll_deg=roll), withtan)
+                roll_ax = max(roll_ax, max(abs(ax1[k] - ax0[k]) for k in range(3)),
+                              max(abs(o1[k] - o0[k]) for k in range(3)))
+                tris = G.implant_triangles_lps(dict(base, roll_deg=roll), withtan)
+                d = [tuple(v[k] - o0[k] for k in range(3)) for tri in tris for v in tri]
+                along = sorted(round(dot(x, ax0), 9) for x in d)
+                perp = sorted(round(math.sqrt(max(0.0, dot(x, x) - dot(x, ax0) ** 2)), 9)
+                              for x in d)
+                cyl[roll] = (along, perp)
+            for roll, (along, perp) in cyl.items():
+                a0, p0 = cyl[0.0]
+                roll_solid = max(roll_solid,
+                                 max(abs(x - y) for x, y in zip(along, a0)),
+                                 max(abs(x - y) for x, y in zip(perp, p0)))
+    ok &= check("clocking moves neither the axis nor the origin",
+                roll_ax < 1e-12, f"worst component change {roll_ax:.2e}")
+    ok &= check("the exported solid is invariant under clocking",
+                roll_solid < 1e-8,
+                f"worst cylindrical-coordinate change {roll_solid:.2e} over 30 poses")
+    # ...and the vertices really do move, or the invariance above is vacuous.
+    moved = max(
+        abs(a[k] - b[k])
+        for a, b in zip(
+            [v for tri in G.implant_triangles_lps(
+                {"jaw": "mandible", "s_mm": 4.0, "t_mm": 1.5,
+                 "z_mm": float(info["occlusal_z_mm"]), "tilt_deg": 0.0, "yaw_deg": 0.0,
+                 "roll_deg": 0.0, "length_mm": L, "diameter_mm": D}, withtan)
+             for v in tri],
+            [v for tri in G.implant_triangles_lps(
+                {"jaw": "mandible", "s_mm": 4.0, "t_mm": 1.5,
+                 "z_mm": float(info["occlusal_z_mm"]), "tilt_deg": 0.0, "yaw_deg": 0.0,
+                 "roll_deg": 37.0, "length_mm": L, "diameter_mm": D}, withtan)
+             for v in tri])
+        for k in range(3))
+    ok &= check("clocking is not a no-op: the vertices move",
+                moved > 0.5, f"worst vertex displacement {moved:.3f} mm at 37 degrees")
+
     # Non-vacuity: the construction this replaced really was sheared, by sin(tilt).
     n0 = G._v_unit(info["normals"][int(info["s0_index"])])
     shear = []
@@ -611,9 +670,16 @@ def api_purity_checks() -> bool:
     import sys as _sys
 
     ok = True
+    # `dentistry.models` joins the list: `GET /v1/models` calls `describe_all` on every
+    # upload-page load, and `ModelEntry.structures()` reaches through `crosswalk` --
+    # which has a numpy import INSIDE `task1_to_merged_lut` and a numpy-free
+    # `task1_to_merged_map` beside it. Calling the wrong one of those two would be an
+    # ImportError on the endpoint that decides which models run.
     src = ("import sys, json; "
            "import dentistry.plan_metrics, dentistry.plan_safety, "
-           "dentistry.plan_geometry; "
+           "dentistry.plan_geometry, dentistry.models; "
+           "dentistry.models.describe_all(None); "
+           "[m.structures() for m in dentistry.models.CATALOGUE]; "
            "print(json.dumps(sorted(m for m in sys.modules "
            "if m.split('.')[0] in ('numpy', 'scipy', 'SimpleITK', 'torch'))))")
     r = subprocess.run([_sys.executable, "-c", src], capture_output=True, text=True,
@@ -630,6 +696,94 @@ def api_purity_checks() -> bool:
                         cwd=str(Path(__file__).resolve().parent.parent))
     ok &= check("the probe detects a heavy import when there is one",
                 r2.returncode == 0 and "numpy" in r2.stdout)
+    return ok
+
+
+def model_menu_checks() -> bool:
+    """The model menu, the config it validates, and the edit penalty it feeds.
+
+    Three separate claims, and each one is a place a quiet wrong answer would come out
+    the far end:
+
+    * **The catalogue and the pipeline agree about ownership.** `worker/board.py` now
+      BUILDS its specialists from these entries, so a model cannot own one set of ids in
+      the picker and a different set in the composition -- but the derivation has to be
+      exercised, because `owns_task1` is in Task-1 ids and the picker shows merged ones.
+    * **A configuration is refused rather than downgraded.** An upload that asked for
+      the anterior canal specialist and quietly got the base model's opinion is a
+      clearance to a structure whose predicted volume runs to twice the truth.
+    * **A hand correction widens the budget of the fields it touched and NO others.**
+    """
+    from dentistry import labels as L
+    from dentistry import models as M
+    from dentistry import plan_safety as PS
+
+    ok = True
+    ok &= check("every catalogue entry has a distinct key and a stated licence",
+                len({m.key for m in M.CATALOGUE}) == len(M.CATALOGUE)
+                and all(m.license for m in M.CATALOGUE),
+                f"{len(M.CATALOGUE)} entries")
+    ok &= check("exactly one entry is the base model and it cannot be switched off",
+                [m.role for m in M.CATALOGUE].count("base") == 1
+                and M.BASE.modes == ("apply",))
+    ok &= check("the anterior canal specialist owns the three accessory canals",
+                sorted(M.CANAL.structures())
+                == sorted(L.BY_INDEX[i].id for i in sorted(L.ACCESSORY_CANALS)),
+                ", ".join(M.CANAL.structures()))
+    ok &= check("the teeth specialist owns 32 teeth and nothing else",
+                len(M.TOOTHSEG.structures()) == 32
+                and all(s.startswith("tooth_") for s in M.TOOTHSEG.structures()))
+    # Every entry's evidence has to say something measured. A menu of names with no
+    # numbers is a menu nobody can choose from.
+    ok &= check("every entry carries measured evidence and a stated trade-off",
+                all(len(m.evidence) > 80 and len(m.tradeoff) > 40 for m in M.CATALOGUE))
+
+    inv = {"models": {"toothfairy3": {"installed": True}, "canal": {"installed": True},
+                      "toothseg-teeth": {"installed": False, "reason": "not set"},
+                      "totalseg": {"installed": False, "reason": "not set"}}}
+    cfg = M.resolve_config(None, inv)
+    ok &= check("a model this worker does not have defaults to off, not to its own default",
+                cfg["toothseg-teeth"] == "off" and cfg["canal"] == "apply", str(cfg))
+    ok &= check("asking for a model that is not installed is REFUSED, not downgraded",
+                _raises(M.resolve_config, {"toothseg-teeth": "apply"}, inv,
+                        exc=M.ConfigRefused))
+    ok &= check("an unknown mode is refused",
+                _raises(M.resolve_config, {"canal": "sometimes"}, inv,
+                        exc=M.ConfigRefused))
+    ok &= check("an unknown model key is refused",
+                _raises(M.resolve_config, {"nope": "apply"}, inv, exc=M.ConfigRefused))
+    ok &= check("the base model cannot be turned off",
+                _raises(M.resolve_config, {"toothfairy3": "off"}, inv,
+                        exc=M.ConfigRefused))
+    ok &= check("the board runs the specialists in CATALOGUE order, not request order",
+                M.board_keys({"toothfairy3": "apply", "totalseg": "shadow",
+                              "canal": "apply", "toothseg-teeth": "shadow"})
+                == [("canal", "apply"), ("toothseg-teeth", "shadow"),
+                    ("totalseg", "shadow")])
+
+    # --- the edit penalty -------------------------------------------------------
+    edits = [{"fields": ["canal"], "quantisation_mm": 0.6}]
+    base = PS.STRUCTURE_PRIORS["canal"]["p95_mm"]
+    widened = PS.prior("canal", edits)
+    ok &= check("a hand correction widens the budget by HALF the display voxel",
+                abs(widened["p95_mm"] - (base + 0.30)) < 1e-9
+                and widened["model_p95_mm"] == base,
+                f"{base} -> {widened['p95_mm']}")
+    ok &= check("...and leaves every field it did not touch alone",
+                PS.prior("tooth", edits)["p95_mm"]
+                == PS.STRUCTURE_PRIORS["tooth"]["p95_mm"]
+                and "edit" not in PS.prior("tooth", edits))
+    ok &= check("the canal budget goes through budget_for, so an edited canal is widened",
+                PS.budget(6.0, edits)["inward_p95_mm"] == widened["p95_mm"],
+                f"{PS.budget(6.0, edits)['inward_p95_mm']} mm deducted")
+    ok &= check("a correction never suppresses the verdict",
+                PS.budget(6.0, edits)["headroom_mm"] > 0
+                and PS.budget(6.0, edits)["clearance_mm"] == 6.0)
+    # Non-vacuity: with no edits the two budgets must be identical, or the check above
+    # would pass for a penalty that is always applied.
+    ok &= check("with no correction the budget is unchanged",
+                PS.budget(6.0)["inward_p95_mm"] == base
+                and PS.edit_penalty("canal", []) is None)
     return ok
 
 
@@ -1513,6 +1667,64 @@ def pack_sampler_checks() -> bool:
 
 
 
+def pack_cache_checks() -> bool:
+    """A rebuilt pack must be REOPENED, not served from the cache it superseded.
+
+    `planning_cache` memoises one `Pack` per path and memory-maps its fields, which is
+    correct for as long as a finished job's files never change -- and a hand correction
+    rewrites exactly those files. Keyed on the path alone, `/measure` kept returning the
+    pre-edit distance field and the pre-edit `edits` list until the pod restarted, which
+    is the opposite of the feature: the point of applying a correction is that the
+    millimetres move.
+
+    Exercised against a real pack, because the failure is about mtimes and mmaps and a
+    synthetic one would not have either.
+    """
+    import os
+
+    from api import planning_cache as pc
+
+    ok = True
+    root = _any_results_dir()
+    if root is None:
+        return check("a stored case is available for the pack-cache check", True,
+                     "skipped: no processed case under data/tenants")
+    a = pc.get(root)
+    if a is None:
+        return check("a stored case has a measurement pack", True,
+                     "skipped: the case on disk has no pack")
+    ok &= check("the same pack is served twice from the cache", pc.get(root) is a)
+    hdr = root / "planning" / "pack" / "header.json"
+    before = hdr.stat().st_mtime_ns
+    os.utime(hdr, ns=(before + 1_000_000, before + 1_000_000))
+    try:
+        b = pc.get(root)
+        ok &= check("a rewritten header reopens the pack", b is not a,
+                    f"stamp {a.stamp} -> {b.stamp}")
+        ok &= check("...and the superseded pack was closed, not leaked",
+                    len(a.fields) == 0, f"{len(a.fields)} field(s) still mapped")
+        ok &= check("the reopened pack still has its fields", len(b.fields) > 0,
+                    f"{len(b.fields)} field(s)")
+    finally:
+        os.utime(hdr, ns=(before, before))
+    return ok
+
+
+def _any_results_dir():
+    """The first stored case that has a planning pack, or None."""
+    base = Path(__file__).resolve().parent.parent / "data" / "tenants"
+    if not base.is_dir():
+        return None
+    for tenant in sorted(base.iterdir()):
+        results = tenant / "results"
+        if not results.is_dir():
+            continue
+        for job in sorted(results.iterdir()):
+            if (job / "planning" / "pack" / "header.json").is_file():
+                return job
+    return None
+
+
 def rtstruct_checks() -> bool:
     """Does the DICOM export actually build, and does a failure stay visible.
 
@@ -1766,6 +1978,10 @@ def test_api_purity():
     assert api_purity_checks()
 
 
+def test_model_menu():
+    assert model_menu_checks()
+
+
 def test_safety_priors():
     assert safety_prior_checks()
 
@@ -1786,6 +2002,10 @@ def test_pack_sampler():
     assert pack_sampler_checks()
 
 
+def test_pack_cache():
+    assert pack_cache_checks()
+
+
 def test_rtstruct():
     assert rtstruct_checks()
 
@@ -1802,8 +2022,8 @@ def main() -> int:
     for fn in (orientation_checks, calibration_checks, crosswalk_checks,
                board_checks, roi_rule_checks, arch_checks,
                panoramic_pitch_checks, plan_geometry_checks,
-               foreign_model_checks, plan_metrics_checks,
-               pack_sampler_checks, rtstruct_checks,
+               foreign_model_checks, plan_metrics_checks, model_menu_checks,
+               pack_sampler_checks, pack_cache_checks, rtstruct_checks,
                volume_pack_checks, cc_filter_checks):
         print(f"\n--- {fn.__name__} ---")
         fn()
