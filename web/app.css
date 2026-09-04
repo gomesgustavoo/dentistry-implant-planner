@@ -1427,8 +1427,15 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 .contactme h3 { margin-top: 0; }
 .contactwho { margin: 0 0 .6rem; line-height: 1.4; }
 .contactlinks { list-style: none; margin: 0 0 .8rem; padding: 0; display: grid; gap: .35rem; }
-.contactlinks li { display: flex; gap: .5rem; align-items: baseline; font-size: 13px; }
-.contactlinks span { color: var(--muted); min-width: 4.5rem; }
+/* STACKED, label above value. Side by side, the label ate 72 px of a ~300 px column and
+   `gustavo.formento@rtmedical.com.br` still did not fit -- `overflow-wrap: anywhere`
+   then breaks mid-word because there is nowhere else to break. Stacking gives the value
+   the whole column, which is enough for the longest of the three at 13 px. */
+.contactlinks li { display: grid; gap: .05rem; font-size: 13px; }
+.contactlinks span {
+  color: var(--muted); font: 600 10.5px/1.6 var(--mono);
+  text-transform: uppercase; letter-spacing: .05em;
+}
 /* `overflow-wrap: anywhere`, not `word-break: break-all`: break-all splits mid-word at
    the first opportunity, so an address broke as "gustavo.formento@rtmedical.c om.br".
    `anywhere` only breaks when the line genuinely cannot fit. */
