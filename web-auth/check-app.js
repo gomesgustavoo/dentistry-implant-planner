@@ -44,8 +44,14 @@ const REQUIRED = [
   'accuracyById', 'accuracyCanal', 'diceCell',
   'toggleIsolate',
   // --- stages --------------------------------------------------------------
-  'setMode', 'selectPlane', 'setLayout', 'set3dMode',
+  // `selectPlane` went with the Slices tab. So did `draw`, `jumpTiles`, `loadContours`,
+  // `tileUrl`, `loadImage` and `planeInfo` -- the MPR panes show the same three planes
+  // from the same volume and cross-reference each other, so the tab was a second, worse
+  // way to do what the tab beside it already did.
+  'setMode', 'setLayout', 'set3dMode',
   'mountVolume', 'afterLayoutChange',
+  // --- the right dock: tools, and the structures they write into -----------
+  'toggleDock', 'wireDock', 'renderEditBudget', 'budgetFieldFor', 'editGridSpacing',
   // --- the implant-planning tab -------------------------------------------
   'planState', 'archUrl', 'xsUrl', 'panUrl', 'loadArch', 'selectJaw',
   'drawPanoramic', 'drawArcMarker', 'selectXs', 'wirePlan',
@@ -98,7 +104,9 @@ const REQUIRED = [
   'api', 'authed', 'cachedFetch', 'navigate', 'setNotice', 'boot',
   // Artifact pictures travel through the bearer-authenticated path. An <img> cannot
   // carry a token, and these three are what stops that being rediscovered.
-  'loadAuthedImage', 'revokeImage', 'isDrawable', 'loadImage',
+  // (`loadImage` was the Slices tab's tile cache and went with it; the plan tab's
+  // pictures come through `loadAuthedImage`, which is the one that matters here.)
+  'loadAuthedImage', 'revokeImage', 'isDrawable',
 ];
 
 const declared = new Set(

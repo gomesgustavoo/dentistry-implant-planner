@@ -1,11 +1,17 @@
-"""Server-rendered slice tiles: the Slices tab.
+"""The display window, and the per-plane geometry manifest.
 
-JPEG rather than the raw volume because this is the DISPLAY view -- it is paired
-with the vector overlay from `worker/contours.py`, and between them they give a
-crisp picture at any zoom for a few hundred kilobytes.
+THE TILES ARE GONE. This module used to render 260 JPEG slices per plane -- ~8 MB of
+every case -- for the Slices tab. That tab is retired: the MPR panes show the same three
+planes from the same volume, scrub with the same wheel, carry the same outlines, and
+cross-reference each other, so it was a second and worse way to do what the tab beside
+it already did. Nothing reads the tiles or `preview/contours.<plane>.json` any more.
 
-The row-orientation table is imported from `contours.py` and never restated. See
-that module for what happened when it was duplicated.
+What survives is what other things depend on and would have to be rebuilt somewhere
+else: the dental WINDOW (`volume_pack` and `rtstruct` both take it from here) and the
+per-plane size / spacing manifest. Both are cheap and neither writes a file.
+
+The row-orientation table is imported from `contours.py` and never restated. See that
+module for what happened when it was duplicated.
 """
 from __future__ import annotations
 
@@ -13,21 +19,10 @@ from pathlib import Path
 
 import numpy as np
 
-from worker.contours import PLANE_FLIP_ROWS
-
-# How many slices each plane's tile strip samples. The pre-deletion service shipped
-# 160 and the 2026-09-01 reconstruction came back with 260; both are defensible and
-# the difference is 62% more tiles, so it is recorded here as a decision rather than
-# left as a drift. 260 stays: on a 0.3 mm scan of ~360 slices it samples every
-# ~0.42 mm instead of every ~0.68 mm, which is what the tile view is for, and it
-# costs ~8 MB of an ~89 MB case. Nothing measurable happens on these tiles -- every
-# millimetre a clinician acts on is measured in the plan tab against the published
-# `pixel_mm` -- so this is a browsing setting, not a precision one.
-#
-# `count` and `total_slices` are both published, so no client should ever hard-code
-# either number.
+# Retained so `count` and `source_indices` keep meaning the same thing they did when
+# tiles existed: any consumer that sampled a plane sampled it at this stride. Nothing
+# writes an image any more, so it costs nothing.
 MAX_SLICES_PER_PLANE = 260
-JPEG_QUALITY = 82
 
 # Bone/dental window: wide enough to keep enamel, cortical bone and the canal
 # distinguishable in one image.
@@ -51,12 +46,6 @@ def _window(vol: np.ndarray) -> tuple[float, float]:
     return DEFAULT_WINDOW
 
 
-def _to_u8(sl: np.ndarray, width: float, level: float) -> np.ndarray:
-    lo = level - width / 2
-    out = (sl.astype(np.float32) - lo) / max(width, 1e-6)
-    return (np.clip(out, 0.0, 1.0) * 255).astype(np.uint8)
-
-
 def _indices(n: int) -> list[int]:
     if n <= MAX_SLICES_PER_PLANE:
         return list(range(n))
@@ -64,16 +53,18 @@ def _indices(n: int) -> list[int]:
 
 
 def render(volume: np.ndarray, merged: np.ndarray, spacing_zyx, out_dir: Path) -> dict:
-    """`volume` and `merged` are (z, y, x). Returns a manifest for the UI."""
-    from PIL import Image
+    """`volume` and `merged` are (z, y, x). Returns the window and plane geometry.
 
+    `out_dir` and `merged` are kept in the signature although neither is written or read
+    any more: three callers pass them, `rederive.py` among them, and a signature change
+    here would be a second edit in a second file for no behavioural gain. They are
+    unused ON PURPOSE rather than by accident, which is why this says so.
+    """
     width, level = _window(volume)
     manifest: dict = {"window": {"width": round(width, 1), "level": round(level, 1)},
                       "planes": {}}
 
     for plane in PLANES:
-        pdir = out_dir / plane
-        pdir.mkdir(parents=True, exist_ok=True)
         if plane == "axial":
             n, take, px = volume.shape[0], (lambda i: volume[i]), (spacing_zyx[1], spacing_zyx[2])
             dims = (volume.shape[1], volume.shape[2])
@@ -85,18 +76,8 @@ def render(volume: np.ndarray, merged: np.ndarray, spacing_zyx, out_dir: Path) -
             dims = (volume.shape[0], volume.shape[1])
 
         idx = _indices(n)
-        for out_i, src_i in enumerate(idx):
-            grey = take(src_i)
-            if PLANE_FLIP_ROWS[plane]:
-                grey = grey[::-1]
-            Image.fromarray(_to_u8(grey, width, level)).save(
-                pdir / f"{out_i:04d}.jpg", quality=JPEG_QUALITY, optimize=True)
-
-        # `total_slices` and `size` were both dropped by the 2026-09-01 reconstruction.
-        # `web/app.js` reads `info.total_slices` for the slice counter, so without it the
-        # label renders "axial 137 / undefined". `size` is [rows, cols] of the 2-D slice
-        # -- the SAME axis order as `pixel_mm`, which is (row_mm, col_mm) and is unpacked
-        # that way by `contours.export`. `count` is how many were sampled;
+        # `size` is [rows, cols] of the 2-D slice -- the SAME axis order as `pixel_mm`,
+        # which is (row_mm, col_mm). `count` is how many a sampler would take;
         # `total_slices` is how many exist.
         manifest["planes"][plane] = {
             "size": [int(dims[0]), int(dims[1])],

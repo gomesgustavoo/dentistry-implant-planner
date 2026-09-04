@@ -1246,15 +1246,18 @@ function renderEditBar() {
   if (note) {
     // The standing statement, and it is the most important text in this bar.
     note.innerHTML = e.notice ? esc(e.notice)
-      : n ? 'These strokes change the slice views only. The 3-D surfaces, the '
+      : n ? 'These strokes change the MPR panes only. The 3-D surfaces, the '
             + 'cross-sections and every clearance still describe the segmentation '
             + '<b>before</b> your corrections — they are rebuilt on the server when '
             + 'you apply. Corrections are made on the '
             + `${editGridMm()} display grid and upsampled to the measurement grid, so an `
             + 'edited boundary carries that much extra uncertainty.'
-      : 'Paint or erase on the slice views. Nothing is sent until you apply.';
+      : 'Paint or erase on the MPR panes. Nothing is sent until you apply.';
     note.className = 'editnote' + (e.notice ? ' bad' : '');
   }
+  // The budget of whatever the picker is pointing at, refreshed with the bar so it
+  // tracks the structure rather than lagging one selection behind.
+  renderEditBudget();
 }
 
 /** The display grid's voxel size, in words. The number the error budget will widen by
@@ -1263,6 +1266,107 @@ function editGridMm() {
   const m = (state.viewer && state.viewer.volumeMeta) || null;
   const sp = m && m.spacing ? Math.min(...m.spacing.map(Number)) : null;
   return sp ? `${sp.toFixed(2)} mm` : 'coarser';
+}
+
+/** The display grid's voxel size as a NUMBER, or null when the pack has not landed. */
+function editGridSpacing() {
+  const m = (state.viewer && state.viewer.volumeMeta) || null;
+  const sp = m && m.spacing ? Math.min(...m.spacing.map(Number)) : null;
+  return Number.isFinite(sp) && sp > 0 ? sp : null;
+}
+
+/** Which measured prior a structure's boundary feeds, mirroring `plan_safety`'s three
+ *  fields. Returns null for a structure no implant clearance is measured against --
+ *  and saying "no measured prior" is the honest answer there, not borrowing one. */
+function budgetFieldFor(id) {
+  if (id === 'canal') return 'canal';
+  if (id === 'incisive_canal_left' || id === 'incisive_canal_right'
+      || id === 'lingual_canal') return 'accessory_canal';
+  if (/^tooth_\d+$/.test(id)) return 'tooth';
+  return null;
+}
+
+/** THE ERROR BUDGET OF THE STRUCTURE THE BRUSH IS ABOUT TO WRITE INTO.
+ *
+ *  This app's whole claim is that it says how wrong it might be, and the one place that
+ *  claim was missing was the moment it matters most: a person about to redraw a boundary
+ *  by hand. The arithmetic existed -- `plan_safety.edit_penalty` computes it and the
+ *  applied result prints it -- but only AFTER the correction was made and recomputed.
+ *  A correction is a decision; the number belongs in front of the person making it.
+ *
+ *  It is deliberately NOT a warning. A hand-drawn contour is often better than the
+ *  model's. It is simply not automatically better, and the budget widens either way,
+ *  because the mask a browser can edit is the downsampled display copy and half a
+ *  display voxel of quantisation is real whichever direction the hand moved the wall. */
+function renderEditBudget() {
+  const box = $('editBudget');
+  if (!box) return;
+  const e = editState();
+  const v = state.viewer;
+  if (!e || !v) { box.innerHTML = ''; return; }
+  const st = (allStructures() || []).find((x) => x.index === e.segment);
+  if (!st || !e.segment) {                       // background, or nothing selected
+    box.innerHTML = '';
+    return;
+  }
+  const sp = editGridSpacing();
+  if (!sp) { box.innerHTML = ''; return; }
+  const add = sp / 2;
+  const field = budgetFieldFor(st.id);
+  if (!field) {
+    // No implant clearance is measured against this structure, so there is no budget to
+    // widen -- and inventing one would be worse than saying so.
+    box.innerHTML = `Correcting <b>${esc(st.name)}</b> quantises its boundary at half a
+      ${esc(editGridMm())} display voxel &mdash; <b>${add.toFixed(2)} mm</b>. No implant
+      clearance is measured against this structure.`;
+    return;
+  }
+  const prior = MODEL_PRIORS && MODEL_PRIORS.structures
+    ? MODEL_PRIORS.structures[field] : null;
+  if (!prior) {
+    // The priors have not landed (or the endpoint failed). Say the half that IS known
+    // rather than the whole of it wrongly -- printing "no clearance is measured against
+    // this" for the mandibular canal would be a false statement about the one structure
+    // the implant verdicts depend on most.
+    box.innerHTML = `Correcting <b>${esc(st.name)}</b> quantises its boundary at half a
+      ${esc(editGridMm())} display voxel &mdash; <b>${add.toFixed(2)} mm</b>, on top of
+      the model's own error for this structure.`;
+    // Fetch them, then say the whole thing. `renderModelPriors` owns the cache.
+    renderModelPriors().then(() => {
+      const e2 = editState();
+      if (e2 && e2.on && e2.segment === st.index) renderEditBudget();
+    }).catch(() => {});
+    return;
+  }
+  box.innerHTML = `Correcting <b>${esc(st.name)}</b> widens its error budget:
+    <b>${prior.p95_mm.toFixed(2)} mm</b> model
+    + <b>${add.toFixed(2)} mm</b> grid
+    = <b>${(prior.p95_mm + add).toFixed(2)} mm</b> deducted from every clearance
+    measured against it.`;
+}
+
+/** The dock: the structure filter, and the tools' own close button. */
+function wireDock() {
+  const f = $('structFilter');
+  if (f) {
+    f.oninput = () => {
+      if (!state.viewer) return;
+      state.viewer.structQuery = f.value;
+      renderStructures(state.viewer.report);
+    };
+    // Esc clears rather than blurring, because a filter left on is a list that looks
+    // like a case with fewer structures than it has.
+    f.onkeydown = (ev) => {
+      if (ev.key !== 'Escape') return;
+      ev.stopPropagation();                 // do NOT let this close the case
+      f.value = '';
+      if (!state.viewer) return;
+      state.viewer.structQuery = '';
+      renderStructures(state.viewer.report);
+    };
+  }
+  const close = $('editClose');
+  if (close) close.onclick = () => setEditMode(false);
 }
 
 function wireEditing() {
@@ -1900,7 +2004,6 @@ function teardownCase() {
   // one pins its bytes until the document goes away. The tile cache alone holds 400.
   const v = state.viewer;
   if (v) {
-    (v.imgCache || new Map()).forEach((entry) => Promise.resolve(entry).then(revokeImage, () => {}));
     if (v.plan) { revokeImage(v.plan.panImage); revokeImage(v.plan.xsImage); }
   }
   state.viewer = null;
@@ -1945,16 +2048,19 @@ async function openCase(jobId, opts) {
 
   const r = job.reports || {};
   state.viewer = {
-    jobId, job, report: r, plane: 'axial', index: 0,
-    hidden: new Set(), isolated: null, centroids: null,
-    contours: {}, contourPending: {}, contoursFailed: false,
-    imgCache: new Map(), mode: 'volume', mprMounted: false, volumeMeta: null,
+    jobId, job, report: r,
+    hidden: new Set(), isolated: null, centroids: null, structQuery: '',
+    mode: 'volume', mprMounted: false, volumeMeta: null,
   };
   if (window.DentistryViewer) await DentistryViewer.unmount().catch(() => {});
 
   $('caseTitle').textContent = job.title || job.filename;
   $('caseSub').textContent = caseSubtitle(state.viewer);
   $('railToggle').hidden = false;
+  $('dockToggle').hidden = false;
+  // A filter is per-case; carrying one across cases would open the next scan already
+  // hiding structures, with the reason two navigations back.
+  { const f = $('structFilter'); if (f) f.value = ''; }
   // Locks the page to the window so the panes fill it instead of running off the
   // bottom. Only with a case open -- the catalogue has to keep scrolling.
   document.body.classList.add('in-case');
@@ -1977,7 +2083,6 @@ async function openCase(jobId, opts) {
   setLayout(layout.kind, layout.pane);
   set3dMode('surfaces', true);
   setMode('volume');
-  selectPlane('axial');
   await mountVolume();
 }
 
@@ -1989,9 +2094,6 @@ const VIEW_NOTES = {
         + 'Double-click a pane to enlarge it. <kbd>1</kbd>\u2013<kbd>4</kbd> focus a pane '
         + '\u00b7 <kbd>0</kbd> grid \u00b7 <kbd>f</kbd> solo \u00b7 <kbd>[</kbd> panel '
         + '\u00b7 <kbd>d</kbd> this menu \u00b7 <kbd>Esc</kbd> close the case.',
-  slices: '<b>Smoothed for display</b> \u2014 the same 0.4 mm smoothed geometry as the STL '
-        + 'and RTSTRUCT downloads, drawn as curves.<br><kbd>\u2190</kbd> <kbd>\u2192</kbd> '
-        + 'scrub \u00b7 <kbd>[</kbd> panel \u00b7 <kbd>Esc</kbd> close the case.',
   plan: '<b>Reconstructed along the dental arch</b> \u2014 a panoramic through a 12 mm '
       + 'focal trough, and the cross-section perpendicular to the arch at one position. '
       + 'Both are rendered from the full-resolution scan on the server, so the '
@@ -2007,7 +2109,6 @@ function setMode(mode) {
   const volume = mode === 'volume';
   const plan = mode === 'plan';
   document.querySelectorAll('.mode').forEach((b) => b.classList.toggle('on', b.dataset.mode === mode));
-  $('sliceStage').hidden = volume || plan;
   $('mprStage').hidden = !volume;
   $('planStage').hidden = !plan;
   // What used to be a paragraph of prose permanently under the image. Same text,
@@ -2048,19 +2149,10 @@ function setMode(mode) {
     loadArch();
     return;
   }
-  // Coming back from the Slices tab, the MPR panes have been `display:none` and are
+  // Coming back from the plan tab, the MPR panes have been `display:none` and are
   // therefore zero-sized; Cornerstone still holds the canvas dimensions from before
   // and will not notice on its own.
   if (volume) afterLayoutChange();
-  // Warm the plane in view first, then quietly fetch the other two so switching
-  // plane does not pay the transfer again. Order matters: the visible plane must not
-  // queue behind the other two.
-  if (!volume) {
-    loadContours().then(() => {
-      const planes = (state.viewer && state.viewer.report.preview || {}).planes || {};
-      Object.keys(planes).forEach((p) => loadContours(p));
-    });
-  }
 }
 
 /** Load the volume pack and mount all four panes. */
@@ -2329,17 +2421,16 @@ function siteTitle(fdi, label, has) {
 
 /** Isolate one structure everywhere, and navigate every view to it.
  *
- * Both halves are load-bearing. Isolating without navigating is what this used to
- * do, and in the slice view it was indistinguishable from broken: measured on a
- * 29-tooth case, clicking a tooth moved the slice **0 times out of 29** and left
- * **28 of 29** showing no overlay at all, because the tooth simply was not on
- * whatever slice happened to be open. Only `jumpTo` existed, and that drives the
- * MPR cameras -- nothing ever touched the tile index. */
+ * Both halves are load-bearing. Isolating without navigating is what this used to do,
+ * and it was indistinguishable from broken: measured on a 29-tooth case in the old
+ * Slices tab, clicking a tooth moved the slice **0 times out of 29** and left **28 of
+ * 29** showing no overlay at all, because the tooth simply was not on whatever slice
+ * happened to be open. The lesson outlived that tab -- every view this isolates in has
+ * to be navigated to the structure, or the isolate reads as a failure. */
 async function toggleIsolate(index) {
   const v = state.viewer;
   if (!v) return;
   const all = [...presentIndices()];
-  let jump = null;
   if (v.isolated === index) {
     v.isolated = null;
     v.hidden.clear();
@@ -2351,7 +2442,6 @@ async function toggleIsolate(index) {
     // The 3D camera is aimed further down, AFTER pushVisibility: it frames whatever is
     // visible, so aiming it while the rest of the arch is still shown would frame the
     // arch and leave the tooth a speck.
-    jump = () => jumpTiles(index, c);
   }
   $('isolateClear').hidden = v.isolated == null;
   pushVisibility(all);
@@ -2363,8 +2453,6 @@ async function toggleIsolate(index) {
   }
   renderStructures(v.report);
   renderArch(v.report);
-  // After pushVisibility, so the redraw already knows what is hidden.
-  if (jump && v.mode === 'slices') await jump();
 }
 
 /** Point the MPR cameras at whatever is currently isolated, if anything.
@@ -2381,19 +2469,6 @@ function syncMprToIsolate() {
   if (!c) return false;
   focus3d(v.isolated, c);
   return DentistryViewer.jumpTo(c);
-}
-
-/** The slice view's half of the same job `syncMprToIsolate` does for the MPR panes.
- *
- * `toggleIsolate` only scrubs the tiles when the slice view is the one on screen, so
- * isolating a tooth in the MPR tab and then switching to Slices left the tiles wherever
- * they were -- the exact asymmetry that was fixed in the other direction last round,
- * still present in this one. Now both tabs replay the jump when they become visible.
- */
-async function syncSlicesToIsolate() {
-  const v = state.viewer;
-  if (!v || v.isolated == null) return false;
-  return jumpTiles(v.isolated, v.centroids && v.centroids[v.isolated]);
 }
 
 /** Point the 3D camera at the isolated structure, from the buccal side.
@@ -2419,12 +2494,12 @@ function focus3d(index, centroid) {
  *
  * Keeping two copies of this is how `hide all` once redrew the tiles correctly and
  * silently did nothing to the Cornerstone labelmap. Keyed by structure INDEX, never
- * by colour: colour looked like a convenient key because the tile overlay filters
+ * by colour: colour looked like a convenient key because the tile overlay filtered
  * by RGB, but it is not unique -- the two "unnumbered teeth" classes shared a grey,
- * and a colour->index lookup returns only the first match.
+ * and a colour->index lookup returns only the first match. The tile overlay is gone
+ * with the Slices tab; the rule it taught is not.
  */
 function pushVisibility(indices) {
-  draw();
   const v = state.viewer;
   if (!v || !v.mprMounted || !window.DentistryViewer) return;
   indices.forEach((idx) => DentistryViewer.setStructureVisible(idx, !v.hidden.has(idx)));
@@ -3166,8 +3241,22 @@ function renderStructures(r) {
   // the base model is the default and saying so 47 times is noise.
   const prov = r.provenance || {};
   let anyProv = false;
+  // The filter. 32 of the 47 structures are teeth, so an unfiltered list buries the
+  // fifteen a planner actually reads -- both jaws, the four canals, the sinuses, the
+  // airway -- under a full dentition. Matches the display name, the group name and the
+  // FDI number, because those are the three things a reader has in mind.
+  const q = ((v && v.structQuery) || '').trim().toLowerCase();
+  const matches = (g, st) => !q
+    || st.name.toLowerCase().includes(q)
+    || g.group.toLowerCase().includes(q)
+    || (st.fdi != null && String(st.fdi).includes(q))
+    || st.id.toLowerCase().includes(q);
+  let shown = 0, total = 0;
   const html = groups.map((g) => {
-    const rows = g.structures.filter((s) => vols[s.id] != null).map((s) => {
+    const present = g.structures.filter((s) => vols[s.id] != null);
+    total += present.length;
+    const rows = present.filter((s) => matches(g, s)).map((s) => {
+      shown += 1;
       const cls = ['srow'];
       if (v && v.hidden.has(s.index)) cls.push('off');
       if (v && v.isolated === s.index) cls.push('sel');
@@ -3195,7 +3284,13 @@ function renderStructures(r) {
         ${stl}
       </div>`;
     }).join('');
-    return rows ? `<div class="sgroup"><h4>${esc(g.group)}</h4>
+    // The count is the group's PRESENT total, not the filtered one: a heading that
+    // read "Upper teeth 2" while a filter was on would look like a case with two upper
+    // teeth. It says how many the filter is showing only when it is hiding some.
+    const n = present.length;
+    const drawn = present.filter((s) => matches(g, s)).length;
+    const count = q && drawn !== n ? `${drawn} of ${n}` : String(n);
+    return rows ? `<div class="sgroup"><h4>${esc(g.group)}<span class="gcount">${count}</span></h4>
       <div class="slist${acc ? ' with-dice' : ''}">${rows}</div></div>` : '';
   }).join('');
   const el = $('structures');
@@ -3211,8 +3306,24 @@ function renderStructures(r) {
     ? `<p class="hint fovnote">\u2022 Drawn by a specialist model rather than the base
        one &mdash; hover for which. Everything unmarked came from
        ${esc((models[0] || {}).name || 'the base model')}.</p>` : '';
-  el.innerHTML = (html + footnote + accnote + provnote)
-    || '<p class="empty">No structures found.</p>';
+  // A filter that hides rows says so. A list that silently omits the structure the
+  // reader is hunting for reads as a structure the model missed, which is the one
+  // wrong conclusion this panel must never invite.
+  const filternote = q && shown < total
+    ? `<p class="strempty">${shown} of ${total} shown &mdash;
+       <button class="link" id="structFilterClear" type="button">clear the filter</button></p>`
+    : '';
+  el.innerHTML = q && shown === 0
+    ? `<p class="strempty">Nothing matches &ldquo;${esc(q)}&rdquo;.
+       <button class="link" id="structFilterClear" type="button">Clear the filter</button></p>`
+    : ((html + filternote + footnote + accnote + provnote)
+       || '<p class="empty">No structures found.</p>');
+  const clr = $('structFilterClear');
+  if (clr) clr.onclick = () => {
+    state.viewer.structQuery = '';
+    $('structFilter').value = '';
+    renderStructures(r);
+  };
 
   // The row used to do exactly one thing -- toggle visibility -- so a reader who
   // clicked "Mandibular canal" expecting to be taken there got it switched off
@@ -3307,31 +3418,6 @@ function renderDownloads(jobId, r) {
         (${mesh.structures} meshes, smoothed and decimated).</p>` : '');
 }
 
-/* ------------------------------------------------------------- tile view */
-function planeInfo() {
-  const p = state.viewer.report.preview;
-  return p && p.planes ? p.planes[state.viewer.plane] : null;
-}
-
-async function selectPlane(plane) {
-  const v = state.viewer;
-  v.plane = plane;
-  document.querySelectorAll('.plane').forEach((b) => b.classList.toggle('on', b.dataset.plane === plane));
-  const info = planeInfo();
-  const slider = $('slice');
-  if (!info) { $('stageEmpty').textContent = 'no preview for this job'; return; }
-  slider.max = String(info.count - 1);
-  slider.value = String(Math.floor(info.count / 2));
-  v.index = Number(slider.value);
-  // A tooth isolated in the axial view is not on the middle coronal slice, so
-  // changing plane has to re-find it rather than drop the user on empty anatomy.
-  if (v.isolated != null) {
-    const c = v.centroids && v.centroids[v.isolated];
-    if (await jumpTiles(v.isolated, c)) return;
-  }
-  await draw();
-}
-
 /* The implant-planning views.
  *
  * Two pictures, both rendered server-side from the FULL-RESOLUTION grid and both
@@ -3372,7 +3458,7 @@ function panUrl(jaw) {
 
 /** Backing-store multiple for the two plan canvases.
  *
- *  Same argument as `TILE_RENDER_SCALE` next door, which was never applied here: the
+ *  Same argument as the retired Slices tab's 2x render scale, never applied here: the
  *  server JPEG is 480 px across, the pane is 270-370 CSS px, and on a DPR-2 display
  *  that is 540-740 device pixels. Drawing the implant outline, the rulers and the arc
  *  marker into a 480 px buffer threw away half the resolution of the one surface the
@@ -3492,7 +3578,7 @@ function planCtx(cv, img, aspectX, crop) {
   // had always been doing; nobody could see it because the panoramic was 401ing. The
   // cross-section is near-isotropic (0.150442 vs 0.150628) and passes ax = 1.
   //
-  // Same remedy as `TILE_RENDER_SCALE` next door, and the same rule as the DPR scale:
+  // Same remedy as the retired Slices tab's 2x render scale, same rule as the DPR scale:
   // the backing store carries the correction, the canvas COORDINATE SYSTEM stays in
   // image pixels, and the two factors are recorded on the element so `planSize` and
   // `canvasPoint` can divide them back out. Nothing downstream has to know.
@@ -4711,7 +4797,7 @@ function refreshPlanFocus() {
 /** Paint this section's outlines, in IMAGE pixels.
  *
  *  `sx = sy = 1` because `planCtx` has already put the context in image pixels -- the
- *  tile view passes `TILE_RENDER_SCALE` because its context is in backing-store pixels.
+ *  the retired tile view passed a 2x scale because its context was in backing-store px.
  *  Outline-only by default (fill 0): a fill hides the greyscale the outline is there to
  *  be checked against, which is the opposite of the point.
  */
@@ -6571,12 +6657,6 @@ function wirePlan() {
   wirePanPane();
 }
 
-function tileUrl(i) {
-  const v = state.viewer;
-  const n = String(i).padStart(4, '0');
-  return `${API}/jobs/${v.jobId}/files/preview/${v.plane}/${n}.jpg`;
-}
-
 /* The segmentation overlay is vector, not raster.
  *
  * `preview/contours.json` holds simplified polygons per plane, per sampled slice,
@@ -6595,7 +6675,7 @@ function tileUrl(i) {
  *  `slice` is `{structureIndex: [ring, ...]}` with rings in `[row, col]` of the picture
  *  the overlay belongs to; `sx`/`sy` scale those into whatever units the context is in.
  *  That is the whole difference between the two callers: the tile context is in BACKING
- *  STORE pixels so it passes `TILE_RENDER_SCALE`, and `planCtx` has already put the plan
+ *  STORE pixels so it passed a 2x scale, and `planCtx` has already put the plan
  *  canvas in IMAGE pixels so it passes 1. Getting that backwards puts every contour at
  *  2x and off the picture, which would read as a data bug rather than a units bug --
  *  hence one function with the scale as an argument rather than two copies.
@@ -6647,70 +6727,6 @@ function drawContourSlice(ctx, slice, opts) {
   return paths.length;
 }
 
-async function loadContours(plane) {
-  const v = state.viewer;
-  const key = plane || v.plane;
-  if (v.contours[key] !== undefined) return v.contours[key];
-  // Cache the in-flight promise, not just the result: switching plane twice quickly
-  // would otherwise fetch the same file twice.
-  if (!v.contourPending[key]) {
-    v.contourPending[key] = (async () => {
-      try {
-        const r = await cachedFetch(`${API}/jobs/${v.jobId}/files/preview/contours.${key}.json`);
-        v.contours[key] = await r.json();
-      } catch (e) {
-        v.contours[key] = null;
-        v.contoursFailed = true;
-        console.warn(`dentistry: contours unavailable for ${key}:`, e.message);
-      }
-      return v.contours[key];
-    })();
-  }
-  return v.contourPending[key];
-}
-
-function loadImage(url) {
-  const cache = state.viewer.imgCache;
-  if (cache.has(url)) return cache.get(url);
-  const p = loadAuthedImage(url);
-  // A rejected entry must not be cached, or one network blip poisons that tile for the
-  // lifetime of the case.
-  p.catch(() => { if (cache.get(url) === p) cache.delete(url); });
-  cache.set(url, p);
-  if (cache.size > 400) {
-    const oldest = cache.keys().next().value;
-    const evicted = cache.get(oldest);
-    cache.delete(oldest);
-    // These are blob URLs now, and an un-revoked one pins its bytes until the document
-    // goes away. 400 tiles is tens of megabytes to leak per case.
-    Promise.resolve(evicted).then(revokeImage, () => {});
-  }
-  return p;
-}
-
-let drawToken = 0;
-
-// The canvas is rendered at this multiple of the tile's pixel grid. The tiles are
-// 360 px across on a typical case and the pane is 600-900, so drawing at 1x threw
-// away the whole point of shipping vectors -- the curves were upscaled by CSS along
-// with the JPEG. 2x puts the polygons at or above display resolution while keeping
-// the grey upscale identical to what the browser was doing anyway.
-const TILE_RENDER_SCALE = 2;
-
-/* What each edge of a rendered tile is, per plane.
- *
- * Left/right encode the radiological convention applied below (patient's right on the
- * viewer's left); top/bottom describe the tile as the worker writes it -- the canonical
- * frame is RPI, so a coronal or sagittal cut comes out superior-first and an axial cut
- * anterior-first, and worker/preview.py no longer flips any of them.
- *
- * Sagittal has no laterality in-plane, which is why it alone is not mirrored. */
-const EDGE_LABELS = {
-  axial:    { left: 'R', right: 'L', top: 'A', bottom: 'P' },
-  coronal:  { left: 'R', right: 'L', top: 'S', bottom: 'I' },
-  sagittal: { left: 'A', right: 'P', top: 'S', bottom: 'I' },
-};
-
 /** Fill alpha and outline width, as the two sliders currently read. */
 function overlayStyle() {
   return {
@@ -6719,158 +6735,8 @@ function overlayStyle() {
   };
 }
 
-async function draw() {
-  const v = state.viewer;
-  if (!v || v.mode !== 'slices') return;
-  const info = planeInfo();
-  if (!info) return;
-  const token = ++drawToken;
-
-  const plane = v.plane;
-  let grey, planeContours;
-  try {
-    [grey, planeContours] = await Promise.all([loadImage(tileUrl(v.index)), loadContours(plane)]);
-  } catch (e) { $('stageEmpty').textContent = 'slice unavailable'; return; }
-  if (plane !== v.plane) return;      // the user switched plane while this was in flight
-  if (token !== drawToken) return;
-
-  const canvas = $('canvas'), ctx = canvas.getContext('2d');
-  // Non-cubic voxels are common in CBCT; scale the drawn height so anatomy is not
-  // silently stretched. pixel_mm is [row, col] in millimetres.
-  const [rowMm, colMm] = info.pixel_mm || [1, 1];
-  const tileW = grey.naturalWidth, tileH = grey.naturalHeight;
-  canvas.width = Math.round(tileW * TILE_RENDER_SCALE);
-  canvas.height = Math.max(1, Math.round(tileH * (rowMm / colMm) * TILE_RENDER_SCALE));
-  const sx = canvas.width / tileW, sy = canvas.height / tileH;
-
-  ctx.imageSmoothingQuality = 'high';
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Radiological convention: the patient's RIGHT goes on the viewer's LEFT.
-  //
-  // The tiles are a faithful rendering of the canonical grid, and canonical is RPI
-  // -- column index increases toward the patient's Right -- so drawn straight they
-  // put the patient's right on the viewer's RIGHT. That was measured, not assumed:
-  // isolating single teeth and taking the horizontal centroid of the overlay gave
-  // patient-left molars (27/36/37) at 0.36-0.49 and patient-right molars (17/46/47)
-  // at 0.61-0.63 of the canvas width. The MPR panes and the dental chart both use
-  // the radiological convention -- FDI 16 (right) at 0.499 against FDI 26 (left) at
-  // 0.632 on the same MPR slice -- so the tiles were the mirror image of every other
-  // view in the app, including the chart that drives them. In a tool whose entire
-  // orientation pipeline exists to stop teeth being numbered on the wrong side, two
-  // views disagreeing about which side is which is not a cosmetic problem.
-  //
-  // Applied here rather than in the worker so it needs no re-render of any existing
-  // case, and so the stored tile stays an honest picture of the stored grid.
-  // Sagittal is left alone: its horizontal axis is anterior-posterior, so there is
-  // no laterality in it to get wrong.
-  const mirrored = plane !== 'sagittal';
-  if (mirrored) { ctx.translate(canvas.width, 0); ctx.scale(-1, 1); }
-  ctx.drawImage(grey, 0, 0, canvas.width, canvas.height);
-
-  const { fill, outline } = overlayStyle();
-  drawContourSlice(ctx, planeContours && planeContours[String(v.index)],
-                   { sx, sy, fill, outline: outline * TILE_RENDER_SCALE });
-
-  // Orientation markers on all FOUR edges, so which way is which is never a question
-  // the user has to reason about. Drawn after the transform is cleared so the letters
-  // are not mirrored.
-  //
-  // All four, not just left and right, because the missing pair is what hid a real
-  // bug: the coronal and sagittal tiles were vertically inverted -- mandible above
-  // maxilla, maxillary roots pointing down -- through three review passes, and nothing
-  // on the canvas named the superior-inferior axis for anyone to notice it against.
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
-  const edge = EDGE_LABELS[plane];
-  const pad = 6 * TILE_RENDER_SCALE;
-  ctx.font = `${Math.round(13 * TILE_RENDER_SCALE)}px ui-monospace, monospace`;
-  ctx.fillStyle = 'rgba(255,255,255,.72)';
-  ctx.textBaseline = 'middle';
-  ctx.textAlign = 'left';
-  ctx.fillText(edge.left, pad, canvas.height / 2);
-  ctx.textAlign = 'right';
-  ctx.fillText(edge.right, canvas.width - pad, canvas.height / 2);
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'top';
-  ctx.fillText(edge.top, canvas.width / 2, pad);
-  ctx.textBaseline = 'bottom';
-  ctx.fillText(edge.bottom, canvas.width / 2, canvas.height - pad);
-
-  $('stageEmpty').textContent = v.contoursFailed ? 'overlay unavailable for this job' : '';
-  const src = (info.source_indices || [])[v.index];
-  $('sliceLabel').textContent = `${v.plane} ${src ?? v.index} / ${info.total_slices}`;
-  [v.index - 1, v.index + 1].forEach((i) => {
-    if (i >= 0 && i < info.count) loadImage(tileUrl(i));
-  });
-}
-
-/** Which sampled tile index of `plane` is nearest a world point, or -1.
- *
- * The tiles sample a SUBSET of the slices -- `count` of `total_slices`, both
- * published in the manifest -- so the answer is the nearest SAMPLED
- * slice, not the exact one. Goes world -> voxel index through the inverse of the
- * same affine the volume pack publishes, then picks the closest entry in
- * `source_indices`. */
-function tileIndexForPoint(plane, point) {
-  const v = state.viewer;
-  const meta = v.volumeMeta;
-  const info = v.report.preview && v.report.preview.planes[plane];
-  if (!meta || !info || !point) return -1;
-  const o = meta.origin, d = meta.direction, sp = meta.spacing;
-  const rel = [point[0] - o[0], point[1] - o[1], point[2] - o[2]];
-  // direction is row-major with columns along the index axes, and orthonormal for
-  // every scan this pipeline accepts (orient.py refuses a genuine oblique), so the
-  // inverse is the transpose.
-  const idx = [0, 1, 2].map((k) =>
-    (d[k] * rel[0] + d[3 + k] * rel[1] + d[6 + k] * rel[2]) / sp[k]);
-  // meta is x,y,z on the DISPLAY grid; the tiles are on the full canonical grid.
-  const factor = meta.downsample_factor || 1;
-  const zyx = [idx[2] * factor, idx[1] * factor, idx[0] * factor];
-  const axis = plane === 'axial' ? 0 : plane === 'coronal' ? 1 : 2;
-  const want = zyx[axis];
-  let best = -1, bestD = Infinity;
-  (info.source_indices || []).forEach((src, i) => {
-    const dist = Math.abs(src - want);
-    if (dist < bestD) { bestD = dist; best = i; }
-  });
-  return best;
-}
-
-/** Move the tile view to the slice that best shows `index`, and redraw.
- *
- * Prefers the nearest sampled slice to the structure's centroid, but will not stop
- * on a slice where that structure has no contour -- landing on a blank overlay is
- * indistinguishable from the feature being broken, which is exactly what it looked
- * like before. */
-async function jumpTiles(index, point) {
-  const v = state.viewer;
-  const info = planeInfo();
-  if (!info) return false;
-  const here = await loadContours(v.plane);
-  const start = point ? tileIndexForPoint(v.plane, point) : -1;
-  const from = start >= 0 ? start : v.index;
-  const has = (i) => !!(here && here[String(i)] && here[String(i)][String(index)]);
-
-  let target = -1;
-  if (has(from)) target = from;
-  else {
-    for (let step = 1; step < info.count && target < 0; step++) {
-      if (from - step >= 0 && has(from - step)) target = from - step;
-      else if (from + step < info.count && has(from + step)) target = from + step;
-    }
-  }
-  if (target < 0) return false;
-  v.index = target;
-  $('slice').value = String(target);
-  await draw();
-  return true;
-}
-
 /* ------------------------------------------------------------------- boot */
 function wireViewer() {
-  document.querySelectorAll('.plane').forEach((b) => b.onclick = () => selectPlane(b.dataset.plane));
-  $('slice').oninput = (e) => { state.viewer.index = Number(e.target.value); draw(); };
   // One pair of controls that means the same thing in both views. The single
   // "overlay" slider they replace drove fillAlpha in the MPR view but, in the slice
   // view, had nothing to fade except a 1-voxel outline -- those tiles carried no
@@ -6887,7 +6753,6 @@ function wireViewer() {
   // fires once the slider settles.
   let styleTimer = null;
   const applyStyle = () => {
-    draw();                                   // live: cheap
     if (!(state.viewer && state.viewer.mprMounted && window.DentistryViewer)) return;
     clearTimeout(styleTimer);
     styleTimer = setTimeout(() => {
@@ -6903,8 +6768,7 @@ function wireViewer() {
     // here too -- otherwise isolating a tooth in the slice view and switching to
     // MPR left the panes wherever they were, which is indistinguishable from the
     // chart not working. The slice view has always self-healed here (`draw` re-runs
-    // `jumpTiles`); the MPR did not, and that asymmetry was the bug.
-    // Leaving the slice views has to give the primary mouse button back. Editing binds
+    // Leaving the MPR panes has to give the primary mouse button back. Editing binds
     // it to a brush, and the plan tab's own drag lives on a different canvas -- so a
     // mode left armed here would be a brush waiting on a tab nobody is editing in.
     if (b.dataset.mode !== 'volume') {
@@ -6913,7 +6777,6 @@ function wireViewer() {
     }
     if (b.dataset.mode === 'volume') { await mountVolume(); syncMprToIsolate(); }
     else if (b.dataset.mode === 'plan') { await loadArch(); loadPlans(); }
-    else { await draw(); await syncSlicesToIsolate(); }
   });
   $('mprReset').onclick = () => window.DentistryViewer && DentistryViewer.resetCameras();
   $('backHome').onclick = closeViewer;
@@ -6980,28 +6843,21 @@ function wireViewer() {
       if (e.key === 'f') { e.preventDefault(); setLayout(layout.kind === 'solo' ? 'grid' : 'solo'); return; }
       return;
     }
+    if (e.key === '\\') { e.preventDefault(); toggleDock(); return; }
     if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
-    const step = e.key === 'ArrowRight' ? 1 : -1;
-    // The plan tab has its OWN slider. This branch used to fall through to #slice --
-    // the tile slider, which is hidden in plan mode -- and then call draw(), which
-    // early-returns unless the mode is 'slices'. So the arrow keys silently moved an
-    // invisible control and did nothing at all in the tab where scrubbing the section
-    // stack is the primary gesture.
-    if (state.viewer.mode === 'plan') {
-      const xs = $('xsSlider');
-      if (!xs) return;
-      e.preventDefault();
-      const want = Math.max(0, Math.min(Number(xs.max), Number(xs.value) + step));
-      xs.value = String(want);
-      selectXs(want);
-      return;
-    }
-    const s = $('slice');
-    if (!s) return;
+    // Scrubbing the cross-section stack is the plan tab's primary gesture. It used to
+    // fall through to the Slices tab's `#slice` -- hidden in plan mode -- and then call
+    // a `draw()` that early-returned unless the mode was 'slices', so the arrow keys
+    // silently moved an invisible control. The Slices tab is gone; the branch stays,
+    // because the MPR panes scrub on the wheel and have no business on the arrow keys.
+    if (state.viewer.mode !== 'plan') return;
+    const xs = $('xsSlider');
+    if (!xs) return;
     e.preventDefault();
-    s.value = String(Math.max(0, Math.min(Number(s.max), Number(s.value) + step)));
-    state.viewer.index = Number(s.value);
-    draw();
+    const step = e.key === 'ArrowRight' ? 1 : -1;
+    const want = Math.max(0, Math.min(Number(xs.max), Number(xs.value) + step));
+    xs.value = String(want);
+    selectXs(want);
   });
 }
 
@@ -7052,6 +6908,27 @@ function toggleRail(force) {
   $('railToggle').setAttribute('aria-expanded', String(!collapsed));
   $('railToggle').title = (collapsed ? 'Show' : 'Collapse') + ' the side panel  ( [ )';
   try { localStorage.setItem('dentistry.rail', collapsed ? 'off' : 'on'); } catch (_) {}
+  afterLayoutChange();
+}
+
+/** Collapse the right dock -- tools and structures -- to give the panes the width.
+ *
+ *  Key `\` rather than `]`, which `toggleSide` already owns for the plan tab's
+ *  measurements sidebar. Both are right-hand panels and both can be open at once in the
+ *  plan tab, so one key could not mean both without picking a winner silently.
+ *
+ *  `afterLayoutChange` is NOT optional here. Cornerstone sizes its canvases when a
+ *  viewport is enabled and never again, so a collapse that widened the stage without it
+ *  leaves every click landing at the wrong voxel -- mis-aimed, not merely stretched. */
+function toggleDock(force) {
+  const ws = $('workspace');
+  const collapsed = force === undefined ? !ws.classList.contains('dock-collapsed') : !!force;
+  ws.classList.toggle('dock-collapsed', collapsed);
+  const btn = $('dockToggle');
+  btn.setAttribute('aria-expanded', String(!collapsed));
+  btn.title = (collapsed ? 'Show' : 'Collapse')
+    + ' the tools and structures panel  ( \\ )';
+  try { localStorage.setItem('dentistry.dock', collapsed ? 'off' : 'on'); } catch (_) {}
   afterLayoutChange();
 }
 
@@ -7292,9 +7169,14 @@ function wireSide() {
 
 function wireRail() {
   $('railToggle').onclick = () => toggleRail();
+  $('dockToggle').onclick = () => toggleDock();
   wireSide();
+  wireDock();
   try {
     if (localStorage.getItem('dentistry.rail') === 'off') toggleRail(true);
+  } catch (_) {}
+  try {
+    if (localStorage.getItem('dentistry.dock') === 'off') toggleDock(true);
   } catch (_) {}
   ['seriesCard', 'runCard'].forEach((id) => {
     const el = $(id);
@@ -7357,7 +7239,6 @@ function move3dPane(where) {
 function afterLayoutChange() {
   requestAnimationFrame(() => {
     if (window.DentistryViewer && state.viewer && state.viewer.mprMounted) DentistryViewer.resize();
-    if (state.viewer && state.viewer.mode === 'slices') draw();
     // The plan tab had no branch here at all, so a window resize or a rail collapse
     // left the 3-D pane at its old canvas size and never repainted the section's
     // overlays. Both matter now that the 3-D pane lives in this stage.
