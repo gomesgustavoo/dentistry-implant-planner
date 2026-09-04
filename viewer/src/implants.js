@@ -21,8 +21,9 @@
  *    2026-09-02 to be applying a SHEAR -- it used the buccal normal itself as a frame
  *    axis, so `ax . e1 = sin(tilt)` and the platform face was not perpendicular to the
  *    axis at any nonzero tilt.
- *  - Cost. A capsule at 48 azimuths is ~380 shared vertices; 380 x 9 multiply-adds and
- *    a ~4.5 KB VBO upload is nothing against a frame.
+ *  - Cost. The drawn screw is ~9k vertices at 96 azimuths and the safety envelope ~3.7k
+ *    at 160 azimuths by 20 dome rings; that many 9-multiply-add transforms and a
+ *    ~150 KB VBO upload is nothing against a frame, and only the SELECTED implant moves.
  *  - `setUserMatrix` also perturbs `getBounds()`, which Cornerstone's `resetCamera`
  *    consumes -- an extra coupling for no gain.
  *
@@ -47,6 +48,24 @@ import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 
 const N_AZIMUTH = 48;
 const DOME_RINGS = 6;
+
+/** Tessellation of the SAFETY ENVELOPE, independent of `N_AZIMUTH`.
+ *
+ *  Same reasoning as `SCREW_AZIMUTH`: `N_AZIMUTH`/`DOME_RINGS` stay 48/6 because
+ *  `capsuleLocal` at those values is diffed triangle-for-triangle against
+ *  `dentistry/plan_geometry.implant_mesh`. But the cross-language check builds its OWN
+ *  capsule (see `implantGeometryForTest`) and never looks at the shell, so the shell is
+ *  free to be as fine as it is worth being.
+ *
+ *  At 48 azimuths the silhouette is a 48-gon -- 7.5 degrees per facet -- and 6 dome
+ *  rings put 15 degrees between apical rings. On an envelope that is DRAWN TRANSLUCENT,
+ *  every one of those facet boundaries is an alpha step, so the faceting reads far
+ *  harder than it does on the opaque body. 160 azimuths take the silhouette to 2.25
+ *  degrees and 20 rings take the dome to 4.5, at ~3.4k vertices -- still a rounding
+ *  error next to the 42 anatomy surfaces sharing the pane.
+ */
+const SHELL_AZIMUTH = 160;
+const SHELL_DOME_RINGS = 20;
 
 /* ------------------------------------------------------- the drawn screw
  * The measured solid is a CAPSULE -- a cylinder of the stated diameter closed by an
@@ -205,7 +224,7 @@ export function setImplantArch(manifest) {
  *  shader-derived face normals look smooth, but a 48-facet barrel visibly facets, and
  *  a faceted implant reads as a rendering artifact rather than as metal.
  */
-function capsuleLocal(lengthMm, diameterMm, nAz = N_AZIMUTH) {
+function capsuleLocal(lengthMm, diameterMm, nAz = N_AZIMUTH, nRings = DOME_RINGS) {
   const r = diameterMm / 2;
   const shoulder = Math.max(0, lengthMm - r);
   const verts = [];
@@ -241,8 +260,8 @@ function capsuleLocal(lengthMm, diameterMm, nAz = N_AZIMUTH) {
   }
 
   let prev = bot;
-  for (let k = 1; k <= DOME_RINGS; k++) {
-    const th = (k / DOME_RINGS) * (Math.PI / 2);
+  for (let k = 1; k <= nRings; k++) {
+    const th = (k / nRings) * (Math.PI / 2);
     const ringR = r * Math.cos(th);
     const ringZ = shoulder + r * Math.sin(th);
     const ring = [];
@@ -784,34 +803,62 @@ function applyMaterial(actor) {
  *  `clearance < margin + inward_p95`, so the boundary is 2.46 mm for the canal. Drawing
  *  2.00 would put the shell inside the line it is meant to mark.
  *
- *  `no_verdict` is drawn as a WIREFRAME, not as a fainter fill. At low alpha a paler
- *  green and a paler grey are the same thing, and "we could not grade this" must not be
- *  able to read as "clear".
+ *  ALWAYS A SURFACE, never a wireframe. It used to draw `no_verdict` as wireframe on the
+ *  reasoning that at low alpha a paler green and a paler grey are the same thing. The
+ *  reasoning was sound and the execution was not: `no_verdict` is not a rare state -- it
+ *  is what EVERY maxillary implant gets, because the level fed to 3-D was the canal
+ *  verdict alone and `plan_safety.canal_verdict` correctly refuses to grade a canal that
+ *  is not there. So the common case was 720 triangles of grey-white edges around the
+ *  upper arch: a wire cage, which reads as a rendering artifact rather than as an
+ *  absence of information.
+ *
+ *  Two things replace it. The level reaching this function is now the WORST of every
+ *  graded clearance rather than the canal's alone (see `web/app.js::worstVerdict`), so a
+ *  maxillary implant with a gradeable neighbour gets a real colour. And when nothing at
+ *  all could be graded, the shell is a NEUTRAL SURFACE that is deliberately dimmer than
+ *  any verdict -- separated by lightness and saturation rather than by fill-vs-line.
  */
 function applyShellMaterial(actor, level, selected) {
-  const rgb = VERDICT_RGB[level] || NEUTRAL_RGB;
+  const graded = !!level && level !== 'no_verdict';
+  const rgb = graded ? VERDICT_RGB[level] : NEUTRAL_RGB;
   const p = actor.getProperty();
   p.setColor(rgb[0] / 255, rgb[1] / 255, rgb[2] / 255);
-  p.setAmbient(0.9);
-  p.setDiffuse(0.1);
-  p.setSpecular(0);
-  // FRONT FACES CULLED, so only the shell's FAR wall is drawn.
+  // AMBIENT WAS 0.9 -- effectively unlit, so the only thing that read was the silhouette
+  // and every facet boundary along it was a hard alpha step. A translucent surface needs
+  // a shading gradient across the barrel for the eye to accept it as curved; that
+  // gradient is also what hides the tessellation. A little specular gives it the wet
+  // highlight that separates "a volume of glass" from "a coloured film".
+  p.setAmbient(0.32);
+  p.setDiffuse(0.62);
+  p.setSpecular(0.25);
+  p.setSpecularPower(18);
+  // BOTH WALLS DRAWN. The old code culled front faces on the stated grounds that "WebGL
+  // has no order-independent transparency here". That is no longer true: vtk.js 36.4.1
+  // instantiates `vtkOpenGLOrderIndependentTranslucentPass` unconditionally whenever a
+  // renderer has translucent actors, and runs an `opaqueZBufferPass` so the opaque screw
+  // still occludes the envelope correctly. Culling the near wall was a large part of why
+  // the envelope read as a thin faceted rind: with one wall there is no near-surface
+  // shading at all, so the silhouette carried the whole shape and every facet along it
+  // was a hard edge.
   //
-  // WebGL has no order-independent transparency here, so a translucent hull in front of
-  // the implant tints everything behind it: at 0.20 alpha the titanium came out green
-  // and stopped reading as metal at all. Culling the near wall keeps the zone legible
-  // as a volume -- you still see it wrap around and behind -- and leaves the metal its
-  // own colour. The same trick every renderer uses for a "glass box" that has something
-  // worth looking at inside it.
-  p.setFrontfaceCulling(true);
+  // THE COMPOSITING ARITHMETIC, because it decides the numbers below. The shell is
+  // convex, so every ray crosses exactly TWO of its surfaces -- near wall and far wall,
+  // everywhere, not more at the silhouette. Two layers at per-wall alpha `a` composite
+  // to `1 - (1 - a)^2`. So the old single-wall 0.26 is matched by a per-wall 0.14, and
+  // anything above that is MORE opaque than what shipped, not less. The ask was for a
+  // more transparent envelope, so: selected 0.11 composites to 0.21, unselected 0.06 to
+  // 0.12 -- both below the old values, with the second wall spending the difference on
+  // shape rather than on density.
+  p.setFrontfaceCulling(false);
   p.setBackfaceCulling(false);
-  p.setOpacity(level && level !== 'no_verdict' ? (selected ? 0.26 : 0.13) : 0.0);
-  p.setRepresentation(level === 'no_verdict' ? 1 : 2);   // 1 = wireframe, 2 = surface
-  if (level === 'no_verdict') {
-    // Wireframe has no back face to keep, so the cull has to come off or it vanishes.
-    p.setFrontfaceCulling(false);
-    p.setOpacity(selected ? 0.6 : 0.32);
-    p.setLineWidth(1);
+  p.setRepresentation(2);                                  // surface, in every state
+  if (graded) {
+    p.setOpacity(selected ? 0.11 : 0.06);
+  } else {
+    // Dimmer than any verdict. "We could not grade this" must never be able to read as
+    // "clear", and at these alphas lightness is the only channel that reliably separates
+    // them -- which is why the gap is asserted rather than eyeballed.
+    p.setOpacity(selected ? 0.075 : 0.042);
   }
 }
 
@@ -875,7 +922,8 @@ export function setImplants(list) {
       // metal stays metal and the warning stays a warning.
       const shellR = SHELL_MARGIN_MM[flat.jaw === 'maxilla' ? 'maxilla' : 'mandible'];
       const shell = capsuleLocal(Number(flat.length_mm) + shellR,
-                                 Number(flat.diameter_mm) + 2 * shellR);
+                                 Number(flat.diameter_mm) + 2 * shellR,
+                                 SHELL_AZIMUTH, SHELL_DOME_RINGS);
       const shellPoly = vtkPolyData.newInstance();
       shellPoly.setPolys(vtkCellArray.newInstance({ values: shell.cells }));
       const shellMapper = vtkMapper.newInstance();
@@ -1149,6 +1197,19 @@ export function debug() {
       const got = entry.shellActor.getProperty().getColor().map((v) => Math.round(v * 255));
       return want.every((v, k) => Math.abs(v - got[k]) <= 1);
     }),
+    // The regression guard for the WIRE CAGE. `no_verdict` used to be drawn as
+    // `setRepresentation(1)`, and because the level reaching 3-D was the canal verdict
+    // alone, every maxillary implant hit that branch -- so the shipped upper arch was a
+    // grey-white wireframe of 720 triangles. Read back per shell, in whatever verdict
+    // state the caller has put it in, so restoring the branch fails here rather than in
+    // a screenshot. 2 = SURFACE.
+    shellsAreSurfaces: ids.every(
+      (id) => registry.get(id).shellActor.getProperty().getRepresentation() === 2),
+    // ...and that it is genuinely translucent. A shell at opacity 1 would occlude the
+    // implant it exists to frame; one at 0 is invisible and would pass every colour
+    // check above while showing the user nothing.
+    shellOpacities: Object.fromEntries(ids.map(
+      (id) => [id, registry.get(id).shellActor.getProperty().getOpacity()])),
     // BODIES, not actors. Each implant is two actors now -- the titanium solid and the
     // translucent safety envelope -- and counting both would make "two implants became
     // two actors" read four, which is a true statement about actors and a confusing one

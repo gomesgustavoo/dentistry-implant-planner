@@ -1295,8 +1295,9 @@ export const viewport3dId = VIEWPORT_3D;
 
 // A bundle revision counter, NOT a Cornerstone version. 5 was the shipped value; 6 adds
 // the implant API below; 7 adds the labelmap editing tools and the model-picker
-// schematic, and makes all three implant angles reach the 3-D pane.
-export const version = '7';
+// schematic, and makes all three implant angles reach the 3-D pane; 8 retires the
+// safety envelope's wireframe branch and draws it as translucent glass at 160x20.
+export const version = '8';
 
 export const {
   setImplantArch,
