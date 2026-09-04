@@ -40,11 +40,18 @@ createServer(async (req, res) => {
         body,
       });
       const buf = Buffer.from(await upstream.arrayBuffer());
-      res.writeHead(upstream.status, {
+      // `worker/bake.py` writes `.gz` siblings and the API serves them with
+      // `Content-Encoding: gzip`. Node's fetch DECODES that transparently, so `buf` is
+      // already plain and the right thing is to send the decoded length and NOT forward
+      // the encoding header -- forwarding it would tell the browser to inflate bytes
+      // that are already inflated.
+      const headers = {
         'content-type': upstream.headers.get('content-type') || 'application/json',
         'content-length': buf.length,
-      });
-      return res.end(buf);
+      };
+      const etag = upstream.headers.get('etag');
+      if (etag) headers.etag = etag;
+      return res.writeHead(upstream.status, headers).end(buf);
     } catch (e) {
       res.writeHead(502).end(JSON.stringify({ detail: `tour proxy: ${e.message}` }));
       return;
