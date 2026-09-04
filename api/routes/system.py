@@ -40,6 +40,24 @@ def implants() -> dict:
     return I.catalog()
 
 
+@router.get("/models")
+def models() -> dict:
+    """The segmentation model menu, and whether each one can actually run here.
+
+    Public, like `/structures` and `/implants`: it describes the product rather than
+    anybody's data, and the upload page needs it before a file is chosen.
+
+    **Availability is reported by the worker, not inferred here.** This pod has no model
+    store mounted and no `DENT_TF3_*` environment, so the only honest source is the
+    inventory the worker writes into the shared data directory when it starts. An absent
+    inventory yields `reason` -- a stated absence -- and the picker then offers the base
+    model alone rather than offering something that would fail forty seconds into a job.
+    """
+    from dentistry import models as M
+
+    return M.describe_all(M.read_inventory(settings.DATA_DIR))
+
+
 @router.get("/model-accuracy")
 def model_accuracy() -> dict:
     """The holdout error budget: a PRIOR about the model, never a measurement of a scan.

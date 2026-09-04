@@ -35,6 +35,12 @@ import struct
 
 # Matches web/app.js. A change here is a change to a published coordinate contract and
 # has to move `tests/plan_vectors.json` with it.
+#
+# `roll_deg` was added to `implant_frame` on 2026-09-04 and this stayed at 1 on purpose:
+# the branch is `if rl:`, so a pose that carries no roll -- which is every pose ever
+# stored -- produces a bit-identical frame. An additive field whose identity element is
+# the old behaviour is not a contract change, and bumping the version would have forced
+# a regeneration of vectors about the pixel maps, which this did not touch.
 CONTRACT_VERSION = 1
 
 
@@ -223,6 +229,18 @@ def implant_frame(imp: dict, info: dict) -> tuple:
 
     e1 = _v_unit(tuple(-down * ct * n[k] + st * up[k] for k in range(3)))
     e2 = _v_unit(_v_cross(ax, e1))
+
+    # CLOCKING. `roll_deg` spins the frame about its own axis, which leaves `ax`
+    # untouched and therefore leaves every measured distance untouched -- the solid is
+    # a body of revolution about `ax`. It is applied here and nowhere else because the
+    # only thing that can see it is a renderer with a non-symmetric mesh: the drawn
+    # screw's connection hex, and one day an indexed abutment. Applying it to `(e1, e2)`
+    # keeps the pair orthonormal by construction, so the frame contract is unchanged.
+    rl = math.radians(imp.get("roll_deg", 0.0) or 0.0)
+    if rl:
+        cr, sr = math.cos(rl), math.sin(rl)
+        e1, e2 = (tuple(cr * e1[k] + sr * e2[k] for k in range(3)),
+                  tuple(-sr * e1[k] + cr * e2[k] for k in range(3)))
     origin = (p0v[0] + imp["t_mm"] * n[0], p0v[1] + imp["t_mm"] * n[1], imp["z_mm"])
     return origin, e1, e2, ax
 

@@ -199,6 +199,21 @@ def task1_to_merged_lut():
     import numpy as np
 
     lut = np.zeros(tf3.TASK1_NUM_CHANNELS, dtype=np.uint8)
+    for t1, merged in task1_to_merged_map().items():
+        lut[t1] = merged
+    return lut
+
+
+def task1_to_merged_map() -> dict:
+    """The same mapping as `task1_to_merged_lut`, as a `{Task-1 id: merged index}` dict.
+
+    NUMPY-FREE, and that is the whole reason it exists. The array form is what the
+    pipeline indexes a whole volume with; this is what the API needs -- it has neither
+    numpy nor scipy (see `requirements-api.txt`), and `GET /v1/models` has to be able to
+    say which merged structures a model owns. One source, two shapes: the array is now
+    built from this dict, so the two cannot drift into disagreeing about which label is
+    which -- which on this particular mapping means the jaws swapping over.
+    """
     raw_to_merged = {
         1: "mandible",           # ToothFairy3 "Lower Jawbone" -- NOT maxilla
         2: "maxilla",            # ToothFairy3 "Upper Jawbone"
@@ -207,13 +222,14 @@ def task1_to_merged_lut():
         8: "bridge", 9: "crown", 10: "implant",
         103: "incisive_canal_left", 104: "incisive_canal_right", 105: "lingual_canal",
     }
+    out = {}
     for raw, merged_id in raw_to_merged.items():
-        lut[tf3.TASK1_MAPPING[raw]] = L.BY_ID[merged_id].index
+        out[int(tf3.TASK1_MAPPING[raw])] = int(L.BY_ID[merged_id].index)
     for task1_idx, fdi in tf3.TASK1_INDEX_TO_FDI.items():
-        lut[task1_idx] = L.BY_FDI[fdi].index
+        out[int(task1_idx)] = int(L.BY_FDI[fdi].index)
     # Pulp: ToothFairy3 collapses all 32 per-tooth pulps into one class, and so do we.
-    lut[tf3.TASK1_MAPPING[111]] = L.BY_ID["pulp"].index
-    return lut
+    out[int(tf3.TASK1_MAPPING[111])] = int(L.BY_ID["pulp"].index)
+    return out
 
 SPACES = {
     "merged-vs-tf3": merged_vs_toothfairy3,

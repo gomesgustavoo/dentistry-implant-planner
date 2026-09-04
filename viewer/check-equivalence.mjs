@@ -463,10 +463,77 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
   DentistryViewer.removeImplant('i2');
   const afterRemove = DentistryViewer.debugState().implants;
 
+  // --- yaw with no published tangents: a REFUSAL, not a guess -------------------
+  //
+  // Yaw rotates the axis toward +s and the tangent array is the only published thing
+  // that says which way that is. Deriving it as up x n gets the SIGN wrong at the far
+  // ends of 2 of 10 real jaw fits, so an implant must simply not be drawn. Python
+  // raises; this is the browser half of the same refusal, and it is measured here
+  // because the golden vectors all carry tangents and can never exercise it.
+  const noTan = { jaws: {} };
+  Object.keys(V.manifest).forEach((j) => {
+    const c = { ...V.manifest[j] };
+    delete c.tangents;
+    noTan.jaws[j] = c;
+  });
+  DentistryViewer.setImplantArch(noTan);
+  DentistryViewer.setImplants([{ ...base('y1', -4), yaw_deg: 12 }]);
+  const yawRefused = DentistryViewer.debugState().implants.count;
+  DentistryViewer.setImplants([{ ...base('y1', -4), yaw_deg: 0 }]);
+  const yawZeroOk = DentistryViewer.debugState().implants.count;
+  DentistryViewer.removeImplant('y1');
+  DentistryViewer.setImplantArch({ jaws: V.manifest });
+
+  // --- the labelmap editing surface --------------------------------------------
+  //
+  // The DIFF ENCODER is the thing that must not be wrong: it is what the server
+  // upsamples onto the measurement grid, and a run at the wrong offset paints a stripe
+  // across the far side of the head. So a known number of voxels is written straight
+  // into the labelmap and the encoder is asked what it sees.
+  const edit = { attached: !!DentistryViewer.editDebug() };
+  if (edit.attached) {
+    edit.freshVoxels = DentistryViewer.editStats().voxels;
+    DentistryViewer.setEditSegment(3);
+    edit.segment = DentistryViewer.editSegment();
+    edit.brush = DentistryViewer.setBrushMm(2.0);
+    DentistryViewer.setEditTool('brush');
+    edit.tool = DentistryViewer.editTool();
+    DentistryViewer.setEditTool(null);
+    edit.toolOff = DentistryViewer.editTool();
+
+    // A KNOWN pattern: two runs on one plane with a gap between them, and one on the
+    // next. A headless brush stroke cannot produce a known voxel count; this can, and
+    // it goes through the same setAtIndex and the same modified-slice event a stroke
+    // does rather than around them.
+    edit.written = DentistryViewer.editWriteForTest(3);
+    const d = DentistryViewer.editDiff();
+    edit.diffVoxels = d ? d.voxels : null;
+    edit.diffSlices = d ? d.slices.length : null;
+    edit.diffRuns = d ? d.slices.map((s2) => s2.runs.length) : null;
+    edit.diffOffsets = d ? d.slices.map((s2) => s2.runs.map((r) => r[0])) : null;
+    edit.gridFactor = d && d.grid ? d.grid.downsample_factor : null;
+    edit.structures = d ? d.structures : null;
+    edit.reset = DentistryViewer.resetEdits();
+    edit.afterReset = DentistryViewer.editStats().voxels;
+  }
+
+  // --- the model-picker schematic ----------------------------------------------
+  const host = document.createElement('div');
+  host.style.cssText = 'width:240px;height:240px;position:relative';
+  document.body.appendChild(host);
+  const previewGroups = DentistryViewer.mountModelPreview(host);
+  const previewBefore = DentistryViewer.previewDebug();
+  DentistryViewer.highlightGroups(['canals']);
+  const previewFocused = DentistryViewer.previewDebug();
+  DentistryViewer.disposeModelPreview();
+  const previewAfter = DentistryViewer.previewDebug();
+
   await DentistryViewer.unmount();
   const st = DentistryViewer.debugState();
   return { poses, placed, neutral, moved, afterRemove,
            originalTriangles, resizedTriangles, originalSpan, resizedSpan,
+           yawRefused, yawZeroOk, edit,
+           previewGroups, previewBefore, previewFocused, previewAfter,
            afterUnmount: st && st.implants ? st.implants : null };
 })()`;
 
@@ -634,7 +701,14 @@ check('the candidate exposes an implant registry and the shipped one does not',
       a.state.implants === undefined && b.state.implants
       && b.state.implants.count === 0 && b.state.implants.arch === false,
       `candidate: ${JSON.stringify(b.state.implants)}`);
-check('the bundle revision moved', a.version === '5' && b.version === '6',
+// The revision counter, and it has to be the CURRENT one rather than a literal that
+// only ever matched the version that introduced this check. 5 is the frozen oracle;
+// 7 adds the labelmap editing surface and the model-picker schematic on top of 6's
+// implant API. A revision that has NOT moved is the failure worth catching -- a
+// candidate served under the same number as the oracle is a client that cannot tell
+// which bundle it has.
+check('the bundle revision moved past the oracle',
+      a.version === '5' && Number(b.version) > Number(a.version),
       `${a.version} -> ${b.version}`);
 
 /* ------------------------------------------------------- the implant feature */
@@ -740,6 +814,73 @@ if (!existsSync(VECTORS)) {
     check('unmount tears the implant actors down with the anatomy',
           res.afterUnmount === null || res.afterUnmount.count === 0,
           JSON.stringify(res.afterUnmount));
+
+    /* ---------------------------------------------- the labelmap editing surface
+     * The diff encoder is the piece a wrong answer travels through silently: every run is
+     * upsampled onto the 0.3 mm measurement grid by `worker/rederive.py`, so a run at the
+     * wrong offset paints a stripe across the far side of the head and every number
+     * downstream is then about that stripe.
+     */
+    {
+      const e = (res.edit || {});
+      check('the editing layer attaches with the case', e.attached === true);
+      check('a freshly mounted case has no edits', e.freshVoxels === 0, String(e.freshVoxels));
+      check('the active structure and brush radius read back', e.segment === 3 && e.brush === 2,
+            `segment ${e.segment}, brush ${e.brush} mm`);
+      check('a tool activates and releases the primary button again',
+            e.tool === 'brush' && e.toolOff === null, `${e.tool} -> ${e.toolOff}`);
+      const wrote = (e.written && e.written.changed) || 0;
+      check('the diff finds exactly the voxels that were written',
+            wrote > 0 && e.diffVoxels === wrote, `${e.diffVoxels} of ${wrote}`);
+      check('the diff keeps the two planes apart', e.diffSlices === 2,
+            `${e.diffSlices} plane(s)`);
+      // THREE runs, not two and not one: the encoder must not merge across the gap on the
+      // first plane, and must not lose the second plane.
+      check('the encoder emits one run per contiguous span',
+            JSON.stringify(e.diffRuns) === JSON.stringify([2, 1]),
+            JSON.stringify(e.diffRuns));
+      check('every run starts at the offset it was written to',
+            JSON.stringify(e.diffOffsets) === JSON.stringify(
+              [[(e.written.wrote[0] || {}).offset, (e.written.wrote[1] || {}).offset],
+               [(e.written.wrote[2] || {}).offset]]),
+            JSON.stringify(e.diffOffsets));
+      check('the diff carries the grid it is expressed on',
+            e.gridFactor >= 1, `downsample factor ${e.gridFactor}`);
+      check('the diff names the structure it wrote and the one it displaced',
+            e.structures && Object.keys(e.structures).includes('3'),
+            JSON.stringify(e.structures));
+      check('discarding restores the mask the worker produced',
+            e.reset === wrote && e.afterReset === 0,
+            `${e.reset} voxel(s) put back, ${e.afterReset} left`);
+    }
+
+    /* -------------------------------------------- yaw with no published tangents */
+    check('a yawed implant is REFUSED when the manifest publishes no tangents',
+          (res.yawRefused || 0) === 0, `${res.yawRefused} drawn`);
+    check('...and the same implant at zero yaw still places, so the refusal is not a bug',
+          (res.yawZeroOk || 0) === 1, `${res.yawZeroOk} drawn`);
+
+    /* ------------------------------------------------- the model-picker schematic */
+    {
+      const before = res.previewBefore || { groups: {} };
+      const focused = res.previewFocused || { groups: {} };
+      check('the schematic mounts with a surface per structure group',
+            (res.previewGroups || []).length === 6, (res.previewGroups || []).join(', '));
+      // 60, not 100: the pharynx is a four-point tube at 16 azimuth, which is 66
+      // vertices and is the right amount of geometry for a diagram of an airway. What
+      // the check is against is an EMPTY group -- what a builder that silently produced
+      // nothing would leave behind -- and the teeth carry 6 144.
+      check('every group carries geometry',
+            Object.values(before.groups).every((g) => g.points > 60),
+            Object.entries(before.groups).map(([k, g]) => `${k}:${g.points}`).join(' '));
+      check('highlighting one group ghosts the others rather than hiding them',
+            focused.groups.canals && focused.groups.canals.opacity === 1
+            && Object.entries(focused.groups)
+              .filter(([k]) => k !== 'canals')
+              .every(([, g]) => g.opacity > 0 && g.opacity < 0.5),
+            Object.entries(focused.groups).map(([k, g]) => `${k}:${g.opacity}`).join(' '));
+      check('disposing releases the schematic', res.previewAfter === null);
+    }
   }
 }
 

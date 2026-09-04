@@ -610,6 +610,22 @@ const cross = (u, v) => [
  *  `web/app.js::implantOutline` already draws in the section and which is exactly
  *  orthogonal to the axis. The Python side used the buccal normal itself here until
  *  2026-09-02, making the map a shear at any nonzero tilt.
+ *
+ *  ALL THREE ANGLES, since 2026-09-04. This function honoured `tilt_deg` alone, so a
+ *  mesiodistally angulated implant -- which the measurement and the STL export have
+ *  both honoured all along -- was drawn UPRIGHT in 3-D. The pane would have shown a
+ *  pose the server was not measuring, which is the one failure this whole registry
+ *  exists to prevent, and it was one field away the whole time.
+ *
+ *  `e1` deliberately does NOT depend on yaw. Yaw rotates the axis in the plane spanned
+ *  by the un-yawed axis and the tangent, and `e1` is orthogonal to both, so the same
+ *  perpendicular stays exactly perpendicular -- the argument is written out in the
+ *  Python docstring and the cross-language check now covers yawed poses.
+ *
+ *  A yawed pose with no published tangents returns null rather than a guess. The
+ *  tangent could be had as `up x n` up to a sign, and that sign FLIPS relative to the
+ *  published normals at the far ends of 2 of 10 real jaw fits -- so deriving it would
+ *  mirror the yaw exactly where a third molar sits.
  */
 function poseFrame(pose) {
   const jaw = arch && arch.jaws && arch.jaws[pose.jaw];
@@ -622,12 +638,35 @@ function poseFrame(pose) {
   const n = unit(jaw.normals[i]);
   const down = pose.jaw === 'maxilla' ? 1 : -1;
   const tl = ((Number(pose.tilt_deg) || 0) * Math.PI) / 180;
+  const yw = ((Number(pose.yaw_deg) || 0) * Math.PI) / 180;
   const st = Math.sin(tl);
   const ct = Math.cos(tl);
+  const sy = Math.sin(yw);
+  const cy = Math.cos(yw);
 
-  const ax = unit([n[0] * st, n[1] * st, down * ct]);
-  const e1 = unit([-down * ct * n[0], -down * ct * n[1], st]);
-  const e2 = unit(cross(ax, e1));
+  let ax = [n[0] * st * cy, n[1] * st * cy, down * ct * cy];
+  if (sy) {
+    const tan = jaw.tangents && jaw.tangents[i];
+    if (!tan) return null;
+    const th = unit(tan);
+    ax = [ax[0] + sy * th[0], ax[1] + sy * th[1], ax[2] + sy * th[2]];
+  }
+  ax = unit(ax);
+  let e1 = unit([-down * ct * n[0], -down * ct * n[1], st]);
+  let e2 = unit(cross(ax, e1));
+
+  // Clocking. Spins the frame about its own axis; `ax` is untouched, so no measured
+  // distance can move. It exists for the connection hex, which is the one part of the
+  // drawn screw that is not a body of revolution.
+  const rl = ((Number(pose.roll_deg) || 0) * Math.PI) / 180;
+  if (rl) {
+    const cr = Math.cos(rl);
+    const sr = Math.sin(rl);
+    const a = e1;
+    const b = e2;
+    e1 = [cr * a[0] + sr * b[0], cr * a[1] + sr * b[1], cr * a[2] + sr * b[2]];
+    e2 = [-sr * a[0] + cr * b[0], -sr * a[1] + cr * b[1], -sr * a[2] + cr * b[2]];
+  }
   const origin = [
     p0[0] + Number(pose.t_mm) * n[0],
     p0[1] + Number(pose.t_mm) * n[1],
@@ -809,12 +848,11 @@ export function setImplants(list) {
   });
 
   want.forEach((pose) => {
-    if (Number(pose.yaw_deg)) {
-      console.warn('dentistry: out-of-plane angulation is not drawn -- the cross-section '
-        + 'cannot show it, so a 3-D-only yaw would be a pose the 2-D view is lying '
-        + 'about. Clamped to 0.');
-    }
-    const flat = { ...pose, yaw_deg: 0 };
+    // Yaw used to be CLAMPED TO 0 here, on the argument that the cross-section could
+    // not show it. The section now draws the foreshortened projection and the
+    // panoramic draws the angle itself, so the clamp had become the lie it was there
+    // to prevent: the server measured the yawed pose and this pane drew an upright one.
+    const flat = { ...pose };
     const key = `${Number(flat.length_mm).toFixed(3)}:${Number(flat.diameter_mm).toFixed(3)}`;
     let entry = registry.get(flat.id);
 
@@ -855,7 +893,15 @@ export function setImplants(list) {
       };
       registry.set(flat.id, entry);
       if (!writePoints(entry, flat)) {
-        // No arch for this jaw: drop it rather than draw it somewhere arbitrary.
+        // No arch for this jaw -- or a yawed pose on a manifest that publishes no
+        // tangents, where the direction of +s is exactly what is missing. Drop it
+        // rather than draw it somewhere arbitrary, and SAY which, because an implant
+        // that quietly fails to appear reads as a rendering bug.
+        console.warn('dentistry: implant ' + flat.id + ' is not drawn in 3-D: '
+          + (Number(flat.yaw_deg)
+            ? 'this arch manifest publishes no tangents, so the direction mesiodistal '
+              + 'angulation rotates toward is unknown'
+            : 'the ' + flat.jaw + ' arch was not reconstructed on this case'));
         registry.delete(flat.id);
         try {
           mapper.delete(); actor.delete();
@@ -869,7 +915,7 @@ export function setImplants(list) {
       viewport.addActor({ uid: shellUid(flat.id), actor: shellActor });
     } else {
       entry.pose = flat;
-      writePoints(entry, flat);
+      if (!writePoints(entry, flat)) { removeImplant(flat.id); return; }
       if (flat.verdict !== undefined && flat.verdict !== entry.verdict) {
         entry.verdict = flat.verdict || null;
       }

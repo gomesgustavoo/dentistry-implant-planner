@@ -17,6 +17,7 @@ and would be caught late.
 
 from __future__ import annotations
 
+import math
 import uuid
 from datetime import datetime, timezone
 from typing import Literal
@@ -46,11 +47,26 @@ class ImplantIn(BaseModel):
     s_mm: float
     t_mm: float
     z_mm: float
-    tilt_deg: float = 0.0
-    # Carried but locked to 0 by the UI: a yawed implant leaves the visible section and
-    # has to be drawn as a projection with an out-of-plane badge. That is a later
-    # increment, not a shortcut taken quietly.
-    yaw_deg: float = 0.0
+    # The three angles, and they are three different KINDS of thing.
+    #
+    # `tilt` is buccolingual angulation: it rotates the axis toward +t, inside the
+    #   cross-section, so the section shows it at true angle and true length.
+    # `yaw` is mesiodistal angulation: it rotates the axis toward +s, OUT of the
+    #   section. The measurement has always honoured it (`Implant.axis`) and the
+    #   exported solid has honoured it since the frame was made orthonormal; what was
+    #   missing was a UI that could show it, which is why it was pinned to 0 by the
+    #   client rather than by this schema. The section now draws the foreshortened
+    #   projection and the panoramic draws the angle itself.
+    # `roll` is clocking about the implant's own axis. It changes NO measurement --
+    #   the solid is a body of revolution -- and the response says so rather than
+    #   letting a reader infer that a control which moves nothing is broken.
+    #
+    # Bounded rather than free. 45 degrees is past any placement a planner would call
+    # restorable, and an unbounded angle is a way to walk an implant out of the band
+    # the pack can measure while every intermediate step reports success.
+    tilt_deg: float = Field(default=0.0, ge=-45, le=45)
+    yaw_deg: float = Field(default=0.0, ge=-45, le=45)
+    roll_deg: float = Field(default=0.0, ge=-360, le=360)
     length_mm: float = Field(gt=3, le=25)
     diameter_mm: float = Field(gt=1.5, le=8)
     site_fdi: int | None = None
@@ -151,20 +167,48 @@ def _curvature_at(jaw_arch: dict, s_mm: float) -> float:
     return v if abs(v) <= KAPPA_MAX_1_PER_MM else 0.0
 
 
-def _measure_one(pack, imp: ImplantIn, arch: dict, quality: dict) -> dict:
+def _pose_block(imp: ImplantIn) -> dict:
+    """The three angles, echoed, each with what it does and does not do to the numbers.
+
+    A control that moves the picture and not the measurement has to SAY so, or a reader
+    reasonably concludes the measurement is broken. Clocking is exactly that control:
+    the measured solid is a body of revolution about the axis, so every clearance below
+    is invariant under `roll_deg` -- exactly, not approximately.
+
+    Yaw is the opposite case: it changes the answer in full and changes the PICTURE by
+    less than the answer, because the cross-section can only show the projection, which
+    is foreshortened by `cos(yaw)`. Saying it here keeps that sentence beside the
+    numbers rather than only in the client.
+    """
+    notes = []
+    if imp.roll_deg:
+        notes.append("clocking does not change any clearance below: the measured solid "
+                     "is a body of revolution about the implant axis")
+    if imp.yaw_deg:
+        notes.append(
+            f"mesiodistal angulation of {imp.yaw_deg:.0f}\u00b0 takes the implant out of "
+            f"the cross-section plane. Every number below is measured in three "
+            f"dimensions; the section can only draw the projection, which is "
+            f"{math.cos(math.radians(imp.yaw_deg)) * 100:.0f}% of the true length")
+    return {"tilt_deg": imp.tilt_deg, "yaw_deg": imp.yaw_deg, "roll_deg": imp.roll_deg,
+            "notes": notes}
+
+
+def _measure_one(pack, imp: ImplantIn, arch: dict, quality: dict, edits=None) -> dict:
     info = pack.jaw(imp.jaw)
     if info is None:
         raise HTTPException(409, f"The {imp.jaw} arch was not reconstructed on this case")
     sampler = pack.sampler(imp.jaw)
     m = PM.Implant(jaw=imp.jaw, s_mm=imp.s_mm, t_mm=imp.t_mm, z_mm=imp.z_mm,
-                   tilt_deg=imp.tilt_deg, yaw_deg=imp.yaw_deg,
+                   tilt_deg=imp.tilt_deg, yaw_deg=imp.yaw_deg, roll_deg=imp.roll_deg,
                    length_mm=imp.length_mm, diameter_mm=imp.diameter_mm,
                    id=imp.id, site_fdi=imp.site_fdi)
     refs = _sound_references(info)
     jaw_arch = (arch.get("jaws") or {}).get(imp.jaw) or {}
     canal_block = jaw_arch.get("canal")
 
-    out = {"id": imp.id, "jaw": imp.jaw, "site_fdi": imp.site_fdi}
+    out = {"id": imp.id, "jaw": imp.jaw, "site_fdi": imp.site_fdi,
+           "pose": _pose_block(imp)}
     clearance = None
     if imp.jaw == "mandible":
         clearance = PM.canal_clearance(sampler, m, canal_block)
@@ -188,7 +232,7 @@ def _measure_one(pack, imp: ImplantIn, arch: dict, quality: dict) -> dict:
                                      "incisive or lingual canal")
         out["accessory_canal"] = acc.as_dict()
         out["accessory_canal_verdict"] = PS.structure_verdict(
-            acc, "accessory_canal", PS.SAFETY_MARGIN_MM).as_dict()
+            acc, "accessory_canal", PS.SAFETY_MARGIN_MM, edits=edits).as_dict()
 
     tooth = PM.structure_clearance(sampler, m, "tooth", "neighbouring tooth")
     # A site tooth that is still in the scan is the tooth being replaced, and a
@@ -207,13 +251,14 @@ def _measure_one(pack, imp: ImplantIn, arch: dict, quality: dict) -> dict:
                 "present this is the distance to it rather than to a neighbour")
     out["tooth"] = tooth.as_dict()
     out["tooth_verdict"] = PS.structure_verdict(
-        tooth, "tooth", PS.ADJACENT_MARGIN_MM).as_dict()
+        tooth, "tooth", PS.ADJACENT_MARGIN_MM, edits=edits).as_dict()
 
     density = PM.density_ratio(sampler, m, refs)
     apex = PM.bone_beyond_apex(sampler, m, refs)
     out["density"] = density.as_dict()
     out["apex"] = apex.as_dict()
-    out["verdict"] = PS.canal_verdict(clearance, canal_block, quality, imp.jaw).as_dict()
+    out["verdict"] = PS.canal_verdict(clearance, canal_block, quality, imp.jaw,
+                                      edits=edits).as_dict()
     out["statements"] = {"density": PS.density_statement(density),
                          "apex": PS.apex_statement(apex, imp.jaw)}
     return out
@@ -247,8 +292,14 @@ def measure(job_id: str, body: MeasureIn,
                               p["distance"]["value"] if p["distance"]["value"] is not None
                               else 0.0))
 
+    # THE HAND CORRECTIONS THIS PACK CARRIES. Written by
+    # `worker/planning_pack.rebuild_label_fields` when a re-derive rebuilt the distance
+    # fields, and read here so a clearance to a contour a person moved can never be
+    # graded as if the model had drawn it: `plan_safety.edit_penalty` widens the budget
+    # of exactly the fields the correction reached, and the client prints the reason.
+    edits = pack.header.get("edits") or []
     return {
-        "implants": [_measure_one(pack, i, arch, quality) for i in body.implants],
+        "implants": [_measure_one(pack, i, arch, quality, edits) for i in body.implants],
         "pairs": pairs,
         "pack": {"version": pack.header.get("version"),
                  "step_mm": pack.header.get("step_mm")},
@@ -262,6 +313,16 @@ def measure(job_id: str, body: MeasureIn,
                    "inter_implant_margin_mm": PS.INTER_IMPLANT_MARGIN_MM,
                    "by_structure": PS.STRUCTURE_PRIORS,
                    "source": "20 held-out annotated cases; not a measurement of YOUR scan"},
+        # Per FIELD, so the panel can show the widened budget beside the number it was
+        # applied to rather than as a footnote about the case.
+        "edits": [{"id": e.get("id"), "at": e.get("at"), "voxels": e.get("voxels"),
+                   "fields": e.get("fields") or [],
+                   "quantisation_mm": e.get("quantisation_mm"),
+                   "structures": e.get("structures") or {}}
+                  for e in edits],
+        "edit_penalty": {f: PS.edit_penalty(f, edits)
+                         for f in ("canal", "accessory_canal", "tooth")
+                         if PS.edit_penalty(f, edits)},
         "notice": PS.NO_GUIDE_NOTICE,
     }
 

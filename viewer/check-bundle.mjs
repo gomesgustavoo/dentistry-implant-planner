@@ -61,11 +61,36 @@ check('the candidate is an IIFE bound to the same global',
       cand.startsWith('var DentistryViewer=(()=>{'),
       cand.slice(0, 32));
 
-// The shipped file is 3,998,373 bytes. The candidate carries a new module (implants)
-// so it will not match exactly; a WILD divergence means a wrong dependency set.
+/* SIZE, against the frozen v5 oracle, with a budget that is RAISED DELIBERATELY.
+ *
+ * The v5 file is 3,998,373 bytes and it predates everything added since the
+ * reconstruction, so "within 5% of v5" stopped being a defect signal and started being
+ * a countdown. What the check is actually for is a WRONG DEPENDENCY SET -- a second copy
+ * of vtk.js, an accidental `dicom-parser`, a polyfill pulled in by a bad import -- and
+ * that is a hundreds-of-kilobytes event, not a percent.
+ *
+ * So the budget is stated with its breakdown, every number MEASURED by building the
+ * variant with that module's import and export block removed:
+ *
+ *   v5, the transcription oracle                    3 998 373
+ *   + the implant API and all three pose angles     +  15 541   (+0.39%)
+ *   + the model-picker schematic (preview.js)       +  91 290   (+2.28%)
+ *   + the labelmap editing tools (editing.js)       +  87 687   (+2.19%)
+ *   -------------------------------------------------------------------
+ *   candidate                                       4 192 871   (+4.86%)
+ *
+ * The two big items are vendor, not app: `preview.js` pulls
+ * `Rendering/Misc/GenericRenderWindow` and the interactor it depends on, and
+ * `editing.js` pulls five Cornerstone segmentation tools with their strategy
+ * compositions. Neither was reachable in v5.
+ *
+ * 8% leaves room for one more feature of this size and still catches a duplicated
+ * vendor bundle by an order of magnitude. Raise it again only WITH a measurement.
+ */
+const SIZE_BUDGET = 0.08;
 const drift = Math.abs(cand.length - ship.length);
-check('the size is within 5% of the shipped artifact',
-      drift < ship.length * 0.05,
+check(`the size is within ${(SIZE_BUDGET * 100).toFixed(0)}% of the v5 oracle`,
+      drift < ship.length * SIZE_BUDGET,
       `${drift} bytes apart (${(100 * drift / ship.length).toFixed(2)}%)`);
 
 /** Every string and template literal, with REGEX literals skipped.
@@ -214,15 +239,27 @@ const ct = tables(cand);
 // the dependency closure, which is what it is for.
 const isEntry = (k) => k.includes('mount') && k.includes('unmount');
 const missingTables = [...st].filter((k) => !ct.has(k) && !isEntry(k));
-// Informational, for the same reason: a vendor namespace the app never touches can be
-// tree-shaken differently without any behavioural consequence. Verified for the one
-// case this actually reported -- `HistoryMemo` -- which the app region never mentions
-// and which IS present in the candidate, just reachable by a different path.
-check('at most a couple of vendor export tables differ',
-      missingTables.length <= 2,
-      missingTables.length
-        ? `${missingTables.length} differ, e.g. ${missingTables[0].slice(0, 60)}`
-        : `all ${st.size} export tables matched`);
+/* A COUNT OF TABLES WAS THE WRONG ASSERTION, and this is the right one.
+ *
+ * It was "at most a couple differ", which is a magic number that has to be raised every
+ * time esbuild inlines a namespace instead of materialising its table object -- and
+ * inlining is not a defect. Three tables differ on the current candidate (gl-matrix's
+ * vec3, the contour-segmentation utilities and the segmentation colour namespace) and
+ * every key of all three is still present by name; the colour namespace in particular
+ * is one the app uses on every mount and whose effect Gate C and the runtime
+ * differential both prove.
+ *
+ * What actually matters is that no NAME went missing, so that is what is asserted. It
+ * subsumes the old check -- a genuinely dropped module loses its keys -- and it needs
+ * no threshold.
+ */
+const tableNames = new Set(missingTables.flatMap((t) => t.split(',')));
+const lostKeys = [...tableNames].filter((n) => !new RegExp(`\\b${n}\\b`).test(cand));
+check('no vendor export name was lost, however the tables were shaken',
+      lostKeys.length === 0,
+      lostKeys.length ? lostKeys.slice(0, 12).join(', ')
+        : `${missingTables.length} table(s) inlined, all ${tableNames.size} names `
+          + 'still present');
 
 // Things that must NOT be in the bundle. `dicom-parser` is a peer of the tools package
 // but nothing here loads DICOM in the browser, and polyseg is what the stub excludes.
@@ -268,10 +305,22 @@ if (shipApi && candApi) {
   //   0.11.x  the implant API
   //   0.13.0  setSurfaceFocus -- the plan tab's 3-D narrowing, so a molar implant is
   //           not drawn behind two tooth roots and a jaw
-  check('the added names are exactly the implant API and the plan-tab surface controls',
-        added.slice().sort().join(',') === ['focusImplant', 'implantGeometryForTest',
-          'removeImplant', 'setImplantArch', 'setImplantVerdict', 'setImplants',
-          'setSurfaceFocus', 'setSurfaceOpacity', 'updateImplant'].join(','),
+  //   0.16.0  the labelmap editing surface (editing.js) and the model-picker
+  //           schematic (preview.js). Added as ONE union, per the rule above.
+  check('the added names are exactly the implant API, the surface controls, the '
+        + 'editing surface and the model-picker schematic',
+        added.slice().sort().join(',') === [
+          'BRUSH_MM', 'EDIT_TOOLS',
+          'brushMm', 'commitBaseline', 'disposeModelPreview',
+          'editDebug', 'editDiff', 'editHistory', 'editRedo', 'editSegment',
+          'editStats', 'editTool', 'editUndo', 'editWriteForTest',
+          'focusImplant', 'highlightGroups', 'implantGeometryForTest',
+          'mountModelPreview', 'previewDebug', 'removeImplant', 'resetEdits',
+          'resizeModelPreview', 'setBrushMm', 'setEditSegment', 'setEditTool',
+          'setImplantArch', 'setImplantVerdict', 'setImplants',
+          'setSurfaceFocus', 'setSurfaceOpacity', 'spinModelPreview',
+          'updateImplant',
+        ].sort().join(','),
         added.join(', ') || 'none');
 }
 

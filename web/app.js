@@ -50,6 +50,27 @@ const state = {
 const AUTH = window.DentistryAuth || null;
 
 /** Merge the bearer token into a fetch init, if we have one. */
+/** Jobs whose bytes have changed under a URL that promised they would not.
+ *
+ *  Written by `markJobStale` after a hand correction is applied, and read by BOTH
+ *  `api()` and `cachedFetch()`. It has to be both: `cachedFetch` covers the artifacts
+ *  and `api` covers the job row itself, and the row is where `report.edits`, the
+ *  re-checked quality block and the re-measured site heights live. Measured live -- with
+ *  only `cachedFetch` consulting it, the case reopened after an applied correction and
+ *  showed the PRE-EDIT report, correction history and all.
+ *
+ *  Declared up here rather than beside `markJobStale` because `authed` and `api` are the
+ *  first things in this file and a `const` in a later block is not hoisted. */
+const staleJobs = new Set();
+// A `function`, not an arrow const: it is used by `api()` above it, and only a function
+// declaration is hoisted. `web-auth/check-app.js` also only counts declarations, which
+// is a fair rule -- a load-bearing helper it cannot see is a helper nothing guards.
+function isStaleUrl(url) {
+  if (!staleJobs.size) return false;
+  for (const id of staleJobs) { if (String(url).includes(id)) return true; }
+  return false;
+}
+
 async function authed(opts) {
   const init = Object.assign({}, opts);
   if (!AUTH) return init;
@@ -69,11 +90,14 @@ class QuotaError extends Error {
 }
 
 async function api(path, opts) {
-  let res = await fetch(API + path, await authed(opts));
+  // A case whose segmentation has been corrected in place: the row and its artifacts
+  // both changed, and neither the HTTP cache nor Cache Storage may answer for them.
+  const init = isStaleUrl(path) ? { cache: 'reload', ...(opts || {}) } : opts;
+  let res = await fetch(API + path, await authed(init));
   // One retry after a forced renew. An access token is good for 300 s, so a tab
   // left open across that boundary would otherwise 401 on its next poll.
   if (res.status === 401 && AUTH && AUTH.isSignedIn()) {
-    res = await fetch(API + path, await authed(opts));
+    res = await fetch(API + path, await authed(init));
   }
   if (res.status === 401 && AUTH) { AUTH.signIn(location.pathname); throw new Error('Signing in'); }
   if (!res.ok) {
@@ -149,6 +173,9 @@ function artifactCache() {
  *  stale one reports "this case predates them" about a case that has them.
  */
 async function cachedFetch(url, fresh) {
+  // A case whose segmentation has been corrected in place: the URL promised
+  // `immutable` and the bytes changed anyway, so neither cache may answer for it.
+  if (!fresh && isStaleUrl(url)) fresh = true;
   const store = await artifactCache();
   // Artifacts are behind the same bearer auth as everything else, so the token has
   // to travel with them. A cache HIT deliberately skips it: the bytes were already
@@ -743,6 +770,7 @@ function parseRoute() {
   const raw = (location.hash || '').replace(/^#\/?/, '');
   const parts = raw.split('/').filter(Boolean);
   if (parts[0] === 'settings') return { view: 'settings' };
+  if (parts[0] === 'contact') return { view: 'contact' };
   if (parts[0] === 'case' && parts[1]) return { view: 'case', jobId: parts[1] };
   // The token is the rest of the hash, not just parts[1]: `token_urlsafe` can emit
   // '-' and '_' but never '/', so one segment is right -- and taking the remainder
@@ -769,6 +797,7 @@ async function route() {
     .forEach((a) => a.classList.toggle('on', a.dataset.view === r.view));
 
   $('home').hidden = r.view !== 'cases';
+  $('contact').hidden = r.view !== 'contact';
   $('settings').hidden = r.view !== 'settings';
   $('workspace').hidden = r.view !== 'case';
   $('inviteGate').hidden = r.view !== 'invite';
@@ -777,9 +806,650 @@ async function route() {
   // A one-time secret has no business surviving a navigation.
   if (r.view !== 'settings') state.newInvite = null;
   if (r.view === 'settings') { renderSettings(); loadSettingsData(); }
+  if (r.view === 'contact') renderContact();
+  // The schematic holds a WebGL context, so it is mounted with the view and disposed
+  // when the view leaves. This SPA hides and shows its views rather than reloading, so
+  // a leaked context per visit is the kind of thing that works for a week.
+  if (r.view === 'cases') { wireModelsPanel(); mountModelSchematic(); }
+  else unmountModelSchematic();
   if (r.view === 'case') await openCase(r.jobId);
   if (r.view === 'invite') await renderInvite(r.token);
   if (r.view !== 'case') window.scrollTo({ top: 0 });
+}
+
+/* ============================================================ the model picker
+ * "Which model segments which structure" was a DEPLOYMENT setting -- `TF3_BOARD` plus
+ * one directory per specialist -- and the person uploading the scan could neither see
+ * it nor change it. The board itself was always built for this: a base model that
+ * paints the whole taxonomy, and specialists that each overwrite only the Task-1 ids
+ * they own, with every voxel outside a specialist's own region asserted byte-identical
+ * to the base prediction on every case. What was missing was the choice.
+ *
+ * Three rules this panel holds to.
+ *
+ * IT NEVER OFFERS A MODEL THAT IS NOT THERE. The API pod mounts no model store, so
+ * availability comes from an inventory the worker writes when it starts. A model whose
+ * files are missing is disabled WITH THE REASON, because the alternative is an upload
+ * accepted against it and failed forty seconds in, with the volume already written.
+ *
+ * IT SHOWS THE EVIDENCE, NOT A RECOMMENDATION. "ToothSeg won ToothFairy2" and "our
+ * holdout is a split of ToothSeg's own training data, so its wins here prove nothing"
+ * are both true and the second is the one that decides the default. Every card carries
+ * the measured reason it is on or off, from `dentistry/models.py`, once.
+ *
+ * `shadow` IS A FIRST-CLASS CHOICE. A model can run, have its opinion recorded in the
+ * report, and stamp nothing. That is the honest way to accumulate evidence on real
+ * clinical scans for a model our own holdout cannot settle.
+ */
+let MODEL_MENU = null;
+/** `{key: mode}`, the reader's choice. Empty until they touch something, so an upload
+ *  with no interaction sends NO config and gets the deployment default -- which is a
+ *  different, and truthful, thing from "the reader chose the defaults". */
+let modelChoice = {};
+
+async function loadModelMenu() {
+  if (MODEL_MENU) return MODEL_MENU;
+  try {
+    const got = await api('/models');
+    // NORMALISED, not trusted. A reply without `models` is what an older API or a
+    // proxy error page looks like, and `menu.models.length` on it throws inside
+    // `route()` -- which is how a blank app shipped once already. A shape this client
+    // cannot use is the same case as a call that failed, and it says so.
+    MODEL_MENU = (got && Array.isArray(got.models))
+      ? { defaults: {}, ...got }
+      : { models: [], defaults: {},
+          reason: 'This deployment did not return a model list, so only its default '
+                  + 'configuration will run.' };
+  } catch (e) {
+    MODEL_MENU = { models: [], defaults: {},
+                   reason: `The model list could not be loaded (${e.message}).` };
+  }
+  return MODEL_MENU;
+}
+
+function modelMode(m) {
+  if (modelChoice[m.key]) return modelChoice[m.key];
+  const d = (MODEL_MENU && MODEL_MENU.defaults) || {};
+  return d[m.key] || m.default_mode;
+}
+
+const MODE_LABEL = {
+  apply: 'apply',
+  shadow: 'shadow',
+  off: 'off',
+};
+const MODE_WHY = {
+  apply: 'Runs, and its output is stamped into your result for the structures it owns.',
+  shadow: 'Runs, and its opinion is recorded in the report without changing your result.',
+  off: 'Does not run.',
+};
+
+/** Render the picker. Idempotent: called on first paint and after every choice. */
+function renderModelPicker() {
+  const box = $('modelList');
+  if (!box) return;
+  const menu = MODEL_MENU;
+  if (!menu) { box.innerHTML = '<p class="empty">loading the model list&hellip;</p>'; return; }
+  if (!(menu.models || []).length) {
+    box.innerHTML = `<p class="hint bad">${esc(menu.reason
+      || 'No models are published by this deployment.')}</p>`;
+    return;
+  }
+  box.innerHTML = (menu.models || []).map((m) => {
+    const mode = modelMode(m);
+    const off = !m.installed;
+    const n = (m.structures || []).length;
+    // What it owns, as a COUNT plus the first few names. Thirty-two tooth ids as chips
+    // is a wall, and the question is which family rather than which tooth.
+    const owns = n === 0 ? 'nothing by default'
+      : n > 6 ? `${n} structures &mdash; ${m.groups.join(', ')}`
+      : m.structures.map((x) => structureName(x) || x).join(', ');
+    const modes = (m.modes || []).map((k) => `
+      <button type="button" class="segb ${mode === k ? 'on' : ''}"
+        data-model="${esc(m.key)}" data-mode="${k}" ${off || m.modes.length < 2 ? 'disabled' : ''}
+        title="${esc(MODE_WHY[k] || '')}">${MODE_LABEL[k] || k}</button>`).join('');
+    return `<article class="modelcard ${off ? 'unavail' : ''} ${mode === 'off' ? 'is-off' : ''}"
+        data-model="${esc(m.key)}" data-groups="${esc((m.groups || []).join(' '))}"
+        tabindex="0" aria-label="${esc(m.name)}">
+      <header>
+        <b>${esc(m.name)}</b>
+        <span class="modelbadge ${m.origin === 'third-party' ? 'third' : ''}"
+              title="${m.role === 'base' ? 'The base model. It draws the whole taxonomy; every specialist only overwrites ids inside its own region.' : 'A specialist: it overwrites only the ids it owns, inside a region derived from the base model’s own prediction.'}"
+        >${m.role === 'base' ? 'base' : 'specialist'}${m.origin === 'third-party' ? ' &middot; third-party' : ''}</span>
+      </header>
+      <p class="modelowns">${owns}</p>
+      <div class="modelrow">
+        <div class="seg modelmodes" role="group"
+             aria-label="How ${esc(m.name)} runs">${modes}</div>
+        <span class="modelcost">${m.seconds ? `~${Math.round(m.seconds)} s` : ''}</span>
+      </div>
+      ${off ? `<p class="hint bad">${esc(m.reason || 'Not installed on this deployment.')}</p>` : ''}
+      <details class="sidenote">
+        <summary>What is measured about it</summary>
+        <p class="finding-why">${esc(m.evidence || '')}</p>
+        ${m.tradeoff ? `<p class="finding-why">${esc(m.tradeoff)}</p>` : ''}
+        <p class="finding-why">Licence: ${esc(m.license || 'unstated')}.</p>
+      </details>
+    </article>`;
+  }).join('');
+
+  // The reader has to be told when the list itself is second-hand.
+  const hint = $('modelsHint');
+  if (hint) {
+    const age = menu.reported_age_hours;
+    hint.textContent = menu.reason ? menu.reason
+      : menu.stale ? `the worker last reported ${Math.round(age / 24)} days ago`
+      : 'choose before you upload';
+    hint.className = menu.reason || menu.stale ? 'hint bad' : 'hint';
+  }
+  wireModelPicker();
+}
+
+function wireModelPicker() {
+  const box = $('modelList');
+  if (!box) return;
+  box.querySelectorAll('button[data-mode]').forEach((b) => {
+    b.onclick = () => {
+      modelChoice[b.dataset.model] = b.dataset.mode;
+      renderModelPicker();
+      renderUploadPlan();
+    };
+  });
+  // Hover or focus a card: bring its structures forward in the schematic and ghost the
+  // rest. Ghosted rather than hidden -- which structures a model does NOT own is half
+  // the answer, and a scene that empties out says nothing about where the canals are.
+  box.querySelectorAll('.modelcard').forEach((el) => {
+    const groups = (el.dataset.groups || '').split(/\s+/).filter(Boolean);
+    const on = () => { if (window.DentistryViewer && DentistryViewer.highlightGroups) DentistryViewer.highlightGroups(groups); };
+    const offAll = () => { if (window.DentistryViewer && DentistryViewer.highlightGroups) DentistryViewer.highlightGroups(null); };
+    el.onmouseenter = on;
+    el.onfocus = on;
+    el.onmouseleave = offAll;
+    el.onblur = offAll;
+  });
+}
+
+/** One line above the drop area saying what the next upload will actually run. */
+function renderUploadPlan() {
+  const el = $('uploadPlan');
+  if (!el || !MODEL_MENU) return;
+  const chosen = (MODEL_MENU.models || [])
+    .filter((m) => modelMode(m) !== 'off')
+    .map((m) => `${m.name}${modelMode(m) === 'shadow' ? ' (shadow)' : ''}`);
+  const secs = (MODEL_MENU.models || [])
+    .filter((m) => modelMode(m) !== 'off')
+    .reduce((a, m) => a + (m.seconds || 0), 0);
+  el.innerHTML = chosen.length
+    ? `This upload will run: <b>${esc(chosen.join(' + '))}</b>`
+      + (secs ? ` &mdash; about ${Math.round(secs)} s on the GPU, plus the derived views.` : '')
+    : '';
+}
+
+/** The config to POST with the upload, or null when nothing was chosen.
+ *
+ *  NULL IS A REAL ANSWER and must survive: `jobs.options` is nullable and null means
+ *  "the deployment default at the time", which is the truth about every job uploaded
+ *  before this picker existed. Sending the defaults back as if they had been chosen
+ *  would make those two states indistinguishable in the row. */
+function uploadConfig() {
+  if (!Object.keys(modelChoice).length) return null;
+  const out = {};
+  (((MODEL_MENU || {}).models) || []).forEach((m) => { out[m.key] = modelMode(m); });
+  return out;
+}
+
+function wireModelsPanel() {
+  const reset = $('modelsReset');
+  if (reset) {
+    reset.onclick = () => { modelChoice = {}; renderModelPicker(); renderUploadPlan(); };
+  }
+  loadModelMenu().then(() => { renderModelPicker(); renderUploadPlan(); });
+}
+
+/** Mount the schematic, once the panel is on screen and the bundle has loaded.
+ *
+ *  The viewer bundle is a 4 MB script the case view needs anyway; this reuses it rather
+ *  than shipping a second WebGL stack. It is deliberately tolerant of failure: no
+ *  WebGL, or a bundle that has not arrived, costs the reader a diagram and nothing
+ *  else, and the picker beside it is fully usable without it. */
+function mountModelSchematic() {
+  const host = $('modelPreview');
+  if (!host || !window.DentistryViewer || !DentistryViewer.mountModelPreview) return false;
+  if (host.dataset.mounted === '1') { DentistryViewer.resizeModelPreview(); return true; }
+  const got = DentistryViewer.mountModelPreview(host);
+  if (!got) {
+    host.innerHTML = '<p class="empty">3-D needs WebGL, which this browser did not give us.</p>';
+    return false;
+  }
+  host.dataset.mounted = '1';
+  DentistryViewer.spinModelPreview(true);
+  return true;
+}
+
+function unmountModelSchematic() {
+  const host = $('modelPreview');
+  if (!host || host.dataset.mounted !== '1') return;
+  if (window.DentistryViewer && DentistryViewer.disposeModelPreview) {
+    DentistryViewer.disposeModelPreview();
+  }
+  host.dataset.mounted = '';
+}
+
+/* ================================================================= the contact page
+ * ONE constant, and every link on the page comes from it. The alternative -- an address
+ * in the HTML and the same address in a mailto in the JS -- is how a page ends up
+ * publishing two different ones. */
+const CONTACT = {
+  name: 'Gustavo Formento',
+  role: 'Medical physicist and the author of this service',
+  email: 'gustavo.formento@rtmedical.com.br',
+  linkedin: 'https://www.linkedin.com/in/gustavoogomesss/',
+  github: 'https://github.com/gomesgustavoo',
+};
+
+function renderContact() {
+  const who = $('contactWho');
+  const links = $('contactLinks');
+  if (who) who.innerHTML = `<b>${esc(CONTACT.name)}</b><br><span class="hint">${esc(CONTACT.role)}</span>`;
+  if (!links) return;
+  const rows = [];
+  if (CONTACT.email) {
+    rows.push(`<li><span>Email</span><a href="mailto:${esc(CONTACT.email)}?subject=${
+      encodeURIComponent('Custom segmentation model')}">${esc(CONTACT.email)}</a></li>`);
+  }
+  if (CONTACT.linkedin) {
+    rows.push(`<li><span>LinkedIn</span><a href="${esc(CONTACT.linkedin)}" target="_blank"
+      rel="noopener">${esc(CONTACT.linkedin.replace(/^https?:\/\/(www\.)?/, ''))}</a></li>`);
+  }
+  if (CONTACT.github) {
+    rows.push(`<li><span>Code</span><a href="${esc(CONTACT.github)}" target="_blank"
+      rel="noopener">${esc(CONTACT.github.replace(/^https?:\/\/(www\.)?/, ''))}</a></li>`);
+  }
+  links.innerHTML = rows.join('');
+}
+
+/* ==================================================== correcting the segmentation
+ * The contours here are drawn by a network and every millimetre the implant tab
+ * publishes is a distance to them. So a specialist who can see that a canal roof is a
+ * voxel low has to be able to move it, and the numbers have to move with it -- otherwise
+ * the edit is a drawing exercise and the figures beside it describe a mask that no
+ * longer exists.
+ *
+ * FOUR RULES, and each one exists because the alternative is a quiet wrong number.
+ *
+ * 1. **Editing is a MODE, off by default.** The tools take the primary mouse button,
+ *    which belongs to window/level. A viewer whose left button paints is a viewer
+ *    somebody edits by accident, on a case they were only reading.
+ *
+ * 2. **While there are unsaved edits, everything except the MPR panes is out of date,
+ *    and the app says so.** The 3-D surfaces are server meshes, the cross-sections are
+ *    server JPEGs and every clearance is a lookup into a server distance field: none of
+ *    them can follow a browser-side edit. Approximating them here would put two
+ *    pictures of the same anatomy on screen with no way to tell which one the numbers
+ *    came from.
+ *
+ * 3. **Apply is a server round trip, and it is not instant.** The diff goes to
+ *    `POST /edits`, the worker rebuilds the distance fields, the meshes, the outlines
+ *    and the per-site heights, and the case is reopened when it lands. 202, then
+ *    polling, then a reload -- never an optimistic repaint.
+ *
+ * 4. **The reload has to get past both caches.** Artifacts are addressed by job id and
+ *    served `immutable`, which is only honest while a finished job's files never
+ *    change. An applied edit breaks that, so the job is marked stale: Cache Storage
+ *    entries are deleted and every subsequent fetch for it carries `cache: 'reload'`.
+ *    This is the same trap an in-place reprocess hit once already.
+ */
+
+/** Mark a case's bytes as changed. See `staleJobs` at the top of this file.
+ *
+ *  Session-scoped and never cleared: once a case has been corrected, its pre-edit copy
+ *  in either cache is a picture of a mask nobody is looking at any more. */
+function markJobStale(jobId) {
+  if (!jobId) return;
+  staleJobs.add(jobId);
+  // Cache Storage first, because `cache: 'reload'` only reaches the HTTP cache.
+  artifactCache().then((store) => {
+    if (!store || !store.keys) return;
+    store.keys().then((reqs) => reqs.forEach((r) => {
+      if (String(r.url).includes(jobId)) store.delete(r).catch(() => {});
+    })).catch(() => {});
+  }).catch(() => {});
+}
+
+function editState() {
+  const v = state.viewer;
+  if (!v) return null;
+  if (!v.edit) v.edit = { on: false, tool: 'brush', segment: 0, brush: 2.0,
+                          applying: false, notice: null, edits: [] };
+  return v.edit;
+}
+
+function viewerEdits() {
+  return (window.DentistryViewer && DentistryViewer.setEditTool) ? DentistryViewer : null;
+}
+
+/** The tools, in the order they are offered. Labels come from the viewer's own table so
+ *  the bar cannot name a tool the bundle does not have. */
+function editToolList() {
+  const V = viewerEdits();
+  const t = (V && V.EDIT_TOOLS) || {};
+  return ['brush', 'erase', 'brush3d', 'erase3d', 'circle', 'rect', 'sphere', 'fill']
+    .filter((k) => t[k])
+    .map((k) => ({ key: k, ...t[k] }));
+}
+
+/** Turn the mode on or off. */
+function setEditMode(on) {
+  const e = editState();
+  const V = viewerEdits();
+  const v = state.viewer;
+  if (!e || !V || !v || !v.mprMounted) return false;
+  e.on = !!on;
+  V.setEditTool(e.on ? e.tool : null);
+  if (e.on) {
+    V.setEditSegment(e.segment);
+    V.setBrushMm(e.brush);
+  }
+  const b = $('editBtn');
+  if (b) {
+    b.setAttribute('aria-pressed', e.on ? 'true' : 'false');
+    b.classList.toggle('on', e.on);
+  }
+  $('editBar').hidden = !e.on;
+  document.body.classList.toggle('editing', e.on);
+  renderEditBar();
+  return true;
+}
+
+/** Rebuild the bar, and every counter in it, from the labelmap itself.
+ *
+ *  Counters are READ BACK rather than accumulated. A running total kept in the client
+ *  drifts the moment an undo, a redo or a discard happens, and a "1 240 voxels changed"
+ *  that is not true of the array is worse than no number. `editStats()` scans only the
+ *  planes the tools actually wrote to. */
+function renderEditBar() {
+  const e = editState();
+  const V = viewerEdits();
+  if (!e || !V) return;
+  const bar = $('editBar');
+  if (!bar || bar.hidden) return;
+
+  // The structure picker: only what this case actually contains, plus background.
+  //
+  // Keyed on the JOB, not on a boolean. `#editBar` is static markup that outlives a
+  // case, so a `built` flag would carry the previous case's structure list into the
+  // next one -- and an index that is not present in the new case paints a structure
+  // whose colour the LUT never registered, which renders as nothing at all.
+  const sel = $('editSegment');
+  const v = state.viewer;
+  if (sel && sel.dataset.built !== String(v && v.jobId)) {
+    const present = presentIndices();
+    const opts = ['<option value="0">background (erase)</option>'].concat(
+      (allStructures() || [])
+        .filter((s) => present.has(s.index))
+        .map((s) => `<option value="${s.index}">${esc(s.name)}</option>`));
+    sel.innerHTML = opts.join('');
+    sel.dataset.built = String(v && v.jobId);
+    // Default to the inferior alveolar canal when the case has one: it is the structure
+    // every clearance in this product is measured to, so it is the one a specialist
+    // opens these tools for.
+    //
+    // And PUSH it to the viewer, not just into local state. `setEditMode` sets the
+    // active segment from `e.segment` before this runs, so without this line the first
+    // stroke of every session paints segment 0 -- which is background, i.e. it erases.
+    const canal = (allStructures() || []).find((s) => s.id === 'canal');
+    if (canal && present.has(canal.index)) {
+      e.segment = canal.index;
+      V.setEditSegment(e.segment);
+    }
+  }
+  if (sel) sel.value = String(e.segment);
+
+  const tools = $('editTools');
+  if (tools) {
+    tools.innerHTML = editToolList().map((t) => `
+      <button class="segb ${e.tool === t.key ? 'on' : ''}" data-tool="${t.key}"
+        type="button" title="${esc(t.hint)}">${esc(t.label)}</button>`).join('');
+  }
+  const size = $('editSize');
+  if (size) size.value = String(e.brush);
+  const sizeLabel = $('editSizeLabel');
+  if (sizeLabel) sizeLabel.textContent = `${Number(e.brush).toFixed(1)} mm`;
+  // The brush has no radius for the scissors or the flood fill, so the control says so
+  // rather than sitting there doing nothing.
+  const brushy = /^(brush|erase)/.test(e.tool);
+  if (size) size.disabled = !brushy;
+  if (sizeLabel) sizeLabel.style.opacity = brushy ? '1' : '.45';
+
+  const h = V.editHistory ? V.editHistory() : { canUndo: false, canRedo: false };
+  if ($('editUndo')) $('editUndo').disabled = !h.canUndo;
+  if ($('editRedo')) $('editRedo').disabled = !h.canRedo;
+
+  const st = V.editStats ? V.editStats() : null;
+  const n = st ? st.voxels : 0;
+  const names = st ? Object.keys(st.structures || {}) : [];
+  const count = $('editCount');
+  if (count) {
+    count.textContent = e.applying ? 'applying…'
+      : n ? `${n.toLocaleString()} voxels on ${st.slices} slice${st.slices === 1 ? '' : 's'}`
+            + (names.length ? ` · ${names.map((i) => structureName(
+              ((allStructures() || []).find((s) => s.index === Number(i)) || {}).id
+              || i)).join(', ')}` : '')
+      : 'nothing changed yet';
+  }
+  if ($('editDiscard')) $('editDiscard').disabled = !n || e.applying;
+  if ($('editApply')) $('editApply').disabled = !n || e.applying;
+
+  const note = $('editNote');
+  if (note) {
+    // The standing statement, and it is the most important text in this bar.
+    note.innerHTML = e.notice ? esc(e.notice)
+      : n ? 'These strokes change the slice views only. The 3-D surfaces, the '
+            + 'cross-sections and every clearance still describe the segmentation '
+            + '<b>before</b> your corrections — they are rebuilt on the server when '
+            + 'you apply. Corrections are made on the '
+            + `${editGridMm()} display grid and upsampled to the measurement grid, so an `
+            + 'edited boundary carries that much extra uncertainty.'
+      : 'Paint or erase on the slice views. Nothing is sent until you apply.';
+    note.className = 'editnote' + (e.notice ? ' bad' : '');
+  }
+}
+
+/** The display grid's voxel size, in words. The number the error budget will widen by
+ *  is half of it, and the server states that; this states where it comes from. */
+function editGridMm() {
+  const m = (state.viewer && state.viewer.volumeMeta) || null;
+  const sp = m && m.spacing ? Math.min(...m.spacing.map(Number)) : null;
+  return sp ? `${sp.toFixed(2)} mm` : 'coarser';
+}
+
+function wireEditing() {
+  const btn = $('editBtn');
+  if (btn) {
+    btn.onclick = () => {
+      const e = editState();
+      if (!e) return;
+      if (!state.viewer.mprMounted) {
+        setNotice('The volume is still loading.', 'err');
+        return;
+      }
+      setEditMode(!e.on);
+    };
+  }
+  const sel = $('editSegment');
+  if (sel) {
+    sel.onchange = () => {
+      const e = editState();
+      const V = viewerEdits();
+      if (!e || !V) return;
+      e.segment = Number(sel.value) || 0;
+      V.setEditSegment(e.segment);
+      renderEditBar();
+    };
+  }
+  const tools = $('editTools');
+  if (tools) {
+    tools.onclick = (ev) => {
+      const b = ev.target.closest('button[data-tool]');
+      const e = editState();
+      const V = viewerEdits();
+      if (!b || !e || !V) return;
+      e.tool = b.dataset.tool;
+      V.setEditTool(e.tool);
+      renderEditBar();
+    };
+  }
+  const size = $('editSize');
+  if (size) {
+    size.oninput = () => {
+      const e = editState();
+      const V = viewerEdits();
+      if (!e || !V) return;
+      e.brush = Number(size.value);
+      V.setBrushMm(e.brush);
+      renderEditBar();
+    };
+  }
+  if ($('editUndo')) $('editUndo').onclick = () => { const V = viewerEdits(); if (V) { V.editUndo(); renderEditBar(); } };
+  if ($('editRedo')) $('editRedo').onclick = () => { const V = viewerEdits(); if (V) { V.editRedo(); renderEditBar(); } };
+  if ($('editDiscard')) {
+    $('editDiscard').onclick = () => {
+      const V = viewerEdits();
+      if (!V) return;
+      const st = V.editStats();
+      if (!st || !st.voxels) return;
+      if (!window.confirm(`Discard ${st.voxels.toLocaleString()} changed voxels and go `
+                          + 'back to what the model drew?')) return;
+      V.resetEdits();
+      renderEditBar();
+    };
+  }
+  if ($('editApply')) $('editApply').onclick = () => applyEdits();
+
+  // The tools write on mouse-up, so the counters are refreshed then. Bound on the
+  // stage rather than per pane: the elements are Cornerstone's and are replaced on
+  // every mount, while the stage is not.
+  const stage = $('mprStage');
+  if (stage) {
+    stage.addEventListener('pointerup', () => {
+      const e = editState();
+      if (e && e.on) setTimeout(renderEditBar, 0);
+    });
+  }
+}
+
+/** Send the diff, then wait for the worker, then reopen the case. */
+async function applyEdits() {
+  const e = editState();
+  const V = viewerEdits();
+  const v = state.viewer;
+  if (!e || !V || !v) return;
+  const diff = V.editDiff();
+  if (!diff || !diff.voxels) return;
+  e.applying = true;
+  e.notice = null;
+  renderEditBar();
+  let row;
+  try {
+    row = await api(`/jobs/${v.jobId}/edits`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        grid: diff.grid,
+        slices: diff.slices,
+        voxels: diff.voxels,
+        structures: diff.structures,
+        note: null,
+      }),
+    });
+  } catch (err) {
+    e.applying = false;
+    e.notice = 'The correction was not accepted: ' + err.message;
+    renderEditBar();
+    return;
+  }
+  e.notice = 'Rebuilding the distance fields, the surfaces and the outlines…';
+  renderEditBar();
+  const done = await pollEdit(v.jobId, row.id);
+  e.applying = false;
+  if (!done || done.state !== 'applied') {
+    e.notice = (done && done.error)
+      ? 'The correction could not be applied: ' + done.error
+      : 'The correction is still being applied; the case will not show it until it is.';
+    renderEditBar();
+    return;
+  }
+  // The server has the new mask, so this baseline is what the next diff is measured
+  // against. Set BEFORE the reopen, because the reopen tears the editing layer down.
+  if (V.commitBaseline) V.commitBaseline();
+  markJobStale(v.jobId);
+  e.notice = null;
+  const jobId = v.jobId;
+  setEditMode(false);
+  setNotice('Correction applied. Every measurement was recomputed from it.', 'ok');
+  // A full reopen rather than a partial refresh. `addSurface` is memoised with no
+  // update path, the labelmap volume is in the Cornerstone cache, and `arch.json` is
+  // held under an `immutable` header -- so a reopen is the only reload that is
+  // guaranteed to be showing one consistent generation of the case.
+  //
+  // `force`, because the case is ALREADY open and `openCase` returns early for that --
+  // which is what made this whole path a no-op with a success notice on top of it.
+  await openCase(jobId, { force: true });
+}
+
+/** Poll one edit until it stops being queued. Bounded, and it says so when it gives up. */
+/** MEASURED: 141 s on a 205x205x135 case with both jaws, 84 meshes and a 19 MB
+ *  structure set; 19 s on a small-field-of-view one. 600 s is four times the worst
+ *  measured run, and the worker requeues anything stuck for 900 s -- so a client that
+ *  gives up here has not lost the correction, it has only stopped watching, and it
+ *  says exactly that. */
+async function pollEdit(jobId, editId, timeoutMs = 600000) {
+  const t0 = Date.now();
+  let wait = 900;
+  while (Date.now() - t0 < timeoutMs) {
+    await new Promise((r) => setTimeout(r, wait));
+    wait = Math.min(4000, wait * 1.35);
+    let list;
+    try {
+      list = await api(`/jobs/${jobId}/edits`);
+    } catch (err) {
+      return { state: 'unknown', error: err.message };
+    }
+    const row = (list.edits || []).find((x) => x.id === editId);
+    if (!row) return { state: 'unknown', error: 'the correction is no longer listed' };
+    if (row.state === 'applied' || row.state === 'failed') return row;
+  }
+  return null;
+}
+
+/** What has already been corrected on this case, for the rail and the printed sheet.
+ *
+ *  Read from `report.edits`, which `worker/rederive.py` appends to -- so it survives a
+ *  reload, a new session and a different browser, and the sentence about the display
+ *  grid travels with it. */
+function renderEditHistory(r) {
+  const box = $('editsCard');
+  if (!box) return;
+  const hist = (r && r.edits) || [];
+  box.hidden = !hist.length;
+  if (!hist.length) { box.innerHTML = ''; return; }
+  box.innerHTML = `<div class="card-head"><h3>Hand corrections</h3>
+      <span class="hint">${hist.length}</span></div>`
+    + hist.slice().reverse().map((h) => {
+      const names = Object.keys(h.structures || {}).map((i) => structureName(
+        ((allStructures() || []).find((s) => s.index === Number(i)) || {}).id || i));
+      return `<div class="editrow">
+        <div class="editrow-head">
+          <b>${esc(fmtWhen(h.at))}</b>
+          <span class="hint">${Number(h.voxels || 0).toLocaleString()} voxels</span>
+        </div>
+        ${names.length ? `<p class="hint">${esc(names.join(', '))}</p>` : ''}
+        <details class="sidenote"><summary>What this means for the numbers</summary>
+          <p class="finding-why">${esc(h.basis || '')}</p>
+          <p class="finding-why">${esc(h.frozen || '')}</p>
+        </details>
+      </div>`;
+    }).join('');
 }
 
 /* --------------------------------------------------------------- settings */
@@ -987,6 +1657,15 @@ async function upload(file) {
   // the difference between "working" and "frozen" on a slow link.
   const body = new FormData();
   body.append('file', file, file.name);
+  // The reader's model choice, alongside the volume in the same multipart request.
+  // Omitted entirely when nothing was chosen: `jobs.options` is nullable and null means
+  // "the deployment default at the time", which is the honest record for every job
+  // uploaded before the picker existed. The API validates this against the worker's
+  // model inventory BEFORE writing a byte, so a request naming a model this deployment
+  // does not have comes back as a 400 with the reason rather than as a job that runs
+  // something else.
+  const cfg = uploadConfig();
+  if (cfg) body.append('config', JSON.stringify(cfg));
   const xhr = new XMLHttpRequest();
   xhr.open('POST', API + '/jobs');
   // XHR does not go through api(), so the token has to be set by hand here.
@@ -1203,6 +1882,12 @@ function teardownCase() {
   $('railToggle').hidden = true;
   document.body.classList.remove('in-case');
   closeDisplayPop();
+  // Editing has to come off with the case. It binds the primary mouse button to a
+  // brush, and the bar and the crosshair cursor are static markup that outlives the
+  // viewer -- so a case closed mid-edit would leave the next one armed.
+  { const e = editState(); if (e && e.on) setEditMode(false); }
+  document.body.classList.remove('editing');
+  { const bar = $('editBar'); if (bar) bar.hidden = true; }
   // Put the 3-D pane back in the MPR grid BEFORE unmounting. `move3dPane` may have
   // parked it in the plan stage, and leaving it there would hand the next case a pane
   // nested in a hidden container -- and `setMode('volume')` short-circuits when the
@@ -1220,8 +1905,18 @@ function teardownCase() {
 }
 
 /** Load a case into the workspace. The router has already shown the view. */
-async function openCase(jobId) {
-  if (state.viewer && state.viewer.jobId === jobId) return;
+async function openCase(jobId, opts) {
+  // `force` REOPENS a case that is already open, and the distinction is load-bearing.
+  //
+  // The guard below exists so the router does not remount a mounted case on every hash
+  // change -- right for navigation, and wrong for the one caller that means "this
+  // case's bytes have changed": after a hand correction is applied, `openCase` was a
+  // no-op, so the app printed "Correction applied. Every measurement was recomputed
+  // from it" over the pre-edit report, the pre-edit surfaces and the pre-edit numbers.
+  // Found by applying a second correction live and watching `report.edits` stay at 1
+  // while the API returned 2.
+  const force = !!(opts && opts.force);
+  if (!force && state.viewer && state.viewer.jobId === jobId) return;
   if (state.viewer) teardownCase();
 
   $('caseTitle').textContent = 'Loading\u2026';
@@ -1263,6 +1958,7 @@ async function openCase(jobId) {
   document.body.classList.add('in-case');
 
   renderFindings(r);
+  renderEditHistory(r);
   renderAccuracy(r);
   renderModelPriors();
   renderSeries(state.viewer);
@@ -1317,7 +2013,11 @@ function setMode(mode) {
   $('popHelp').innerHTML = VIEW_NOTES[mode] || '';
   // Controls that only mean something for the Cornerstone panes. Left visible in the
   // tile view they are three dead switches next to two live ones.
-  ['layoutPicker', 'modePicker3d', 'mprReset'].forEach((id) => { $(id).hidden = !volume; });
+  // ...and the editing toggle, which only means anything where the labelmap is: the
+  // brush writes on the Cornerstone slice views, and there is nothing for it to do in
+  // the tile view or the implant tab.
+  ['layoutPicker', 'modePicker3d', 'mprReset', 'editBtn']
+    .forEach((id) => { const el = $(id); if (el) el.hidden = !volume; });
   // The mode has to be recorded BEFORE the early return: renderArch branches on
   // `v.mode === 'plan'` to turn the FDI chart into an implant-site picker, and for
   // as long as this line sat below the return, that mode was never once set.
@@ -2265,6 +2965,21 @@ function renderRunDetails(r) {
   const mt = mesh.totals || {};
 
   const rows = [];
+  // WHAT WAS ASKED FOR, before what ran. `reports.requested` exists only on a job
+  // uploaded through the model picker; its absence means the deployment default at the
+  // time, which is the truth about every job that predates the picker and must not be
+  // rendered as a set of models nobody chose.
+  const req = r.requested;
+  if (req && req.config) {
+    const chosen = Object.keys(req.config).filter((k) => req.config[k] !== 'off');
+    rows.push(['Chosen at upload', `${chosen.length} model(s)`, '']);
+    (req.unavailable || []).forEach((u) => {
+      // A requested model that was not deployed. Loud, because the numbers that come
+      // out the far end are clearances to structures whose predicted volume depends on
+      // which model drew them -- a quiet fallback here is a wrong number later.
+      rows.push(['  not available', `${u.name} — ${u.reason}`, 'bad']);
+    });
+  }
   // The model NAME is a value, not a label. It used to be interpolated into the
   // `<dt>` -- so "ToothFairy3 U-Mamba2 (Task 1) peak VRAM" became a 263px
   // unwrappable label and took the whole rail with it. Both numbers are optional:
@@ -2696,6 +3411,25 @@ const CROP_WINDOW_MM = 36;   // implant (<=16) + envelope + diagnostic margin, a
 const CROP_PAD_MM = 6;
 const CROP_MIN_MM = 30;
 
+/* SCROLL TO ZOOM, inside the crop rather than beside it.
+ *
+ * A free zoom would mean a scale factor in the transform, and then `planSize`,
+ * `canvasPoint`, `withScreenUnits` and `drawImage` would each need it -- a fifth
+ * coordinate factor on a contract that took a round trip measured at 1.42e-14 px to
+ * pin down. There is no need: what limits the section's magnification is its ASPECT,
+ * `object-fit: contain` fits it by the long side, and the crop already changes the
+ * aspect. Scaling the crop WINDOW is therefore a real zoom that touches no coordinate
+ * code at all -- the same single translation, computed from a different span.
+ *
+ * The window stays anchored on the implant (or the crest), so there is no pan gesture
+ * to conflict with the ruler or the drag, and it can never be scrolled to somewhere
+ * with nothing in it. Zooming out far enough returns the whole section, which is the
+ * same state the `Z` toggle reaches.
+ */
+const XS_ZOOM_MIN = 0.6;
+const XS_ZOOM_MAX = 2.6;
+const XS_ZOOM_STEP = 1.12;      // per wheel notch, so a notch is the same proportion
+
 /** Rows [y0, y0+rows) of the section to show, or null for the whole picture. */
 function xsCropRows(info) {
   const p = planState();
@@ -2732,10 +3466,14 @@ function xsCropRows(info) {
     }
   }
   if (zHi == null) return null;
-  let span = Math.max(CROP_MIN_MM, zHi - zLo);
+  const content = Math.max(CROP_MIN_MM, zHi - zLo);
   // A long implant at full tilt can exceed the window. Widening rather than clipping is
   // the only safe direction, and it must be visible in the readout rather than silent.
-  span = Math.max(span, CROP_WINDOW_MM);
+  let span = Math.max(content, CROP_WINDOW_MM);
+  // The reader's zoom, applied to the window and floored at the CONTENT: scrolling in
+  // must never hide the platform or the apex of the implant the window is anchored on,
+  // because those are the two ends the whole verdict is about.
+  span = Math.max(zHi - zLo, span * (Number(p.xsZoom) || 1));
   const mid = (zHi + zLo) / 2;
   let y0 = Math.round((f.zTop - (mid + span / 2)) / f.rowPitch);
   let rows = Math.round(span / f.rowPitch);
@@ -2963,6 +3701,43 @@ function drawArcMarker() {
   drawRulers('pan');
 }
 
+/** The section's caption, the slice label and the slider position.
+ *
+ *  Extracted from `selectXs` so a view change that does not change WHICH section is in
+ *  view -- the crop window, the zoom, the whole/site toggle -- can repaint and relabel
+ *  without re-fetching the picture. `selectXs` reloads through `loadAuthedImage`, which
+ *  is a Cache Storage read, a blob URL and an image decode; at wheel rate that is a
+ *  stutter and a lot of garbage for a caption that already has its bytes on screen. */
+function renderXsMeta(info) {
+  const p = planState();
+  const s = info.cross_sections.s_mm[p.index];
+  const px = info.cross_sections.pixel_mm[0];
+  // The side is named from the sign of s, which the arch fit defines as negative to
+  // the patient's RIGHT. Naming it here rather than in the picture keeps the one
+  // laterality convention in one place.
+  const side = s < 0 ? 'right' : 'left';
+  // Four decimals, not two: the pitch is 0.1506 mm, and rounding it to 0.15 in the copy
+  // beside a ruler that uses the real value invites somebody to "correct" the ruler.
+  $('xsMeta').textContent =
+    `${Math.abs(s).toFixed(1)} mm ${side} of the midline · ${px.toFixed(4)} mm per pixel`
+    + ' · plane perpendicular to the arch'
+    // The slab thickness, and whether the picture is cropped. At 10-14 px/mm a reader
+    // starts treating the greyscale as fine detail when it is still a 1 mm AVERAGE, and
+    // a cropped picture that does not say so is a picture of somewhere smaller.
+    + ` · ${info.cross_sections.slab_mm || 1} mm slab`
+    + (() => {
+      // The window in MILLIMETRES, not just "cropped": with a zoom the crop is no
+      // longer one fixed 36 mm, and a reader has to be able to tell 22 mm of ridge
+      // from 44 mm of it or the greyscale is a picture of an unknown extent.
+      const c = xsCropRows(info);
+      if (!c) return '';
+      const f = xsFrame(info);
+      return ' · ' + (c.rows * f.rowPitch).toFixed(0) + ' mm of z, at the site';
+    })();
+  $('xsLabel').textContent = `cross-section ${p.index + 1} of ${info.cross_sections.count}`;
+  $('xsSlider').value = p.index;
+}
+
 function selectXs(i) {
   const p = planState();
   const info = ((p.arch || {}).jaws || {})[p.jaw];
@@ -3002,24 +3777,7 @@ function selectXs(i) {
     $('xsEmpty').hidden = true;
     drawRulers('xs');
   });
-  const s = info.cross_sections.s_mm[p.index];
-  const px = info.cross_sections.pixel_mm[0];
-  // The side is named from the sign of s, which the arch fit defines as negative to
-  // the patient's RIGHT. Naming it here rather than in the picture keeps the one
-  // laterality convention in one place.
-  const side = s < 0 ? 'right' : 'left';
-  // Four decimals, not two: the pitch is 0.1506 mm, and rounding it to 0.15 in the copy
-  // beside a ruler that uses the real value invites somebody to "correct" the ruler.
-  $('xsMeta').textContent =
-    `${Math.abs(s).toFixed(1)} mm ${side} of the midline · ${px.toFixed(4)} mm per pixel`
-    + ' · plane perpendicular to the arch'
-    // The slab thickness, and whether the picture is cropped. At 10-14 px/mm a reader
-    // starts treating the greyscale as fine detail when it is still a 1 mm AVERAGE, and
-    // a cropped picture that does not say so is a picture of somewhere smaller.
-    + ` · ${info.cross_sections.slab_mm || 1} mm slab`
-    + (xsCropRows(info) ? ' · cropped to the site (z)' : '');
-  $('xsLabel').textContent = `cross-section ${p.index + 1} of ${info.cross_sections.count}`;
-  $('xsSlider').value = p.index;
+  renderXsMeta(info);
   drawArcMarker();
   renderRulerList();
   renderImplantPanel();
@@ -3113,8 +3871,16 @@ function drawRulers(which) {
                               which === 'pan' ? panAspectX(info) : 1,
                               which === 'xs' ? xsCropRows(info) : null);
   g.clearRect(0, 0, w, h);
-  if (isDrawable(img)) g.drawImage(img, 0, 0, w, h);
-  if (which === 'pan') drawArcMarkerOn(g, info, cv);
+  if (isDrawable(img)) {
+    // The brightness/contrast preference, on the PICTURE and on nothing else. Set
+    // around `drawImage` and cleared immediately, so every overlay below -- outlines,
+    // implant, envelope rings, chips, scale bar -- is drawn at full strength on top.
+    const filt = picFilter();
+    if (filt !== 'none' && 'filter' in g) g.filter = filt;
+    g.drawImage(img, 0, 0, w, h);
+    if ('filter' in g) g.filter = 'none';
+  }
+  if (which === 'pan') { drawArcMarkerOn(g, info, cv); drawPanImplants(g, cv, info); }
 
   if (which === 'xs') {
     // Anatomy first, then the implant on top of it: the implant is the thing being
@@ -3259,9 +4025,7 @@ function drawDistances(g, cv, info) {
   if (Math.abs(imp.s_mm - here) > XS_NEAR_MM) return;
   const m = p.measured[imp.id] || {};
   const f = xsFrame(info);
-  const down = imp.jaw === 'maxilla' ? 1 : -1;
-  const sa = Math.sin(imp.tilt_deg * Math.PI / 180);
-  const sb = down * Math.cos(imp.tilt_deg * Math.PI / 180);
+  const { a: sa, b: sb, fore, yawed } = sectionAxis(imp);
   const r = imp.diameter_mm / 2;
 
   const rows = [
@@ -3278,8 +4042,14 @@ function drawDistances(g, cv, info) {
     if (val == null && bound == null) return;
     const u = Number((mm.detail || {}).at_depth_mm || 0);
     // The implant-side end: on the AXIS at the argmin depth, pushed out to the surface.
-    const base = { t: imp.t_mm + sa * u, z: imp.z_mm + sb * u };
-    const dir = mk === 'clearance' ? approachVector(m.approach, imp) : null;
+    // `u` is a depth along the TRUE axis, so it is foreshortened onto the picture the
+    // same way every other mark on the implant is.
+    const base = { t: imp.t_mm + sa * u * fore, z: imp.z_mm + sb * u * fore };
+    // No caliper on an out-of-plane pose. The clearance is a three-dimensional number
+    // and its projection into this section is shorter, so a line drawn at the printed
+    // length would measure something that is not on screen -- the same reason
+    // mesial/distal never get one. The chip stays; only the line goes.
+    const dir = (mk === 'clearance' && !yawed) ? approachVector(m.approach, imp) : null;
     const cue = verdictColour(v, false);
     const text = val == null ? `> ${Number(bound).toFixed(1)}` : `${val.toFixed(2)}`;
     if (dir && val != null && val > 0) {
@@ -3388,6 +4158,146 @@ function drawArcMarkerOn(g, info, cv) {
   g.strokeStyle = '#ffd23b'; g.lineWidth = 2; g.globalAlpha = 0.9;
   g.beginPath(); g.moveTo(x, 0); g.lineTo(x, planSize(cv).h); g.stroke();
   g.restore();
+}
+
+/* ------------------------------------------- the panoramic as the MESIODISTAL view
+ * Two things were true at once: the panoramic strip did not show where any implant
+ * was, and mesiodistal angulation was pinned to zero because no view could show it.
+ * They are the same gap. The cross-section is the BUCCOLINGUAL plane -- `tilt` lives
+ * there and is drawn at true angle -- and the plane `yaw` lives in is (s, z), which is
+ * exactly the plane the panoramic reconstructs.
+ *
+ * This chart is honest in the ARCH frame, and says where it is not. Columns are
+ * polyline indices at `step_mm` apiece, rows are `pixel_mm[0]` of true z, and `planCtx`
+ * already folds the 3.32x pixel anisotropy into the backing store -- so a capsule drawn
+ * here in `(s_mm, z_mm)` has the right angle and the right length in that frame. What it
+ * is NOT is straight-line millimetres: `s` is arc length along the mid-line, so a
+ * structure at buccolingual offset `t` reads long by about `1 + t/R`. That is
+ * `metric_axes: "vertical_only"`, which `arch.json` already publishes, and it is
+ * exactly zero at `t = 0`, which is where a seated implant starts. The authoritative
+ * figure is still the three-dimensional one `/measure` returns; this is where the ANGLE
+ * is set, and no millimetre is printed on this canvas.
+ */
+
+/** `(s, z)` millimetres -> panoramic image pixels. Mirrors `drawArcMarkerOn`'s column
+ *  map exactly, so the section marker and an implant at the same `s` line up. */
+function panPixelOf(info, cv, sMm, zMm) {
+  const step = Number(info.step_mm) || 0.5;
+  const s0 = Number(info.s0_index) || 0;
+  const cols = Math.max(2, Number(info.panoramic.size[1]) || 2);
+  const w = planSize(cv).w;
+  const k = Number(sMm) / step + s0;
+  return { x: (k / (cols - 1)) * (w - 1),
+           y: (Number(info.panoramic.z_top_mm) - Number(zMm))
+              / Number(info.panoramic.pixel_mm[0]) };
+}
+
+/** The inverse, for the drag. */
+function panMmOf(info, cv, pt) {
+  const step = Number(info.step_mm) || 0.5;
+  const s0 = Number(info.s0_index) || 0;
+  const cols = Math.max(2, Number(info.panoramic.size[1]) || 2);
+  const w = planSize(cv).w;
+  const k = pt.x * ((cols - 1) / Math.max(1, w - 1));
+  return { s_mm: (k - s0) * step,
+           z_mm: Number(info.panoramic.z_top_mm)
+                 - pt.y * Number(info.panoramic.pixel_mm[0]) };
+}
+
+/** The panoramic's view of one pose: the in-plane axis unit and the foreshortening.
+ *
+ *  The same Minkowski argument `sectionAxis` sets out, one plane over. Dropping the
+ *  `t` component of `(sin y, sin t cos y, down cos t cos y)` leaves
+ *  `(sin y, down cos t cos y)`, whose norm is what this plane loses -- so here it is
+ *  BUCCOLINGUAL tilt that foreshortens and yaw that is drawn at true angle, the exact
+ *  mirror of the section. */
+function panAxis(imp) {
+  const down = imp.jaw === 'maxilla' ? 1 : -1;
+  const tl = (Number(imp.tilt_deg) || 0) * Math.PI / 180;
+  const yw = (Number(imp.yaw_deg) || 0) * Math.PI / 180;
+  const s = Math.sin(yw);
+  const z = down * Math.cos(tl) * Math.cos(yw);
+  const n = Math.hypot(s, z) || 1;
+  return { ds: s / n, dz: z / n, fore: n, tilted: Math.abs(tl) > 1e-9 };
+}
+
+/** The implant outline in the panoramic's own `(s, z)` millimetres. */
+function panImplantOutline(imp) {
+  const r = imp.diameter_mm / 2;
+  const { ds, dz, fore } = panAxis(imp);
+  const shoulder = (imp.length_mm - r) * fore;
+  const pt = (u, w) => [imp.s_mm + ds * u - dz * w, imp.z_mm + dz * u + ds * w];
+  const out = [pt(0, r), pt(shoulder, r)];
+  for (let i = 1; i < 12; i += 1) {
+    const th = (i / 12) * Math.PI;
+    out.push(pt(shoulder + r * Math.sin(th), r * Math.cos(th)));
+  }
+  out.push(pt(shoulder, -r), pt(0, -r));
+  return out;
+}
+
+/** Every implant of this jaw, on the panoramic. The SAME colour rule as the section:
+ *  the body is titanium grey, and the only coloured mark is the collar band. */
+function drawPanImplants(g, cv, info) {
+  const p = implantState();
+  if (!info || !info.ok || !info.panoramic) return;
+  (p.implants || []).forEach((imp) => {
+    if (imp.jaw !== p.jaw) return;
+    const sel = p.selected === imp.id;
+    const cue = verdictColour((p.measured[imp.id] || {}).verdict, p.measuring);
+    const r = imp.diameter_mm / 2;
+    const { ds, dz, fore } = panAxis(imp);
+    const at = (u, w) => panPixelOf(info, cv,
+      imp.s_mm + ds * u * fore - dz * w, imp.z_mm + dz * u * fore + ds * w);
+    const poly = panImplantOutline(imp).map(([s, z]) => panPixelOf(info, cv, s, z));
+
+    g.save();
+    g.beginPath();
+    poly.forEach((q, i) => (i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y)));
+    g.closePath();
+    g.fillStyle = 'rgba(199,204,212,.18)';
+    g.fill();
+    g.strokeStyle = IMPLANT_BODY;
+    g.lineWidth = sel ? 2 : 1.2;
+    g.stroke();
+
+    // The axis, which on this canvas IS the mesiodistal angulation.
+    const a0 = at(0.4, 0); const a1 = at(imp.length_mm - r * 0.4, 0);
+    g.beginPath(); g.moveTo(a0.x, a0.y); g.lineTo(a1.x, a1.y);
+    g.strokeStyle = 'rgba(199,204,212,.55)';
+    g.lineWidth = sel ? 1 : 0.7;
+    g.setLineDash([2, 3]); g.stroke(); g.setLineDash([]);
+
+    // The collar band carries the verdict here too, so a reader glancing at the strip
+    // sees WHICH implant is the problem without opening the panel.
+    g.beginPath();
+    [[0, r], [COLLAR_BAND_MM, r], [COLLAR_BAND_MM, -r], [0, -r]].forEach(([u, w], i) => {
+      const q = at(u, w);
+      return i ? g.lineTo(q.x, q.y) : g.moveTo(q.x, q.y);
+    });
+    g.closePath();
+    g.fillStyle = cue;
+    g.globalAlpha = sel ? 0.85 : 0.55;
+    g.fill();
+    g.globalAlpha = 1;
+    g.restore();
+  });
+}
+
+/** Which part of an implant a panoramic click landed on. Mirrors `hitTest`, in (s, z).
+ *  `apex` is the yaw handle, `body` moves the implant along the arch. */
+function panHitTest(imp, info, cv, pt) {
+  const q = panMmOf(info, cv, pt);
+  const { ds, dz, fore } = panAxis(imp);
+  const dS = q.s_mm - imp.s_mm;
+  const dZ = q.z_mm - imp.z_mm;
+  const along = dS * ds + dZ * dz;
+  const across = Math.abs(-dS * dz + dZ * ds);
+  const len = imp.length_mm * fore;
+  if (across > imp.diameter_mm / 2 + 1.0) return null;
+  if (along < -1.0 || along > len + 1.0) return null;
+  if (along > len - 1.4) return 'apex';
+  return 'body';
 }
 
 function wireRuler() {
@@ -3597,6 +4507,26 @@ const MAX_IMPLANTS = 8;
  *  drag cannot disagree about what is reachable. */
 const MAX_TILT_DEG = 35;
 
+/** Mesiodistal angulation, the angle the panoramic draws at true value.
+ *
+ *  Tighter than the buccolingual clamp on purpose. Buccolingual tilt is routinely large
+ *  -- an anterior maxillary implant follows a labially inclined ridge -- while a
+ *  mesiodistally angulated implant is fighting the neighbouring roots on both sides,
+ *  and past about 30 degrees the abutment cannot be brought back to the occlusal plane.
+ *  The server accepts up to 45; the reason the client stops earlier is clinical, not
+ *  arithmetic, so it is stated here rather than duplicated as a bare number. */
+const MAX_YAW_DEG = 30;
+const YAW_STEP_DEG = 1;
+
+/** Clocking, in fifteens: the connection hex has six-fold symmetry, so 15 degrees is
+ *  half an index position and there is nothing finer to ask for.
+ *
+ *  IT MOVES NO MEASUREMENT. The measured solid is a body of revolution about the axis,
+ *  so every clearance is invariant under it exactly; `/measure` returns that sentence
+ *  in `pose.notes` and the panel prints it. A control that changes the picture and not
+ *  the numbers has to say so, or a reader concludes the numbers are broken. */
+const ROLL_STEP_DEG = 15;
+
 /** How much of the implant, measured down from the platform, carries the verdict band.
  *
  *  1.2 mm is the machined collar length of a 10 mm implant in the catalogue's middle,
@@ -3615,14 +4545,43 @@ function implantState() {
   return p;
 }
 
-/** The implant outline in the section's own (t, z) millimetres: body + apical dome. */
+/* ------------------------------------------------- the section's view of a 3-D pose
+ * THE PROJECTION OF A CAPSULE IS A CAPSULE, and that one fact is the whole reason
+ * mesiodistal angulation can be drawn here honestly rather than refused.
+ *
+ * The measured solid is `segment (+) ball(r)`. Orthogonal projection distributes over a
+ * Minkowski sum, the projection of the ball is a disc of the same radius, and the
+ * projection of the axis segment is a segment in the SAME in-plane direction: the axis
+ * is `(sin y, sin t cos y, down cos t cos y)` in `(s, t, z)`, so dropping the `s`
+ * component leaves `cos y * (sin t, down cos t)`. Direction unchanged, length scaled.
+ *
+ * So a yawed implant costs this drawing exactly one scalar -- `fore` -- and every depth
+ * along the axis is drawn at `u * fore`. Nothing else in the outline, the envelope, the
+ * hit test or the platform band changes, and at `yaw = 0` every one of them is
+ * bit-identical to what it drew before.
+ *
+ * What it does NOT license is drawing a 3-D distance in this plane. A clearance is
+ * measured in three dimensions; its in-plane projection is shorter than the number on
+ * the chip. `drawDistances` therefore drops the caliper when the pose is out of plane
+ * and keeps the chip, which is the same rule it already applies to mesial/distal.
+ */
+function sectionAxis(imp) {
+  const down = imp.jaw === 'maxilla' ? 1 : -1;
+  const tl = (Number(imp.tilt_deg) || 0) * Math.PI / 180;
+  const yw = (Number(imp.yaw_deg) || 0) * Math.PI / 180;
+  return { a: Math.sin(tl), b: down * Math.cos(tl),
+           fore: Math.abs(Math.cos(yw)), yawed: Math.abs(yw) > 1e-9 };
+}
+
+/** The implant outline in the section's own (t, z) millimetres: body + apical dome.
+ *
+ *  Foreshortened by `sectionAxis().fore` when the pose is angulated out of plane; see
+ *  the block comment above for why that is exact and not an approximation. */
 function implantOutline(imp) {
   const r = imp.diameter_mm / 2;
-  const down = imp.jaw === 'maxilla' ? 1 : -1;
-  const a = Math.sin(imp.tilt_deg * Math.PI / 180);
-  const b = down * Math.cos(imp.tilt_deg * Math.PI / 180);
+  const { a, b, fore } = sectionAxis(imp);
   // axis unit in (t, z); the perpendicular is (-b, a)
-  const shoulder = imp.length_mm - r;
+  const shoulder = (imp.length_mm - r) * fore;
   const pt = (u, w) => [imp.t_mm + a * u - b * w, imp.z_mm + b * u + a * w];
   const out = [pt(0, r), pt(shoulder, r)];
   for (let i = 1; i < 12; i += 1) {
@@ -3792,15 +4751,17 @@ function hitTest(imp, info, pt) {
   const f = xsFrame(info);
   const t = f.tMin + pt.x * f.colPitch;
   const z = f.zTop - pt.y * f.rowPitch;
-  const down = imp.jaw === 'maxilla' ? 1 : -1;
-  const a = Math.sin(imp.tilt_deg * Math.PI / 180);
-  const b = down * Math.cos(imp.tilt_deg * Math.PI / 180);
+  const { a, b, fore } = sectionAxis(imp);
   const dt = t - imp.t_mm, dz = z - imp.z_mm;
-  const along = dt * a + dz * b;                 // depth down the axis
+  const along = dt * a + dz * b;                 // depth down the PROJECTED axis
   const across = Math.abs(-dt * b + dz * a);
+  // The grab zones are on the picture, so they are measured on the projection: a
+  // 45-degree yaw draws a 10 mm implant 7.1 mm long, and an apex handle at 10 mm
+  // would sit 2.9 mm past the end of the thing on screen.
+  const len = imp.length_mm * fore;
   if (across > imp.diameter_mm / 2 + 0.8) return null;
-  if (along < -0.8 || along > imp.length_mm + 0.8) return null;
-  if (along > imp.length_mm - 1.2) return 'apex';
+  if (along < -0.8 || along > len + 0.8) return null;
+  if (along > len - 1.2) return 'apex';
   if (along < 1.2) return 'platform';
   return 'body';
 }
@@ -3824,6 +4785,31 @@ function verdictColour(v, measuring) {
     : v.level === 'breach' ? '#f87171'
     : v.level === 'tight' ? '#fbbf24'
     : v.level === 'clear' ? '#34d399' : '#94a3b8';
+}
+
+/** The pose in words, for the printed sheet and for the print-only `::after`.
+ *
+ *  Every angle that is set is named, and CLOCKING SAYS WHAT IT DOES NOT DO. A reader
+ *  looking at a printed plan with "37 degrees rotation" on it and no number changed
+ *  anywhere would otherwise be entitled to think a measurement had been missed; the
+ *  measured solid is a body of revolution about the axis, so the invariance is exact.
+ */
+function anglePrint(imp) {
+  const bits = [];
+  const t = Number(imp.tilt_deg) || 0;
+  const y = Number(imp.yaw_deg) || 0;
+  const r = Number(imp.roll_deg) || 0;
+  if (t) bits.push(`${t.toFixed(0)}\u00b0 buccolingual`);
+  if (y) bits.push(`${y.toFixed(0)}\u00b0 mesiodistal`);
+  if (r) bits.push(`${r.toFixed(0)}\u00b0 clocking (changes no clearance)`);
+  return bits.join(', ');
+}
+function sizeOnly(imp) {
+  return `${imp.diameter_mm} \u00d7 ${imp.length_mm} mm`;
+}
+function posePrint(imp) {
+  const a = anglePrint(imp);
+  return a ? `${sizeOnly(imp)}, ${a}` : sizeOnly(imp);
 }
 
 /** Machined titanium, the same grey the 3-D body uses. */
@@ -3850,10 +4836,12 @@ function drawImplants(g, info) {
     // anything but a completed measurement. It just no longer paints the metal.
     const cue = verdictColour(v, p.measuring);
     const r = imp.diameter_mm / 2;
-    const down = imp.jaw === 'maxilla' ? 1 : -1;
-    const a = Math.sin(imp.tilt_deg * Math.PI / 180);
-    const b = down * Math.cos(imp.tilt_deg * Math.PI / 180);
-    const at = (u, w) => tzToPixel(info, imp.t_mm + a * u - b * w, imp.z_mm + b * u + a * w);
+    const { a, b, fore, yawed } = sectionAxis(imp);
+    // `u` is a TRUE depth down the implant axis and is projected here, once, so every
+    // mark below -- axis, platform, collar band, apex cross -- lands on the same
+    // foreshortened body the outline draws.
+    const at = (u, w) => tzToPixel(info,
+      imp.t_mm + a * u * fore - b * w, imp.z_mm + b * u * fore + a * w);
 
     g.save();
     // The SAFETY ENVELOPE, before the body so the implant sits on top of it.
@@ -3974,7 +4962,7 @@ function addImplant(s_mm, fdi) {
                       ...p.implants.map((i) => (Number(String(i.id).slice(1)) || 0) + 1));
   const id = `i${p.nextId}`;
   p.nextId += 1;
-  const imp = { id, jaw: p.jaw, s_mm, t_mm: 0, tilt_deg: 0, yaw_deg: 0,
+  const imp = { id, jaw: p.jaw, s_mm, t_mm: 0, tilt_deg: 0, yaw_deg: 0, roll_deg: 0,
                 length_mm: 10, diameter_mm: 4.1,
                 // Added from the section rather than from the chart? Adopt whatever
                 // site this arc position IS. Without it `+ Add implant` had no site, so
@@ -4094,6 +5082,30 @@ function implantKey(e) {
       imp.tilt_deg = Math.min(MAX_TILT_DEG,
         imp.tilt_deg + (e.shiftKey ? TILT_COARSE_DEG : TILT_STEP_DEG));
       break;
+    // Mesiodistal angulation -- the panoramic's plane. Next to the buccolingual pair on
+    // the keyboard because they are the same gesture in two planes, and refused
+    // outright when the manifest publishes no tangents: yaw rotates toward +s, and the
+    // tangent is what defines which way +s points. Deriving it as `up x n` gets the
+    // SIGN wrong at the far ends of real arches, so a refusal beats a mirror.
+    case ';': case ':':
+      if (!canYaw(info)) { did = false; break; }
+      pushUndo('yaw');
+      imp.yaw_deg = Math.max(-MAX_YAW_DEG,
+        (Number(imp.yaw_deg) || 0) - (e.shiftKey ? TILT_COARSE_DEG : YAW_STEP_DEG));
+      break;
+    case "'": case '"':
+      if (!canYaw(info)) { did = false; break; }
+      pushUndo('yaw');
+      imp.yaw_deg = Math.min(MAX_YAW_DEG,
+        (Number(imp.yaw_deg) || 0) + (e.shiftKey ? TILT_COARSE_DEG : YAW_STEP_DEG));
+      break;
+    // Clocking. Wraps rather than clamping -- a rotation has no ends -- and is the one
+    // tool here that changes no number, which the panel says in as many words.
+    case 'r': case 'R':
+      pushUndo('clocking');
+      imp.roll_deg = (((Number(imp.roll_deg) || 0)
+        + (e.shiftKey ? -ROLL_STEP_DEG : ROLL_STEP_DEG) + 360) % 360);
+      break;
     // Size, stepped through the served catalogue rather than by free arithmetic: a
     // diameter this app cannot name is a diameter nobody can order.
     case '+': case '=': pushUndo('length'); stepSize(imp, 'length_mm', +1, e.shiftKey); break;
@@ -4138,6 +5150,19 @@ function stepSize(imp, field, dir, wide) {
   imp[f] = list[j];
 }
 
+/** Whether mesiodistal angulation is available on this jaw's manifest.
+ *
+ *  It needs `tangents`, and for one reason: yaw rotates the axis toward +s, and the
+ *  tangent array is the only published thing that says which direction that is.
+ *  `plan_geometry.implant_frame` raises rather than derive it from `up x n`, because the
+ *  handedness of the published normals relative to the published tangents FLIPS at the
+ *  extreme ends of 2 of 10 real jaw fits -- so a derived sign would mirror the
+ *  angulation exactly where a third molar sits. The control is disabled with that
+ *  reason on it, which is a stated absence rather than a dead input. */
+function canYaw(info) {
+  return !!(info && Array.isArray(info.tangents) && info.tangents.length);
+}
+
 /** Keep an implant inside the picture it is drawn on. A pose the section cannot show is
  *  a pose the reader cannot check. */
 function clampImplant(info, imp) {
@@ -4146,6 +5171,15 @@ function clampImplant(info, imp) {
   imp.t_mm = Math.max(-tMax, Math.min(tMax, imp.t_mm));
   const zLo = f.zTop - (info.cross_sections.size[0] - 1) * f.rowPitch;
   imp.z_mm = Math.max(zLo + 1, Math.min(f.zTop - 1, imp.z_mm));
+  // ...and inside the ARCH, now that the panoramic can drag it along one. Off the end
+  // of the polyline the frame is clamped to the last index, so the implant would stop
+  // moving while its stored `s_mm` kept going -- two poses, one picture.
+  const arc = (info.cross_sections || {}).s_mm || [];
+  if (arc.length) {
+    imp.s_mm = Math.max(Math.min(arc[0], arc[arc.length - 1]),
+                        Math.min(Math.max(arc[0], arc[arc.length - 1]), imp.s_mm));
+  }
+  if (!canYaw(info)) imp.yaw_deg = 0;
 }
 
 /** How near a published site has to be, along the arch, to count as THIS site.
@@ -4205,6 +5239,12 @@ function alignToSite(info, imp) {
     : info.occlusal_z_mm + down * 1.0;
   imp.t_mm = 0;                 // the crest midline, which is where `ridge.py` measures
   imp.tilt_deg = 0;
+  // ALL THREE angles, not just the one. `C` is "re-seat on the ridge", and a re-seat
+  // that left a 20-degree mesiodistal angulation in place would put the platform on
+  // the crest and the apex somewhere nobody asked for -- which is exactly the
+  // half-reset that made a "complete record" necessary in `measure_sites`.
+  imp.yaw_deg = 0;
+  imp.roll_deg = 0;
   imp.alignedTo = crest != null ? 'crest' : 'occlusal';
 
   const h = site && site.height_mm != null ? site.height_mm : null;
@@ -4299,6 +5339,95 @@ function wireImplants() {
   });
 }
 
+/** The panoramic's own pointer gestures: move along the arch, and set the yaw.
+ *
+ *  Registered in the CAPTURE phase, ahead of `wireRuler`'s listener on the same
+ *  element, and it stops immediate propagation when it takes the gesture -- otherwise
+ *  the same pointerdown would also start a ruler and, on release without movement,
+ *  scrub the section stack out from under the implant being dragged.
+ *
+ *  These two are the gestures the panoramic had none of. Mesiodistal POSITION had no
+ *  pointer at all -- `s_mm` was only reachable by placing a new implant or by `D`,
+ *  which offsets by a fixed 7 mm -- and mesiodistal ANGULATION had no control anywhere.
+ */
+function wirePanImplants() {
+  const cv = $('panCanvas');
+  if (!cv) return;
+  cv.addEventListener('pointerdown', (e) => {
+    const p = implantState();
+    const info = ((p.arch || {}).jaws || {})[p.jaw];
+    if (!info || !info.ok || !p.implants.length) return;
+    const pt = canvasPoint(cv, e);
+    if (!pt) return;
+    for (const imp of p.implants) {
+      if (imp.jaw !== p.jaw) continue;
+      const part = panHitTest(imp, info, cv, pt);
+      if (!part) continue;
+      e.stopImmediatePropagation();
+      p.selected = imp.id;
+      p.panDrag = { id: imp.id, part, from: panMmOf(info, cv, pt),
+                    s0: imp.s_mm, z0: imp.z_mm, yaw0: imp.yaw_deg || 0 };
+      cv.setPointerCapture(e.pointerId);
+      renderImplantPanel();
+      drawRulers('pan');
+      return;
+    }
+  }, true);
+
+  cv.addEventListener('pointermove', (e) => {
+    const p = planState();
+    if (!p || !p.panDrag) return;
+    const info = ((p.arch || {}).jaws || {})[p.jaw];
+    const pt = canvasPoint(cv, e);
+    if (!pt) return;
+    const imp = p.implants.find((i) => i.id === p.panDrag.id);
+    if (!imp) return;
+    const now = panMmOf(info, cv, pt);
+    if (p.panDrag.part === 'body') {
+      imp.s_mm = p.panDrag.s0 + (now.s_mm - p.panDrag.from.s_mm);
+      imp.z_mm = p.panDrag.z0 + (now.z_mm - p.panDrag.from.z_mm);
+      // The site follows the position, or is dropped: a plan that still claims FDI 36
+      // after being dragged onto 34 measures its tooth clearance against the wrong
+      // exclusion and prints the wrong tooth number on the sheet.
+      imp.site_fdi = siteAt(info, imp.s_mm);
+    } else {
+      // The yaw handle. Solve the pose for the direction the pointer is asking for
+      // rather than accumulating pixels: the axis satisfies
+      //   axis_s / axis_z = tan(yaw) / (down * cos(tilt)),
+      // so a target `(ds, dz)` gives `tan(yaw) = (ds / dz_apical) * cos(tilt)` and the
+      // gesture means the same thing at every zoom level and on every screen.
+      const down = imp.jaw === 'maxilla' ? 1 : -1;
+      const ds = now.s_mm - imp.s_mm;
+      const apical = (now.z_mm - imp.z_mm) * down;
+      if (apical > 0.5) {
+        const ct = Math.cos((Number(imp.tilt_deg) || 0) * Math.PI / 180);
+        const want = Math.atan2(ds * ct, apical) * 180 / Math.PI;
+        imp.yaw_deg = Math.max(-MAX_YAW_DEG, Math.min(MAX_YAW_DEG, want));
+      }
+    }
+    clampImplant(info, imp);
+    drawRulers('pan');
+    // The section has to follow: the implant may have left the slice in view, and the
+    // outline there is what the clearance chips hang off.
+    drawRulers('xs');
+    requestMeasure(220);
+  });
+
+  cv.addEventListener('pointerup', (e) => {
+    const p = planState();
+    if (!p || !p.panDrag) return;
+    const imp = p.implants.find((i) => i.id === p.panDrag.id);
+    p.panDrag = null;
+    try { cv.releasePointerCapture(e.pointerId); } catch { /* already gone */ }
+    // Land on the section the implant is now nearest to, so the buccolingual view and
+    // the mesiodistal one are looking at the same place.
+    const info = ((p.arch || {}).jaws || {})[p.jaw];
+    if (imp && info) selectXs(nearestXsIndex(info, imp.s_mm));
+    requestMeasure(0);
+    renderImplantPanel();
+  });
+}
+
 let _measureTimer = null;
 /** Ask the server. Debounced during a drag; immediate on release. */
 function requestMeasure(delayMs) {
@@ -4324,7 +5453,12 @@ function requestMeasure(delayMs) {
       // map rather than in it. Sorted ascending by the server, so [0] is the binding
       // pair and that is the one worth putting in front of the reader.
       p.pairs = r.pairs || [];
-      p.priors = r.priors; p.notice = r.notice;
+      // `edits` and `edit_penalty` travel WITH the priors rather than beside them: they
+      // are terms in the same budget, and a reader looking at "0.76 mm deducted" has to
+      // be able to find the 0.46 and the 0.30 in one place.
+      p.priors = { ...(r.priors || {}), edits: r.edits || [],
+                   edit_penalty: r.edit_penalty || {} };
+      p.notice = r.notice;
       p.measureError = null;
       p.measuredStale = null;
     } catch (err) {
@@ -4762,6 +5896,7 @@ function renderImplantPanel() {
     const v = m.verdict || {};
     const sel = p.selected === imp.id;
     const cat = implantSizes();
+    const yawOk = canYaw(info);
     const opts = (arr, cur) => arr
       .map((x) => `<option value="${x}" ${x === cur ? 'selected' : ''}>${x}</option>`).join('');
     const title = imp.site_fdi
@@ -4778,7 +5913,7 @@ function renderImplantPanel() {
         <button class="link imp-del" data-del="${imp.id}" type="button"
           aria-label="Remove the implant at ${esc(title)}">remove</button>
       </div>
-      <div class="imp-ctl row" data-print="${imp.diameter_mm} \u00d7 ${imp.length_mm} mm, ${Number(imp.tilt_deg || 0).toFixed(0)}\u00b0 tilt">
+      <div class="imp-ctl row" data-print="${posePrint(imp)}">
         <span class="sep">&#8960;</span>
         <select data-f="diameter_mm" data-id="${imp.id}"
           aria-label="Diameter in millimetres">${opts(cat.diameter, imp.diameter_mm)}</select>
@@ -4786,11 +5921,27 @@ function renderImplantPanel() {
         <select data-f="length_mm" data-id="${imp.id}"
           aria-label="Length in millimetres">${opts(cat.length, imp.length_mm)}</select>
         <span class="sep">mm</span>
+      </div>
+      <div class="imp-ang row">
+        <span class="sep" title="Buccolingual angulation, in the cross-section plane. Drawn there at true angle.">B</span>
         <input type="number" data-f="tilt_deg" data-id="${imp.id}"
+          data-lo="${-MAX_TILT_DEG}" data-hi="${MAX_TILT_DEG}"
           min="${-MAX_TILT_DEG}" max="${MAX_TILT_DEG}" step="1"
           value="${Number(imp.tilt_deg || 0).toFixed(0)}"
           aria-label="Buccolingual angulation in degrees">
-        <span class="sep">&deg;</span>
+        <span class="sep" title="${yawOk ? 'Mesiodistal angulation, along the arch. Drawn at true angle on the panoramic; the cross-section shows it foreshortened.' : 'Unavailable on this case'}">M</span>
+        <input type="number" data-f="yaw_deg" data-id="${imp.id}"
+          data-lo="${-MAX_YAW_DEG}" data-hi="${MAX_YAW_DEG}"
+          min="${-MAX_YAW_DEG}" max="${MAX_YAW_DEG}" step="1"
+          value="${Number(imp.yaw_deg || 0).toFixed(0)}" ${yawOk ? '' : 'disabled'}
+          title="${yawOk ? '' : 'This case\u2019s arch manifest publishes no tangents, so the direction mesiodistal angulation rotates toward is unknown. Re-running the case publishes them.'}"
+          aria-label="Mesiodistal angulation in degrees">
+        <span class="sep" title="Clocking: rotation about the implant\u2019s own axis. It moves no clearance \u2014 the measured solid is a body of revolution about that axis \u2014 and is here for the connection.">R</span>
+        <input type="number" data-f="roll_deg" data-id="${imp.id}"
+          data-lo="-360" data-hi="360" min="-360" max="360" step="${ROLL_STEP_DEG}"
+          value="${Number(imp.roll_deg || 0).toFixed(0)}"
+          aria-label="Rotation about the implant axis in degrees; changes no measurement">
+        ${Number(imp.yaw_deg) ? `<span class="oop" title="Angulated ${Math.abs(Number(imp.yaw_deg)).toFixed(0)}\u00b0 out of the cross-section plane, so the section draws it at ${(Math.abs(Math.cos(Number(imp.yaw_deg) * Math.PI / 180)) * 100).toFixed(0)}% of its length. Every number below is measured in three dimensions.">&#8599;</span>` : ''}
       </div>
       ${off ? `<p class="imp-off">Not on this section &mdash;
         <button type="button" data-goto="${imp.id}">go to it</button></p>` : ''}
@@ -4834,6 +5985,13 @@ function renderImplantPanel() {
       ((v || {}).because || []).forEach((w) => {
         if (w && !provenance.includes(w)) provenance.push(w);
       });
+    });
+    // What each angle does to the numbers, from the SERVER's own `pose.notes` -- so
+    // the sentence that clocking changes no clearance, and the sentence that a yawed
+    // implant is measured in three dimensions and drawn foreshortened, are stated by
+    // the thing that computed them and not paraphrased here.
+    ((m.pose || {}).notes || []).forEach((w) => {
+      if (w && !provenance.includes(w)) provenance.push(w);
     });
   });
   const notices = [IMPLANT_CATALOG && IMPLANT_CATALOG.notice, p.notice].filter(Boolean);
@@ -4902,10 +6060,16 @@ function renderImplantPanel() {
       const imp = p.implants.find((i) => i.id === inp.dataset.id);
       if (!imp) return;
       const n = Number(inp.value);
-      const clamped = Math.max(-MAX_TILT_DEG, Math.min(MAX_TILT_DEG, Number.isFinite(n) ? n : 0));
+      // PER FIELD, from the input's own bounds. This clamped every numeric input to
+      // MAX_TILT_DEG, which was right while there was exactly one; with three angles it
+      // would have silently pinned clocking to 35 degrees and made five of the six
+      // hex index positions unreachable.
+      const lo = Number(inp.dataset.lo);
+      const hi = Number(inp.dataset.hi);
+      const clamped = Math.max(lo, Math.min(hi, Number.isFinite(n) ? n : 0));
       imp[inp.dataset.f] = clamped;
       if (clamped !== n) inp.value = String(clamped);
-      drawRulers('xs'); requestMeasure(0);
+      drawRulers('xs'); drawRulers('pan'); requestMeasure(0);
     };
   });
   box.querySelectorAll('.imp').forEach((el) => {
@@ -4962,13 +6126,32 @@ function renderPlanPriors() {
   // change between implants or between cases, and they are on the printed sheet in
   // full. The one number that has to stay visible without a click is the deduction
   // itself, so it goes in the summary line.
+  // WHAT WAS ACTUALLY DEDUCTED, read back from the verdicts rather than taken from the
+  // top-level prior. They are the same number on an uncorrected case and they are not
+  // on an edited one: `plan_safety` deducts the model's p95 PLUS the display grid's
+  // quantisation for a field a person has corrected, so quoting the constant here would
+  // have printed 0.46 as "deducted from every clearance" beside bars drawn at 0.76.
+  const deducted = [];
+  p.implants.forEach((imp) => {
+    const m = p.measured[imp.id] || {};
+    [m.verdict, m.accessory_canal_verdict, m.tooth_verdict].forEach((v) => {
+      const x = ((v || {}).numbers || {}).inward_p95_mm;
+      if (typeof x === 'number' && !deducted.includes(x)) deducted.push(x);
+    });
+  });
+  deducted.sort((a, b) => a - b);
+  const deductText = deducted.length
+    ? (deducted.length === 1 ? `${mm(deducted[0])} mm`
+       : `${mm(deducted[0])}\u2013${mm(deducted[deducted.length - 1])} mm`)
+    : `${mm(pr.inward_p95_mm)} mm`;
   box.innerHTML = `<details class="sidenote">
-    <summary>Error budget &mdash; <span class="mono">${mm(pr.inward_p95_mm)} mm</span>
-      deducted from every clearance</summary>
+    <summary>Error budget &mdash; <span class="mono">${deductText}</span>
+      deducted from the clearances above</summary>
     <p class="finding-why">${esc(pr.source || '')}</p>
     <ul class="notelist">
-      <li>Every clearance above has <span class="mono">${mm(pr.inward_p95_mm)} mm</span>
-        deducted for how far this segmentation may sit inside the truth.</li>
+      <li>Every clearance above has <span class="mono">${deductText}</span>
+        deducted for how far the contour it was measured to may sit inside the
+        truth.</li>
       <li>The worst single point ever measured on the holdout is
         <span class="mono">${mm(pr.worst_measured_inward_mm)} mm</span>. It is quoted, never
         deducted &mdash; deducting a one-voxel outlier would refuse every plan.</li>
@@ -4978,6 +6161,28 @@ function renderPlanPriors() {
     </ul>
     ${rows ? `<table class="ptable ptable-dark"><thead><tr><th>Graded against</th>
       <th>p95 inward</th><th>worst</th></tr></thead><tbody>${rows}</tbody></table>` : ''}
+    ${(() => {
+      // A HAND-CORRECTED field is graded against a WIDER budget, and the reader has to
+      // be able to see which one and by how much. Both terms separately: "0.76 mm
+      // deducted" is not something anybody can check, while "0.46 the model may
+      // under-draw plus 0.30 of edit quantisation" is.
+      const pen = pr.edit_penalty || {};
+      const keys = Object.keys(pen).filter((k) => used.has(k));
+      if (!keys.length) return '';
+      return `<ul class="notelist">` + keys.map((k) => {
+        const base = ((by[k] || {}).p95_mm);
+        const add = pen[k].add_p95_mm;
+        // ALL THREE NUMBERS. The summary above prints the range across every field, so
+        // an edited field's own deduction never appears there -- and "0.30 mm of
+        // quantisation" beside a bar drawn at 0.76 is not something a reader can
+        // check. The arithmetic, spelled out, is.
+        return `<li><b>${esc(((by[k] || {}).label) || k)}</b> was corrected by hand:
+          <span class="mono">${mm(base)}</span> the model may under-draw
+          + <span class="mono">${mm(add)}</span> of display-grid quantisation
+          = <span class="mono">${mm((Number(base) || 0) + (Number(add) || 0))} mm</span>
+          deducted. ${esc(pen[k].note)}</li>`;
+      }).join('') + `</ul>`;
+    })()}
   </details>`;
 }
 
@@ -5134,7 +6339,8 @@ function planPrintTable() {
     };
     return `<tr>
       <th>${esc(site)}</th>
-      <td>${imp.diameter_mm} &times; ${imp.length_mm} mm${imp.tilt_deg ? `, ${imp.tilt_deg.toFixed(0)}&deg; tilt` : ''}</td>
+      <td>${imp.diameter_mm} &times; ${imp.length_mm} mm${
+        posePrint(imp) === sizeOnly(imp) ? '' : `, ${esc(anglePrint(imp))}`}</td>
       ${cell(m.verdict)}
       ${cell(m.accessory_canal_verdict)}
       ${cell(m.tooth_verdict)}
@@ -5227,6 +6433,22 @@ function planPrintTable() {
           single point measured is ${v.worst_mm.toFixed(2)} mm. ${esc(v.source)}.</li>`).join('')}
       <li>${esc((p.priors || {}).source || '')}</li>
     </ul>
+    ${(() => {
+      // HAND CORRECTIONS, on paper. A clearance measured to a contour a person moved is
+      // a different claim from one measured to the model's, and the sheet is the
+      // artifact somebody carries into a consultation -- so the widened budget and the
+      // reason for it belong here in full rather than behind a disclosure on screen.
+      const ed = (p.priors && p.priors.edits) || [];
+      const pen = (p.priors && p.priors.edit_penalty) || {};
+      if (!ed.length && !Object.keys(pen).length) return '';
+      return `<h4>Hand corrections to the segmentation</h4><ul class="pbasis">`
+        + ed.map((e) => `<li>${esc(fmtWhen(e.at))} &mdash;
+            ${Number(e.voxels || 0).toLocaleString()} voxels, affecting
+            ${esc((e.fields || []).join(', ') || 'no measured field')}.</li>`).join('')
+        + Object.entries(pen).map(([f, v]) =>
+            `<li><b>${esc(f)}</b>: ${esc(v.note)}</li>`).join('')
+        + `</ul>`;
+    })()}
     <p class="pbasis">The 3-D view draws a generic threaded screw. The solid this plan
       MEASURES and the solid the STL EXPORTS are the envelope of that thread &mdash; a
       cylinder of the stated diameter and length closed by a rounded apex &mdash; so
@@ -5297,6 +6519,10 @@ function wirePlan() {
   // In CAPTURE order ahead of the ruler: grabbing an implant is a placement gesture,
   // and the ruler must not also start a measurement from the same pointerdown.
   wireImplants();
+  wirePanImplants();
+  wireXsZoom();
+  wireXsPic();
+  wirePanPane();
 }
 
 function tileUrl(i) {
@@ -5632,6 +6858,13 @@ function wireViewer() {
     // MPR left the panes wherever they were, which is indistinguishable from the
     // chart not working. The slice view has always self-healed here (`draw` re-runs
     // `jumpTiles`); the MPR did not, and that asymmetry was the bug.
+    // Leaving the slice views has to give the primary mouse button back. Editing binds
+    // it to a brush, and the plan tab's own drag lives on a different canvas -- so a
+    // mode left armed here would be a brush waiting on a tab nobody is editing in.
+    if (b.dataset.mode !== 'volume') {
+      const ed = editState();
+      if (ed && ed.on) setEditMode(false);
+    }
     if (b.dataset.mode === 'volume') { await mountVolume(); syncMprToIsolate(); }
     else if (b.dataset.mode === 'plan') { await loadArch(); loadPlans(); }
     else { await draw(); await syncSlicesToIsolate(); }
@@ -5639,6 +6872,7 @@ function wireViewer() {
   $('mprReset').onclick = () => window.DentistryViewer && DentistryViewer.resetCameras();
   $('backHome').onclick = closeViewer;
   wireDisplayPop();
+  wireEditing();
   wireRail();
   wireLayout();
   wire3d();
@@ -5677,7 +6911,22 @@ function wireViewer() {
       const b = $('xsFitBtn'); if (b) b.click();
       return;
     }
+    if (e.key === 'p' && state.viewer && state.viewer.mode === 'plan') {
+      e.preventDefault();
+      const b = $('panPaneBtn'); if (b) b.click();
+      return;
+    }
+    if (e.key === 'b' && state.viewer && state.viewer.mode === 'plan') {
+      e.preventDefault();
+      const b = $('xsPicBtn'); if (b) b.click();
+      return;
+    }
     if (e.key === 'd') { e.preventDefault(); toggleDisplayPop(); return; }
+    if (e.key === 'e' && state.viewer.mode === 'volume') {
+      e.preventDefault();
+      const b = $('editBtn'); if (b) b.click();
+      return;
+    }
     if (state.viewer.mode === 'volume') {
       const pane = { 1: 'axial', 2: 'coronal', 3: 'sagittal', 4: '3d' }[e.key];
       if (pane) { e.preventDefault(); setLayout('focus', pane); return; }
@@ -5828,9 +7077,139 @@ function setXsFit(mode) {
   const b = $('xsFitBtn');
   if (b) b.textContent = `view: ${xsFitPref}`;
   try { localStorage.setItem('dentistry.xsfit', xsFitPref); } catch (_) {}
-  // A full repaint, not just a redraw: the backing store's height changes with the
-  // window, so the picture has to be blitted again rather than decorated again.
-  if (p && p.arch) selectXs(p.index);
+  // A full repaint, not just a decoration: the backing store's height changes with the
+  // window, so the picture has to be blitted again. `drawRulers` does exactly that --
+  // it calls `planCtx` with the current crop and re-draws the held image -- so this no
+  // longer goes through `selectXs`, which would re-fetch and re-decode a JPEG that is
+  // already on screen.
+  if (p && p.arch) {
+    const info = ((p.arch || {}).jaws || {})[p.jaw];
+    drawRulers('xs');
+    if (info && info.ok) renderXsMeta(info);
+  }
+}
+
+/* ------------------------------------------------------- plan view options
+ * Three, and each is a statement about the PICTURE rather than about the anatomy.
+ *
+ * `zoom`  scales the crop window; see `xsCropRows`. Scroll or pinch on the section.
+ * `pane`  gives the panoramic working height instead of locator height, which is what
+ *         makes mesiodistal angulation adjustable rather than merely visible.
+ * `pic`   brightness and contrast, applied to the JPEG and to nothing else.
+ *
+ * `pic` is the one that needs a rule written down. The section and the panoramic are
+ * SERVER-RENDERED JPEGs, already windowed at a bone window from the full-resolution
+ * grid, and every millimetre in this app is measured server-side on that grid. So this
+ * cannot change any number, and it must not look as though it could: the filter is set
+ * on the context around `drawImage` only, so the outlines, the implant, the envelope
+ * rings and the chips are drawn at full strength over an adjusted picture, and the
+ * caption says which adjustment is on.
+ */
+const XS_PIC = [
+  { key: 'normal', filter: 'none', label: 'as rendered' },
+  { key: 'bright', filter: 'brightness(1.25) contrast(1.05)', label: 'brighter' },
+  { key: 'hard', filter: 'brightness(0.95) contrast(1.45)', label: 'harder edges' },
+];
+let xsPicPref = 'normal';
+
+function picFilter() {
+  const hit = XS_PIC.find((x) => x.key === xsPicPref);
+  return hit ? hit.filter : 'none';
+}
+
+function setXsPic(key) {
+  xsPicPref = XS_PIC.some((x) => x.key === key) ? key : 'normal';
+  const hit = XS_PIC.find((x) => x.key === xsPicPref);
+  const b = $('xsPicBtn');
+  if (b) {
+    b.textContent = `picture: ${hit.label}`;
+    b.title = 'Brightness and contrast of the rendered picture only. It changes no '
+      + 'measurement: every millimetre in this app is measured on the full-resolution '
+      + 'volume, server-side, and these are pre-windowed JPEGs of it.  ( b )';
+  }
+  try { localStorage.setItem('dentistry.xspic', xsPicPref); } catch (_) { /* private mode */ }
+  const p = planState();
+  if (p && p.arch) { drawRulers('xs'); drawRulers('pan'); }
+}
+
+function wireXsPic() {
+  const b = $('xsPicBtn');
+  if (!b) return;
+  let start = 'normal';
+  try { start = localStorage.getItem('dentistry.xspic') || 'normal'; } catch (_) { /* private */ }
+  setXsPic(start);
+  b.onclick = () => {
+    const i = XS_PIC.findIndex((x) => x.key === xsPicPref);
+    setXsPic(XS_PIC[(i + 1) % XS_PIC.length].key);
+  };
+}
+
+/** Scroll or pinch on the section: step the crop window. See `XS_ZOOM_STEP`. */
+function wireXsZoom() {
+  const cv = $('xsCanvas');
+  if (!cv) return;
+  cv.addEventListener('wheel', (e) => {
+    const p = planState();
+    const info = p && ((p.arch || {}).jaws || {})[p.jaw];
+    if (!info || !info.ok) return;
+    e.preventDefault();
+    // macOS pinch arrives as a wheel event with `ctrlKey` set, so one handler covers
+    // the trackpad gesture and the mouse wheel -- the same reason the 3-D pane's zoom
+    // is written this way.
+    const k = e.deltaY > 0 ? XS_ZOOM_STEP : 1 / XS_ZOOM_STEP;
+    p.xsZoom = Math.max(XS_ZOOM_MIN, Math.min(XS_ZOOM_MAX, (Number(p.xsZoom) || 1) * k));
+    // Zooming the window while the whole section is shown would do nothing at all, so
+    // the gesture implies the cropped view. Stated in the caption either way.
+    if ((p.xsFit || xsFitPref) === 'whole') { setXsFit('site'); return; }
+    drawRulers('xs');
+    renderXsMeta(info);
+  }, { passive: false });
+  // Double-click restores the default window. A zoom with no way back is a trap.
+  cv.addEventListener('dblclick', () => {
+    const p = planState();
+    const info = p && ((p.arch || {}).jaws || {})[p.jaw];
+    if (!info || !info.ok) return;
+    p.xsZoom = 1;
+    drawRulers('xs');
+    renderXsMeta(info);
+  });
+}
+
+/** The panoramic at working height instead of locator height.
+ *
+ *  The strip is deliberately short -- its horizontal axis is arc length and it is a
+ *  locator, so the pixels belong to the two views you plan against. But it is also the
+ *  only plane mesiodistal angulation is visible in, and 104 px of it is not enough to
+ *  set an angle on. So it is a TOGGLE, off by default, and the tall state is a mode the
+ *  reader chose rather than a default that quietly costs the section 92 px. */
+function setPanPane(open) {
+  const stage = $('planStage');
+  if (!stage) return;
+  stage.classList.toggle('pan-tall', !!open);
+  const b = $('panPaneBtn');
+  if (b) {
+    b.setAttribute('aria-pressed', open ? 'true' : 'false');
+    b.textContent = open ? 'mesiodistal: open' : 'mesiodistal';
+    b.title = open
+      ? 'Back to the locator strip, and give the pixels to the section  ( p )'
+      : 'Open the panoramic to working height: the plane mesiodistal angulation is '
+        + 'drawn in, and the one you can drag it in  ( p )';
+  }
+  try { localStorage.setItem('dentistry.panpane', open ? '1' : '0'); } catch (_) { /* private */ }
+  // Cornerstone measures a viewport once, at enable time, and the 3-D pane is a grid
+  // sibling of this one: without the resize a click in it lands on the wrong voxel.
+  afterLayoutChange();
+  const p = planState();
+  if (p && p.arch) { drawRulers('pan'); drawRulers('xs'); }
+}
+
+function wirePanPane() {
+  const b = $('panPaneBtn');
+  if (!b) return;
+  let open = false;
+  try { open = localStorage.getItem('dentistry.panpane') === '1'; } catch (_) { /* private */ }
+  setPanPane(open);
+  b.onclick = () => setPanPane(!$('planStage').classList.contains('pan-tall'));
 }
 
 function wireXsFit() {

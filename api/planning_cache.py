@@ -90,8 +90,11 @@ class Field:
 class Pack:
     """One case's pack: the header plus its mapped fields, per jaw."""
 
-    def __init__(self, root: Path):
+    def __init__(self, root: Path, stamp=None):
         self.root = root
+        #: `(mtime_ns, size)` of the header this Pack was built from. `get()` compares it
+        #: so a rebuilt pack is reopened rather than served from a stale mmap.
+        self.stamp = stamp
         self.header = json.loads((root / "header.json").read_text())
         self.fields: dict = {}
         for jaw, info in self.header.get("jaws", {}).items():
@@ -214,17 +217,41 @@ class _PackSampler:
 
 
 def get(results_dir: Path) -> Pack | None:
-    """The pack under `<results>/planning/pack`, or None when the job has none."""
+    """The pack under `<results>/planning/pack`, or None when the job has none.
+
+    **The cache is keyed on the header's mtime and size, not on the path alone.** It was
+    keyed on the path, and a pack is immutable for as long as a finished job's files
+    never change -- which stopped being true the moment a hand correction could rewrite
+    them. The header is read ONCE at construction and the fields are MEMORY-MAPPED, so a
+    path-keyed entry serves the pre-edit distance field and the pre-edit `edits` list
+    until the pod restarts or the LRU happens to evict it. That is the exact opposite of
+    the feature: the whole point of applying a correction is that the millimetres change.
+
+    `worker/planning_pack.rebuild_label_fields` rewrites `header.json` unconditionally,
+    so its mtime is the one signal that covers every rebuild -- including one that
+    rewrites a `.raw` file to the same length, where nothing about the file's own
+    metadata would have to move.
+
+    The superseded Pack is CLOSED rather than dropped: it holds one mmap per field, and
+    leaking them on every correction is a file-descriptor leak with a slow fuse.
+    """
     root = Path(results_dir) / "planning" / "pack"
-    if not (root / "header.json").exists():
+    hdr = root / "header.json"
+    try:
+        st = hdr.stat()
+    except OSError:
         return None
     key = str(root)
+    stamp = (st.st_mtime_ns, st.st_size)
     with _lock:
         hit = _open.get(key)
         if hit is not None:
-            _open[key] = _open.pop(key)          # move to the end: most recently used
-            return hit
-    pack = Pack(root)
+            if hit.stamp == stamp:
+                _open[key] = _open.pop(key)      # move to the end: most recently used
+                return hit
+            # Rebuilt under us. Drop and reopen; see the docstring.
+            _open.pop(key).close()
+    pack = Pack(root, stamp=stamp)
     with _lock:
         _open[key] = pack
         while len(_open) > MAX_OPEN_PACKS:

@@ -74,6 +74,17 @@ class Implant:
     diameter_mm: float
     tilt_deg: float = 0.0
     yaw_deg: float = 0.0
+    #: Rotation of the implant about its OWN axis -- "clocking" in the literature.
+    #:
+    #: It is carried here and used by nothing, and that is a statement rather than an
+    #: omission: the measured solid is the Minkowski sum of a segment with a ball, a
+    #: body of revolution about `axis()`, so every distance this module computes is
+    #: invariant under it *exactly*, not approximately. It matters to the drawn screw
+    #: (where the connection hex points) and to a real abutment; it cannot matter to a
+    #: clearance. `plan_geometry.implant_frame` applies it to the frame it hands the
+    #: renderer, and `tests/test_phantom.py` asserts the invariance so that a future
+    #: change which makes the solid non-symmetric cannot pass silently.
+    roll_deg: float = 0.0
     id: str = "i1"
     site_fdi: int | None = None
 

@@ -495,6 +495,132 @@ def build(grey: np.ndarray, merged: np.ndarray, image, fits: dict, out_dir: Path
                      for j, v in header["jaws"].items()}}
 
 
+def rebuild_label_fields(merged: np.ndarray, image, fits: dict, out_dir: Path,
+                         edit: dict | None = None) -> dict:
+    """Recompute only the LABEL-derived fields of an existing pack, in place.
+
+    Called after a hand correction to the segmentation. Three things make this a partial
+    rebuild rather than a `build()`:
+
+    * **The band is frozen.** The lattice is read from the existing header, not
+      recomputed, so `(s, t, z)` means exactly what it meant before the edit and every
+      saved plan's coordinates still refer to the same place. `dentistry/arch.py`'s
+      `revive_from_manifest` states the same argument for the polyline.
+    * **The grey field does not change.** It is the SCAN. A label edit cannot move it,
+      and re-sampling it would need the full-resolution greyscale volume, which is not
+      retained past the job -- so re-deriving from `build()` was never an option.
+    * **The density references are KEPT, and said to be kept.** They are measured from
+      the greyscale inside the jaw mask, so a large edit could move them slightly and
+      this cannot recompute them for the reason above. The header records that they
+      predate the edit rather than presenting them as freshly measured.
+
+    What IS recomputed is every distance field: the inferior alveolar canal, the
+    accessory canals and the teeth. Those are the fields every clearance, every
+    available-bone height and every verdict is read from, which is the whole point of
+    letting a specialist move a contour at all.
+    """
+    from dentistry import labels as L
+
+    out_dir = Path(out_dir) / "pack"
+    hdr_path = out_dir / "header.json"
+    if not hdr_path.is_file():
+        raise FileNotFoundError(f"no pack to rebuild at {hdr_path}")
+    header = json.loads(hdr_path.read_text())
+    spacing_zyx = tuple(reversed(image.GetSpacing()))
+    rebuilt: dict = {}
+    # WHICH FIELDS the edit reaches. `plan_safety` widens the error budget of a
+    # clearance only when the field it was measured to was actually touched, so it needs
+    # this named rather than inferred -- and the index sets live here, not there.
+    edited_indices = {int(k) for k in ((edit or {}).get("structures") or {})}
+    fields_touched: set = set()
+
+    for jaw, block in header.get("jaws", {}).items():
+        if not block.get("ok"):
+            continue
+        fit = fits.get(jaw)
+        if fit is None or not fit.ok:
+            # The pack says this jaw is measurable and the manifest no longer does.
+            # Refuse: silently leaving a stale distance field beside a live grey one is
+            # how a clearance to a structure nobody re-measured gets published.
+            raise ValueError(f"the pack has a {jaw} band but arch.json does not publish "
+                             f"that jaw, so its fields cannot be rebuilt")
+        lat = block["lattice"]
+        lps = _band_points(fit, lat)
+        band_box = _band_index_box(lps, image, merged.shape)
+        fields = dict(block.get("fields") or {})
+        # Every field except the greyscale is label-derived and is replaced. Dropped
+        # first, so a structure that has been erased ENTIRELY loses its field rather
+        # than keeping the pre-edit one -- an absent structure must read as absent.
+        for name in ("canal", "accessory_canal", "tooth"):
+            fields.pop(name, None)
+        total = 0
+        if jaw == "mandible":
+            edt, box = _canal_edt(merged, spacing_zyx, L.MERGED_CANAL, band_box=band_box)
+            if edt is not None:
+                d = _edt_into_band(edt, box, lps, image)
+                q = np.clip(d, 0, SAT_MM) * 1000.0
+                cp = out_dir / f"{jaw}.canal.raw"
+                np.ascontiguousarray(q, dtype=np.uint16).tofile(cp)
+                fields["canal"] = {"file": f"pack/{jaw}.canal.raw", "dtype": "uint16",
+                                   "scale": 0.001, "offset": 0.0, "unit": "mm",
+                                   "saturates_mm": SAT_MM, "bytes": cp.stat().st_size}
+                total += cp.stat().st_size
+                del edt, d, q
+            else:
+                (out_dir / f"{jaw}.canal.raw").unlink(missing_ok=True)
+            acc = sorted(L.ACCESSORY_CANALS)
+            n = _write_fine_field(
+                merged, spacing_zyx, acc, lps, image, out_dir, jaw, "accessory_canal",
+                fields, "the nearest drawn accessory canal (incisive or lingual)",
+                band_box=band_box)
+            if not n:
+                (out_dir / f"{jaw}.accessory_canal.raw").unlink(missing_ok=True)
+            total += n
+        tooth_ids = sorted(_jaw_tooth_indices(jaw))
+        if tooth_ids:
+            n = _write_fine_field(
+                merged, spacing_zyx, tooth_ids, lps, image, out_dir, jaw, "tooth",
+                fields, "the nearest drawn tooth of this jaw", band_box=band_box)
+            if not n:
+                (out_dir / f"{jaw}.tooth.raw").unlink(missing_ok=True)
+            total += n
+        del lps
+        block["fields"] = fields
+        if edited_indices:
+            if "canal" in fields and int(L.MERGED_CANAL) in edited_indices:
+                fields_touched.add("canal")
+            for name in ("accessory_canal", "tooth"):
+                idx = {int(i) for i in ((fields.get(name) or {}).get("indices") or [])}
+                if idx & edited_indices:
+                    fields_touched.add(name)
+        refs = dict(block.get("references") or {})
+        if edit:
+            # STATED, not silently carried. These are greyscale statistics inside the
+            # jaw mask, and the mask has just moved.
+            refs["measured_before_edits"] = True
+        block["references"] = refs
+        rebuilt[jaw] = {"fields": sorted(fields), "bytes": total}
+
+    if edit:
+        # The pack's own record of what it is now. `plan_safety` reads this to widen the
+        # error budget of every structure an edit touched, and `/measure` publishes it,
+        # so a clearance to an edited contour can never be reported as if the model had
+        # drawn it.
+        edits = list(header.get("edits") or [])
+        edits.append({**edit, "fields": sorted(fields_touched)})
+        header["edits"] = edits
+    hdr_path.write_text(json.dumps(header, indent=1) + "\n")
+    # The pre-compressed copy is served in preference to its source while it is at least
+    # as new; leaving a stale one here would serve the pre-edit header to every browser.
+    gz = out_dir / "header.json.gz"
+    if gz.exists():
+        import gzip
+
+        gz.write_bytes(gzip.compress(hdr_path.read_bytes(), 9))
+    log.info("planning pack: rebuilt label fields on %d jaw(s)", len(rebuilt))
+    return rebuilt
+
+
 def attach_site_measurements(out_dir: Path, fits: dict, reports: dict, ridge) -> None:
     """Measure available bone per site and write it into BOTH published places.
 

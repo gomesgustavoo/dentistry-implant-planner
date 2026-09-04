@@ -14,3 +14,14 @@ k8s/
 node_modules/
 .worker.env
 *.log
+
+# NESTED node_modules. A bare `node_modules/` matches the top level only -- Docker's
+# ignore patterns are path patterns, not "anywhere" globs -- so `viewer/node_modules`
+# (94 MB) and `web-auth/node_modules` (12 MB) were both being packed into the build
+# context on every build, along with `viewer/dist` (4 MB) and the git history.
+**/node_modules/
+viewer/dist/
+viewer/reference/
+.git/
+.github/
+web-auth/

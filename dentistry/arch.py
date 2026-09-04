@@ -309,6 +309,43 @@ def _orient_and_score(fit: ArchFit, merged, sp, origin, M, jaw: str) -> None:
     fit.residual_p95_mm = float(np.percentile(resid, 95)) if resid else None
 
 
+def revive_from_manifest(block: dict, jaw: str) -> "ArchFit":
+    """An `ArchFit` rebuilt from a published `arch.json` jaw block.
+
+    **The arch is FROZEN across a hand edit, and that is a decision rather than a
+    shortcut.** A re-derive after a contour correction could re-fit the arch from the
+    edited labelmap -- and then `s`, `t` and the section list would all mean something
+    slightly different, so every saved plan's `(s, t, z)` would silently refer to a
+    different place and two plans on the same case would stop being comparable. Freezing
+    it keeps the coordinate contract, and the cost is stated: an edit does not move the
+    curve the sections are cut along.
+
+    So this reads the polyline the worker published and recomputes nothing that is in
+    the manifest. `normals()` is the exception and it is deliberate: it is derived from
+    the tangents by the same centroid rule the original fit used, and the caller can
+    compare the result against the PUBLISHED `normals` to prove the revival landed on
+    the same fit. `worker/rederive.py` does exactly that and refuses if it does not.
+    """
+    import numpy as np
+
+    if not block or not block.get("ok"):
+        return ArchFit(jaw=jaw, ok=False,
+                       reason=(block or {}).get("reason") or "not fitted")
+    pts = np.asarray(block["points"], dtype=np.float64)
+    tang = np.asarray(block["tangents"], dtype=np.float64)
+    return ArchFit(
+        jaw=jaw, ok=True,
+        points=pts,
+        tangents=tang,
+        step_mm=float(block["step_mm"]),
+        s0_index=int(block["s0_index"]),
+        occlusal_z_mm=float(block["occlusal_z_mm"]),
+        arc_length_mm=float(block.get("arc_length_mm")
+                            or (len(pts) - 1) * float(block["step_mm"])),
+        sites={int(k): v for k, v in (block.get("sites") or {}).items()},
+    )
+
+
 def describe(fits: dict) -> dict:
     """The `report.arch` block: summary and site table, never the polyline."""
     return {"jaws": {name: f.as_dict() for name, f in fits.items()}}

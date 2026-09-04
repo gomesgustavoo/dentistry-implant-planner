@@ -69,10 +69,26 @@ const REQUIRED = [
   'savePlan', 'openPlan', 'deletePlan', 'downloadPlanArtifact', 'planPrintTable',
   'scanFactsBlock', 'renderModelPriors', 'syncPlanToIsolate', 'wirePlanPrint',
   // the plan canvases: one backing-store scale, one coordinate conversion
-  'planCtx', 'planSize', 'panAspectX', 'siteText',
+  'planCtx', 'planSize', 'panAspectX', 'siteText', 'renderXsMeta',
+  // the three angles, and the two planes they are drawn in. `sectionAxis` and `panAxis`
+  // are the same Minkowski projection argument in the two planes; `canYaw` is the
+  // refusal when the manifest publishes no tangents.
+  'sectionAxis', 'panAxis', 'canYaw', 'anglePrint', 'posePrint', 'sizeOnly',
+  'panPixelOf', 'panMmOf', 'panImplantOutline', 'drawPanImplants', 'panHitTest',
+  'wirePanImplants',
+  // plan view options: the crop zoom, the picture filter, the mesiodistal pane
+  'wireXsZoom', 'setXsPic', 'wireXsPic', 'picFilter', 'setPanPane', 'wirePanPane',
   // the 3-D pane is reparented between stages rather than duplicated
   'move3dPane',
   'structureName',
+  // --- correcting the segmentation mask ------------------------------------
+  'editState', 'viewerEdits', 'editToolList', 'setEditMode', 'renderEditBar',
+  'wireEditing', 'applyEdits', 'pollEdit', 'renderEditHistory', 'markJobStale',
+  'editGridMm', 'isStaleUrl',
+  // --- the model picker on the upload page, and the contact page -----------
+  'loadModelMenu', 'modelMode', 'renderModelPicker', 'wireModelPicker',
+  'renderUploadPlan', 'uploadConfig', 'wireModelsPanel', 'mountModelSchematic',
+  'unmountModelSchematic', 'renderContact',
   // --- account, teams, billing --------------------------------------------
   'renderAccount', 'renderSettings', 'renderTeam', 'renderInvite',
   'renderUsageChip', 'renderUsageHistory', 'renderPlanPanel', 'renderJobs',
@@ -165,6 +181,21 @@ if (badSrc.length) {
      + '        an <img> cannot carry the bearer token; route artifact pictures through '
      + 'loadAuthedImage()');
 } else pass(`every image src is a blob or data URL (${imgSrcAssignments.length} assignment(s))`);
+
+// The post-edit reload has to FORCE a remount, and this is a grep for the same reason
+// the one above is: only a live signed-in browser with a worker behind it can exercise
+// it, and the failure is silent in the worst way. `openCase` returns early when the
+// case it is asked for is already open -- right for the router, and a no-op for the one
+// caller that means "this case's bytes just changed". Measured live: a second applied
+// correction left `report.edits` at 1 while the API returned 2, under a notice reading
+// "Correction applied. Every measurement was recomputed from it."
+const applyBody = (codeLines.match(/async function applyEdits\(\)[\s\S]*?\n\}/) || [''])[0];
+if (!applyBody) {
+  fail('applyEdits() was not found, so the post-edit reload cannot be checked');
+} else if (!/openCase\([^)]*force:\s*true/.test(applyBody)) {
+  fail('applyEdits() reopens the case without `force: true`, so openCase returns early '
+     + 'and the corrected case keeps showing its pre-edit report');
+} else pass('the post-edit reload forces a remount');
 
 // `img.complete` is TRUE for a broken image, so it is never a sufficient guard before
 // drawImage -- which throws InvalidStateError and, when it happened inside drawRulers,

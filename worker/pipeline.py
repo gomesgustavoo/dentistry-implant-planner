@@ -58,11 +58,23 @@ class _Rep:
 
 
 def segment_task1(image, settings, *, rep=None, use_lock=True, board=None,
-                  keep_base=False, load_labels=None):
+                  config=None, keep_base=False, load_labels=None):
     """Run the base model and the board, returning Task-1 ids on the canonical grid.
 
-    `board=None` loads the configured one; pass `[]` for the base model alone, which is
-    what an A/B needs so the two arms differ by the board and nothing else.
+    `board=None` loads one; pass `[]` for the base model alone, which is what an A/B
+    needs so the two arms differ by the board and nothing else.
+
+    `config` is the UPLOADER's `{model key: mode}` choice, and it is only consulted when
+    `board` is None. `config=None` in turn keeps the deployment-wide behaviour exactly
+    -- the specialists named by `TF3_BOARD` -- which is the path every evaluation takes,
+    and it has to stay bit-identical or the published numbers stop describing the
+    shipped system.
+
+    WHAT WAS ASKED FOR is recorded whether or not it could be honoured
+    (`reports["requested"]`). A specialist that was requested and is not deployed shows
+    up there as a named substitution rather than as a board that quietly has one fewer
+    member: the numbers that come out the far end are clearances to structures whose
+    predicted volume depends on which model drew them.
     """
     from dentistry import crosswalk  # noqa: F401  (kept: callers convert afterwards)
     from worker import board as board_mod
@@ -147,7 +159,22 @@ def segment_task1(image, settings, *, rep=None, use_lock=True, board=None,
     seg_case = tf3.to_canonical(seg_t1, pre, image)
     del seg_t1, pre
 
-    board = board_mod.load_board(settings) if board is None else board
+    if board is None:
+        board = board_mod.load_board(settings, config)
+        if config is not None:
+            from dentistry import models as M
+
+            ran = {sp.key for sp in board}
+            reports["requested"] = {
+                "config": dict(config),
+                "ran": sorted(ran),
+                "unavailable": [
+                    {"key": k, "mode": mode, "name": M.BY_KEY[k].name,
+                     "reason": "not deployed on this worker: "
+                               f"{M.BY_KEY[k].dir_setting} is unset or its files are "
+                               "missing"}
+                    for k, mode in M.board_keys(config) if k not in ran],
+            }
     board_runs = []
     base_keep = seg_case.copy() if keep_base else None
     if board:

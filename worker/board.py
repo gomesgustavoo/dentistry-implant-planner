@@ -95,6 +95,11 @@ class Specialist:
     origin: str = "first-party"         # first-party | third-party
     license: str = ""
     mode: str = "apply"                 # apply | shadow
+    #: The `dentistry.models` catalogue key this was built from. Travels into the run
+    #: report so a reader can join "what was asked for" to "what actually ran" -- which
+    #: is the difference between a specialist that found nothing and one that was
+    #: skipped, and those two used to render identically.
+    key: str = ""
 
     def _json(self, name: str) -> dict:
         import json
@@ -149,7 +154,7 @@ class Specialist:
         return out
 
     def describe(self) -> dict:
-        return {"name": self.name,
+        return {"name": self.name, "key": self.key,
                 "checkpoint": f"{self.model_dir.name}/fold_{self.fold}/{self.checkpoint}",
                 "owns": list(self.owns), "roi": self.roi, "engine": self.engine,
                 "mode": self.mode, "origin": self.origin,
@@ -186,110 +191,93 @@ class BoardRun:
         return d
 
 
-def canal_specialist(settings):
-    """The board preset that ships today, or None when it is switched off.
+def _from_catalogue(entry, settings, mode: str | None = None):
+    """Build a `Specialist` from a `dentistry.models` entry, or None if not deployed.
 
-    Evidence for shipping the plain specialist rather than the Skeleton-Recall one:
-    in-distribution it gains +0.0505 / +0.0874 / +0.0172 Dice on the left incisive,
-    right incisive and lingual canals and corrects their predicted volume from
-    155-205% of ground truth to 99-111%; on 40 external PMCanalSeg cases it beats
-    the base model at p = 7.6e-4 and the SRL variant at p = 7.0e-4.
+    THE MENU MOVED, and only the declarative half of it. What a model is called, what
+    it owns, where its ids come from, its ROI, its engine and its licence now live in
+    `dentistry/models.py`, where the API can read them too -- because a per-job model
+    choice has to be validated by the endpoint that accepts the upload, and this module
+    imports numpy at module scope and reads a model store the API pod does not mount.
+
+    Everything that made those declarations trustworthy stays here: the GPU lease, the
+    composition, `assert_outside_box_unchanged` and `assert_owns_only`. One consequence
+    worth stating: ownership can no longer differ between the picker and the pipeline,
+    because there is one tuple and both read it.
+
+    `calibrate` stays DERIVED rather than declared. A model whose plans say
+    `CTNormalization` needs the scan on the training grey scale first and one saying
+    `ZScoreNormalization` is already invariant to an affine change of it -- so the
+    answer follows the weights if a model is ever retrained differently, which a
+    catalogue literal would not.
     """
-    name = (getattr(settings, "TF3_CANAL_SPECIALIST_DIR", "") or "").strip()
+    name = (getattr(settings, entry.dir_setting, "") or "").strip()
     if not name:
         return None
+    owns = entry.owns_task1
+    if entry.key == "totalseg":
+        # The one entry whose ownership is CONFIGURED, and it defaults to nothing
+        # because the measurement says it should own nothing. See its `evidence`.
+        owns = tuple(getattr(settings, "TF3_TOTALSEG_OWNS", ()) or ())
     return Specialist(
-        name="ToothFairy3 canal specialist (43/44/45)",
+        name=entry.name,
         model_dir=Path(settings.MODEL_STORE) / name,
-        fold=getattr(settings, "TF3_CANAL_SPECIALIST_FOLD", "all"),
-        checkpoint=getattr(settings, "TF3_CANAL_SPECIALIST_CHECKPOINT", "checkpoint_final.pth"),
-        owns=(43, 44, 45),
-        label_rule="canal-roi",
-        roi="canal",
-        # Derived, not set: this model's plans declare ZScoreNormalization, so it is
-        # already invariant to an affine change of grey scale and calibrating first is
-        # a no-op it standardises away. Leaving it to needs_calibration() means the
-        # answer follows the weights if the model is ever retrained differently.
+        fold=getattr(settings, entry.fold_setting, "all") if entry.fold_setting else "all",
+        checkpoint=(getattr(settings, entry.checkpoint_setting, "checkpoint_final.pth")
+                    if entry.checkpoint_setting else "checkpoint_final.pth"),
+        owns=owns,
+        label_rule=entry.label_rule,
+        roi=entry.roi,
+        engine=entry.engine,
         calibrate=None,
+        origin=entry.origin,
+        license=entry.license,
+        mode=(mode or _mode_from_settings(entry, settings)),
+        key=entry.key,
     )
 
 
-def toothseg_teeth_specialist(settings):
-    """MIC-DKFZ ToothSeg semantic: the ToothFairy2 challenge winner on teeth.
+def _mode_from_settings(entry, settings) -> str:
+    """The mode a deployment-wide setting asks for, or the catalogue default."""
+    attr = {"toothseg-teeth": "TF3_TOOTHSEG_MODE",
+            "totalseg": "TF3_TOTALSEG_MODE"}.get(entry.key)
+    if attr:
+        return (getattr(settings, attr, "") or entry.default_mode)
+    return entry.default_mode
 
-    NOT enabled by default, and the reason is measurement rather than caution. ToothSeg
-    trained on ToothFairy2, which is a SUBSET of ToothFairy3, and our 20-case holdout is
-    a split we made out of that same public release -- so on our own holdout its wins
-    prove nothing and only its losses are informative. Ownership is settled in
-    `eval/ownership.md`, not here.
+
+def load_board(settings, config: dict | None = None) -> list:
+    """The specialists to run, in application order.
+
+    `config` is a per-job `{model key: mode}` -- what the uploader chose. `None` keeps
+    the deployment-wide behaviour exactly: the specialists named by `TF3_BOARD`, each in
+    whatever mode its own setting says, with an unset directory yielding None and an
+    empty board. That path is what `scripts/tf3_predict.py` and every evaluation use,
+    and it has to stay bit-identical or the numbers stop describing the shipped system.
+
+    A per-job config never reorders anything: the order comes from the catalogue,
+    because "a later specialist overwrites an earlier one inside its own ROI" is a
+    property `assert_owns_only` relies on and not a preference.
     """
-    name = (getattr(settings, "TF3_TOOTHSEG_DIR", "") or "").strip()
-    if not name:
-        return None
-    return Specialist(
-        name="ToothSeg semantic (teeth)",
-        model_dir=Path(settings.MODEL_STORE) / name,
-        fold=getattr(settings, "TF3_TOOTHSEG_FOLD", "all"),
-        checkpoint=getattr(settings, "TF3_TOOTHSEG_CHECKPOINT", "checkpoint_final.pth"),
-        owns=tuple(range(11, 43)),
-        label_rule="toothseg",
-        roi="teeth",
-        origin="third-party",
-        license="Apache-2.0 (MIC-DKFZ/ToothSeg)",
-        mode=(getattr(settings, "TF3_TOOTHSEG_MODE", "shadow") or "shadow"),
-    )
+    from dentistry import models as M
 
+    if config is not None:
+        out = []
+        for key, mode in M.board_keys(config):
+            spec = _from_catalogue(M.BY_KEY[key], settings, mode=mode)
+            if spec is not None:
+                out.append(spec)
+        return out
 
-def totalseg_specialist(settings):
-    """TotalSegmentator Dataset113_ToothFairy3, whole volume.
-
-    Measured before the deletion and it took ownership of NOTHING: zero accessory-canal
-    voxels in 18 of 18 cases, pulp -0.078, both inferior alveolar canals -0.014/-0.021.
-    Leakage could only have helped it, so those losses are real. Kept mountable so the
-    measurement can be reproduced, not because it is expected to win.
-    """
-    name = (getattr(settings, "TF3_TOTALSEG_DIR", "") or "").strip()
-    if not name:
-        return None
-    return Specialist(
-        name="TotalSegmentator teeth (Dataset113)",
-        model_dir=Path(settings.MODEL_STORE) / name,
-        fold=getattr(settings, "TF3_TOTALSEG_FOLD", "all"),
-        checkpoint=getattr(settings, "TF3_TOTALSEG_CHECKPOINT", "checkpoint_final.pth"),
-        owns=tuple(getattr(settings, "TF3_TOTALSEG_OWNS", ()) or ()),
-        label_rule="totalseg",
-        roi="full",
-        engine="blocked",      # 78 classes over a whole volume needs the z-tiler
-        origin="third-party",
-        license="Apache-2.0 (wasserth/TotalSegmentator)",
-        mode=(getattr(settings, "TF3_TOTALSEG_MODE", "shadow") or "shadow"),
-    )
-
-
-# Config picks from a menu; the menu is code. Everything structural -- what a model
-# owns, its ROI, its label rule, its engine, its licence -- lives beside the comment
-# carrying the evidence that justifies it, and config carries only WHICH and WHERE.
-SPECIALISTS = {
-    "canal": canal_specialist,
-    "toothseg-teeth": toothseg_teeth_specialist,
-    "totalseg": totalseg_specialist,
-}
-
-
-def load_board(settings) -> list:
-    """The specialists named by TF3_BOARD, in application order.
-
-    Default `"canal"` with an unset directory reproduces today's behaviour exactly: the
-    factory returns None and the board is empty.
-    """
     names = [n.strip() for n in
              (getattr(settings, "TF3_BOARD", "canal") or "").split(",") if n.strip()]
     out = []
     for n in names:
-        make = SPECIALISTS.get(n)
-        if make is None:
-            raise ValueError(f"unknown board member {n!r}; known: {sorted(SPECIALISTS)}")
-        spec = make(settings)
+        entry = M.BY_KEY.get(n)
+        if entry is None or entry.role != "specialist":
+            raise ValueError(f"unknown board member {n!r}; known: "
+                             f"{sorted(M.SPECIALIST_KEYS)}")
+        spec = _from_catalogue(entry, settings)
         if spec is not None:
             out.append(spec)
     return out

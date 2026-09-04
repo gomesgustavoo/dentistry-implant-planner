@@ -127,6 +127,69 @@ def _canal_presence(merged, fit, image, spacing_zyx) -> dict | None:
             "side": side.tolist()}
 
 
+def rerender_contours(merged: np.ndarray, image, manifest: dict, out_dir: Path,
+                      verify_only: bool = False) -> dict:
+    """Re-sample the section outlines from an edited labelmap, on the FROZEN geometry.
+
+    A hand correction changes the labelmap and nothing else: the greyscale pictures are
+    the scan and cannot move, so re-running `render` would spend twenty seconds redrawing
+    identical JPEGs -- and, worse, would re-fit the arch and move the sections the plan's
+    coordinates are expressed in.
+
+    So every geometric quantity here is READ FROM THE PUBLISHED MANIFEST rather than
+    recomputed: the polyline, the buccal normals, the row and column pitches, the section
+    list and the top of the picture. That is the same rule `dentistry/plan_geometry.py`
+    follows for exactly the same reason -- a reimplementation of `ArchFit.normals()`'s
+    sign convention is a silent mirror waiting to happen.
+
+    `verify_only=True` samples one section and RETURNS what it found without writing,
+    which is how `worker/rederive.py` proves this reproduction agrees with the file the
+    original run wrote before it overwrites it.
+    """
+    out_dir = Path(out_dir)
+    origin = np.asarray(image.GetOrigin(), dtype=np.float64)
+    d = np.asarray(image.GetDirection(), dtype=np.float64).reshape(3, 3)
+    inv_m = np.linalg.inv(d * np.asarray(image.GetSpacing(), dtype=np.float64)[np.newaxis, :])
+    up = np.array([0.0, 0.0, 1.0])
+    out: dict = {}
+
+    for jaw, block in (manifest.get("jaws") or {}).items():
+        if not block.get("ok"):
+            continue
+        xs = block["cross_sections"]
+        rows, cols = int(xs["size"][0]), int(xs["size"][1])
+        row_pitch, col_pitch = float(xs["pixel_mm"][0]), float(xs["pixel_mm"][1])
+        z_hi = float(xs["z_top_mm"])
+        t_min = float((xs.get("t_range_mm") or [-xs["half_width_mm"]])[0])
+        heights = z_hi - np.arange(rows) * row_pitch
+        ts = t_min + np.arange(cols) * col_pitch
+        pts = np.asarray(block["points"], dtype=np.float64)
+        nrm = np.asarray(block["normals"], dtype=np.float64)
+        picks = [int(i) for i in xs["source_indices"]]
+        got: dict[str, dict] = {}
+        for out_i, k in enumerate(picks):
+            base = pts[k][None, :] + nrm[k][None, :] * ts[:, None]        # (cols, 3)
+            grid = (base[None, :, :] + up[None, None, :]
+                    * (heights[:, None, None] - base[None, :, 2:3]))
+            idx = _lps_to_index(grid.reshape(-1, 3), origin, inv_m)
+            lab = _sample(merged, idx, order=0, cval=0).reshape(rows, cols)
+            polys = contours.plane_polygons(lab.astype(np.int32), contours.TOLERANCE_VOX,
+                                            row_pitch, col_pitch)
+            if polys:
+                got[str(out_i)] = {str(v): rings for v, rings in polys.items()}
+            if verify_only:
+                return {"jaw": jaw, "index": out_i, "contours": got.get(str(out_i))}
+        rel = xs.get("contours") or f"xs/{jaw}/contours.json"
+        path = out_dir / rel
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(got, separators=(",", ":")))
+        out[jaw] = {"sections": len(picks), "with_contours": len(got),
+                    "bytes": path.stat().st_size}
+        log.info("section outlines: %s %d/%d sections, %.2f MB",
+                 jaw, len(got), len(picks), path.stat().st_size / 1e6)
+    return out
+
+
 def render(volume: np.ndarray, spacing_zyx, image, fits: dict, out_dir: Path,
            merged: np.ndarray | None = None) -> dict:
     """Write `planning/pan/*.jpg`, `planning/xs/<jaw>/*.jpg` and `planning/arch.json`.

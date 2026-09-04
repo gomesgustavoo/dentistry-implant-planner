@@ -92,7 +92,17 @@ const BAD_TOKENS = /\bNaN\b|\bundefined\b|\bInfinity\b|\[object Object\]|\bnull\
 //
 // The baseline these replace, measured on the live site with ONE implant: 1118 px and
 // 2745 characters, with 65% of the sidebar unreachable and no scrollbar to say so.
-const IMP_CARD_MAX_PX = 360;
+// RAISED ONCE, deliberately, on 2026-09-04: the card gained an ANGULATION row.
+// Buccolingual angulation was one number field wedged into the size row; the implant
+// now carries three angles -- buccolingual, mesiodistal and clocking -- and three
+// number fields do not fit beside two selects at any width the sidebar reaches. So
+// they are a row of their own, labelled B / M / R because the words are 41 characters
+// against 3 and the whole card's budget is ~400.
+//
+// Measured after the change, across all 113 states: the worst card is 372 px (it was
+// 338), so 400 is the new ceiling with the same ~28 px of slack the old one had. The
+// CHARACTER budget did not move: the three letters and the out-of-plane mark add 4.
+const IMP_CARD_MAX_PX = 400;
 const IMP_CARD_MAX_CHARS = 400;
 
 // openCase must not throw AT ALL. It used to sit behind a bare
@@ -177,6 +187,14 @@ const ARCH = JSON.parse(readFileSync(path.join(FIX, 'assets/arch-mandible.json')
 // is `no_verdict` (a negative value with a caveat), its accessory canal is a SATURATED
 // bound with a null value; i2's canal is `no_verdict`; and the pair is a `breach`.
 const MEASURE = JSON.parse(readFileSync(path.join(FIX, 'assets/measure-mandible.json'), 'utf8'));
+// The same reply, computed against a pack carrying a synthetic HAND CORRECTION. The
+// three example cases have never been corrected, so a fixture generated from their
+// packs can only ever exercise the model-drawn path -- and the edited path is the one
+// with a new claim in it: a clearance to a contour a person moved is graded against a
+// WIDER budget, and the reason has to reach the panel and the printed sheet. One state,
+// at the user's own window size, rather than a whole extra grid.
+const MEASURE_EDITED = JSON.parse(
+  readFileSync(path.join(FIX, 'assets/measure-mandible-edited.json'), 'utf8'));
 
 const PROBE = (fixture, fold, arch, measure) => `(async () => {
   window.DENTISTRY_NO_BOOT = true;
@@ -245,7 +263,13 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
   try { await openCase('fixture'); } catch (e) { openCaseError = String(e && (e.message || e)); }
   // route() normally reveals the workspace; openCase is called directly here so that
   // a failure in one render function is attributable, which means unhiding it by hand.
-  for (const id of ['home', 'settings']) { const e = document.getElementById(id); if (e) e.hidden = true; }
+  for (const id of ['home', 'settings', 'contact']) { const e = document.getElementById(id); if (e) e.hidden = true; }
+  // ...AND the top navigation, which route() hides for a case view and this probe was
+  // leaving up. It was measuring a header no user ever sees: the nav, the brand, the
+  // account strip AND the case header's own tabs all competing for one row. The state
+  // that surfaced it was a 4 px page scroll at 640 px, blamed on a button that had
+  // just been added to the row rather than on the row being a fiction.
+  { const e = document.getElementById('nav'); if (e) e.hidden = true; }
   // The workspace AND the case header. The view tabs moved into the header when the
   // three stacked bars above the planning stage were folded into two, so a probe that
   // reveals only the workspace now reports every tab hidden -- which route() would
@@ -392,6 +416,14 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
     accuracy: vis(document.getElementById('accuracyCard')) ? 1 : 0,
     plan: vis(document.getElementById('planTab')) ? 1 : 0,
     rows: rail.querySelectorAll('.srow').length,
+    // The hand-correction surface: the editsCard is the case's history in the rail and
+    // planPriors is where the widened budget is stated. Both are absent on an
+    // uncorrected case and both must appear on a corrected one.
+    editsCard: vis(document.getElementById('editsCard')) ? 1 : 0,
+    editRows: document.querySelectorAll('#editsCard .editrow').length,
+    priorsText: (document.getElementById('planPriors') || {}).textContent || '',
+    editBar: !!document.getElementById('editBar'),
+    editBtn: !!document.getElementById('editBtn'),
     planned: planned ? 1 : 0,
     implantPanel: document.getElementById('implantPanel')
       && document.getElementById('implantPanel').innerHTML.length > 0 ? 1 : 0,
@@ -400,6 +432,23 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
     fov: rail.querySelectorAll('.fovmark').length,
     overflow: overflowing.slice(0, 4),
     bodyOverflowX: document.body.scrollWidth > window.innerWidth + 1,
+    // WHICH element, not just "the page scrolls". The bare boolean cost a debugging
+    // round the first time it fired: the overflowing list above is scoped to the rail
+    // and this one is global, so a failure named nothing at all. The widest element
+    // whose right edge is past the viewport is almost always the cause.
+    widest: (() => {
+      let best = null;
+      document.querySelectorAll('body *').forEach((el) => {
+        if (!(el instanceof HTMLElement)) return;
+        const r = el.getBoundingClientRect();
+        if (r.width < 1 || r.height < 1) return;
+        if (r.right > window.innerWidth + 1 && (!best || r.right > best.right)) {
+          best = { right: Math.round(r.right), tag: el.tagName.toLowerCase(),
+                   id: el.id || '', cls: String(el.className || '').slice(0, 48) };
+        }
+      });
+      return best;
+    })(),
     // Does a plan canvas fit inside the box that clips it?
     //
     // These two are the surfaces an implant is placed and angled on, and their wrap is
@@ -532,6 +581,92 @@ const AUTH_WRAP = `(() => {
 //   boot: wireViewer did not bind xsOverlayBtn, xsFitBtn
 // It is not in the `--prove` table because that table mutates FIXTURES and this is a
 // source defect; the proof is the paragraph above and it was run.
+/* ONE state, and it is the only one that exercises a hand-corrected case.
+ *
+ * Everything else in this file measures the model-drawn path. The corrected path makes
+ * a different claim -- the clearance is graded against the model's error PLUS the
+ * display grid's quantisation -- and three things have to be true of it: the widened
+ * deduction is what the panel shows, the sentence saying why reaches the reader, and
+ * the case's correction history appears in the rail. None of those are reachable from
+ * the three uncorrected example packs, so the fixture is generated with a synthetic
+ * edit (`scripts/make_web_fixtures.py::EDIT_STUB`) shaped exactly as
+ * `worker/planning_pack.rebuild_label_fields` writes one.
+ */
+async function editedPlanCheck(c, sessionId, port, breakage) {
+  const name = 'report-47-planning';
+  const file = path.join(FIX, `${name}.json`);
+  if (!existsSync(file)) return;
+  let fixture = JSON.parse(readFileSync(file, 'utf8'));
+  // The case's own record of the correction, as `worker/rederive.py` appends it.
+  fixture.edits = [{
+    id: 'fixture-edit',
+    at: '2026-09-04T10:00:00Z',
+    voxels: 1840,
+    full_voxels: 14720,
+    quantisation_mm: 0.6,
+    structures: { 3: { added: 1200, removed: 640 } },
+    basis: 'corrected by hand on the 2x display grid (0.60 mm voxels) and upsampled to '
+      + 'the 0.30 mm measurement grid, so the boundary of an edited contour carries an '
+      + 'extra 0.60 mm of uncertainty on top of the model\'s own',
+    frozen: 'the arch curve, the cross-section list, the greyscale pictures and the '
+      + 'density references are the ones this case was processed with; an edit does not '
+      + 'move them',
+  }];
+  const arch = structuredClone(ARCH);
+  const measure = structuredClone(MEASURE_EDITED);
+  // --prove reaches this state too. It is keyed under its own name so a break can be
+  // written for the corrected path alone, and every existing break still applies here
+  // -- which is free coverage rather than a complication.
+  if (breakage) fixture = breakage(`${name}-edited`, fixture, arch, measure);
+  await c.send('Emulation.setDeviceMetricsOverride',
+    { width: 1470, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
+  const loaded = c.once('Page.loadEventFired');
+  await c.send('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` }, sessionId);
+  await loaded;
+  const { result, exceptionDetails } = await c.send('Runtime.evaluate',
+    { expression: PROBE(fixture, false, arch, measure),
+      awaitPromise: true, returnByValue: true }, sessionId);
+  states += 1;
+  if (exceptionDetails) {
+    const ex = exceptionDetails.exception || {};
+    fail(`edited: the probe threw -> ${ex.description || ex.value || exceptionDetails.text}`);
+    return;
+  }
+  const r = result.value || {};
+  const at = 'edited @1470x900';
+  if ((r.pageErrors || []).length) {
+    fail(`${at}: the page raised -> ${r.pageErrors.slice(0, 2).join(' ; ')}`);
+  }
+  if (!r.editsCard) fail(`${at}: a corrected case shows no correction history in the rail`);
+  if (r.editRows !== 1) fail(`${at}: ${r.editRows} correction row(s), expected 1`);
+  // The WIDENED deduction, not the model's. 0.46 is the canal's own p95 and 0.76 is
+  // that plus half a 0.60 mm display voxel; showing 0.46 beside a bar drawn at 0.76 is
+  // exactly the drift this asserts against.
+  if (!/0\.76/.test(r.priorsText)) {
+    fail(`${at}: the widened error budget (0.76 mm) is not in the priors panel -> `
+         + JSON.stringify(r.priorsText.slice(0, 120)));
+  }
+  if (!/corrected by hand/i.test(r.measurementText + r.priorsText)) {
+    fail(`${at}: nothing on the measurement surface says the contour was corrected`);
+  }
+  if (BAD_TOKENS.test(r.measurementText)) {
+    fail(`${at}: bad token in the measurement surface -> `
+         + (r.measurementText.match(BAD_TOKENS) || [])[0]);
+  }
+  (r.impHeights || []).forEach((h) => {
+    if (h > IMP_CARD_MAX_PX) {
+      fail(`${at}: an implant card is ${h} px tall on a corrected case, over the `
+           + `${IMP_CARD_MAX_PX} px ceiling`);
+    }
+  });
+  // The editing surface itself exists in the document even with no volume mounted --
+  // the bar is built by `renderEditBar` and gated on the mode, not on the markup.
+  if (!r.editBar || !r.editBtn) {
+    fail(`${at}: the segmentation editing controls are missing from the document`);
+  }
+}
+
+
 async function bootCheck(c, sessionId, port) {
   const { identifier } = await c.send('Page.addScriptToEvaluateOnNewDocument',
     { source: AUTH_WRAP }, sessionId);
@@ -590,6 +725,8 @@ async function run(breakage) {
     await c.send('Emulation.setDeviceMetricsOverride',
       { width: 1470, height: 900, deviceScaleFactor: 1, mobile: false }, sessionId);
     await bootCheck(c, sessionId, port);
+    // ...and the hand-corrected case, once. See `editedPlanCheck`.
+    await editedPlanCheck(c, sessionId, port, breakage);
 
     for (const name of names) {
       let fixture = JSON.parse(readFileSync(path.join(FIX, `${name}.json`), 'utf8'));
@@ -681,7 +818,13 @@ async function run(breakage) {
           if (FORBIDDEN_IN_MEASUREMENT.test(r.measurementText)) fail(`${at}: absolute HU in the measurement surface -> ${(r.measurementText.match(FORBIDDEN_IN_MEASUREMENT) || [])[0]}`);
           if (!REQUIRED_DISCLAIMER.test(r.allText)) fail(`${at}: the "not calibrated" grey-value disclaimer is missing from the rail`);
           if (r.overflow.length) fail(`${at}: horizontal overflow -> ${r.overflow.join(' ')}`);
-          if (r.bodyOverflowX) fail(`${at}: the page itself scrolls horizontally`);
+          if (r.bodyOverflowX) {
+            const w = r.widest;
+            fail(`${at}: the page itself scrolls horizontally`
+                 + (w ? ` -> ${w.tag}${w.id ? '#' + w.id : ''}`
+                        + `${w.cls ? '.' + w.cls.split(/\s+/).join('.') : ''}`
+                        + ` reaches ${w.right} px` : ''));
+          }
         }
        }
       }
@@ -798,6 +941,34 @@ if (mode === '--selftest') {
     // made of, and until the fixture had real images nothing could see it.
     'the cross-section failing to paint': (n, f, arch) => {
       arch.__breakImages = true;
+      return f;
+    },
+    // --- the hand-corrected path. Only reachable in `editedPlanCheck`, so both of
+    // these are no-ops everywhere else. ---
+    //
+    // A clearance to a contour a person moved is graded against the model's error PLUS
+    // the display grid's quantisation. Dropping the widened terms is what a client that
+    // reads `priors.inward_p95_mm` instead of the verdict's own `numbers` would print:
+    // 0.46 beside a bar drawn at 0.76.
+    'a hand-corrected contour graded on the model prior alone': (n, f, arch, measure) => {
+      if (!String(n).endsWith('-edited')) return f;
+      delete measure.edit_penalty;
+      (measure.implants || []).forEach((imp) => {
+        ['verdict', 'accessory_canal_verdict', 'tooth_verdict'].forEach((k) => {
+          const nums = (imp[k] || {}).numbers;
+          if (!nums || nums.model_p95_mm == null) return;
+          nums.inward_p95_mm = nums.model_p95_mm;
+          delete nums.edit;
+          delete nums.model_p95_mm;
+        });
+      });
+      return f;
+    },
+    // The case's own record of having been corrected. Without it a reader has numbers
+    // whose provenance is a person and no way to know that.
+    'a corrected case forgetting it was corrected': (n, f) => {
+      if (!String(n).endsWith('-edited')) return f;
+      delete f.edits;
       return f;
     },
   };

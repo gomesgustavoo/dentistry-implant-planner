@@ -129,6 +129,14 @@ class Job(Base):
     results_expired: Mapped[bool] = mapped_column(
         Integer, default=0, nullable=False, server_default=text("0"), index=True
     )
+    # WHICH MODELS the uploader chose, as `{model key: mode}` out of
+    # `dentistry.models.CATALOGUE`. Nullable, and null means "whatever the deployment
+    # was configured to run" -- which is every job uploaded before the picker existed,
+    # and inventing a config for those would claim they were segmented by a set of
+    # models nobody chose. `api/routes/jobs.py` validates it against the worker's
+    # inventory BEFORE the upload is written, so a request naming a model this
+    # deployment does not have is refused while there is still something to change.
+    options: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
 
 
 
@@ -462,6 +470,74 @@ class CasePlan(Base):
     schema_version: Mapped[int] = mapped_column(default=1)
 
 
+EDIT_QUEUED, EDIT_APPLYING, EDIT_APPLIED, EDIT_FAILED = (
+    "queued", "applying", "applied", "failed")
+
+
+class CaseEdit(Base):
+    """One accepted correction to a case's segmentation mask, and its outcome.
+
+    **Why a row rather than just an edited file.** The whole product argument is that
+    every number carries its basis, and after a hand edit the basis of a clearance is no
+    longer "the model drew this" -- it is "a person moved this contour, on a 0.6 mm
+    display grid, at this time". That sentence has to survive into the report, the plan
+    sheet and the error budget, so it needs somewhere to live that is not a mutated
+    array.
+
+    **The diff is a FILE, not a column.** A generous correction to a canal roof over
+    forty slices is megabytes of runs. It goes to
+    `results/<job>/edits/<edit_id>.json`, which means it is deleted with the results it
+    describes -- correct, because an edit to a segmentation that no longer exists is not
+    a thing anyone can act on. The row keeps the summary: how many voxels, which
+    structures, on what grid.
+
+    **The queue is this table.** The worker claims `state = 'queued'` here with the same
+    `FOR UPDATE SKIP LOCKED` it uses for jobs. A re-derive needs no GPU, so it does not
+    contend for the lease and does not belong in the jobs queue -- and putting it there
+    would have made it consume a segmentation from the tenant's quota, which would be
+    charging somebody for fixing our contour.
+    """
+
+    __tablename__ = "case_edits"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4()))
+    job_id: Mapped[str] = mapped_column(
+        String(36), ForeignKey("jobs.id", ondelete="CASCADE"), index=True)
+    tenant_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tenants.id", ondelete="CASCADE"),
+        index=True, nullable=True)
+    created_by_user_id: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True)
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=text("now()"),
+        nullable=False, index=True)
+    updated_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=text("now()"),
+        onupdate=utcnow, nullable=False)
+
+    state: Mapped[str] = mapped_column(String(16), default=EDIT_QUEUED, nullable=False,
+                                       index=True)
+    note: Mapped[str | None] = mapped_column(Text, nullable=True)
+    #: How many DISPLAY-grid voxels changed, and the same figure in mm3 on that grid.
+    voxels: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
+    #: `{merged index: {"added": n, "removed": n}}` -- which structures were touched and
+    #: in which direction. This is what `plan_safety` keys the edit caveat on.
+    structures: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    #: The grid the diff was expressed on, `downsample_factor` included. Kept because
+    #: the boundary quantisation of an edit IS that grid's voxel size, and the error
+    #: budget has to be able to state it long after the display volume is gone.
+    grid: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    #: What the re-derive actually rebuilt, and what it could not.
+    result: Mapped[dict | None] = mapped_column(JSONB, nullable=True)
+    applied_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True)
+    error: Mapped[str | None] = mapped_column(Text, nullable=True)
+    heartbeat_at: Mapped[dt.datetime | None] = mapped_column(
+        DateTime(timezone=True), nullable=True)
+    schema_version: Mapped[int] = mapped_column(default=1)
+
+
 _MIGRATIONS: list[tuple[str, str]] = [
     ("0001_jobs_is_example", "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS is_example INTEGER NOT NULL DEFAULT 0"),
     ("0002_jobs_title", "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS title VARCHAR(200)"),
@@ -515,6 +591,13 @@ _MIGRATIONS: list[tuple[str, str]] = [
      INSERT INTO tenant_members (id, tenant_id, user_id, role)
      SELECT gen_random_uuid(), u.tenant_id, u.id, 'owner' FROM users u
      ON CONFLICT ON CONSTRAINT uq_tenant_members_tenant_user DO NOTHING"""),
+    # The per-upload model choice. NOT backfilled: null means "the deployment default
+    # at the time", which is the truth about every job that predates the picker.
+    ("0018_jobs_options", "ALTER TABLE jobs ADD COLUMN IF NOT EXISTS options JSONB"),
+    # `case_edits` is a NEW table, so `create_all` makes it; the index the worker's
+    # claim query needs is not implied by the column declarations.
+    ("0019_ix_case_edits_queue",
+     "CREATE INDEX IF NOT EXISTS ix_case_edits_queue ON case_edits (state, created_at)"),
 ]
 
 _ALREADY_EXISTS = {"42P07", "42710", "42701"}
