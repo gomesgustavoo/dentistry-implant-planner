@@ -71,6 +71,17 @@ const DOME_RINGS = 6;
  * generic on purpose: naming a system would imply this app knows that system's drilling
  * protocol, and it knows none of them.
  */
+/** Azimuthal resolution of the DRAWN screw, independent of `N_AZIMUTH`.
+ *
+ *  `N_AZIMUTH` stays 48 because `capsuleLocal` has to tessellate exactly the way
+ *  `dentistry/plan_geometry.implant_mesh` does -- that is what the cross-language check
+ *  compares. The screw is a picture and can be as fine as it is worth being. At 48 the
+ *  silhouette is a visible 48-gon at implant zoom and the helix stair-steps; 96 halves
+ *  the facet angle to 3.75 degrees and costs ~8k extra vertices, which is 0.05 ms in
+ *  the per-frame transform.
+ */
+const SCREW_AZIMUTH = 96;
+
 const THREAD_PITCH_MM = 0.80;
 const THREAD_HALF_ANGLE_DEG = 30;        // 60 degrees included, the ISO-metric V
 const THREAD_CREST_FLAT_MM = 0.08;       // the bright helical highlight; the screw cue
@@ -97,7 +108,7 @@ const THREAD_LEADIN_MM = 0.80;           // one turn of run-in and run-out
  *  compare against the palette. It is also the physically right constraint: metals tint
  *  their specular reflection with their own base colour. A white one is what a
  *  dielectric does. */
-const BODY_RGB = [199, 204, 212];
+const BODY_RGB = [150, 155, 163];
 
 /* The four colours `web/app.js` already uses for the 2-D outline. Shared verbatim so
  * the section and the 3-D actor can never disagree about a verdict. NEUTRAL is not a
@@ -271,7 +282,7 @@ function envelopeRadius(z, r, shoulder) {
  *  canal verdict is decided and is the one place a reader scrutinises, so it is drawn
  *  as the thing that was measured and nothing else.
  */
-function screwLocal(lengthMm, diameterMm, nAz = N_AZIMUTH) {
+function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
   const r = diameterMm / 2;
   const shoulder = Math.max(0, lengthMm - r);
   const depth = Math.min(THREAD_DEPTH_MAX_MM,
@@ -581,10 +592,19 @@ function writePoints(entry, pose) {
 function applyMaterial(actor) {
   const p = actor.getProperty();
   p.setColor(BODY_RGB[0] / 255, BODY_RGB[1] / 255, BODY_RGB[2] / 255);
-  p.setAmbient(0.34);
-  p.setDiffuse(0.42);
-  p.setSpecular(0.85);
-  p.setSpecularPower(55);
+  // AMBIENT IS THE ENEMY OF METAL. It is light with no direction, so it fills the
+  // shadowed side of every thread flank equally and flattens the whole form -- the
+  // first pass ran 0.34 and read as light grey plastic. Metal needs the flanks to go
+  // dark so the crests can be bright.
+  p.setAmbient(0.08);
+  p.setDiffuse(0.50);
+  // Specular over 1 is deliberate: a metal's highlight is brighter than its diffuse
+  // response, which is exactly what separates it from a dielectric of the same colour.
+  p.setSpecular(1.15);
+  // And BROAD, not sharp. 55 gave a pinpoint highlight that hit one thread crest and
+  // missed the rest; a machined titanium implant has a satin finish whose highlight
+  // runs ALONG the helix. Lower power, wider lobe, the whole thread lights up.
+  p.setSpecularPower(28);
   p.setOpacity(1);
 }
 
@@ -606,9 +626,24 @@ function applyShellMaterial(actor, level, selected) {
   p.setAmbient(0.9);
   p.setDiffuse(0.1);
   p.setSpecular(0);
-  p.setOpacity(level && level !== 'no_verdict' ? (selected ? 0.20 : 0.10) : 0.0);
+  // FRONT FACES CULLED, so only the shell's FAR wall is drawn.
+  //
+  // WebGL has no order-independent transparency here, so a translucent hull in front of
+  // the implant tints everything behind it: at 0.20 alpha the titanium came out green
+  // and stopped reading as metal at all. Culling the near wall keeps the zone legible
+  // as a volume -- you still see it wrap around and behind -- and leaves the metal its
+  // own colour. The same trick every renderer uses for a "glass box" that has something
+  // worth looking at inside it.
+  p.setFrontfaceCulling(true);
+  p.setBackfaceCulling(false);
+  p.setOpacity(level && level !== 'no_verdict' ? (selected ? 0.26 : 0.13) : 0.0);
   p.setRepresentation(level === 'no_verdict' ? 1 : 2);   // 1 = wireframe, 2 = surface
-  if (level === 'no_verdict') { p.setOpacity(selected ? 0.55 : 0.3); p.setLineWidth(1); }
+  if (level === 'no_verdict') {
+    // Wireframe has no back face to keep, so the cull has to come off or it vanishes.
+    p.setFrontfaceCulling(false);
+    p.setOpacity(selected ? 0.6 : 0.32);
+    p.setLineWidth(1);
+  }
 }
 
 function scheduleRender() {

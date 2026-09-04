@@ -92,6 +92,60 @@ const LOADER_SCHEME = 'dentistryLocal';
 const MPR_TOOL_GROUP = 'dentistry-mpr';
 const TOOL_GROUP_3D = 'dentistry-3d';
 const VIEWPORT_3D = 'dent-3d';
+
+/* -------------------------------------------------------------- wheel zoom (3-D)
+ * `ZoomTool` is bound to the SECONDARY mouse button, which on a trackpad is a
+ * two-finger click-drag -- discoverable by nobody. A two-finger SCROLL is what everyone
+ * actually reaches for, and macOS pinch arrives as a wheel event with `ctrlKey` set, so
+ * one handler covers both.
+ *
+ * Driven by `parallelScale` rather than by camera distance, because the 3-D viewport is
+ * a PARALLEL projection: moving the camera closer changes nothing at all, and that cost
+ * a build cycle to learn once already.
+ *
+ * Exponential, so a notch is the same proportional step at every zoom level, and the
+ * gesture feels the same close in as far out.
+ */
+const ZOOM_PER_NOTCH = 0.0015;   // per pixel of wheel delta
+const ZOOM_MIN_MM = 1.5;         // half-height; below this a 4 mm implant fills the pane
+const ZOOM_MAX_MM = 260;         // the whole head and then some
+
+let wheelHost = null;
+function onWheelZoom(e) {
+  if (!engine) return;
+  const viewport = engine.getViewport(VIEWPORT_3D);
+  if (!viewport) return;
+  // The page must not scroll under the gesture, and macOS pinch must not page-zoom.
+  e.preventDefault();
+  try {
+    const cam = viewport.getCamera();
+    if (!cam || !cam.parallelScale) return;
+    // A pinch (ctrlKey) reports much larger deltas than a scroll for the same intent.
+    const k = e.ctrlKey ? 0.35 : 1;
+    const next = cam.parallelScale * Math.exp(e.deltaY * ZOOM_PER_NOTCH * k);
+    viewport.setCamera({
+      parallelScale: Math.min(ZOOM_MAX_MM, Math.max(ZOOM_MIN_MM, next)),
+    });
+    if (viewport.resetCameraClippingRange) viewport.resetCameraClippingRange();
+    viewport.render();
+  } catch (err) {
+    console.warn('dentistry: 3-D wheel zoom failed: ' + err.message);
+  }
+}
+
+function attachWheelZoom(el) {
+  if (!el || wheelHost === el) return;
+  detachWheelZoom();
+  wheelHost = el;
+  // NOT passive: the whole point is to preventDefault the page scroll.
+  el.addEventListener('wheel', onWheelZoom, { passive: false });
+}
+
+function detachWheelZoom() {
+  if (!wheelHost) return;
+  wheelHost.removeEventListener('wheel', onWheelZoom);
+  wheelHost = null;
+}
 const SEG_RENDERED_TIMEOUT_MS = 4e3;
 const FRAME_OF_REFERENCE_UID = 'dentistry-local';
 
@@ -594,6 +648,7 @@ export async function mount(elements, meta, imageBuffer, labelBuffer, element3d)
         { bindings: [{ mouseButton: MouseBindings.Secondary }] });
     }
     group3d.addViewport(VIEWPORT_3D, engine.id);
+    attachWheelZoom(element3d);
     const viewport3d = engine.getViewport(VIEWPORT_3D);
     if (viewport3d) {
       try {
@@ -1169,6 +1224,7 @@ export function resetCameras() {
 
 export async function unmount() {
   if (!state) return;
+  detachWheelZoom();
   try {
     if (segmentation.removeAllSegmentationRepresentations) {
       state.viewportIds.forEach((id) => segmentation.removeAllSegmentationRepresentations(id));
