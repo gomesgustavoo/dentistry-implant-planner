@@ -356,7 +356,27 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
     // so checking the vertices proves it for every point of every triangle, which is
     // strictly stronger than the 40 sampled triangles above. In the implant's own
     // frame, recovered by projecting onto the published axes.
-    let outside = -Infinity, touch = Infinity, sliver = 0;
+    let outside = -Infinity, touch = Infinity, sliver = 0, misWound = 0;
+    {
+      // WINDING against the supplied normals. vtk.js's WebGL shader negates the normal
+      // on a back-facing fragment, so a triangle wound the wrong way lights as if it
+      // faced away -- ambient only, which at 0.08 is black. It shipped once exactly
+      // that way: 5,944 of 13,353 body triangles inward, correct normals throughout,
+      // and a threaded body that rendered black between the fins.
+      const cw = probe.cells; const pw = probe.points; const nw = probe.normals || null;
+      if (nw) {
+        for (let c = 0; c + 3 < cw.length; c += 4) {
+          const a = cw[c + 1] * 3; const b = cw[c + 2] * 3; const d = cw[c + 3] * 3;
+          const ux = pw[b] - pw[a]; const uy = pw[b+1] - pw[a+1]; const uz = pw[b+2] - pw[a+2];
+          const vx = pw[d] - pw[a]; const vy = pw[d+1] - pw[a+1]; const vz = pw[d+2] - pw[a+2];
+          const fx = uy*vz - uz*vy; const fy = uz*vx - ux*vz; const fz = ux*vy - uy*vx;
+          const nx = nw[a] + nw[b] + nw[d];
+          const ny = nw[a+1] + nw[b+1] + nw[d+1];
+          const nz = nw[a+2] + nw[b+2] + nw[d+2];
+          if (fx*nx + fy*ny + fz*nz < 0) misWound += 1;
+        }
+      }
+    }
     {
       // A thread face that spans more than one PITCH in z is the signature of a profile
       // wrapped back to its own first station inside one column -- a triangle that jumps
@@ -394,7 +414,7 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
       Math.abs(dot(probe.frame.ax, probe.frame.e2)),
       Math.abs(dot(probe.frame.e1, probe.frame.e2)));
 
-    poses.push({ frameError, vertexError, sampled, orthoError, outside, touch, sliver,
+    poses.push({ frameError, vertexError, sampled, orthoError, outside, touch, sliver, misWound,
                  threadDepth: probe.profile ? probe.profile.depthMaxMm : 0,
                  // The ENVELOPE's tessellation is what must equal Python's. The drawn
                  // mesh is a thread and has its own count, which is checked separately
@@ -664,6 +684,11 @@ if (!existsSync(VECTORS)) {
     check('every drawn vertex is INSIDE the measured capsule',
           worstOut < 1e-4,
           `worst vertex ${worstOut.toExponential(2)} mm outside the envelope`);
+    const worstWound = Math.max(...res.poses.map((p) => p.misWound || 0));
+    check('  ... and every triangle is wound to match its own normal, so none goes black',
+          worstWound === 0,
+          `${worstWound} triangle(s) wound against their normals -- vtk.js negates the `
+          + 'normal on a back face, so each of those lights as ambient only');
     const worstSliver = Math.max(...res.poses.map((p) => p.sliver));
     check('  ... and no thread face jumps a whole turn, so it reads as a screw',
           worstSliver < 1.2,
