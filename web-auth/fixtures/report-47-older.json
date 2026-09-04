@@ -1,0 +1,5292 @@
+{
+ "roi": {
+  "kept": 3,
+  "shape": [
+   308,
+   370,
+   421
+  ],
+  "start": [
+   82,
+   44,
+   120
+  ],
+  "source": "teeth",
+  "components": 3,
+  "logit_gb_full": 25.43,
+  "dropped_voxels": 0,
+  "logit_gb_cropped": 6.33,
+  "threshold_voxels": 17953,
+  "logit_gb_instance": 1.12,
+  "dropped_components": 0,
+  "fraction_of_volume": 0.2491,
+  "n_classes_toothseg": 33,
+  "softmax_skipped_gb": 3.67,
+  "toothseg_resampled": true,
+  "instance_input_shape": [
+   385,
+   462,
+   526
+  ],
+  "logit_gb_model_input": 3.67,
+  "toothseg_input_shape": [
+   257,
+   308,
+   351
+  ],
+  "vram_free_mb_before_toothseg": 12198.7
+ },
+ "bake": {
+  "files": {
+   "report.json": {
+    "bytes": 69077,
+    "sha256_16": "234b2e41aee9958a",
+    "gzip_bytes": 10747
+   },
+   "stl/canal.stl": {
+    "bytes": 3048284,
+    "sha256_16": "ac66ea00580339c8"
+   },
+   "mesh/canal.msh": {
+    "bytes": 216064,
+    "sha256_16": "00d3a08b28d231f1",
+    "gzip_bytes": 111314
+   },
+   "stl/maxilla.stl": {
+    "bytes": 15000084,
+    "sha256_16": "9a8543029d435411"
+   },
+   "mesh/maxilla.msh": {
+    "bytes": 1081564,
+    "sha256_16": "127b5779894d9402",
+    "gzip_bytes": 648461
+   },
+   "stl/mandible.stl": {
+    "bytes": 15000084,
+    "sha256_16": "4294505548267528"
+   },
+   "stl/tooth_11.stl": {
+    "bytes": 909084,
+    "sha256_16": "3b596052a7289ff4"
+   },
+   "stl/tooth_12.stl": {
+    "bytes": 803284,
+    "sha256_16": "8994172928d6c9d3"
+   },
+   "stl/tooth_13.stl": {
+    "bytes": 1071684,
+    "sha256_16": "2ad42d166f1ba14c"
+   },
+   "stl/tooth_14.stl": {
+    "bytes": 831084,
+    "sha256_16": "6e165545fc718a8e"
+   },
+   "stl/tooth_15.stl": {
+    "bytes": 846084,
+    "sha256_16": "ad738232a4977804"
+   },
+   "stl/tooth_16.stl": {
+    "bytes": 1623684,
+    "sha256_16": "7d7ba05702dbeed7"
+   },
+   "stl/tooth_17.stl": {
+    "bytes": 1188884,
+    "sha256_16": "e1e50cf09a81fe0c"
+   },
+   "stl/tooth_21.stl": {
+    "bytes": 984284,
+    "sha256_16": "d78a2a45dea5d817"
+   },
+   "stl/tooth_22.stl": {
+    "bytes": 823084,
+    "sha256_16": "eb5e700d299ed2e7"
+   },
+   "stl/tooth_23.stl": {
+    "bytes": 1080884,
+    "sha256_16": "8c555dc55fdbee57"
+   },
+   "stl/tooth_24.stl": {
+    "bytes": 873484,
+    "sha256_16": "b63c9ba7b66613aa"
+   },
+   "stl/tooth_25.stl": {
+    "bytes": 905684,
+    "sha256_16": "344f5f86ec2e2044"
+   },
+   "stl/tooth_26.stl": {
+    "bytes": 1388884,
+    "sha256_16": "2ed7877c4ba32b87"
+   },
+   "stl/tooth_27.stl": {
+    "bytes": 1158484,
+    "sha256_16": "e313d7a7ee30696e"
+   },
+   "stl/tooth_31.stl": {
+    "bytes": 635684,
+    "sha256_16": "d8f982287731b86c"
+   },
+   "stl/tooth_32.stl": {
+    "bytes": 706084,
+    "sha256_16": "fa6c49caf5208f0d"
+   },
+   "stl/tooth_33.stl": {
+    "bytes": 1068484,
+    "sha256_16": "63d1abd4e5ece0bd"
+   },
+   "stl/tooth_34.stl": {
+    "bytes": 751084,
+    "sha256_16": "ca14d88b270dfe1b"
+   },
+   "stl/tooth_35.stl": {
+    "bytes": 823884,
+    "sha256_16": "0e3fe6a8e7d65fe8"
+   },
+   "stl/tooth_36.stl": {
+    "bytes": 1580884,
+    "sha256_16": "0547df08649ddb45"
+   },
+   "stl/tooth_37.stl": {
+    "bytes": 721084,
+    "sha256_16": "ca79794f13e6b295"
+   },
+   "stl/tooth_38.stl": {
+    "bytes": 1339884,
+    "sha256_16": "a49eb55a410f193a"
+   },
+   "stl/tooth_41.stl": {
+    "bytes": 633284,
+    "sha256_16": "ec6a365fe4d67e22"
+   },
+   "stl/tooth_42.stl": {
+    "bytes": 739084,
+    "sha256_16": "9f1276bbc0b1c7db"
+   },
+   "stl/tooth_43.stl": {
+    "bytes": 1093684,
+    "sha256_16": "77c4d092c4043d0e"
+   },
+   "stl/tooth_44.stl": {
+    "bytes": 724084,
+    "sha256_16": "fdc10fe439ae6cc9"
+   },
+   "stl/tooth_45.stl": {
+    "bytes": 805884,
+    "sha256_16": "3084227d4211503e"
+   },
+   "stl/tooth_47.stl": {
+    "bytes": 1599684,
+    "sha256_16": "6eab92a4ab0edde6"
+   },
+   "stl/tooth_48.stl": {
+    "bytes": 1367684,
+    "sha256_16": "b74480db36f4a6e3"
+   },
+   "volume/image.raw": {
+    "bytes": 7096896,
+    "sha256_16": "37d0e1c59145f88a",
+    "gzip_bytes": 3492421
+   },
+   "volume/meta.json": {
+    "bytes": 10059,
+    "sha256_16": "78fa5acd502f4351",
+    "gzip_bytes": 1999
+   },
+   "mesh/mandible.msh": {
+    "bytes": 1078792,
+    "sha256_16": "23f12e2acf7f8012",
+    "gzip_bytes": 617223
+   },
+   "mesh/tooth_11.msh": {
+    "bytes": 108040,
+    "sha256_16": "2cb4bda90955873e",
+    "gzip_bytes": 56307
+   },
+   "mesh/tooth_12.msh": {
+    "bytes": 108040,
+    "sha256_16": "f3c489eb81338fb4",
+    "gzip_bytes": 55891
+   },
+   "mesh/tooth_13.msh": {
+    "bytes": 108040,
+    "sha256_16": "19111d05b0105877",
+    "gzip_bytes": 55747
+   },
+   "mesh/tooth_14.msh": {
+    "bytes": 108040,
+    "sha256_16": "47d5e33f0f35c207",
+    "gzip_bytes": 55729
+   },
+   "mesh/tooth_15.msh": {
+    "bytes": 108040,
+    "sha256_16": "edb99f9f33856f44",
+    "gzip_bytes": 55872
+   },
+   "mesh/tooth_16.msh": {
+    "bytes": 108064,
+    "sha256_16": "f2a7a108dfb114a0",
+    "gzip_bytes": 56897
+   },
+   "mesh/tooth_17.msh": {
+    "bytes": 108040,
+    "sha256_16": "fa40b97eea34126c",
+    "gzip_bytes": 55993
+   },
+   "mesh/tooth_21.msh": {
+    "bytes": 108040,
+    "sha256_16": "42387a6aea472a4f",
+    "gzip_bytes": 56343
+   },
+   "mesh/tooth_22.msh": {
+    "bytes": 108040,
+    "sha256_16": "ea330c70f822aeab",
+    "gzip_bytes": 55639
+   },
+   "mesh/tooth_23.msh": {
+    "bytes": 108004,
+    "sha256_16": "141bda818c5f1947",
+    "gzip_bytes": 55262
+   },
+   "mesh/tooth_24.msh": {
+    "bytes": 108004,
+    "sha256_16": "b346c51652998091",
+    "gzip_bytes": 55657
+   },
+   "mesh/tooth_25.msh": {
+    "bytes": 108040,
+    "sha256_16": "335256c08f49be4e",
+    "gzip_bytes": 55389
+   },
+   "mesh/tooth_26.msh": {
+    "bytes": 108004,
+    "sha256_16": "da4b7082f0694544",
+    "gzip_bytes": 55857
+   },
+   "mesh/tooth_27.msh": {
+    "bytes": 108004,
+    "sha256_16": "faaeeec4b0a5a587",
+    "gzip_bytes": 55814
+   },
+   "mesh/tooth_31.msh": {
+    "bytes": 108040,
+    "sha256_16": "dff544ac18c12bfb",
+    "gzip_bytes": 55488
+   },
+   "mesh/tooth_32.msh": {
+    "bytes": 108004,
+    "sha256_16": "eba151793c415206",
+    "gzip_bytes": 55451
+   },
+   "mesh/tooth_33.msh": {
+    "bytes": 108040,
+    "sha256_16": "e1fb7ace8a0c3399",
+    "gzip_bytes": 55796
+   },
+   "mesh/tooth_34.msh": {
+    "bytes": 108004,
+    "sha256_16": "674062d68fb5c6bb",
+    "gzip_bytes": 54805
+   },
+   "mesh/tooth_35.msh": {
+    "bytes": 108040,
+    "sha256_16": "e428035c2a8de656",
+    "gzip_bytes": 55182
+   },
+   "mesh/tooth_36.msh": {
+    "bytes": 108004,
+    "sha256_16": "2192efcd8ff7d5eb",
+    "gzip_bytes": 56409
+   },
+   "mesh/tooth_37.msh": {
+    "bytes": 108040,
+    "sha256_16": "5db9ba228d71d76d",
+    "gzip_bytes": 55511
+   },
+   "mesh/tooth_38.msh": {
+    "bytes": 108004,
+    "sha256_16": "9aecd5d425f1dd0d",
+    "gzip_bytes": 56312
+   },
+   "mesh/tooth_41.msh": {
+    "bytes": 108040,
+    "sha256_16": "0e8acec2415925d1",
+    "gzip_bytes": 54769
+   },
+   "mesh/tooth_42.msh": {
+    "bytes": 108040,
+    "sha256_16": "25e4d27c9c371d63",
+    "gzip_bytes": 54687
+   },
+   "mesh/tooth_43.msh": {
+    "bytes": 108004,
+    "sha256_16": "c19620240396bd57",
+    "gzip_bytes": 54891
+   },
+   "mesh/tooth_44.msh": {
+    "bytes": 108004,
+    "sha256_16": "197dabb614f9e8f5",
+    "gzip_bytes": 54737
+   },
+   "mesh/tooth_45.msh": {
+    "bytes": 108040,
+    "sha256_16": "038458fa18b68db1",
+    "gzip_bytes": 55052
+   },
+   "mesh/tooth_47.msh": {
+    "bytes": 108004,
+    "sha256_16": "803e3caa397ea54d",
+    "gzip_bytes": 55747
+   },
+   "mesh/tooth_48.msh": {
+    "bytes": 108028,
+    "sha256_16": "d8c2cba3813e80b1",
+    "gzip_bytes": 56011
+   },
+   "volume/labels.raw": {
+    "bytes": 7096896,
+    "sha256_16": "bd297882f591833e",
+    "gzip_bytes": 107135
+   },
+   "segmentation.nii.gz": {
+    "bytes": 1615505,
+    "sha256_16": "6d7b2576a517fb7c"
+   },
+   "volume/conflicts.raw": {
+    "bytes": 7096896,
+    "sha256_16": "fc61ad65d8392c04",
+    "gzip_bytes": 14348
+   },
+   "rtstruct/rtstruct.zip": {
+    "bytes": 164638995,
+    "sha256_16": "45faa70f01de9328"
+   },
+   "preview/axial/0000.jpg": {
+    "bytes": 88839,
+    "sha256_16": "8ca69cdfb6612436"
+   },
+   "preview/axial/0001.jpg": {
+    "bytes": 88589,
+    "sha256_16": "7f51def67885d4a9"
+   },
+   "preview/axial/0002.jpg": {
+    "bytes": 88355,
+    "sha256_16": "4d95f6964e663457"
+   },
+   "preview/axial/0003.jpg": {
+    "bytes": 88114,
+    "sha256_16": "ac21edec51929481"
+   },
+   "preview/axial/0004.jpg": {
+    "bytes": 87289,
+    "sha256_16": "5dd853dae4881251"
+   },
+   "preview/axial/0005.jpg": {
+    "bytes": 86834,
+    "sha256_16": "979bbbaa8e805dce"
+   },
+   "preview/axial/0006.jpg": {
+    "bytes": 86170,
+    "sha256_16": "aec5292c0c14beb8"
+   },
+   "preview/axial/0007.jpg": {
+    "bytes": 85225,
+    "sha256_16": "004811734480a7ca"
+   },
+   "preview/axial/0008.jpg": {
+    "bytes": 84310,
+    "sha256_16": "9da0a81b280e3b86"
+   },
+   "preview/axial/0009.jpg": {
+    "bytes": 83484,
+    "sha256_16": "bd59d21619fa0c31"
+   },
+   "preview/axial/0010.jpg": {
+    "bytes": 82722,
+    "sha256_16": "1444b223c6f48014"
+   },
+   "preview/axial/0011.jpg": {
+    "bytes": 81967,
+    "sha256_16": "1060efe327648fb2"
+   },
+   "preview/axial/0012.jpg": {
+    "bytes": 81320,
+    "sha256_16": "0d404d8bc0c47a62"
+   },
+   "preview/axial/0013.jpg": {
+    "bytes": 80885,
+    "sha256_16": "04ade484df1d05b0"
+   },
+   "preview/axial/0014.jpg": {
+    "bytes": 80568,
+    "sha256_16": "02ae403000f2fdb6"
+   },
+   "preview/axial/0015.jpg": {
+    "bytes": 79958,
+    "sha256_16": "ef5b77d6277dd5aa"
+   },
+   "preview/axial/0016.jpg": {
+    "bytes": 79406,
+    "sha256_16": "99eb71784e7323b6"
+   },
+   "preview/axial/0017.jpg": {
+    "bytes": 78802,
+    "sha256_16": "e2f0bfdc0503c2c1"
+   },
+   "preview/axial/0018.jpg": {
+    "bytes": 78305,
+    "sha256_16": "a2731c81b7bbe677"
+   },
+   "preview/axial/0019.jpg": {
+    "bytes": 77867,
+    "sha256_16": "1774c8b8c788bdb1"
+   },
+   "preview/axial/0020.jpg": {
+    "bytes": 77705,
+    "sha256_16": "9213681762c3d04f"
+   },
+   "preview/axial/0021.jpg": {
+    "bytes": 77117,
+    "sha256_16": "a0b3686516fe51c3"
+   },
+   "preview/axial/0022.jpg": {
+    "bytes": 76739,
+    "sha256_16": "b6c517b50866e43f"
+   },
+   "preview/axial/0023.jpg": {
+    "bytes": 76635,
+    "sha256_16": "e9b26318aaf21226"
+   },
+   "preview/axial/0024.jpg": {
+    "bytes": 76653,
+    "sha256_16": "8df110423de62326"
+   },
+   "preview/axial/0025.jpg": {
+    "bytes": 76170,
+    "sha256_16": "06cf6e4cec2bf170"
+   },
+   "preview/axial/0026.jpg": {
+    "bytes": 76249,
+    "sha256_16": "c009a9dc6ece75a3"
+   },
+   "preview/axial/0027.jpg": {
+    "bytes": 76062,
+    "sha256_16": "1989f9bb0daf60da"
+   },
+   "preview/axial/0028.jpg": {
+    "bytes": 75735,
+    "sha256_16": "3cd29c8a18b86b86"
+   },
+   "preview/axial/0029.jpg": {
+    "bytes": 75575,
+    "sha256_16": "ee59a6f7ddfed016"
+   },
+   "preview/axial/0030.jpg": {
+    "bytes": 75554,
+    "sha256_16": "7d6c17832ae44ce6"
+   },
+   "preview/axial/0031.jpg": {
+    "bytes": 75412,
+    "sha256_16": "eb25d7c7a2da34e4"
+   },
+   "preview/axial/0032.jpg": {
+    "bytes": 75578,
+    "sha256_16": "0aea682094e3253f"
+   },
+   "preview/axial/0033.jpg": {
+    "bytes": 75511,
+    "sha256_16": "d8fc8667a63ca1d7"
+   },
+   "preview/axial/0034.jpg": {
+    "bytes": 75467,
+    "sha256_16": "8cb744c19ecb0cda"
+   },
+   "preview/axial/0035.jpg": {
+    "bytes": 75370,
+    "sha256_16": "8d1821b5b5ced38c"
+   },
+   "preview/axial/0036.jpg": {
+    "bytes": 75441,
+    "sha256_16": "94f9680751a54d5b"
+   },
+   "preview/axial/0037.jpg": {
+    "bytes": 75502,
+    "sha256_16": "4908059ef4575aa4"
+   },
+   "preview/axial/0038.jpg": {
+    "bytes": 75288,
+    "sha256_16": "e783699199d8228e"
+   },
+   "preview/axial/0039.jpg": {
+    "bytes": 74716,
+    "sha256_16": "dd80d233c96997f4"
+   },
+   "preview/axial/0040.jpg": {
+    "bytes": 73803,
+    "sha256_16": "16e4b77cf5a0eb67"
+   },
+   "preview/axial/0041.jpg": {
+    "bytes": 73288,
+    "sha256_16": "3ebd7af8d008e570"
+   },
+   "preview/axial/0042.jpg": {
+    "bytes": 72448,
+    "sha256_16": "6f649a8589da5435"
+   },
+   "preview/axial/0043.jpg": {
+    "bytes": 71894,
+    "sha256_16": "00380607e3e724c6"
+   },
+   "preview/axial/0044.jpg": {
+    "bytes": 71599,
+    "sha256_16": "a58784be1a9bdd04"
+   },
+   "preview/axial/0045.jpg": {
+    "bytes": 71472,
+    "sha256_16": "5c6bcd238ece1696"
+   },
+   "preview/axial/0046.jpg": {
+    "bytes": 71129,
+    "sha256_16": "888b1995fef4b957"
+   },
+   "preview/axial/0047.jpg": {
+    "bytes": 71380,
+    "sha256_16": "3883a9ed8f568679"
+   },
+   "preview/axial/0048.jpg": {
+    "bytes": 71561,
+    "sha256_16": "82985a7681cb4cfb"
+   },
+   "preview/axial/0049.jpg": {
+    "bytes": 71722,
+    "sha256_16": "199fccfbec04d426"
+   },
+   "preview/axial/0050.jpg": {
+    "bytes": 71941,
+    "sha256_16": "1ad3d8ff8e8b7290"
+   },
+   "preview/axial/0051.jpg": {
+    "bytes": 71576,
+    "sha256_16": "5dbf0c96716996df"
+   },
+   "preview/axial/0052.jpg": {
+    "bytes": 71299,
+    "sha256_16": "b733a48d728fe029"
+   },
+   "preview/axial/0053.jpg": {
+    "bytes": 71283,
+    "sha256_16": "a379f44fcb7e1da1"
+   },
+   "preview/axial/0054.jpg": {
+    "bytes": 70970,
+    "sha256_16": "afb0af16c9a9a5f5"
+   },
+   "preview/axial/0055.jpg": {
+    "bytes": 70894,
+    "sha256_16": "118cd6aa48e0a778"
+   },
+   "preview/axial/0056.jpg": {
+    "bytes": 70733,
+    "sha256_16": "7af06ffcc6465dc2"
+   },
+   "preview/axial/0057.jpg": {
+    "bytes": 70444,
+    "sha256_16": "c4486c9f1182ea96"
+   },
+   "preview/axial/0058.jpg": {
+    "bytes": 70880,
+    "sha256_16": "91d34ecdd35d50cb"
+   },
+   "preview/axial/0059.jpg": {
+    "bytes": 70858,
+    "sha256_16": "b37c397bc741f17a"
+   },
+   "preview/axial/0060.jpg": {
+    "bytes": 71078,
+    "sha256_16": "f17b63fe98ded36b"
+   },
+   "preview/axial/0061.jpg": {
+    "bytes": 71524,
+    "sha256_16": "33b49285eb2ebab9"
+   },
+   "preview/axial/0062.jpg": {
+    "bytes": 71675,
+    "sha256_16": "411805b188e1853d"
+   },
+   "preview/axial/0063.jpg": {
+    "bytes": 71628,
+    "sha256_16": "8d1a58cc5baefb1b"
+   },
+   "preview/axial/0064.jpg": {
+    "bytes": 71413,
+    "sha256_16": "20620ed76ac63c5a"
+   },
+   "preview/axial/0065.jpg": {
+    "bytes": 71236,
+    "sha256_16": "c754c14278bfe583"
+   },
+   "preview/axial/0066.jpg": {
+    "bytes": 70986,
+    "sha256_16": "b4b0db28294c1990"
+   },
+   "preview/axial/0067.jpg": {
+    "bytes": 71087,
+    "sha256_16": "a137fea360c176c6"
+   },
+   "preview/axial/0068.jpg": {
+    "bytes": 71205,
+    "sha256_16": "eec0fce0220842df"
+   },
+   "preview/axial/0069.jpg": {
+    "bytes": 71447,
+    "sha256_16": "8480930bb09e5db6"
+   },
+   "preview/axial/0070.jpg": {
+    "bytes": 71842,
+    "sha256_16": "954dc401047d4456"
+   },
+   "preview/axial/0071.jpg": {
+    "bytes": 72017,
+    "sha256_16": "5b50d6d6909ffa4c"
+   },
+   "preview/axial/0072.jpg": {
+    "bytes": 72381,
+    "sha256_16": "1174b905a9933fd7"
+   },
+   "preview/axial/0073.jpg": {
+    "bytes": 72701,
+    "sha256_16": "3ee79000e2aac4a0"
+   },
+   "preview/axial/0074.jpg": {
+    "bytes": 72978,
+    "sha256_16": "8786011a556b2e91"
+   },
+   "preview/axial/0075.jpg": {
+    "bytes": 73275,
+    "sha256_16": "91994940165e5f57"
+   },
+   "preview/axial/0076.jpg": {
+    "bytes": 73639,
+    "sha256_16": "9514cdcbc6cb6d60"
+   },
+   "preview/axial/0077.jpg": {
+    "bytes": 73919,
+    "sha256_16": "4f09762caad02878"
+   },
+   "preview/axial/0078.jpg": {
+    "bytes": 74204,
+    "sha256_16": "2110240cd5ffcd36"
+   },
+   "preview/axial/0079.jpg": {
+    "bytes": 74590,
+    "sha256_16": "8b3100d00e3f7c53"
+   },
+   "preview/axial/0080.jpg": {
+    "bytes": 74507,
+    "sha256_16": "731cf96df315c6e4"
+   },
+   "preview/axial/0081.jpg": {
+    "bytes": 74529,
+    "sha256_16": "f16c4a28fc21da47"
+   },
+   "preview/axial/0082.jpg": {
+    "bytes": 74384,
+    "sha256_16": "4fa8fd9a08449565"
+   },
+   "preview/axial/0083.jpg": {
+    "bytes": 74473,
+    "sha256_16": "124d77315ccfd280"
+   },
+   "preview/axial/0084.jpg": {
+    "bytes": 74564,
+    "sha256_16": "563d543b767b4f1b"
+   },
+   "preview/axial/0085.jpg": {
+    "bytes": 74670,
+    "sha256_16": "d9b0d7e6496d89f5"
+   },
+   "preview/axial/0086.jpg": {
+    "bytes": 74593,
+    "sha256_16": "0662a5799afa85ab"
+   },
+   "preview/axial/0087.jpg": {
+    "bytes": 74338,
+    "sha256_16": "072edfe5aedbcf6c"
+   },
+   "preview/axial/0088.jpg": {
+    "bytes": 74742,
+    "sha256_16": "e66b52369dc2b536"
+   },
+   "preview/axial/0089.jpg": {
+    "bytes": 74794,
+    "sha256_16": "512724ab23a2c329"
+   },
+   "preview/axial/0090.jpg": {
+    "bytes": 74801,
+    "sha256_16": "8dcfefc4e1861517"
+   },
+   "preview/axial/0091.jpg": {
+    "bytes": 75232,
+    "sha256_16": "ae698de8b0d18673"
+   },
+   "preview/axial/0092.jpg": {
+    "bytes": 75223,
+    "sha256_16": "bb50c1779b583e3c"
+   },
+   "preview/axial/0093.jpg": {
+    "bytes": 74664,
+    "sha256_16": "446d0895d9a64f66"
+   },
+   "preview/axial/0094.jpg": {
+    "bytes": 74656,
+    "sha256_16": "914d1322ac7c7887"
+   },
+   "preview/axial/0095.jpg": {
+    "bytes": 74266,
+    "sha256_16": "2570c9caee585794"
+   },
+   "preview/axial/0096.jpg": {
+    "bytes": 74028,
+    "sha256_16": "ab11dfb02165b093"
+   },
+   "preview/axial/0097.jpg": {
+    "bytes": 73830,
+    "sha256_16": "4e2a810b154d5e26"
+   },
+   "preview/axial/0098.jpg": {
+    "bytes": 73268,
+    "sha256_16": "75da070a748c17de"
+   },
+   "preview/axial/0099.jpg": {
+    "bytes": 72539,
+    "sha256_16": "dce1347c65ba1bf7"
+   },
+   "preview/axial/0100.jpg": {
+    "bytes": 71314,
+    "sha256_16": "71844a05711ed75d"
+   },
+   "preview/axial/0101.jpg": {
+    "bytes": 70777,
+    "sha256_16": "0185b6d8d1c1672d"
+   },
+   "preview/axial/0102.jpg": {
+    "bytes": 70081,
+    "sha256_16": "6f2d1f3ca9852122"
+   },
+   "preview/axial/0103.jpg": {
+    "bytes": 69359,
+    "sha256_16": "68d761f87f28a647"
+   },
+   "preview/axial/0104.jpg": {
+    "bytes": 68563,
+    "sha256_16": "4e8d8e685af4e143"
+   },
+   "preview/axial/0105.jpg": {
+    "bytes": 68316,
+    "sha256_16": "b0ab98d4f814b49c"
+   },
+   "preview/axial/0106.jpg": {
+    "bytes": 67537,
+    "sha256_16": "098b046af662c3b4"
+   },
+   "preview/axial/0107.jpg": {
+    "bytes": 66973,
+    "sha256_16": "1d20417cff16c7a2"
+   },
+   "preview/axial/0108.jpg": {
+    "bytes": 66496,
+    "sha256_16": "29686fd56de691d9"
+   },
+   "preview/axial/0109.jpg": {
+    "bytes": 65502,
+    "sha256_16": "26416ce443e35278"
+   },
+   "preview/axial/0110.jpg": {
+    "bytes": 65211,
+    "sha256_16": "fd6c09eb4c77b81a"
+   },
+   "preview/axial/0111.jpg": {
+    "bytes": 64291,
+    "sha256_16": "8a434069c98e5d5e"
+   },
+   "preview/axial/0112.jpg": {
+    "bytes": 64141,
+    "sha256_16": "4ff8e95ce2a5b6bd"
+   },
+   "preview/axial/0113.jpg": {
+    "bytes": 63291,
+    "sha256_16": "83669c0c1b66a871"
+   },
+   "preview/axial/0114.jpg": {
+    "bytes": 62864,
+    "sha256_16": "ad4f6d21cc6cba7d"
+   },
+   "preview/axial/0115.jpg": {
+    "bytes": 62537,
+    "sha256_16": "703dbad8d27b73b4"
+   },
+   "preview/axial/0116.jpg": {
+    "bytes": 61927,
+    "sha256_16": "972d9d04d2b17b61"
+   },
+   "preview/axial/0117.jpg": {
+    "bytes": 61399,
+    "sha256_16": "66236b3f12b46128"
+   },
+   "preview/axial/0118.jpg": {
+    "bytes": 60936,
+    "sha256_16": "53c009542956f279"
+   },
+   "preview/axial/0119.jpg": {
+    "bytes": 60527,
+    "sha256_16": "ceb8b87695132e40"
+   },
+   "preview/axial/0120.jpg": {
+    "bytes": 60371,
+    "sha256_16": "50b7b04af7c55685"
+   },
+   "preview/axial/0121.jpg": {
+    "bytes": 59888,
+    "sha256_16": "4e096dee50887245"
+   },
+   "preview/axial/0122.jpg": {
+    "bytes": 59525,
+    "sha256_16": "1e5cca5c89b825bd"
+   },
+   "preview/axial/0123.jpg": {
+    "bytes": 59374,
+    "sha256_16": "0a9c0d65a37bd4af"
+   },
+   "preview/axial/0124.jpg": {
+    "bytes": 59392,
+    "sha256_16": "0afd96e767dfc01f"
+   },
+   "preview/axial/0125.jpg": {
+    "bytes": 59140,
+    "sha256_16": "f967a032b368d7a6"
+   },
+   "preview/axial/0126.jpg": {
+    "bytes": 59005,
+    "sha256_16": "0dc82d73c034496f"
+   },
+   "preview/axial/0127.jpg": {
+    "bytes": 58861,
+    "sha256_16": "1f26e0ae507225fb"
+   },
+   "preview/axial/0128.jpg": {
+    "bytes": 58638,
+    "sha256_16": "ffd9d2bbb9407553"
+   },
+   "preview/axial/0129.jpg": {
+    "bytes": 58503,
+    "sha256_16": "59af71d8a50fad8f"
+   },
+   "preview/axial/0130.jpg": {
+    "bytes": 58442,
+    "sha256_16": "c27c1d245631ec49"
+   },
+   "preview/axial/0131.jpg": {
+    "bytes": 58299,
+    "sha256_16": "436d1db2a845916c"
+   },
+   "preview/axial/0132.jpg": {
+    "bytes": 57814,
+    "sha256_16": "a046394da176017d"
+   },
+   "preview/axial/0133.jpg": {
+    "bytes": 57924,
+    "sha256_16": "75f41fa72b09bc46"
+   },
+   "preview/axial/0134.jpg": {
+    "bytes": 57396,
+    "sha256_16": "4da6b93b5d0210ec"
+   },
+   "preview/axial/0135.jpg": {
+    "bytes": 57039,
+    "sha256_16": "81d2c192ae97c647"
+   },
+   "preview/axial/0136.jpg": {
+    "bytes": 56682,
+    "sha256_16": "d04b9336e8182008"
+   },
+   "preview/axial/0137.jpg": {
+    "bytes": 56597,
+    "sha256_16": "b070778ae9ef9d63"
+   },
+   "preview/axial/0138.jpg": {
+    "bytes": 57083,
+    "sha256_16": "6a550be12bfa677c"
+   },
+   "preview/axial/0139.jpg": {
+    "bytes": 55150,
+    "sha256_16": "092082e1c12b5874"
+   },
+   "preview/axial/0140.jpg": {
+    "bytes": 54433,
+    "sha256_16": "2119900c496aa516"
+   },
+   "preview/axial/0141.jpg": {
+    "bytes": 53944,
+    "sha256_16": "8ab83ad34812b2cf"
+   },
+   "preview/axial/0142.jpg": {
+    "bytes": 54004,
+    "sha256_16": "5771ba7bd57518a8"
+   },
+   "preview/axial/0143.jpg": {
+    "bytes": 53996,
+    "sha256_16": "4565954793be361a"
+   },
+   "preview/axial/0144.jpg": {
+    "bytes": 54120,
+    "sha256_16": "862f32c56c9adfab"
+   },
+   "preview/axial/0145.jpg": {
+    "bytes": 53745,
+    "sha256_16": "4b77e408482c375d"
+   },
+   "preview/axial/0146.jpg": {
+    "bytes": 53273,
+    "sha256_16": "2b4611be3c3a0c47"
+   },
+   "preview/axial/0147.jpg": {
+    "bytes": 52817,
+    "sha256_16": "fc0b74712e8a75e0"
+   },
+   "preview/axial/0148.jpg": {
+    "bytes": 51901,
+    "sha256_16": "55f4d81d3342e4f7"
+   },
+   "preview/axial/0149.jpg": {
+    "bytes": 50842,
+    "sha256_16": "af6d7bfc0c4c8fdc"
+   },
+   "preview/axial/0150.jpg": {
+    "bytes": 50223,
+    "sha256_16": "9c3fbde66391213b"
+   },
+   "preview/axial/0151.jpg": {
+    "bytes": 50056,
+    "sha256_16": "3c4c486f43e6b61f"
+   },
+   "preview/axial/0152.jpg": {
+    "bytes": 49387,
+    "sha256_16": "f847c3612facab16"
+   },
+   "preview/axial/0153.jpg": {
+    "bytes": 48495,
+    "sha256_16": "f431cf876099342e"
+   },
+   "preview/axial/0154.jpg": {
+    "bytes": 48191,
+    "sha256_16": "1cabaf5217a06c1d"
+   },
+   "preview/axial/0155.jpg": {
+    "bytes": 48626,
+    "sha256_16": "3028f5db6088aaff"
+   },
+   "preview/axial/0156.jpg": {
+    "bytes": 48008,
+    "sha256_16": "81a05ad1d40e5646"
+   },
+   "preview/axial/0157.jpg": {
+    "bytes": 47536,
+    "sha256_16": "08c02770e1a69e41"
+   },
+   "preview/axial/0158.jpg": {
+    "bytes": 47271,
+    "sha256_16": "ac62649021413c77"
+   },
+   "preview/axial/0159.jpg": {
+    "bytes": 46834,
+    "sha256_16": "31a1956a93c5e190"
+   },
+   "preview/coronal/0000.jpg": {
+    "bytes": 1884,
+    "sha256_16": "c0cc6c182112ee6e"
+   },
+   "preview/coronal/0001.jpg": {
+    "bytes": 2253,
+    "sha256_16": "a73a0e72e40e938d"
+   },
+   "preview/coronal/0002.jpg": {
+    "bytes": 2438,
+    "sha256_16": "661fd586ca956b67"
+   },
+   "preview/coronal/0003.jpg": {
+    "bytes": 2676,
+    "sha256_16": "cdc4f2b063afeb0d"
+   },
+   "preview/coronal/0004.jpg": {
+    "bytes": 2946,
+    "sha256_16": "22830e16bbd092db"
+   },
+   "preview/coronal/0005.jpg": {
+    "bytes": 3194,
+    "sha256_16": "899b4a0800a29645"
+   },
+   "preview/coronal/0006.jpg": {
+    "bytes": 3411,
+    "sha256_16": "23570e05c37fd614"
+   },
+   "preview/coronal/0007.jpg": {
+    "bytes": 3575,
+    "sha256_16": "fdf35c8e1fff6742"
+   },
+   "preview/coronal/0008.jpg": {
+    "bytes": 4478,
+    "sha256_16": "df537c3330a95dc7"
+   },
+   "preview/coronal/0009.jpg": {
+    "bytes": 5116,
+    "sha256_16": "5aed29be5670a910"
+   },
+   "preview/coronal/0010.jpg": {
+    "bytes": 6225,
+    "sha256_16": "72ab3068651f13b1"
+   },
+   "preview/coronal/0011.jpg": {
+    "bytes": 6388,
+    "sha256_16": "dc16850eb7739330"
+   },
+   "preview/coronal/0012.jpg": {
+    "bytes": 7124,
+    "sha256_16": "1a5eca29dd3b2ecd"
+   },
+   "preview/coronal/0013.jpg": {
+    "bytes": 8566,
+    "sha256_16": "f0ab079bb022a02f"
+   },
+   "preview/coronal/0014.jpg": {
+    "bytes": 11180,
+    "sha256_16": "1bf6ccc4c6ca7314"
+   },
+   "preview/coronal/0015.jpg": {
+    "bytes": 12047,
+    "sha256_16": "57872cb0301bdf19"
+   },
+   "preview/coronal/0016.jpg": {
+    "bytes": 11095,
+    "sha256_16": "78a11278d23488dd"
+   },
+   "preview/coronal/0017.jpg": {
+    "bytes": 10300,
+    "sha256_16": "84338f2970441def"
+   },
+   "preview/coronal/0018.jpg": {
+    "bytes": 10000,
+    "sha256_16": "13d87552fce19c4b"
+   },
+   "preview/coronal/0019.jpg": {
+    "bytes": 10995,
+    "sha256_16": "c57c43b06a88f164"
+   },
+   "preview/coronal/0020.jpg": {
+    "bytes": 12323,
+    "sha256_16": "5d52452a06aeb9ff"
+   },
+   "preview/coronal/0021.jpg": {
+    "bytes": 13935,
+    "sha256_16": "3892bce59a77d4bb"
+   },
+   "preview/coronal/0022.jpg": {
+    "bytes": 15286,
+    "sha256_16": "b4ecc6fa32791bba"
+   },
+   "preview/coronal/0023.jpg": {
+    "bytes": 16463,
+    "sha256_16": "9cb4570843b66b17"
+   },
+   "preview/coronal/0024.jpg": {
+    "bytes": 17347,
+    "sha256_16": "f1518f00ec4985c8"
+   },
+   "preview/coronal/0025.jpg": {
+    "bytes": 18044,
+    "sha256_16": "722178bc39985b16"
+   },
+   "preview/coronal/0026.jpg": {
+    "bytes": 18750,
+    "sha256_16": "366a3f4964d50d7e"
+   },
+   "preview/coronal/0027.jpg": {
+    "bytes": 19719,
+    "sha256_16": "11c492d0a71d9d14"
+   },
+   "preview/coronal/0028.jpg": {
+    "bytes": 20965,
+    "sha256_16": "afaf421f8d599784"
+   },
+   "preview/coronal/0029.jpg": {
+    "bytes": 22369,
+    "sha256_16": "0f136c59c04c2ac8"
+   },
+   "preview/coronal/0030.jpg": {
+    "bytes": 24105,
+    "sha256_16": "c73d850199c7f232"
+   },
+   "preview/coronal/0031.jpg": {
+    "bytes": 25415,
+    "sha256_16": "ff6f014dadc37f93"
+   },
+   "preview/coronal/0032.jpg": {
+    "bytes": 26728,
+    "sha256_16": "709611bbcd3baab3"
+   },
+   "preview/coronal/0033.jpg": {
+    "bytes": 28026,
+    "sha256_16": "689e7f555c41275f"
+   },
+   "preview/coronal/0034.jpg": {
+    "bytes": 29324,
+    "sha256_16": "d6d1d69ecb3ac2f0"
+   },
+   "preview/coronal/0035.jpg": {
+    "bytes": 30911,
+    "sha256_16": "507692c0506cfbf1"
+   },
+   "preview/coronal/0036.jpg": {
+    "bytes": 32036,
+    "sha256_16": "2de7e7f68d315041"
+   },
+   "preview/coronal/0037.jpg": {
+    "bytes": 33394,
+    "sha256_16": "b74f1243d499eba8"
+   },
+   "preview/coronal/0038.jpg": {
+    "bytes": 34296,
+    "sha256_16": "8a28316ee1f296e3"
+   },
+   "preview/coronal/0039.jpg": {
+    "bytes": 35173,
+    "sha256_16": "37aa56fb9e00aeec"
+   },
+   "preview/coronal/0040.jpg": {
+    "bytes": 35747,
+    "sha256_16": "fd7b78710df54bf8"
+   },
+   "preview/coronal/0041.jpg": {
+    "bytes": 36609,
+    "sha256_16": "2345cb4f3a7747bc"
+   },
+   "preview/coronal/0042.jpg": {
+    "bytes": 37161,
+    "sha256_16": "f6a2195e33b5c562"
+   },
+   "preview/coronal/0043.jpg": {
+    "bytes": 37907,
+    "sha256_16": "d2a2a86308f2d880"
+   },
+   "preview/coronal/0044.jpg": {
+    "bytes": 38417,
+    "sha256_16": "654eb92c5d447756"
+   },
+   "preview/coronal/0045.jpg": {
+    "bytes": 38962,
+    "sha256_16": "1e5c3696720b205a"
+   },
+   "preview/coronal/0046.jpg": {
+    "bytes": 39595,
+    "sha256_16": "3d244516dbbbf3fa"
+   },
+   "preview/coronal/0047.jpg": {
+    "bytes": 40112,
+    "sha256_16": "7417f51c1963036d"
+   },
+   "preview/coronal/0048.jpg": {
+    "bytes": 40729,
+    "sha256_16": "9f3ccfa45db1d1b6"
+   },
+   "preview/coronal/0049.jpg": {
+    "bytes": 41123,
+    "sha256_16": "f99352411033a097"
+   },
+   "preview/coronal/0050.jpg": {
+    "bytes": 41539,
+    "sha256_16": "6ae74f3a53e1c95e"
+   },
+   "preview/coronal/0051.jpg": {
+    "bytes": 42280,
+    "sha256_16": "f2269994d2d32108"
+   },
+   "preview/coronal/0052.jpg": {
+    "bytes": 42755,
+    "sha256_16": "c65d6fbd273e1aa5"
+   },
+   "preview/coronal/0053.jpg": {
+    "bytes": 43228,
+    "sha256_16": "2f4bff332c4a5e15"
+   },
+   "preview/coronal/0054.jpg": {
+    "bytes": 43636,
+    "sha256_16": "98b20b699474fa2c"
+   },
+   "preview/coronal/0055.jpg": {
+    "bytes": 44096,
+    "sha256_16": "a7bbd14c26a9e9ec"
+   },
+   "preview/coronal/0056.jpg": {
+    "bytes": 44647,
+    "sha256_16": "23efc1694d536c80"
+   },
+   "preview/coronal/0057.jpg": {
+    "bytes": 45111,
+    "sha256_16": "73ca8aef4a0f57b8"
+   },
+   "preview/coronal/0058.jpg": {
+    "bytes": 45561,
+    "sha256_16": "675e05244103410f"
+   },
+   "preview/coronal/0059.jpg": {
+    "bytes": 46097,
+    "sha256_16": "4cb6449d5c523fe2"
+   },
+   "preview/coronal/0060.jpg": {
+    "bytes": 46522,
+    "sha256_16": "918b1ee2a83d179c"
+   },
+   "preview/coronal/0061.jpg": {
+    "bytes": 46925,
+    "sha256_16": "c449062ef304887d"
+   },
+   "preview/coronal/0062.jpg": {
+    "bytes": 47337,
+    "sha256_16": "4895495fbaf11351"
+   },
+   "preview/coronal/0063.jpg": {
+    "bytes": 47769,
+    "sha256_16": "e19757f07e282825"
+   },
+   "preview/coronal/0064.jpg": {
+    "bytes": 47916,
+    "sha256_16": "ff7b1ed86c304641"
+   },
+   "preview/coronal/0065.jpg": {
+    "bytes": 48381,
+    "sha256_16": "0005138b4db6d679"
+   },
+   "preview/coronal/0066.jpg": {
+    "bytes": 48557,
+    "sha256_16": "53227537f708adc5"
+   },
+   "preview/coronal/0067.jpg": {
+    "bytes": 49292,
+    "sha256_16": "970a2f6a4a05c74e"
+   },
+   "preview/coronal/0068.jpg": {
+    "bytes": 49573,
+    "sha256_16": "fa7e9bad716f77b9"
+   },
+   "preview/coronal/0069.jpg": {
+    "bytes": 49970,
+    "sha256_16": "568a8451d7117e67"
+   },
+   "preview/coronal/0070.jpg": {
+    "bytes": 50282,
+    "sha256_16": "4d740503d6ba41f7"
+   },
+   "preview/coronal/0071.jpg": {
+    "bytes": 50789,
+    "sha256_16": "5b2c177bd1986018"
+   },
+   "preview/coronal/0072.jpg": {
+    "bytes": 51386,
+    "sha256_16": "b9e8ee7ef2af0604"
+   },
+   "preview/coronal/0073.jpg": {
+    "bytes": 51827,
+    "sha256_16": "58218476e81ecf17"
+   },
+   "preview/coronal/0074.jpg": {
+    "bytes": 52463,
+    "sha256_16": "78b07fdf8bcf334c"
+   },
+   "preview/coronal/0075.jpg": {
+    "bytes": 52899,
+    "sha256_16": "20e9ba1f7175add0"
+   },
+   "preview/coronal/0076.jpg": {
+    "bytes": 53475,
+    "sha256_16": "fc6e16ecd57334eb"
+   },
+   "preview/coronal/0077.jpg": {
+    "bytes": 54234,
+    "sha256_16": "8547fc29c586685e"
+   },
+   "preview/coronal/0078.jpg": {
+    "bytes": 54077,
+    "sha256_16": "4ab10f56f15461fd"
+   },
+   "preview/coronal/0079.jpg": {
+    "bytes": 53941,
+    "sha256_16": "bc04915b061269ba"
+   },
+   "preview/coronal/0080.jpg": {
+    "bytes": 54029,
+    "sha256_16": "c4557aea0195fc0a"
+   },
+   "preview/coronal/0081.jpg": {
+    "bytes": 54256,
+    "sha256_16": "ca2c5d212895be28"
+   },
+   "preview/coronal/0082.jpg": {
+    "bytes": 54842,
+    "sha256_16": "bc0c74995d29be03"
+   },
+   "preview/coronal/0083.jpg": {
+    "bytes": 54755,
+    "sha256_16": "e6dc3050343bcf29"
+   },
+   "preview/coronal/0084.jpg": {
+    "bytes": 55074,
+    "sha256_16": "18f9b67846489f33"
+   },
+   "preview/coronal/0085.jpg": {
+    "bytes": 55286,
+    "sha256_16": "cfa7871e92d204bf"
+   },
+   "preview/coronal/0086.jpg": {
+    "bytes": 55043,
+    "sha256_16": "2619cdba5896699d"
+   },
+   "preview/coronal/0087.jpg": {
+    "bytes": 55141,
+    "sha256_16": "2cc2db6affa8ab7e"
+   },
+   "preview/coronal/0088.jpg": {
+    "bytes": 55510,
+    "sha256_16": "c967dfc623b495d0"
+   },
+   "preview/coronal/0089.jpg": {
+    "bytes": 55597,
+    "sha256_16": "18d5c8d3e4884776"
+   },
+   "preview/coronal/0090.jpg": {
+    "bytes": 55283,
+    "sha256_16": "3020c00f0a7f20d4"
+   },
+   "preview/coronal/0091.jpg": {
+    "bytes": 55251,
+    "sha256_16": "cd20b769349db65b"
+   },
+   "preview/coronal/0092.jpg": {
+    "bytes": 55237,
+    "sha256_16": "c64da907b866ad35"
+   },
+   "preview/coronal/0093.jpg": {
+    "bytes": 55522,
+    "sha256_16": "68168ef407d1b987"
+   },
+   "preview/coronal/0094.jpg": {
+    "bytes": 55973,
+    "sha256_16": "2684dff6d583efcd"
+   },
+   "preview/coronal/0095.jpg": {
+    "bytes": 55942,
+    "sha256_16": "f5c91ae65ed28ed8"
+   },
+   "preview/coronal/0096.jpg": {
+    "bytes": 56398,
+    "sha256_16": "673e7d51dd038c59"
+   },
+   "preview/coronal/0097.jpg": {
+    "bytes": 56438,
+    "sha256_16": "0801653ff1fdd89a"
+   },
+   "preview/coronal/0098.jpg": {
+    "bytes": 56697,
+    "sha256_16": "428e5e3214fd8b87"
+   },
+   "preview/coronal/0099.jpg": {
+    "bytes": 56966,
+    "sha256_16": "6252a8a1cab1bbe9"
+   },
+   "preview/coronal/0100.jpg": {
+    "bytes": 57152,
+    "sha256_16": "29702f40ab27b512"
+   },
+   "preview/coronal/0101.jpg": {
+    "bytes": 57108,
+    "sha256_16": "7b15e08d5394e37a"
+   },
+   "preview/coronal/0102.jpg": {
+    "bytes": 57018,
+    "sha256_16": "9646e5465cfed49f"
+   },
+   "preview/coronal/0103.jpg": {
+    "bytes": 57192,
+    "sha256_16": "d0401a9a6f0f2e04"
+   },
+   "preview/coronal/0104.jpg": {
+    "bytes": 57767,
+    "sha256_16": "13308dba24ce0df4"
+   },
+   "preview/coronal/0105.jpg": {
+    "bytes": 58165,
+    "sha256_16": "52133cf0e9c95b29"
+   },
+   "preview/coronal/0106.jpg": {
+    "bytes": 58293,
+    "sha256_16": "bef90183bbe8f40f"
+   },
+   "preview/coronal/0107.jpg": {
+    "bytes": 58503,
+    "sha256_16": "bfa0b514090d1f7c"
+   },
+   "preview/coronal/0108.jpg": {
+    "bytes": 58823,
+    "sha256_16": "a94ff1c8627adf40"
+   },
+   "preview/coronal/0109.jpg": {
+    "bytes": 58923,
+    "sha256_16": "4e9dfb935ae0d2c5"
+   },
+   "preview/coronal/0110.jpg": {
+    "bytes": 59395,
+    "sha256_16": "a7d3e5b3860b0af0"
+   },
+   "preview/coronal/0111.jpg": {
+    "bytes": 59846,
+    "sha256_16": "d4eebfe699e81df7"
+   },
+   "preview/coronal/0112.jpg": {
+    "bytes": 60362,
+    "sha256_16": "4d3eebd69dd4d951"
+   },
+   "preview/coronal/0113.jpg": {
+    "bytes": 61473,
+    "sha256_16": "1520394d5d7a899d"
+   },
+   "preview/coronal/0114.jpg": {
+    "bytes": 62152,
+    "sha256_16": "81a47a8f097f0d22"
+   },
+   "preview/coronal/0115.jpg": {
+    "bytes": 63039,
+    "sha256_16": "8399f1f06abcd072"
+   },
+   "preview/coronal/0116.jpg": {
+    "bytes": 63640,
+    "sha256_16": "8d27c748e8222227"
+   },
+   "preview/coronal/0117.jpg": {
+    "bytes": 64015,
+    "sha256_16": "620171ec04cf5501"
+   },
+   "preview/coronal/0118.jpg": {
+    "bytes": 64388,
+    "sha256_16": "57e032421b51d763"
+   },
+   "preview/coronal/0119.jpg": {
+    "bytes": 64847,
+    "sha256_16": "2bed9b397b6d4f18"
+   },
+   "preview/coronal/0120.jpg": {
+    "bytes": 65669,
+    "sha256_16": "7ec615cba1e58240"
+   },
+   "preview/coronal/0121.jpg": {
+    "bytes": 65872,
+    "sha256_16": "eb916fd47570686a"
+   },
+   "preview/coronal/0122.jpg": {
+    "bytes": 66361,
+    "sha256_16": "25fb52bf0a8cb5f3"
+   },
+   "preview/coronal/0123.jpg": {
+    "bytes": 66422,
+    "sha256_16": "c06e5dc0729ddf6a"
+   },
+   "preview/coronal/0124.jpg": {
+    "bytes": 66668,
+    "sha256_16": "7bc507f7b6f00671"
+   },
+   "preview/coronal/0125.jpg": {
+    "bytes": 66810,
+    "sha256_16": "879f01d8031c1e35"
+   },
+   "preview/coronal/0126.jpg": {
+    "bytes": 66957,
+    "sha256_16": "abc06555af9849be"
+   },
+   "preview/coronal/0127.jpg": {
+    "bytes": 66652,
+    "sha256_16": "f041ff49e09398e6"
+   },
+   "preview/coronal/0128.jpg": {
+    "bytes": 66607,
+    "sha256_16": "873dcf7911101334"
+   },
+   "preview/coronal/0129.jpg": {
+    "bytes": 66801,
+    "sha256_16": "4c93ccef74d0fe81"
+   },
+   "preview/coronal/0130.jpg": {
+    "bytes": 66143,
+    "sha256_16": "5dedf4511145ef29"
+   },
+   "preview/coronal/0131.jpg": {
+    "bytes": 66022,
+    "sha256_16": "07b44c153e755144"
+   },
+   "preview/coronal/0132.jpg": {
+    "bytes": 65466,
+    "sha256_16": "51056256cb88d574"
+   },
+   "preview/coronal/0133.jpg": {
+    "bytes": 64814,
+    "sha256_16": "4722cdf74697fa7c"
+   },
+   "preview/coronal/0134.jpg": {
+    "bytes": 64072,
+    "sha256_16": "bf622b781a7933ef"
+   },
+   "preview/coronal/0135.jpg": {
+    "bytes": 63607,
+    "sha256_16": "f29404e8a8a3073b"
+   },
+   "preview/coronal/0136.jpg": {
+    "bytes": 62754,
+    "sha256_16": "59c80badb5b622c2"
+   },
+   "preview/coronal/0137.jpg": {
+    "bytes": 61948,
+    "sha256_16": "e97a4292486d6c29"
+   },
+   "preview/coronal/0138.jpg": {
+    "bytes": 61127,
+    "sha256_16": "798f03ac1520f84c"
+   },
+   "preview/coronal/0139.jpg": {
+    "bytes": 60192,
+    "sha256_16": "4193e1d6cfd32b72"
+   },
+   "preview/coronal/0140.jpg": {
+    "bytes": 58957,
+    "sha256_16": "c3457ab63becaa22"
+   },
+   "preview/coronal/0141.jpg": {
+    "bytes": 57821,
+    "sha256_16": "9d00476b45caebed"
+   },
+   "preview/coronal/0142.jpg": {
+    "bytes": 56796,
+    "sha256_16": "8a9af3db831fe295"
+   },
+   "preview/coronal/0143.jpg": {
+    "bytes": 55414,
+    "sha256_16": "034ccf007656d5eb"
+   },
+   "preview/coronal/0144.jpg": {
+    "bytes": 54491,
+    "sha256_16": "26c04e4a3fcd03a8"
+   },
+   "preview/coronal/0145.jpg": {
+    "bytes": 53648,
+    "sha256_16": "c77400f468ded077"
+   },
+   "preview/coronal/0146.jpg": {
+    "bytes": 51765,
+    "sha256_16": "b8c0a661273b1de8"
+   },
+   "preview/coronal/0147.jpg": {
+    "bytes": 50155,
+    "sha256_16": "63b598bd4dede263"
+   },
+   "preview/coronal/0148.jpg": {
+    "bytes": 48846,
+    "sha256_16": "5d2de1fa8f53d172"
+   },
+   "preview/coronal/0149.jpg": {
+    "bytes": 47066,
+    "sha256_16": "e669961c48555729"
+   },
+   "preview/coronal/0150.jpg": {
+    "bytes": 45069,
+    "sha256_16": "88d982a347ce6b16"
+   },
+   "preview/coronal/0151.jpg": {
+    "bytes": 43170,
+    "sha256_16": "a0d1af8f46ce7451"
+   },
+   "preview/coronal/0152.jpg": {
+    "bytes": 40023,
+    "sha256_16": "1833412ff20936f2"
+   },
+   "preview/coronal/0153.jpg": {
+    "bytes": 37988,
+    "sha256_16": "adcb8bc27dbbf18b"
+   },
+   "preview/coronal/0154.jpg": {
+    "bytes": 35790,
+    "sha256_16": "9d8265ee6538a4b7"
+   },
+   "preview/coronal/0155.jpg": {
+    "bytes": 32734,
+    "sha256_16": "f0ceffe7747e3302"
+   },
+   "preview/coronal/0156.jpg": {
+    "bytes": 29484,
+    "sha256_16": "950b38bdfce025f4"
+   },
+   "preview/coronal/0157.jpg": {
+    "bytes": 24147,
+    "sha256_16": "410f1d3ba5848e08"
+   },
+   "preview/coronal/0158.jpg": {
+    "bytes": 19169,
+    "sha256_16": "a97d97dc24c9ade1"
+   },
+   "preview/coronal/0159.jpg": {
+    "bytes": 10278,
+    "sha256_16": "f70d6f3582b7bf1e"
+   },
+   "preview/sagittal/0000.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0001.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0002.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0003.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0004.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0005.jpg": {
+    "bytes": 1755,
+    "sha256_16": "b45878f4a0e93f83"
+   },
+   "preview/sagittal/0006.jpg": {
+    "bytes": 2926,
+    "sha256_16": "1432bb405442640e"
+   },
+   "preview/sagittal/0007.jpg": {
+    "bytes": 3813,
+    "sha256_16": "6335fbe630c6b7da"
+   },
+   "preview/sagittal/0008.jpg": {
+    "bytes": 5440,
+    "sha256_16": "7a19727e9b2e4086"
+   },
+   "preview/sagittal/0009.jpg": {
+    "bytes": 6479,
+    "sha256_16": "030d00ee7a1cb6f3"
+   },
+   "preview/sagittal/0010.jpg": {
+    "bytes": 7564,
+    "sha256_16": "68cbb8a59be09cff"
+   },
+   "preview/sagittal/0011.jpg": {
+    "bytes": 8677,
+    "sha256_16": "6b7edf43c83b55ba"
+   },
+   "preview/sagittal/0012.jpg": {
+    "bytes": 9670,
+    "sha256_16": "0838598edb3aab9f"
+   },
+   "preview/sagittal/0013.jpg": {
+    "bytes": 11104,
+    "sha256_16": "4237c52cede6c036"
+   },
+   "preview/sagittal/0014.jpg": {
+    "bytes": 12881,
+    "sha256_16": "4bc3bdd5eb15c70e"
+   },
+   "preview/sagittal/0015.jpg": {
+    "bytes": 14327,
+    "sha256_16": "185287a23dc3b45d"
+   },
+   "preview/sagittal/0016.jpg": {
+    "bytes": 15776,
+    "sha256_16": "8694ddca11dc980d"
+   },
+   "preview/sagittal/0017.jpg": {
+    "bytes": 17405,
+    "sha256_16": "1f690274c1758c82"
+   },
+   "preview/sagittal/0018.jpg": {
+    "bytes": 19299,
+    "sha256_16": "9f6ebd729694c763"
+   },
+   "preview/sagittal/0019.jpg": {
+    "bytes": 21097,
+    "sha256_16": "7ca2d30839658b7d"
+   },
+   "preview/sagittal/0020.jpg": {
+    "bytes": 22923,
+    "sha256_16": "1dcba6072aa0746b"
+   },
+   "preview/sagittal/0021.jpg": {
+    "bytes": 24656,
+    "sha256_16": "d70f848f2e4c6553"
+   },
+   "preview/sagittal/0022.jpg": {
+    "bytes": 26552,
+    "sha256_16": "dfecd3d53f0b4d38"
+   },
+   "preview/sagittal/0023.jpg": {
+    "bytes": 28519,
+    "sha256_16": "90a169545e33b3e9"
+   },
+   "preview/sagittal/0024.jpg": {
+    "bytes": 30262,
+    "sha256_16": "b17ebb4850569454"
+   },
+   "preview/sagittal/0025.jpg": {
+    "bytes": 31886,
+    "sha256_16": "6bf690e31c6f0d14"
+   },
+   "preview/sagittal/0026.jpg": {
+    "bytes": 32962,
+    "sha256_16": "c18f75d53e3e8d94"
+   },
+   "preview/sagittal/0027.jpg": {
+    "bytes": 34540,
+    "sha256_16": "b3dfd1c716c40772"
+   },
+   "preview/sagittal/0028.jpg": {
+    "bytes": 35776,
+    "sha256_16": "595afc8421dcfccd"
+   },
+   "preview/sagittal/0029.jpg": {
+    "bytes": 36670,
+    "sha256_16": "bc351e2653836b8a"
+   },
+   "preview/sagittal/0030.jpg": {
+    "bytes": 38531,
+    "sha256_16": "8936b5f0059a5737"
+   },
+   "preview/sagittal/0031.jpg": {
+    "bytes": 39441,
+    "sha256_16": "e93be34c8317291a"
+   },
+   "preview/sagittal/0032.jpg": {
+    "bytes": 40806,
+    "sha256_16": "fa384e5621b08798"
+   },
+   "preview/sagittal/0033.jpg": {
+    "bytes": 41647,
+    "sha256_16": "b0e64cd58b29ef10"
+   },
+   "preview/sagittal/0034.jpg": {
+    "bytes": 42895,
+    "sha256_16": "25a1da4dbadf059a"
+   },
+   "preview/sagittal/0035.jpg": {
+    "bytes": 44099,
+    "sha256_16": "f13cdce44b07b59a"
+   },
+   "preview/sagittal/0036.jpg": {
+    "bytes": 44896,
+    "sha256_16": "1402de3aa2225bbd"
+   },
+   "preview/sagittal/0037.jpg": {
+    "bytes": 45681,
+    "sha256_16": "735166307195f8f7"
+   },
+   "preview/sagittal/0038.jpg": {
+    "bytes": 46954,
+    "sha256_16": "ec63485f5eb25605"
+   },
+   "preview/sagittal/0039.jpg": {
+    "bytes": 47606,
+    "sha256_16": "421a8da70a8ca103"
+   },
+   "preview/sagittal/0040.jpg": {
+    "bytes": 48412,
+    "sha256_16": "41edfdf54da04480"
+   },
+   "preview/sagittal/0041.jpg": {
+    "bytes": 50134,
+    "sha256_16": "2de369fb1b18c5be"
+   },
+   "preview/sagittal/0042.jpg": {
+    "bytes": 51049,
+    "sha256_16": "20e6fc86f7f6e918"
+   },
+   "preview/sagittal/0043.jpg": {
+    "bytes": 49774,
+    "sha256_16": "dbf10654a6701ed3"
+   },
+   "preview/sagittal/0044.jpg": {
+    "bytes": 50832,
+    "sha256_16": "4c594ca58d9224dd"
+   },
+   "preview/sagittal/0045.jpg": {
+    "bytes": 51429,
+    "sha256_16": "343f0442e4a35b34"
+   },
+   "preview/sagittal/0046.jpg": {
+    "bytes": 51852,
+    "sha256_16": "0b7a9c26e43bb3fb"
+   },
+   "preview/sagittal/0047.jpg": {
+    "bytes": 52535,
+    "sha256_16": "b95a77bdaacacbfc"
+   },
+   "preview/sagittal/0048.jpg": {
+    "bytes": 52557,
+    "sha256_16": "9d8e00b67cf57c40"
+   },
+   "preview/sagittal/0049.jpg": {
+    "bytes": 53781,
+    "sha256_16": "28020a1153ca77be"
+   },
+   "preview/sagittal/0050.jpg": {
+    "bytes": 54284,
+    "sha256_16": "615c0332f541ba21"
+   },
+   "preview/sagittal/0051.jpg": {
+    "bytes": 55133,
+    "sha256_16": "18c2d09fa346f0b4"
+   },
+   "preview/sagittal/0052.jpg": {
+    "bytes": 55387,
+    "sha256_16": "b720f999018c8ed4"
+   },
+   "preview/sagittal/0053.jpg": {
+    "bytes": 56731,
+    "sha256_16": "beb995b3b2d6576c"
+   },
+   "preview/sagittal/0054.jpg": {
+    "bytes": 57527,
+    "sha256_16": "a2ff41ddac1b670b"
+   },
+   "preview/sagittal/0055.jpg": {
+    "bytes": 58192,
+    "sha256_16": "36211b774a15d9ea"
+   },
+   "preview/sagittal/0056.jpg": {
+    "bytes": 59619,
+    "sha256_16": "d48f867ec61e26bd"
+   },
+   "preview/sagittal/0057.jpg": {
+    "bytes": 60825,
+    "sha256_16": "1f19a4513dd7ed51"
+   },
+   "preview/sagittal/0058.jpg": {
+    "bytes": 61605,
+    "sha256_16": "fe09ad42d5707a0a"
+   },
+   "preview/sagittal/0059.jpg": {
+    "bytes": 62107,
+    "sha256_16": "1b296b98f4661312"
+   },
+   "preview/sagittal/0060.jpg": {
+    "bytes": 63230,
+    "sha256_16": "14a7e6aefd6a15de"
+   },
+   "preview/sagittal/0061.jpg": {
+    "bytes": 63611,
+    "sha256_16": "0f970abfeb2b618c"
+   },
+   "preview/sagittal/0062.jpg": {
+    "bytes": 64011,
+    "sha256_16": "244851c7ad11eef1"
+   },
+   "preview/sagittal/0063.jpg": {
+    "bytes": 63825,
+    "sha256_16": "dc588f304ff272b6"
+   },
+   "preview/sagittal/0064.jpg": {
+    "bytes": 63866,
+    "sha256_16": "33ebbdd5589b7432"
+   },
+   "preview/sagittal/0065.jpg": {
+    "bytes": 63876,
+    "sha256_16": "700d042a1f9ed575"
+   },
+   "preview/sagittal/0066.jpg": {
+    "bytes": 63290,
+    "sha256_16": "d742d18608dcaa0a"
+   },
+   "preview/sagittal/0067.jpg": {
+    "bytes": 63130,
+    "sha256_16": "19db3c8e812df123"
+   },
+   "preview/sagittal/0068.jpg": {
+    "bytes": 63218,
+    "sha256_16": "da18d3c16961981d"
+   },
+   "preview/sagittal/0069.jpg": {
+    "bytes": 63768,
+    "sha256_16": "6142673612ec53d5"
+   },
+   "preview/sagittal/0070.jpg": {
+    "bytes": 63441,
+    "sha256_16": "620fe32aa6fcc22d"
+   },
+   "preview/sagittal/0071.jpg": {
+    "bytes": 63090,
+    "sha256_16": "5ce0c265010f06e3"
+   },
+   "preview/sagittal/0072.jpg": {
+    "bytes": 63506,
+    "sha256_16": "76fdf1a460af67b5"
+   },
+   "preview/sagittal/0073.jpg": {
+    "bytes": 63638,
+    "sha256_16": "3bdf06f5024c4213"
+   },
+   "preview/sagittal/0074.jpg": {
+    "bytes": 63897,
+    "sha256_16": "7eaabcec2ccc626d"
+   },
+   "preview/sagittal/0075.jpg": {
+    "bytes": 63655,
+    "sha256_16": "9100590301f4f317"
+   },
+   "preview/sagittal/0076.jpg": {
+    "bytes": 63421,
+    "sha256_16": "39818c2b3db409ce"
+   },
+   "preview/sagittal/0077.jpg": {
+    "bytes": 63422,
+    "sha256_16": "bf34dcf7c852ef43"
+   },
+   "preview/sagittal/0078.jpg": {
+    "bytes": 62548,
+    "sha256_16": "a4523563c0883453"
+   },
+   "preview/sagittal/0079.jpg": {
+    "bytes": 62192,
+    "sha256_16": "6e93913377f497ef"
+   },
+   "preview/sagittal/0080.jpg": {
+    "bytes": 62205,
+    "sha256_16": "6cbfbbe34ebc6d99"
+   },
+   "preview/sagittal/0081.jpg": {
+    "bytes": 63157,
+    "sha256_16": "3fa5281aee407546"
+   },
+   "preview/sagittal/0082.jpg": {
+    "bytes": 63443,
+    "sha256_16": "c4a6743aed165757"
+   },
+   "preview/sagittal/0083.jpg": {
+    "bytes": 63429,
+    "sha256_16": "d96dada83b292239"
+   },
+   "preview/sagittal/0084.jpg": {
+    "bytes": 63244,
+    "sha256_16": "3b4ee3cdb136ec76"
+   },
+   "preview/sagittal/0085.jpg": {
+    "bytes": 63328,
+    "sha256_16": "32e231b78132cf27"
+   },
+   "preview/sagittal/0086.jpg": {
+    "bytes": 63162,
+    "sha256_16": "e30230cc335edaa0"
+   },
+   "preview/sagittal/0087.jpg": {
+    "bytes": 63087,
+    "sha256_16": "982f12c4348d4144"
+   },
+   "preview/sagittal/0088.jpg": {
+    "bytes": 62714,
+    "sha256_16": "6368b302b1d2c081"
+   },
+   "preview/sagittal/0089.jpg": {
+    "bytes": 62064,
+    "sha256_16": "fa04fcfeffcf9e06"
+   },
+   "preview/sagittal/0090.jpg": {
+    "bytes": 62175,
+    "sha256_16": "f2f89b817edfa20a"
+   },
+   "preview/sagittal/0091.jpg": {
+    "bytes": 61451,
+    "sha256_16": "f1afa7435f007224"
+   },
+   "preview/sagittal/0092.jpg": {
+    "bytes": 61442,
+    "sha256_16": "f06524e1f2fe51a3"
+   },
+   "preview/sagittal/0093.jpg": {
+    "bytes": 61243,
+    "sha256_16": "794735a380e3e0b4"
+   },
+   "preview/sagittal/0094.jpg": {
+    "bytes": 61043,
+    "sha256_16": "f21d02a96dedd961"
+   },
+   "preview/sagittal/0095.jpg": {
+    "bytes": 60960,
+    "sha256_16": "e64ddd1e92039282"
+   },
+   "preview/sagittal/0096.jpg": {
+    "bytes": 60726,
+    "sha256_16": "265c0f7f40c5e82b"
+   },
+   "preview/sagittal/0097.jpg": {
+    "bytes": 60513,
+    "sha256_16": "3f9bfb832b41cc7f"
+   },
+   "preview/sagittal/0098.jpg": {
+    "bytes": 60281,
+    "sha256_16": "74901d95ab9e2753"
+   },
+   "preview/sagittal/0099.jpg": {
+    "bytes": 59918,
+    "sha256_16": "a301c51a9b62409a"
+   },
+   "preview/sagittal/0100.jpg": {
+    "bytes": 58859,
+    "sha256_16": "701e57247309298c"
+   },
+   "preview/sagittal/0101.jpg": {
+    "bytes": 58603,
+    "sha256_16": "519ba5f3b10788bf"
+   },
+   "preview/sagittal/0102.jpg": {
+    "bytes": 58414,
+    "sha256_16": "043979345ccd59d0"
+   },
+   "preview/sagittal/0103.jpg": {
+    "bytes": 58301,
+    "sha256_16": "d8379ead6bcb8532"
+   },
+   "preview/sagittal/0104.jpg": {
+    "bytes": 57445,
+    "sha256_16": "f8a2d3d65830ee0c"
+   },
+   "preview/sagittal/0105.jpg": {
+    "bytes": 56993,
+    "sha256_16": "d19006ff5b8a0993"
+   },
+   "preview/sagittal/0106.jpg": {
+    "bytes": 56306,
+    "sha256_16": "a02ab0d22a918481"
+   },
+   "preview/sagittal/0107.jpg": {
+    "bytes": 55610,
+    "sha256_16": "9c307c7160bc357b"
+   },
+   "preview/sagittal/0108.jpg": {
+    "bytes": 55046,
+    "sha256_16": "62a391f3a6c73834"
+   },
+   "preview/sagittal/0109.jpg": {
+    "bytes": 54166,
+    "sha256_16": "9778333ee46a3cc9"
+   },
+   "preview/sagittal/0110.jpg": {
+    "bytes": 53609,
+    "sha256_16": "30c1bd78e05f02f4"
+   },
+   "preview/sagittal/0111.jpg": {
+    "bytes": 52494,
+    "sha256_16": "718384c8af7946c5"
+   },
+   "preview/sagittal/0112.jpg": {
+    "bytes": 52273,
+    "sha256_16": "10045ce4f37ddd8e"
+   },
+   "preview/sagittal/0113.jpg": {
+    "bytes": 52078,
+    "sha256_16": "d0e0245714a36c01"
+   },
+   "preview/sagittal/0114.jpg": {
+    "bytes": 52349,
+    "sha256_16": "90400a5722b1dd32"
+   },
+   "preview/sagittal/0115.jpg": {
+    "bytes": 53092,
+    "sha256_16": "b0c444990d034d5e"
+   },
+   "preview/sagittal/0116.jpg": {
+    "bytes": 51040,
+    "sha256_16": "7f20ad0dbca2b09f"
+   },
+   "preview/sagittal/0117.jpg": {
+    "bytes": 50426,
+    "sha256_16": "30b55e3bd83f99d4"
+   },
+   "preview/sagittal/0118.jpg": {
+    "bytes": 50112,
+    "sha256_16": "616adfb491d76d20"
+   },
+   "preview/sagittal/0119.jpg": {
+    "bytes": 49021,
+    "sha256_16": "87c5c3d2b8de40b0"
+   },
+   "preview/sagittal/0120.jpg": {
+    "bytes": 48440,
+    "sha256_16": "7bfc97ef1b8e6de4"
+   },
+   "preview/sagittal/0121.jpg": {
+    "bytes": 47855,
+    "sha256_16": "3f16b59a69773259"
+   },
+   "preview/sagittal/0122.jpg": {
+    "bytes": 46497,
+    "sha256_16": "a7e77b79c1ae17b9"
+   },
+   "preview/sagittal/0123.jpg": {
+    "bytes": 46418,
+    "sha256_16": "d53733c1db4173b3"
+   },
+   "preview/sagittal/0124.jpg": {
+    "bytes": 45071,
+    "sha256_16": "f9f444f9a1031873"
+   },
+   "preview/sagittal/0125.jpg": {
+    "bytes": 43585,
+    "sha256_16": "2bff66f1f246f587"
+   },
+   "preview/sagittal/0126.jpg": {
+    "bytes": 43109,
+    "sha256_16": "c70c93d1db0defb1"
+   },
+   "preview/sagittal/0127.jpg": {
+    "bytes": 42391,
+    "sha256_16": "e1d8abb0a9ec0124"
+   },
+   "preview/sagittal/0128.jpg": {
+    "bytes": 41002,
+    "sha256_16": "10989abbd5e6ce8a"
+   },
+   "preview/sagittal/0129.jpg": {
+    "bytes": 40073,
+    "sha256_16": "4a116f579cb13f73"
+   },
+   "preview/sagittal/0130.jpg": {
+    "bytes": 38700,
+    "sha256_16": "9373b1767d93ef15"
+   },
+   "preview/sagittal/0131.jpg": {
+    "bytes": 37712,
+    "sha256_16": "f170eda7babb2326"
+   },
+   "preview/sagittal/0132.jpg": {
+    "bytes": 36842,
+    "sha256_16": "a405a620c25467bc"
+   },
+   "preview/sagittal/0133.jpg": {
+    "bytes": 35326,
+    "sha256_16": "9adb178212869f0c"
+   },
+   "preview/sagittal/0134.jpg": {
+    "bytes": 33855,
+    "sha256_16": "2a894711875b6307"
+   },
+   "preview/sagittal/0135.jpg": {
+    "bytes": 32120,
+    "sha256_16": "0eec002526725c5d"
+   },
+   "preview/sagittal/0136.jpg": {
+    "bytes": 30362,
+    "sha256_16": "1fb8726014cdbda8"
+   },
+   "preview/sagittal/0137.jpg": {
+    "bytes": 28651,
+    "sha256_16": "12dcd896601a5d9f"
+   },
+   "preview/sagittal/0138.jpg": {
+    "bytes": 27223,
+    "sha256_16": "16454df024159ef8"
+   },
+   "preview/sagittal/0139.jpg": {
+    "bytes": 25018,
+    "sha256_16": "4c7174b11ed35f39"
+   },
+   "preview/sagittal/0140.jpg": {
+    "bytes": 22936,
+    "sha256_16": "76008c7ea42592be"
+   },
+   "preview/sagittal/0141.jpg": {
+    "bytes": 20935,
+    "sha256_16": "88914ef676a5681c"
+   },
+   "preview/sagittal/0142.jpg": {
+    "bytes": 19176,
+    "sha256_16": "5fd406d3a025589f"
+   },
+   "preview/sagittal/0143.jpg": {
+    "bytes": 17159,
+    "sha256_16": "162c15047d863a7a"
+   },
+   "preview/sagittal/0144.jpg": {
+    "bytes": 15809,
+    "sha256_16": "7b43b8caea093058"
+   },
+   "preview/sagittal/0145.jpg": {
+    "bytes": 14009,
+    "sha256_16": "230f48be6b62fee0"
+   },
+   "preview/sagittal/0146.jpg": {
+    "bytes": 11731,
+    "sha256_16": "8a7a427b94ce164a"
+   },
+   "preview/sagittal/0147.jpg": {
+    "bytes": 9939,
+    "sha256_16": "58983b27c328e106"
+   },
+   "preview/sagittal/0148.jpg": {
+    "bytes": 8508,
+    "sha256_16": "63fc69e9e06da6c8"
+   },
+   "preview/sagittal/0149.jpg": {
+    "bytes": 7171,
+    "sha256_16": "527926ff55f6b100"
+   },
+   "preview/sagittal/0150.jpg": {
+    "bytes": 6099,
+    "sha256_16": "a6122c23415e4050"
+   },
+   "preview/sagittal/0151.jpg": {
+    "bytes": 5035,
+    "sha256_16": "385b39517a5c7d5f"
+   },
+   "preview/sagittal/0152.jpg": {
+    "bytes": 3668,
+    "sha256_16": "76b17fbb91487098"
+   },
+   "preview/sagittal/0153.jpg": {
+    "bytes": 2477,
+    "sha256_16": "781ca47af7fdb5a7"
+   },
+   "preview/sagittal/0154.jpg": {
+    "bytes": 1923,
+    "sha256_16": "8d7b5571bc822fb1"
+   },
+   "preview/sagittal/0155.jpg": {
+    "bytes": 1436,
+    "sha256_16": "cc66bb353dbad0a5"
+   },
+   "preview/sagittal/0156.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0157.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0158.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/sagittal/0159.jpg": {
+    "bytes": 1316,
+    "sha256_16": "c8dcd4c0b1d503b6"
+   },
+   "preview/contours.axial.json": {
+    "bytes": 1311282,
+    "sha256_16": "d2bdc62a0dc5e788",
+    "gzip_bytes": 384082
+   },
+   "preview/contours.coronal.json": {
+    "bytes": 715825,
+    "sha256_16": "b849defdf407408f",
+    "gzip_bytes": 214027
+   },
+   "preview/contours.sagittal.json": {
+    "bytes": 643943,
+    "sha256_16": "b0a70c87d4bded19",
+    "gzip_bytes": 194653
+   },
+   "stl/lower_teeth_unnumbered.stl": {
+    "bytes": 1300084,
+    "sha256_16": "45d936c04eca67d7"
+   },
+   "stl/upper_teeth_unnumbered.stl": {
+    "bytes": 480484,
+    "sha256_16": "3f50e42b3f586868"
+   },
+   "mesh/lower_teeth_unnumbered.msh": {
+    "bytes": 144208,
+    "sha256_16": "cef6c932d7daa935",
+    "gzip_bytes": 76033
+   },
+   "mesh/upper_teeth_unnumbered.msh": {
+    "bytes": 144556,
+    "sha256_16": "9bea8c02bb20ff93",
+    "gzip_bytes": 74891
+   }
+  },
+  "precompressed": 42,
+  "precompressed_bytes": 29838834,
+  "precompressed_gzip_bytes": 7560579
+ },
+ "input": {
+  "kind": "volume",
+  "n_files": 1,
+  "size_xyz": [
+   667,
+   667,
+   433
+  ],
+  "warnings": [
+   "Scan is tilted 8.0\u00b0 off the world axes. The nearest orientation (LPS) was unambiguous so the numbering is sound, but the reformatted planes will look tilted."
+  ],
+  "acquisition": null,
+  "orientation": {
+   "original": "LPS",
+   "ambiguous": false,
+   "canonical": "RPI",
+   "reoriented": true,
+   "unverified": false,
+   "tilt_degrees": 8.04,
+   "direction_cosines": [
+    0.9941,
+    0.9902,
+    0.9932
+   ]
+  },
+  "spacing_xyz": [
+   0.25,
+   0.25,
+   0.25
+  ],
+  "dicom_reference": false,
+  "series_description": null
+ },
+ "merge": {
+  "voxels": {
+   "canal": 51768,
+   "maxilla": 4402321,
+   "mandible": 3220388,
+   "tooth_11": 34535,
+   "tooth_12": 24756,
+   "tooth_13": 41771,
+   "tooth_14": 28814,
+   "tooth_15": 30350,
+   "tooth_16": 59908,
+   "tooth_17": 47458,
+   "tooth_21": 36993,
+   "tooth_22": 26049,
+   "tooth_23": 41801,
+   "tooth_24": 30898,
+   "tooth_25": 32634,
+   "tooth_26": 55224,
+   "tooth_27": 47322,
+   "tooth_31": 18089,
+   "tooth_32": 19574,
+   "tooth_33": 39427,
+   "tooth_34": 23785,
+   "tooth_35": 28158,
+   "tooth_36": 64425,
+   "tooth_37": 17296,
+   "tooth_38": 55408,
+   "tooth_41": 17710,
+   "tooth_42": 20650,
+   "tooth_43": 41831,
+   "tooth_44": 24114,
+   "tooth_45": 28371,
+   "tooth_47": 66890,
+   "tooth_48": 57754,
+   "lower_teeth_unnumbered": 76213,
+   "upper_teeth_unnumbered": 44180
+  },
+  "teeth_found": [
+   11,
+   12,
+   13,
+   14,
+   15,
+   16,
+   17,
+   21,
+   22,
+   23,
+   24,
+   25,
+   26,
+   27,
+   31,
+   32,
+   33,
+   34,
+   35,
+   36,
+   37,
+   38,
+   41,
+   42,
+   43,
+   44,
+   45,
+   47,
+   48
+  ],
+  "specks_removed": {
+   "maxilla": 11008,
+   "mandible": 271,
+   "tooth_14": 6,
+   "tooth_21": 2,
+   "tooth_32": 5,
+   "lower_teeth_unnumbered": 22685,
+   "upper_teeth_unnumbered": 16085
+  },
+  "tooth_agreement_dice": 0.9240571755122245,
+  "unnumbered_lower_voxels": 76213,
+  "unnumbered_upper_voxels": 44180,
+  "canal_jaw_overlap_voxels": 0,
+  "canal_tooth_overlap_voxels": 0,
+  "tooth_only_in_toothseg_voxels": 46519,
+  "tooth_only_in_dentalseg_voxels": 120393
+ },
+ "meshes": {
+  "frame": {
+   "note": "Vertices are x,y,z in patient LPS millimetres -- the same physical space in the canonical and the as-uploaded frame, so one mesh serves both the STL download and the viewer.",
+   "space": "LPS",
+   "units": "mm",
+   "origin": [
+    70.02210938958876,
+    -140.14757289431182,
+    67.10157256730469
+   ],
+   "direction": [
+    -0.9940781967960048,
+    0.09694405147534274,
+    0.049095718126427844,
+    0.09133167899340905,
+    0.9901711118493441,
+    -0.10592305542835587,
+    -0.05888177194215916,
+    -0.10081180557146947,
+    -0.9931615763763577
+   ],
+   "spacing_zyx": [
+    0.25,
+    0.25,
+    0.25
+   ]
+  },
+  "detail": {
+   "canal": {
+    "frame": "LPS_mm",
+    "voxels": 51768,
+    "sigma_mm": 0.25,
+    "stl_file": "stl/canal.stl",
+    "vertices": 30486,
+    "web_file": "mesh/canal.msh",
+    "step_size": 1,
+    "triangles": 60964,
+    "web_bytes": 216064,
+    "triangles_raw": 60964,
+    "web_triangles": 12000,
+    "web_volume_drift": 0.00214,
+    "mean_thickness_mm": 1.04
+   },
+   "maxilla": {
+    "frame": "LPS_mm",
+    "voxels": 4391313,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/maxilla.stl",
+    "vertices": 1487411,
+    "web_file": "mesh/maxilla.msh",
+    "step_size": 1,
+    "triangles": 2965520,
+    "web_bytes": 1081564,
+    "stl_triangles": 300000,
+    "triangles_raw": 2965520,
+    "web_triangles": 59998,
+    "stl_volume_drift": 0.00184,
+    "web_volume_drift": 0.01442,
+    "mean_thickness_mm": 1.55
+   },
+   "mandible": {
+    "frame": "LPS_mm",
+    "voxels": 3220117,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/mandible.stl",
+    "vertices": 785675,
+    "web_file": "mesh/mandible.msh",
+    "step_size": 1,
+    "triangles": 1571508,
+    "web_bytes": 1078792,
+    "stl_triangles": 300000,
+    "triangles_raw": 1571508,
+    "web_triangles": 59999,
+    "stl_volume_drift": 5e-05,
+    "web_volume_drift": 0.00026,
+    "mean_thickness_mm": 1.83
+   },
+   "tooth_11": {
+    "frame": "LPS_mm",
+    "voxels": 34535,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_11.stl",
+    "vertices": 9092,
+    "web_file": "mesh/tooth_11.msh",
+    "step_size": 1,
+    "triangles": 18180,
+    "web_bytes": 108040,
+    "triangles_raw": 18180,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00021,
+    "mean_thickness_mm": 1.89
+   },
+   "tooth_12": {
+    "frame": "LPS_mm",
+    "voxels": 24756,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_12.stl",
+    "vertices": 8034,
+    "web_file": "mesh/tooth_12.msh",
+    "step_size": 1,
+    "triangles": 16064,
+    "web_bytes": 108040,
+    "triangles_raw": 16064,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00021,
+    "mean_thickness_mm": 1.58
+   },
+   "tooth_13": {
+    "frame": "LPS_mm",
+    "voxels": 41771,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_13.stl",
+    "vertices": 10718,
+    "web_file": "mesh/tooth_13.msh",
+    "step_size": 1,
+    "triangles": 21432,
+    "web_bytes": 108040,
+    "triangles_raw": 21432,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.0003,
+    "mean_thickness_mm": 1.95
+   },
+   "tooth_14": {
+    "frame": "LPS_mm",
+    "voxels": 28808,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_14.stl",
+    "vertices": 8312,
+    "web_file": "mesh/tooth_14.msh",
+    "step_size": 1,
+    "triangles": 16620,
+    "web_bytes": 108040,
+    "triangles_raw": 16620,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00017,
+    "mean_thickness_mm": 1.73
+   },
+   "tooth_15": {
+    "frame": "LPS_mm",
+    "voxels": 30350,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_15.stl",
+    "vertices": 8462,
+    "web_file": "mesh/tooth_15.msh",
+    "step_size": 1,
+    "triangles": 16920,
+    "web_bytes": 108040,
+    "triangles_raw": 16920,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00018,
+    "mean_thickness_mm": 1.79
+   },
+   "tooth_16": {
+    "frame": "LPS_mm",
+    "voxels": 59908,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_16.stl",
+    "vertices": 16240,
+    "web_file": "mesh/tooth_16.msh",
+    "step_size": 1,
+    "triangles": 32472,
+    "web_bytes": 108064,
+    "triangles_raw": 32472,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00054,
+    "mean_thickness_mm": 1.76
+   },
+   "tooth_17": {
+    "frame": "LPS_mm",
+    "voxels": 47458,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_17.stl",
+    "vertices": 11890,
+    "web_file": "mesh/tooth_17.msh",
+    "step_size": 1,
+    "triangles": 23776,
+    "web_bytes": 108040,
+    "triangles_raw": 23776,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00039,
+    "mean_thickness_mm": 2.09
+   },
+   "tooth_21": {
+    "frame": "LPS_mm",
+    "voxels": 36991,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_21.stl",
+    "vertices": 9844,
+    "web_file": "mesh/tooth_21.msh",
+    "step_size": 1,
+    "triangles": 19684,
+    "web_bytes": 108040,
+    "triangles_raw": 19684,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00028,
+    "mean_thickness_mm": 1.92
+   },
+   "tooth_22": {
+    "frame": "LPS_mm",
+    "voxels": 26049,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_22.stl",
+    "vertices": 8232,
+    "web_file": "mesh/tooth_22.msh",
+    "step_size": 1,
+    "triangles": 16460,
+    "web_bytes": 108040,
+    "triangles_raw": 16460,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00017,
+    "mean_thickness_mm": 1.63
+   },
+   "tooth_23": {
+    "frame": "LPS_mm",
+    "voxels": 41801,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_23.stl",
+    "vertices": 10810,
+    "web_file": "mesh/tooth_23.msh",
+    "step_size": 1,
+    "triangles": 21616,
+    "web_bytes": 108004,
+    "triangles_raw": 21616,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.0003,
+    "mean_thickness_mm": 1.96
+   },
+   "tooth_24": {
+    "frame": "LPS_mm",
+    "voxels": 30898,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_24.stl",
+    "vertices": 8736,
+    "web_file": "mesh/tooth_24.msh",
+    "step_size": 1,
+    "triangles": 17468,
+    "web_bytes": 108004,
+    "triangles_raw": 17468,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00025,
+    "mean_thickness_mm": 1.75
+   },
+   "tooth_25": {
+    "frame": "LPS_mm",
+    "voxels": 32634,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_25.stl",
+    "vertices": 9058,
+    "web_file": "mesh/tooth_25.msh",
+    "step_size": 1,
+    "triangles": 18112,
+    "web_bytes": 108040,
+    "triangles_raw": 18112,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00024,
+    "mean_thickness_mm": 1.79
+   },
+   "tooth_26": {
+    "frame": "LPS_mm",
+    "voxels": 55224,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_26.stl",
+    "vertices": 13890,
+    "web_file": "mesh/tooth_26.msh",
+    "step_size": 1,
+    "triangles": 27776,
+    "web_bytes": 108004,
+    "triangles_raw": 27776,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00047,
+    "mean_thickness_mm": 2.07
+   },
+   "tooth_27": {
+    "frame": "LPS_mm",
+    "voxels": 47322,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_27.stl",
+    "vertices": 11586,
+    "web_file": "mesh/tooth_27.msh",
+    "step_size": 1,
+    "triangles": 23168,
+    "web_bytes": 108004,
+    "triangles_raw": 23168,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00046,
+    "mean_thickness_mm": 2.13
+   },
+   "tooth_31": {
+    "frame": "LPS_mm",
+    "voxels": 18089,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_31.stl",
+    "vertices": 6358,
+    "web_file": "mesh/tooth_31.msh",
+    "step_size": 1,
+    "triangles": 12712,
+    "web_bytes": 108040,
+    "triangles_raw": 12712,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00022,
+    "mean_thickness_mm": 1.39
+   },
+   "tooth_32": {
+    "frame": "LPS_mm",
+    "voxels": 19569,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_32.stl",
+    "vertices": 7062,
+    "web_file": "mesh/tooth_32.msh",
+    "step_size": 1,
+    "triangles": 14120,
+    "web_bytes": 108004,
+    "triangles_raw": 14120,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00027,
+    "mean_thickness_mm": 1.41
+   },
+   "tooth_33": {
+    "frame": "LPS_mm",
+    "voxels": 39427,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_33.stl",
+    "vertices": 10686,
+    "web_file": "mesh/tooth_33.msh",
+    "step_size": 1,
+    "triangles": 21368,
+    "web_bytes": 108040,
+    "triangles_raw": 21368,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00031,
+    "mean_thickness_mm": 1.91
+   },
+   "tooth_34": {
+    "frame": "LPS_mm",
+    "voxels": 23785,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_34.stl",
+    "vertices": 7512,
+    "web_file": "mesh/tooth_34.msh",
+    "step_size": 1,
+    "triangles": 15020,
+    "web_bytes": 108004,
+    "triangles_raw": 15020,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00027,
+    "mean_thickness_mm": 1.66
+   },
+   "tooth_35": {
+    "frame": "LPS_mm",
+    "voxels": 28158,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_35.stl",
+    "vertices": 8240,
+    "web_file": "mesh/tooth_35.msh",
+    "step_size": 1,
+    "triangles": 16476,
+    "web_bytes": 108040,
+    "triangles_raw": 16476,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00039,
+    "mean_thickness_mm": 1.79
+   },
+   "tooth_36": {
+    "frame": "LPS_mm",
+    "voxels": 64425,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_36.stl",
+    "vertices": 15810,
+    "web_file": "mesh/tooth_36.msh",
+    "step_size": 1,
+    "triangles": 31616,
+    "web_bytes": 108004,
+    "triangles_raw": 31616,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00049,
+    "mean_thickness_mm": 2.21
+   },
+   "tooth_37": {
+    "frame": "LPS_mm",
+    "voxels": 17296,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_37.stl",
+    "vertices": 7212,
+    "web_file": "mesh/tooth_37.msh",
+    "step_size": 1,
+    "triangles": 14420,
+    "web_bytes": 108040,
+    "triangles_raw": 14420,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00038,
+    "mean_thickness_mm": 1.28
+   },
+   "tooth_38": {
+    "frame": "LPS_mm",
+    "voxels": 55408,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_38.stl",
+    "vertices": 13400,
+    "web_file": "mesh/tooth_38.msh",
+    "step_size": 1,
+    "triangles": 26796,
+    "web_bytes": 108004,
+    "triangles_raw": 26796,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00046,
+    "mean_thickness_mm": 2.27
+   },
+   "tooth_41": {
+    "frame": "LPS_mm",
+    "voxels": 17710,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_41.stl",
+    "vertices": 6334,
+    "web_file": "mesh/tooth_41.msh",
+    "step_size": 1,
+    "triangles": 12664,
+    "web_bytes": 108040,
+    "triangles_raw": 12664,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00021,
+    "mean_thickness_mm": 1.41
+   },
+   "tooth_42": {
+    "frame": "LPS_mm",
+    "voxels": 20650,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_42.stl",
+    "vertices": 7392,
+    "web_file": "mesh/tooth_42.msh",
+    "step_size": 1,
+    "triangles": 14780,
+    "web_bytes": 108040,
+    "triangles_raw": 14780,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00018,
+    "mean_thickness_mm": 1.43
+   },
+   "tooth_43": {
+    "frame": "LPS_mm",
+    "voxels": 41831,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_43.stl",
+    "vertices": 10938,
+    "web_file": "mesh/tooth_43.msh",
+    "step_size": 1,
+    "triangles": 21872,
+    "web_bytes": 108004,
+    "triangles_raw": 21872,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00024,
+    "mean_thickness_mm": 1.94
+   },
+   "tooth_44": {
+    "frame": "LPS_mm",
+    "voxels": 24114,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_44.stl",
+    "vertices": 7242,
+    "web_file": "mesh/tooth_44.msh",
+    "step_size": 1,
+    "triangles": 14480,
+    "web_bytes": 108004,
+    "triangles_raw": 14480,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00012,
+    "mean_thickness_mm": 1.71
+   },
+   "tooth_45": {
+    "frame": "LPS_mm",
+    "voxels": 28371,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_45.stl",
+    "vertices": 8060,
+    "web_file": "mesh/tooth_45.msh",
+    "step_size": 1,
+    "triangles": 16116,
+    "web_bytes": 108040,
+    "triangles_raw": 16116,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00029,
+    "mean_thickness_mm": 1.79
+   },
+   "tooth_47": {
+    "frame": "LPS_mm",
+    "voxels": 66890,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_47.stl",
+    "vertices": 15998,
+    "web_file": "mesh/tooth_47.msh",
+    "step_size": 1,
+    "triangles": 31992,
+    "web_bytes": 108004,
+    "triangles_raw": 31992,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00057,
+    "mean_thickness_mm": 2.37
+   },
+   "tooth_48": {
+    "frame": "LPS_mm",
+    "voxels": 57754,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_48.stl",
+    "vertices": 13680,
+    "web_file": "mesh/tooth_48.msh",
+    "step_size": 1,
+    "triangles": 27352,
+    "web_bytes": 108028,
+    "triangles_raw": 27352,
+    "web_triangles": 5998,
+    "web_volume_drift": 0.00051,
+    "mean_thickness_mm": 2.34
+   },
+   "lower_teeth_unnumbered": {
+    "frame": "LPS_mm",
+    "voxels": 53528,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/lower_teeth_unnumbered.stl",
+    "vertices": 13018,
+    "web_file": "mesh/lower_teeth_unnumbered.msh",
+    "step_size": 1,
+    "triangles": 26000,
+    "web_bytes": 144208,
+    "triangles_raw": 26000,
+    "web_triangles": 8000,
+    "web_volume_drift": 0.00047,
+    "mean_thickness_mm": 2.04
+   },
+   "upper_teeth_unnumbered": {
+    "frame": "LPS_mm",
+    "voxels": 28095,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/upper_teeth_unnumbered.stl",
+    "vertices": 4852,
+    "web_file": "mesh/upper_teeth_unnumbered.msh",
+    "step_size": 1,
+    "triangles": 9608,
+    "web_bytes": 144556,
+    "triangles_raw": 9608,
+    "web_triangles": 7998,
+    "web_volume_drift": 0.00044,
+    "mean_thickness_mm": 0.53
+   }
+  },
+  "taubin": {
+   "nu": -0.53,
+   "lambda": 0.5,
+   "iterations": 12
+  },
+  "totals": {
+   "stl_bytes": 63908056,
+   "triangles": 1278104,
+   "web_bytes": 5797960,
+   "structures": 34,
+   "web_triangles": 321971,
+   "web_structures": 34
+  },
+  "web_mesh_format": {
+   "magic": "DSVM",
+   "endian": "little",
+   "layout": "u32 version, u32 n_points, u32 n_tris, f32[3n] xyz LPS mm, u32[3m] indices",
+   "version": 1
+  },
+  "stl_triangle_budget": 300000,
+  "web_triangle_budget": {
+   "canal": 12000,
+   "tooth": 6000,
+   "maxilla": 60000,
+   "mandible": 60000,
+   "lower_teeth_unnumbered": 8000,
+   "upper_teeth_unnumbered": 8000
+  }
+ },
+ "models": [
+  {
+   "name": "dentalseg",
+   "labels": {
+    "Mandible": 2,
+    "background": 0,
+    "Lower Teeth": 4,
+    "Upper Skull": 1,
+    "Upper Teeth": 3,
+    "Mandibular canal": 5
+   },
+   "seconds": 77.24,
+   "patch_size": [
+    128,
+    160,
+    112
+   ],
+   "peak_reserved_mb": 1644.2,
+   "fell_back_to_cpu_aggregate": false
+  },
+  {
+   "name": "toothseg",
+   "labels": {
+    "background": 0,
+    "Lower Left Canine": 19,
+    "Upper Left Canine": 11,
+    "Lower Right Canine": 27,
+    "Upper Right Canine": 3,
+    "Lower Left First Molar": 22,
+    "Upper Left First Molar": 14,
+    "Lower Left Second Molar": 23,
+    "Lower Right First Molar": 30,
+    "Upper Left Second Molar": 15,
+    "Upper Right First Molar": 6,
+    "Lower Right Second Molar": 31,
+    "Upper Right Second Molar": 7,
+    "Lower Left First Premolar": 20,
+    "Upper Left First Premolar": 12,
+    "Lower Left Central Incisor": 17,
+    "Lower Left Lateral Incisor": 18,
+    "Lower Left Second Premolar": 21,
+    "Lower Right First Premolar": 28,
+    "Upper Left Central Incisor": 9,
+    "Upper Left Lateral Incisor": 10,
+    "Upper Left Second Premolar": 13,
+    "Upper Right First Premolar": 4,
+    "Lower Right Central Incisor": 25,
+    "Lower Right Lateral Incisor": 26,
+    "Lower Right Second Premolar": 29,
+    "Upper Right Central Incisor": 1,
+    "Upper Right Lateral Incisor": 2,
+    "Upper Right Second Premolar": 5,
+    "Lower Left Third Molar (Wisdom Tooth)": 24,
+    "Upper Left Third Molar (Wisdom Tooth)": 16,
+    "Lower Right Third Molar (Wisdom Tooth)": 32,
+    "Upper Right Third Molar (Wisdom Tooth)": 8
+   },
+   "seconds": 17.3,
+   "patch_size": [
+    256,
+    256,
+    256
+   ],
+   "peak_reserved_mb": 10871.6,
+   "fell_back_to_cpu_aggregate": false
+  },
+  {
+   "name": "toothseg_instance",
+   "labels": {
+    "border": 2,
+    "center": 1,
+    "background": 0
+   },
+   "seconds": 16.01,
+   "patch_size": [
+    192,
+    192,
+    192
+   ],
+   "peak_reserved_mb": 4789.9,
+   "fell_back_to_cpu_aggregate": false
+  }
+ ],
+ "volume": {
+  "note": "Display volume: grey is windowed to 8-bit and downsampled, and the labelmap is resampled by smoothed-indicator argmax. Use segmentation.nii.gz on the original grid for anything measured.",
+  "image": {
+   "file": "image.raw",
+   "dtype": "uint8",
+   "window": [
+    2464.0,
+    233.0
+   ]
+  },
+  "colors": {
+   "1": {
+    "id": "maxilla",
+    "name": "Maxilla & upper skull",
+    "color": "#d9c9a3",
+    "group": "Jaws"
+   },
+   "2": {
+    "id": "mandible",
+    "name": "Mandible",
+    "color": "#c2a878",
+    "group": "Jaws"
+   },
+   "3": {
+    "id": "canal",
+    "name": "Mandibular canal",
+    "color": "#ff3b30",
+    "group": "Nerve canal"
+   },
+   "4": {
+    "id": "upper_teeth_unnumbered",
+    "name": "Upper teeth (unnumbered)",
+    "color": "#9aa3ad",
+    "group": "Upper teeth"
+   },
+   "5": {
+    "id": "lower_teeth_unnumbered",
+    "name": "Lower teeth (unnumbered)",
+    "color": "#8b96a6",
+    "group": "Lower teeth"
+   },
+   "6": {
+    "id": "tooth_11",
+    "name": "Upper right central incisor (11)",
+    "color": "#186ebf",
+    "group": "Upper teeth"
+   },
+   "7": {
+    "id": "tooth_12",
+    "name": "Upper right lateral incisor (12)",
+    "color": "#1f7acd",
+    "group": "Upper teeth"
+   },
+   "8": {
+    "id": "tooth_13",
+    "name": "Upper right canine (13)",
+    "color": "#2984d9",
+    "group": "Upper teeth"
+   },
+   "9": {
+    "id": "tooth_14",
+    "name": "Upper right first premolar (14)",
+    "color": "#408fd8",
+    "group": "Upper teeth"
+   },
+   "10": {
+    "id": "tooth_15",
+    "name": "Upper right second premolar (15)",
+    "color": "#5699d7",
+    "group": "Upper teeth"
+   },
+   "11": {
+    "id": "tooth_16",
+    "name": "Upper right first molar (16)",
+    "color": "#6ca4d8",
+    "group": "Upper teeth"
+   },
+   "12": {
+    "id": "tooth_17",
+    "name": "Upper right second molar (17)",
+    "color": "#80aed9",
+    "group": "Upper teeth"
+   },
+   "14": {
+    "id": "tooth_21",
+    "name": "Upper left central incisor (21)",
+    "color": "#18bf8d",
+    "group": "Upper teeth"
+   },
+   "15": {
+    "id": "tooth_22",
+    "name": "Upper left lateral incisor (22)",
+    "color": "#1fcd99",
+    "group": "Upper teeth"
+   },
+   "16": {
+    "id": "tooth_23",
+    "name": "Upper left canine (23)",
+    "color": "#29d9a4",
+    "group": "Upper teeth"
+   },
+   "17": {
+    "id": "tooth_24",
+    "name": "Upper left first premolar (24)",
+    "color": "#40d8aa",
+    "group": "Upper teeth"
+   },
+   "18": {
+    "id": "tooth_25",
+    "name": "Upper left second premolar (25)",
+    "color": "#56d7b1",
+    "group": "Upper teeth"
+   },
+   "19": {
+    "id": "tooth_26",
+    "name": "Upper left first molar (26)",
+    "color": "#6cd8b7",
+    "group": "Upper teeth"
+   },
+   "20": {
+    "id": "tooth_27",
+    "name": "Upper left second molar (27)",
+    "color": "#80d9be",
+    "group": "Upper teeth"
+   },
+   "22": {
+    "id": "tooth_31",
+    "name": "Lower left central incisor (31)",
+    "color": "#bf8618",
+    "group": "Lower teeth"
+   },
+   "23": {
+    "id": "tooth_32",
+    "name": "Lower left lateral incisor (32)",
+    "color": "#cd921f",
+    "group": "Lower teeth"
+   },
+   "24": {
+    "id": "tooth_33",
+    "name": "Lower left canine (33)",
+    "color": "#d99d29",
+    "group": "Lower teeth"
+   },
+   "25": {
+    "id": "tooth_34",
+    "name": "Lower left first premolar (34)",
+    "color": "#d8a440",
+    "group": "Lower teeth"
+   },
+   "26": {
+    "id": "tooth_35",
+    "name": "Lower left second premolar (35)",
+    "color": "#d7ab56",
+    "group": "Lower teeth"
+   },
+   "27": {
+    "id": "tooth_36",
+    "name": "Lower left first molar (36)",
+    "color": "#d8b36c",
+    "group": "Lower teeth"
+   },
+   "28": {
+    "id": "tooth_37",
+    "name": "Lower left second molar (37)",
+    "color": "#d9bb80",
+    "group": "Lower teeth"
+   },
+   "29": {
+    "id": "tooth_38",
+    "name": "Lower left third molar (38)",
+    "color": "#dbc394",
+    "group": "Lower teeth"
+   },
+   "30": {
+    "id": "tooth_41",
+    "name": "Lower right central incisor (41)",
+    "color": "#bf185e",
+    "group": "Lower teeth"
+   },
+   "31": {
+    "id": "tooth_42",
+    "name": "Lower right lateral incisor (42)",
+    "color": "#cd1f68",
+    "group": "Lower teeth"
+   },
+   "32": {
+    "id": "tooth_43",
+    "name": "Lower right canine (43)",
+    "color": "#d92973",
+    "group": "Lower teeth"
+   },
+   "33": {
+    "id": "tooth_44",
+    "name": "Lower right first premolar (44)",
+    "color": "#d84080",
+    "group": "Lower teeth"
+   },
+   "34": {
+    "id": "tooth_45",
+    "name": "Lower right second premolar (45)",
+    "color": "#d7568c",
+    "group": "Lower teeth"
+   },
+   "36": {
+    "id": "tooth_47",
+    "name": "Lower right second molar (47)",
+    "color": "#d980a6",
+    "group": "Lower teeth"
+   },
+   "37": {
+    "id": "tooth_48",
+    "name": "Lower right third molar (48)",
+    "color": "#db94b2",
+    "group": "Lower teeth"
+   }
+  },
+  "labels": {
+   "file": "labels.raw",
+   "dtype": "uint8",
+   "present": [
+    1,
+    2,
+    3,
+    4,
+    5,
+    6,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    29,
+    30,
+    31,
+    32,
+    33,
+    34,
+    36,
+    37
+   ],
+   "lost_to_downsampling": []
+  },
+  "origin": [
+   70.02210938958876,
+   -140.14757289431182,
+   67.10157256730469
+  ],
+  "spacing": [
+   0.7511261261261262,
+   0.7511261261261262,
+   0.7517361111111112
+  ],
+  "resample": {
+   "lost": [],
+   "sigma_mm": 0.4,
+   "out_shape": [
+    144,
+    222,
+    222
+   ],
+   "structures": {
+    "canal": {
+     "voxels_source": 51768,
+     "voxels_display": 1811
+    },
+    "maxilla": {
+     "voxels_source": 4391313,
+     "voxels_display": 165893
+    },
+    "mandible": {
+     "voxels_source": 3220117,
+     "voxels_display": 126665
+    },
+    "tooth_11": {
+     "voxels_source": 34535,
+     "voxels_display": 1197
+    },
+    "tooth_12": {
+     "voxels_source": 24756,
+     "voxels_display": 883
+    },
+    "tooth_13": {
+     "voxels_source": 41771,
+     "voxels_display": 1576
+    },
+    "tooth_14": {
+     "voxels_source": 28808,
+     "voxels_display": 1065
+    },
+    "tooth_15": {
+     "voxels_source": 30350,
+     "voxels_display": 1107
+    },
+    "tooth_16": {
+     "voxels_source": 59908,
+     "voxels_display": 2446
+    },
+    "tooth_17": {
+     "voxels_source": 47458,
+     "voxels_display": 1759
+    },
+    "tooth_21": {
+     "voxels_source": 36991,
+     "voxels_display": 1351
+    },
+    "tooth_22": {
+     "voxels_source": 26049,
+     "voxels_display": 951
+    },
+    "tooth_23": {
+     "voxels_source": 41801,
+     "voxels_display": 1527
+    },
+    "tooth_24": {
+     "voxels_source": 30898,
+     "voxels_display": 1141
+    },
+    "tooth_25": {
+     "voxels_source": 32634,
+     "voxels_display": 1196
+    },
+    "tooth_26": {
+     "voxels_source": 55224,
+     "voxels_display": 2021
+    },
+    "tooth_27": {
+     "voxels_source": 47322,
+     "voxels_display": 1747
+    },
+    "tooth_31": {
+     "voxels_source": 18089,
+     "voxels_display": 650
+    },
+    "tooth_32": {
+     "voxels_source": 19569,
+     "voxels_display": 720
+    },
+    "tooth_33": {
+     "voxels_source": 39427,
+     "voxels_display": 1450
+    },
+    "tooth_34": {
+     "voxels_source": 23785,
+     "voxels_display": 865
+    },
+    "tooth_35": {
+     "voxels_source": 28158,
+     "voxels_display": 1027
+    },
+    "tooth_36": {
+     "voxels_source": 64425,
+     "voxels_display": 2402
+    },
+    "tooth_37": {
+     "voxels_source": 17296,
+     "voxels_display": 608
+    },
+    "tooth_38": {
+     "voxels_source": 55408,
+     "voxels_display": 1958
+    },
+    "tooth_41": {
+     "voxels_source": 17710,
+     "voxels_display": 599
+    },
+    "tooth_42": {
+     "voxels_source": 20650,
+     "voxels_display": 749
+    },
+    "tooth_43": {
+     "voxels_source": 41831,
+     "voxels_display": 1552
+    },
+    "tooth_44": {
+     "voxels_source": 24114,
+     "voxels_display": 890
+    },
+    "tooth_45": {
+     "voxels_source": 28371,
+     "voxels_display": 1039
+    },
+    "tooth_47": {
+     "voxels_source": 66890,
+     "voxels_display": 2440
+    },
+    "tooth_48": {
+     "voxels_source": 57754,
+     "voxels_display": 2116
+    },
+    "lower_teeth_unnumbered": {
+     "voxels_source": 53528,
+     "voxels_display": 2577
+    },
+    "upper_teeth_unnumbered": {
+     "voxels_source": 28095,
+     "voxels_display": 2650
+    }
+   }
+  },
+  "conflicts": {
+   "file": "conflicts.raw",
+   "note": "Where the two models contradict each other. Not anatomy, and not part of any download -- the exported label map is one value per voxel and cannot represent an overlap.",
+   "dtype": "uint8",
+   "colors": {
+    "1": {
+     "id": "conflict_1",
+     "name": "Tooth model only",
+     "color": "#22d3ee"
+    },
+    "2": {
+     "id": "conflict_2",
+     "name": "Jaw model only",
+     "color": "#f472b6"
+    }
+   },
+   "voxels": {
+    "1": 1819,
+    "2": 4510
+   },
+   "present": [
+    1,
+    2
+   ]
+  },
+  "direction": [
+   -0.9940781967960048,
+   0.09694405147534274,
+   0.049095718126427844,
+   0.09133167899340905,
+   0.9901711118493441,
+   -0.10592305542835587,
+   -0.05888177194215916,
+   -0.10081180557146947,
+   -0.9931615763763577
+  ],
+  "dimensions": [
+   222,
+   222,
+   144
+  ],
+  "downsample_factor": 3
+ },
+ "outputs": {
+  "stl": {
+   "canal": "stl/canal.stl",
+   "maxilla": "stl/maxilla.stl",
+   "mandible": "stl/mandible.stl",
+   "tooth_11": "stl/tooth_11.stl",
+   "tooth_12": "stl/tooth_12.stl",
+   "tooth_13": "stl/tooth_13.stl",
+   "tooth_14": "stl/tooth_14.stl",
+   "tooth_15": "stl/tooth_15.stl",
+   "tooth_16": "stl/tooth_16.stl",
+   "tooth_17": "stl/tooth_17.stl",
+   "tooth_21": "stl/tooth_21.stl",
+   "tooth_22": "stl/tooth_22.stl",
+   "tooth_23": "stl/tooth_23.stl",
+   "tooth_24": "stl/tooth_24.stl",
+   "tooth_25": "stl/tooth_25.stl",
+   "tooth_26": "stl/tooth_26.stl",
+   "tooth_27": "stl/tooth_27.stl",
+   "tooth_31": "stl/tooth_31.stl",
+   "tooth_32": "stl/tooth_32.stl",
+   "tooth_33": "stl/tooth_33.stl",
+   "tooth_34": "stl/tooth_34.stl",
+   "tooth_35": "stl/tooth_35.stl",
+   "tooth_36": "stl/tooth_36.stl",
+   "tooth_37": "stl/tooth_37.stl",
+   "tooth_38": "stl/tooth_38.stl",
+   "tooth_41": "stl/tooth_41.stl",
+   "tooth_42": "stl/tooth_42.stl",
+   "tooth_43": "stl/tooth_43.stl",
+   "tooth_44": "stl/tooth_44.stl",
+   "tooth_45": "stl/tooth_45.stl",
+   "tooth_47": "stl/tooth_47.stl",
+   "tooth_48": "stl/tooth_48.stl",
+   "lower_teeth_unnumbered": "stl/lower_teeth_unnumbered.stl",
+   "upper_teeth_unnumbered": "stl/upper_teeth_unnumbered.stl"
+  },
+  "mesh": {
+   "canal": "mesh/canal.msh",
+   "maxilla": "mesh/maxilla.msh",
+   "mandible": "mesh/mandible.msh",
+   "tooth_11": "mesh/tooth_11.msh",
+   "tooth_12": "mesh/tooth_12.msh",
+   "tooth_13": "mesh/tooth_13.msh",
+   "tooth_14": "mesh/tooth_14.msh",
+   "tooth_15": "mesh/tooth_15.msh",
+   "tooth_16": "mesh/tooth_16.msh",
+   "tooth_17": "mesh/tooth_17.msh",
+   "tooth_21": "mesh/tooth_21.msh",
+   "tooth_22": "mesh/tooth_22.msh",
+   "tooth_23": "mesh/tooth_23.msh",
+   "tooth_24": "mesh/tooth_24.msh",
+   "tooth_25": "mesh/tooth_25.msh",
+   "tooth_26": "mesh/tooth_26.msh",
+   "tooth_27": "mesh/tooth_27.msh",
+   "tooth_31": "mesh/tooth_31.msh",
+   "tooth_32": "mesh/tooth_32.msh",
+   "tooth_33": "mesh/tooth_33.msh",
+   "tooth_34": "mesh/tooth_34.msh",
+   "tooth_35": "mesh/tooth_35.msh",
+   "tooth_36": "mesh/tooth_36.msh",
+   "tooth_37": "mesh/tooth_37.msh",
+   "tooth_38": "mesh/tooth_38.msh",
+   "tooth_41": "mesh/tooth_41.msh",
+   "tooth_42": "mesh/tooth_42.msh",
+   "tooth_43": "mesh/tooth_43.msh",
+   "tooth_44": "mesh/tooth_44.msh",
+   "tooth_45": "mesh/tooth_45.msh",
+   "tooth_47": "mesh/tooth_47.msh",
+   "tooth_48": "mesh/tooth_48.msh",
+   "lower_teeth_unnumbered": "mesh/lower_teeth_unnumbered.msh",
+   "upper_teeth_unnumbered": "mesh/upper_teeth_unnumbered.msh"
+  },
+  "nifti": "segmentation.nii.gz",
+  "volume": "volume/meta.json",
+  "contours": "preview/contours.axial.json",
+  "rtstruct": "rtstruct/rtstruct.zip"
+ },
+ "preview": {
+  "planes": {
+   "axial": {
+    "size": [
+     667,
+     667
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.25,
+     0.25
+    ],
+    "total_slices": 433,
+    "source_indices": [
+     0,
+     3,
+     5,
+     8,
+     11,
+     14,
+     16,
+     19,
+     22,
+     24,
+     27,
+     30,
+     33,
+     35,
+     38,
+     41,
+     43,
+     46,
+     49,
+     52,
+     54,
+     57,
+     60,
+     62,
+     65,
+     68,
+     71,
+     73,
+     76,
+     79,
+     82,
+     84,
+     87,
+     90,
+     92,
+     95,
+     98,
+     101,
+     103,
+     106,
+     109,
+     111,
+     114,
+     117,
+     120,
+     122,
+     125,
+     128,
+     130,
+     133,
+     136,
+     139,
+     141,
+     144,
+     147,
+     149,
+     152,
+     155,
+     158,
+     160,
+     163,
+     166,
+     168,
+     171,
+     174,
+     177,
+     179,
+     182,
+     185,
+     187,
+     190,
+     193,
+     196,
+     198,
+     201,
+     204,
+     206,
+     209,
+     212,
+     215,
+     217,
+     220,
+     223,
+     226,
+     228,
+     231,
+     234,
+     236,
+     239,
+     242,
+     245,
+     247,
+     250,
+     253,
+     255,
+     258,
+     261,
+     264,
+     266,
+     269,
+     272,
+     274,
+     277,
+     280,
+     283,
+     285,
+     288,
+     291,
+     293,
+     296,
+     299,
+     302,
+     304,
+     307,
+     310,
+     312,
+     315,
+     318,
+     321,
+     323,
+     326,
+     329,
+     331,
+     334,
+     337,
+     340,
+     342,
+     345,
+     348,
+     350,
+     353,
+     356,
+     359,
+     361,
+     364,
+     367,
+     370,
+     372,
+     375,
+     378,
+     380,
+     383,
+     386,
+     389,
+     391,
+     394,
+     397,
+     399,
+     402,
+     405,
+     408,
+     410,
+     413,
+     416,
+     418,
+     421,
+     424,
+     427,
+     429,
+     432
+    ]
+   },
+   "coronal": {
+    "size": [
+     433,
+     667
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.25,
+     0.25
+    ],
+    "total_slices": 667,
+    "source_indices": [
+     0,
+     4,
+     8,
+     13,
+     17,
+     21,
+     25,
+     29,
+     34,
+     38,
+     42,
+     46,
+     50,
+     54,
+     59,
+     63,
+     67,
+     71,
+     75,
+     80,
+     84,
+     88,
+     92,
+     96,
+     101,
+     105,
+     109,
+     113,
+     117,
+     121,
+     126,
+     130,
+     134,
+     138,
+     142,
+     147,
+     151,
+     155,
+     159,
+     163,
+     168,
+     172,
+     176,
+     180,
+     184,
+     188,
+     193,
+     197,
+     201,
+     205,
+     209,
+     214,
+     218,
+     222,
+     226,
+     230,
+     235,
+     239,
+     243,
+     247,
+     251,
+     256,
+     260,
+     264,
+     268,
+     272,
+     276,
+     281,
+     285,
+     289,
+     293,
+     297,
+     302,
+     306,
+     310,
+     314,
+     318,
+     323,
+     327,
+     331,
+     335,
+     339,
+     343,
+     348,
+     352,
+     356,
+     360,
+     364,
+     369,
+     373,
+     377,
+     381,
+     385,
+     390,
+     394,
+     398,
+     402,
+     406,
+     410,
+     415,
+     419,
+     423,
+     427,
+     431,
+     436,
+     440,
+     444,
+     448,
+     452,
+     457,
+     461,
+     465,
+     469,
+     473,
+     478,
+     482,
+     486,
+     490,
+     494,
+     498,
+     503,
+     507,
+     511,
+     515,
+     519,
+     524,
+     528,
+     532,
+     536,
+     540,
+     545,
+     549,
+     553,
+     557,
+     561,
+     565,
+     570,
+     574,
+     578,
+     582,
+     586,
+     591,
+     595,
+     599,
+     603,
+     607,
+     612,
+     616,
+     620,
+     624,
+     628,
+     632,
+     637,
+     641,
+     645,
+     649,
+     653,
+     658,
+     662,
+     666
+    ]
+   },
+   "sagittal": {
+    "size": [
+     433,
+     667
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.25,
+     0.25
+    ],
+    "total_slices": 667,
+    "source_indices": [
+     0,
+     4,
+     8,
+     13,
+     17,
+     21,
+     25,
+     29,
+     34,
+     38,
+     42,
+     46,
+     50,
+     54,
+     59,
+     63,
+     67,
+     71,
+     75,
+     80,
+     84,
+     88,
+     92,
+     96,
+     101,
+     105,
+     109,
+     113,
+     117,
+     121,
+     126,
+     130,
+     134,
+     138,
+     142,
+     147,
+     151,
+     155,
+     159,
+     163,
+     168,
+     172,
+     176,
+     180,
+     184,
+     188,
+     193,
+     197,
+     201,
+     205,
+     209,
+     214,
+     218,
+     222,
+     226,
+     230,
+     235,
+     239,
+     243,
+     247,
+     251,
+     256,
+     260,
+     264,
+     268,
+     272,
+     276,
+     281,
+     285,
+     289,
+     293,
+     297,
+     302,
+     306,
+     310,
+     314,
+     318,
+     323,
+     327,
+     331,
+     335,
+     339,
+     343,
+     348,
+     352,
+     356,
+     360,
+     364,
+     369,
+     373,
+     377,
+     381,
+     385,
+     390,
+     394,
+     398,
+     402,
+     406,
+     410,
+     415,
+     419,
+     423,
+     427,
+     431,
+     436,
+     440,
+     444,
+     448,
+     452,
+     457,
+     461,
+     465,
+     469,
+     473,
+     478,
+     482,
+     486,
+     490,
+     494,
+     498,
+     503,
+     507,
+     511,
+     515,
+     519,
+     524,
+     528,
+     532,
+     536,
+     540,
+     545,
+     549,
+     553,
+     557,
+     561,
+     565,
+     570,
+     574,
+     578,
+     582,
+     586,
+     591,
+     595,
+     599,
+     603,
+     607,
+     612,
+     616,
+     620,
+     624,
+     628,
+     632,
+     637,
+     641,
+     645,
+     649,
+     653,
+     658,
+     662,
+     666
+    ]
+   }
+  },
+  "window": {
+   "level": 233.0,
+   "width": 2464.0
+  }
+ },
+ "quality": {
+  "warnings": [
+   "1 tooth/teeth outside the plausible volume range: 37 (270 mm3)",
+   "1 contralateral pair(s) differ by more than 30% in volume, worst 47/37 at 118%",
+   "1 dense unnumbered mass(es), 755 mm3, largest 755 mm3 at teeth 26, 27, 36, 37, 38 -- grey well above this scan's enamel, so restorative material. The tooth model has no class for crowns, bridges or implants and cannot number these."
+  ],
+  "components": {
+   "canal": 2,
+   "maxilla": 1,
+   "mandible": 1,
+   "tooth_11": 1,
+   "tooth_12": 1,
+   "tooth_13": 1,
+   "tooth_14": 1,
+   "tooth_15": 1,
+   "tooth_16": 1,
+   "tooth_17": 1,
+   "tooth_21": 1,
+   "tooth_22": 1,
+   "tooth_23": 1,
+   "tooth_24": 1,
+   "tooth_25": 1,
+   "tooth_26": 1,
+   "tooth_27": 1,
+   "tooth_31": 1,
+   "tooth_32": 1,
+   "tooth_33": 1,
+   "tooth_34": 1,
+   "tooth_35": 1,
+   "tooth_36": 1,
+   "tooth_37": 1,
+   "tooth_38": 1,
+   "tooth_41": 1,
+   "tooth_42": 1,
+   "tooth_43": 1,
+   "tooth_44": 1,
+   "tooth_45": 1,
+   "tooth_47": 1,
+   "tooth_48": 1,
+   "lower_teeth_unnumbered": 3,
+   "upper_teeth_unnumbered": 32
+  },
+  "spacing_mm": [
+   0.25,
+   0.25,
+   0.25
+  ],
+  "unnumbered": {
+   "checked": true,
+   "film_mm3": 520.4,
+   "free_mm3": 0.0,
+   "dense_mm3": 755.0,
+   "total_mm3": 1275.4,
+   "components": [
+    {
+     "mm3": 755.0,
+     "arch": "lower",
+     "bucket": "dense",
+     "gap_mm": 0.25,
+     "touches": [
+      26,
+      27,
+      36,
+      37,
+      38
+     ],
+     "median_grey": 2870.5,
+     "thickness_mm": 4.08
+    },
+    {
+     "mm3": 131.0,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      11,
+      12,
+      21,
+      31,
+      32,
+      41,
+      42
+     ],
+     "median_grey": 1349.0,
+     "thickness_mm": 0.56
+    },
+    {
+     "mm3": 49.8,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      16,
+      47
+     ],
+     "median_grey": 1870.0,
+     "thickness_mm": 0.75
+    },
+    {
+     "mm3": 46.3,
+     "arch": "lower",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      38
+     ],
+     "median_grey": 320.0,
+     "thickness_mm": 1.15
+    },
+    {
+     "mm3": 30.5,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      11
+     ],
+     "median_grey": 1323.0,
+     "thickness_mm": 0.43
+    },
+    {
+     "mm3": 19.6,
+     "arch": "lower",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      48
+     ],
+     "median_grey": 778.0,
+     "thickness_mm": 0.5
+    },
+    {
+     "mm3": 17.2,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      17
+     ],
+     "median_grey": 924.0,
+     "thickness_mm": 0.56
+    },
+    {
+     "mm3": 16.2,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      16
+     ],
+     "median_grey": 987.0,
+     "thickness_mm": 0.56
+    },
+    {
+     "mm3": 16.2,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      13,
+      42
+     ],
+     "median_grey": 1228.0,
+     "thickness_mm": 0.5
+    },
+    {
+     "mm3": 11.3,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      21
+     ],
+     "median_grey": 1269.0,
+     "thickness_mm": 0.35
+    },
+    {
+     "mm3": 11.0,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      21,
+      22
+     ],
+     "median_grey": 1608.0,
+     "thickness_mm": 0.56
+    },
+    {
+     "mm3": 10.2,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      27
+     ],
+     "median_grey": 918.0,
+     "thickness_mm": 0.5
+    },
+    {
+     "mm3": 9.4,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      13,
+      43
+     ],
+     "median_grey": 1239.0,
+     "thickness_mm": 0.25
+    },
+    {
+     "mm3": 7.5,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      15
+     ],
+     "median_grey": 1060.0,
+     "thickness_mm": 0.35
+    },
+    {
+     "mm3": 7.4,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      14,
+      15,
+      44
+     ],
+     "median_grey": 929.0,
+     "thickness_mm": 0.5
+    },
+    {
+     "mm3": 6.0,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      26
+     ],
+     "median_grey": 741.0,
+     "thickness_mm": 0.35
+    },
+    {
+     "mm3": 5.9,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      22,
+      33
+     ],
+     "median_grey": 1260.5,
+     "thickness_mm": 0.35
+    },
+    {
+     "mm3": 5.8,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      13,
+      14,
+      43
+     ],
+     "median_grey": 1103.0,
+     "thickness_mm": 0.43
+    },
+    {
+     "mm3": 5.5,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      27,
+      38
+     ],
+     "median_grey": 1273.0,
+     "thickness_mm": 0.5
+    },
+    {
+     "mm3": 5.0,
+     "arch": "upper",
+     "bucket": "film",
+     "gap_mm": 0.25,
+     "touches": [
+      23
+     ],
+     "median_grey": 1421.0,
+     "thickness_mm": 0.35
+    }
+   ],
+   "n_components": 77,
+   "film_within_mm": 0.25,
+   "tooth_grey_p95": 2451.0
+  },
+  "teeth_found": 29,
+  "volumes_cm3": {
+   "canal": 0.809,
+   "maxilla": 68.614,
+   "mandible": 50.314,
+   "tooth_11": 0.54,
+   "tooth_12": 0.387,
+   "tooth_13": 0.653,
+   "tooth_14": 0.45,
+   "tooth_15": 0.474,
+   "tooth_16": 0.936,
+   "tooth_17": 0.742,
+   "tooth_21": 0.578,
+   "tooth_22": 0.407,
+   "tooth_23": 0.653,
+   "tooth_24": 0.483,
+   "tooth_25": 0.51,
+   "tooth_26": 0.863,
+   "tooth_27": 0.739,
+   "tooth_31": 0.283,
+   "tooth_32": 0.306,
+   "tooth_33": 0.616,
+   "tooth_34": 0.372,
+   "tooth_35": 0.44,
+   "tooth_36": 1.007,
+   "tooth_37": 0.27,
+   "tooth_38": 0.866,
+   "tooth_41": 0.277,
+   "tooth_42": 0.323,
+   "tooth_43": 0.654,
+   "tooth_44": 0.377,
+   "tooth_45": 0.443,
+   "tooth_47": 1.045,
+   "tooth_48": 0.902,
+   "lower_teeth_unnumbered": 0.836,
+   "upper_teeth_unnumbered": 0.439
+  },
+  "arch_checked": true,
+  "laterality_ok": true,
+  "arch_conflicts": [],
+  "arch_wrong_mm3": 18.7,
+  "tooth_fragments": [],
+  "canal_components": 2,
+  "teeth_fragmented": [],
+  "voxel_volume_mm3": 0.015625,
+  "arch_conflict_mm3": 0.0,
+  "laterality_checks": [
+   {
+    "check": "upper_arch",
+    "detail": "quadrants 1 and 2 are separated",
+    "result": "ok",
+    "separation_voxels": 150.0
+   },
+   {
+    "check": "lower_arch",
+    "detail": "quadrants 4 and 3 are separated",
+    "result": "ok",
+    "separation_voxels": 140.6
+   },
+   {
+    "check": "arches_agree",
+    "detail": "the upper and lower arches place the patient's right on the same side",
+    "result": "ok"
+   },
+   {
+    "check": "matches_image_orientation",
+    "detail": "FDI right/left matches the scan's direction cosines",
+    "result": "ok"
+   }
+  ],
+  "arch_wrong_by_tooth": [
+   {
+    "fdi": 43,
+    "mm3": 9.4,
+    "share_of_tooth": 0.0144,
+    "jaw_model_coverage": 0.958
+   },
+   {
+    "fdi": 42,
+    "mm3": 2.9,
+    "share_of_tooth": 0.0091,
+    "jaw_model_coverage": 0.968
+   },
+   {
+    "fdi": 32,
+    "mm3": 2.4,
+    "share_of_tooth": 0.0079,
+    "jaw_model_coverage": 0.981
+   },
+   {
+    "fdi": 33,
+    "mm3": 1.6,
+    "share_of_tooth": 0.0026,
+    "jaw_model_coverage": 0.981
+   },
+   {
+    "fdi": 31,
+    "mm3": 0.8,
+    "share_of_tooth": 0.0027,
+    "jaw_model_coverage": 0.959
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.4,
+    "share_of_tooth": 0.0004,
+    "jaw_model_coverage": 0.941
+   },
+   {
+    "fdi": 11,
+    "mm3": 0.2,
+    "share_of_tooth": 0.0004,
+    "jaw_model_coverage": 0.981
+   },
+   {
+    "fdi": 23,
+    "mm3": 0.2,
+    "share_of_tooth": 0.0003,
+    "jaw_model_coverage": 0.981
+   },
+   {
+    "fdi": 35,
+    "mm3": 0.2,
+    "share_of_tooth": 0.0004,
+    "jaw_model_coverage": 0.939
+   },
+   {
+    "fdi": 16,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0001,
+    "jaw_model_coverage": 0.954
+   },
+   {
+    "fdi": 24,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0002,
+    "jaw_model_coverage": 0.95
+   },
+   {
+    "fdi": 25,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0002,
+    "jaw_model_coverage": 0.961
+   },
+   {
+    "fdi": 34,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0002,
+    "jaw_model_coverage": 0.954
+   },
+   {
+    "fdi": 38,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0001,
+    "jaw_model_coverage": 0.952
+   },
+   {
+    "fdi": 41,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0003,
+    "jaw_model_coverage": 0.976
+   },
+   {
+    "fdi": 44,
+    "mm3": 0.1,
+    "share_of_tooth": 0.0002,
+    "jaw_model_coverage": 0.947
+   },
+   {
+    "fdi": 13,
+    "mm3": 0.0,
+    "share_of_tooth": 0.0,
+    "jaw_model_coverage": 0.976
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.0,
+    "share_of_tooth": 0.0,
+    "jaw_model_coverage": 0.957
+   },
+   {
+    "fdi": 21,
+    "mm3": 0.0,
+    "share_of_tooth": 0.0,
+    "jaw_model_coverage": 0.989
+   },
+   {
+    "fdi": 45,
+    "mm3": 0.0,
+    "share_of_tooth": 0.0001,
+    "jaw_model_coverage": 0.946
+   }
+  ],
+  "symmetry_violations": [
+   {
+    "mm3": [
+     1045.0,
+     270.0
+    ],
+    "pair": [
+     47,
+     37
+    ],
+    "difference": 1.179
+   }
+  ],
+  "occlusal_contact_mm2": 199.7,
+  "laterality_violations": [],
+  "occlusal_contact_pairs": [
+   {
+    "mm2": 70.9,
+    "lower": 47,
+    "upper": 16
+   },
+   {
+    "mm2": 28.3,
+    "lower": 31,
+    "upper": 11
+   },
+   {
+    "mm2": 25.9,
+    "lower": 35,
+    "upper": 24
+   },
+   {
+    "mm2": 19.9,
+    "lower": 43,
+    "upper": 13
+   },
+   {
+    "mm2": 14.2,
+    "lower": 44,
+    "upper": 14
+   },
+   {
+    "mm2": 12.8,
+    "lower": 36,
+    "upper": 25
+   },
+   {
+    "mm2": 9.1,
+    "lower": 45,
+    "upper": 15
+   },
+   {
+    "mm2": 5.5,
+    "lower": 32,
+    "upper": 21
+   }
+  ]
+ },
+ "contours": {
+  "bytes": 2671050,
+  "files": {
+   "axial": {
+    "file": "contours.axial.json",
+    "bytes": 1311282
+   },
+   "coronal": {
+    "file": "contours.coronal.json",
+    "bytes": 715825
+   },
+   "sagittal": {
+    "file": "contours.sagittal.json",
+    "bytes": 643943
+   }
+  },
+  "points": 192063,
+  "polygons": 8045,
+  "sigma_mm": 0.4,
+  "fallback_iso": 0.35,
+  "tolerance_mm": 0.1,
+  "thin_sigma_mm": 0.25,
+  "fallback_area_mm2": 5.0,
+  "slices_without_contour": {
+   "maxilla": 8,
+   "tooth_11": 5,
+   "tooth_13": 14,
+   "tooth_14": 6,
+   "tooth_15": 16,
+   "tooth_16": 31,
+   "tooth_17": 3,
+   "tooth_22": 3,
+   "tooth_23": 1,
+   "tooth_24": 25,
+   "tooth_25": 17,
+   "tooth_27": 3,
+   "tooth_31": 123,
+   "tooth_32": 13,
+   "tooth_34": 14,
+   "tooth_37": 54,
+   "tooth_38": 7,
+   "tooth_41": 24,
+   "tooth_42": 26,
+   "tooth_43": 33,
+   "tooth_44": 34,
+   "tooth_45": 14,
+   "tooth_47": 18,
+   "tooth_48": 8,
+   "lower_teeth_unnumbered": 1335,
+   "upper_teeth_unnumbered": 3364
+  },
+  "slices_without_contour_count": 138,
+  "slices_recovered_at_lower_iso": {
+   "upper_teeth_unnumbered": 25
+  }
+ },
+ "rtstruct": {
+  "file": "rtstruct/rtstruct.zip",
+  "note": "The upload was not DICOM, so there was no series to reference. The zip contains a CT series generated from the uploaded volume (marked DERIVED/SECONDARY) plus RS.dcm, which references it. Import both.",
+  "rois": {
+   "canal": {
+    "name": "IAN_Canal",
+    "points": 4571,
+    "contours": 382,
+    "roi_number": 3
+   },
+   "maxilla": {
+    "name": "Maxilla",
+    "points": 140578,
+    "contours": 4886,
+    "roi_number": 1
+   },
+   "mandible": {
+    "name": "Mandible",
+    "points": 64526,
+    "contours": 2125,
+    "roi_number": 2
+   },
+   "tooth_11": {
+    "name": "Tooth_11",
+    "points": 1301,
+    "contours": 85,
+    "roi_number": 6
+   },
+   "tooth_12": {
+    "name": "Tooth_12",
+    "points": 1312,
+    "contours": 93,
+    "roi_number": 7
+   },
+   "tooth_13": {
+    "name": "Tooth_13",
+    "points": 1600,
+    "contours": 108,
+    "roi_number": 8
+   },
+   "tooth_14": {
+    "name": "Tooth_14",
+    "points": 1150,
+    "contours": 80,
+    "roi_number": 9
+   },
+   "tooth_15": {
+    "name": "Tooth_15",
+    "points": 1146,
+    "contours": 76,
+    "roi_number": 10
+   },
+   "tooth_16": {
+    "name": "Tooth_16",
+    "points": 2286,
+    "contours": 151,
+    "roi_number": 11
+   },
+   "tooth_17": {
+    "name": "Tooth_17",
+    "points": 1488,
+    "contours": 93,
+    "roi_number": 12
+   },
+   "tooth_21": {
+    "name": "Tooth_21",
+    "points": 1362,
+    "contours": 90,
+    "roi_number": 13
+   },
+   "tooth_22": {
+    "name": "Tooth_22",
+    "points": 1274,
+    "contours": 90,
+    "roi_number": 14
+   },
+   "tooth_23": {
+    "name": "Tooth_23",
+    "points": 1541,
+    "contours": 104,
+    "roi_number": 15
+   },
+   "tooth_24": {
+    "name": "Tooth_24",
+    "points": 1260,
+    "contours": 84,
+    "roi_number": 16
+   },
+   "tooth_25": {
+    "name": "Tooth_25",
+    "points": 1230,
+    "contours": 82,
+    "roi_number": 17
+   },
+   "tooth_26": {
+    "name": "Tooth_26",
+    "points": 1848,
+    "contours": 112,
+    "roi_number": 18
+   },
+   "tooth_27": {
+    "name": "Tooth_27",
+    "points": 1485,
+    "contours": 95,
+    "roi_number": 19
+   },
+   "tooth_31": {
+    "name": "Tooth_31",
+    "points": 929,
+    "contours": 67,
+    "roi_number": 20
+   },
+   "tooth_32": {
+    "name": "Tooth_32",
+    "points": 1050,
+    "contours": 76,
+    "roi_number": 21
+   },
+   "tooth_33": {
+    "name": "Tooth_33",
+    "points": 1384,
+    "contours": 95,
+    "roi_number": 22
+   },
+   "tooth_34": {
+    "name": "Tooth_34",
+    "points": 1077,
+    "contours": 77,
+    "roi_number": 23
+   },
+   "tooth_35": {
+    "name": "Tooth_35",
+    "points": 1065,
+    "contours": 72,
+    "roi_number": 24
+   },
+   "tooth_36": {
+    "name": "Tooth_36",
+    "points": 1717,
+    "contours": 107,
+    "roi_number": 25
+   },
+   "tooth_37": {
+    "name": "Tooth_37",
+    "points": 891,
+    "contours": 59,
+    "roi_number": 26
+   },
+   "tooth_38": {
+    "name": "Tooth_38",
+    "points": 1240,
+    "contours": 67,
+    "roi_number": 27
+   },
+   "tooth_41": {
+    "name": "Tooth_41",
+    "points": 967,
+    "contours": 72,
+    "roi_number": 28
+   },
+   "tooth_42": {
+    "name": "Tooth_42",
+    "points": 1126,
+    "contours": 84,
+    "roi_number": 29
+   },
+   "tooth_43": {
+    "name": "Tooth_43",
+    "points": 1511,
+    "contours": 101,
+    "roi_number": 30
+   },
+   "tooth_44": {
+    "name": "Tooth_44",
+    "points": 1111,
+    "contours": 80,
+    "roi_number": 31
+   },
+   "tooth_45": {
+    "name": "Tooth_45",
+    "points": 1183,
+    "contours": 79,
+    "roi_number": 32
+   },
+   "tooth_47": {
+    "name": "Tooth_47",
+    "points": 1619,
+    "contours": 93,
+    "roi_number": 33
+   },
+   "tooth_48": {
+    "name": "Tooth_48",
+    "points": 1292,
+    "contours": 63,
+    "roi_number": 34
+   },
+   "lower_teeth_unnumbered": {
+    "name": "LowerTeeth_Unk",
+    "points": 1604,
+    "contours": 128,
+    "roi_number": 5
+   },
+   "upper_teeth_unnumbered": {
+    "name": "UpperTeeth_Unk",
+    "points": 1028,
+    "contours": 149,
+    "roi_number": 4
+   }
+  },
+  "bytes": 164638995,
+  "skipped": [],
+  "roi_count": 34,
+  "total_points": 250752,
+  "derived_series": true,
+  "derived_slices": 433
+ },
+ "numbering": {
+  "used": true,
+  "n_parts": 31,
+  "n_split": 0,
+  "seconds": 1.88,
+  "fallback": null,
+  "n_instances": 31,
+  "resequenced": [],
+  "teeth_after": 29,
+  "n_arch_split": 5,
+  "n_background": 1,
+  "teeth_before": 29,
+  "n_resequenced": 0,
+  "orphan_voxels": 23221,
+  "adopted_voxels": 23221,
+  "changed_voxels": 39719,
+  "arch_from_jaw_model": 30,
+  "arch_from_tooth_model": 1
+ },
+ "structures": [
+  {
+   "group": "Jaws",
+   "structures": [
+    {
+     "id": "maxilla",
+     "fdi": null,
+     "name": "Maxilla & upper skull",
+     "color": "#d9c9a3",
+     "index": 1
+    },
+    {
+     "id": "mandible",
+     "fdi": null,
+     "name": "Mandible",
+     "color": "#c2a878",
+     "index": 2
+    }
+   ]
+  },
+  {
+   "group": "Nerve canal",
+   "structures": [
+    {
+     "id": "canal",
+     "fdi": null,
+     "name": "Mandibular canal",
+     "color": "#ff3b30",
+     "index": 3
+    }
+   ]
+  },
+  {
+   "group": "Upper teeth",
+   "structures": [
+    {
+     "id": "upper_teeth_unnumbered",
+     "fdi": null,
+     "name": "Upper teeth (unnumbered)",
+     "color": "#9aa3ad",
+     "index": 4
+    },
+    {
+     "id": "tooth_11",
+     "fdi": 11,
+     "name": "Upper right central incisor (11)",
+     "color": "#186ebf",
+     "index": 6
+    },
+    {
+     "id": "tooth_12",
+     "fdi": 12,
+     "name": "Upper right lateral incisor (12)",
+     "color": "#1f7acd",
+     "index": 7
+    },
+    {
+     "id": "tooth_13",
+     "fdi": 13,
+     "name": "Upper right canine (13)",
+     "color": "#2984d9",
+     "index": 8
+    },
+    {
+     "id": "tooth_14",
+     "fdi": 14,
+     "name": "Upper right first premolar (14)",
+     "color": "#408fd8",
+     "index": 9
+    },
+    {
+     "id": "tooth_15",
+     "fdi": 15,
+     "name": "Upper right second premolar (15)",
+     "color": "#5699d7",
+     "index": 10
+    },
+    {
+     "id": "tooth_16",
+     "fdi": 16,
+     "name": "Upper right first molar (16)",
+     "color": "#6ca4d8",
+     "index": 11
+    },
+    {
+     "id": "tooth_17",
+     "fdi": 17,
+     "name": "Upper right second molar (17)",
+     "color": "#80aed9",
+     "index": 12
+    },
+    {
+     "id": "tooth_18",
+     "fdi": 18,
+     "name": "Upper right third molar (18)",
+     "color": "#94b9db",
+     "index": 13
+    },
+    {
+     "id": "tooth_21",
+     "fdi": 21,
+     "name": "Upper left central incisor (21)",
+     "color": "#18bf8d",
+     "index": 14
+    },
+    {
+     "id": "tooth_22",
+     "fdi": 22,
+     "name": "Upper left lateral incisor (22)",
+     "color": "#1fcd99",
+     "index": 15
+    },
+    {
+     "id": "tooth_23",
+     "fdi": 23,
+     "name": "Upper left canine (23)",
+     "color": "#29d9a4",
+     "index": 16
+    },
+    {
+     "id": "tooth_24",
+     "fdi": 24,
+     "name": "Upper left first premolar (24)",
+     "color": "#40d8aa",
+     "index": 17
+    },
+    {
+     "id": "tooth_25",
+     "fdi": 25,
+     "name": "Upper left second premolar (25)",
+     "color": "#56d7b1",
+     "index": 18
+    },
+    {
+     "id": "tooth_26",
+     "fdi": 26,
+     "name": "Upper left first molar (26)",
+     "color": "#6cd8b7",
+     "index": 19
+    },
+    {
+     "id": "tooth_27",
+     "fdi": 27,
+     "name": "Upper left second molar (27)",
+     "color": "#80d9be",
+     "index": 20
+    },
+    {
+     "id": "tooth_28",
+     "fdi": 28,
+     "name": "Upper left third molar (28)",
+     "color": "#94dbc6",
+     "index": 21
+    }
+   ]
+  },
+  {
+   "group": "Lower teeth",
+   "structures": [
+    {
+     "id": "lower_teeth_unnumbered",
+     "fdi": null,
+     "name": "Lower teeth (unnumbered)",
+     "color": "#8b96a6",
+     "index": 5
+    },
+    {
+     "id": "tooth_31",
+     "fdi": 31,
+     "name": "Lower left central incisor (31)",
+     "color": "#bf8618",
+     "index": 22
+    },
+    {
+     "id": "tooth_32",
+     "fdi": 32,
+     "name": "Lower left lateral incisor (32)",
+     "color": "#cd921f",
+     "index": 23
+    },
+    {
+     "id": "tooth_33",
+     "fdi": 33,
+     "name": "Lower left canine (33)",
+     "color": "#d99d29",
+     "index": 24
+    },
+    {
+     "id": "tooth_34",
+     "fdi": 34,
+     "name": "Lower left first premolar (34)",
+     "color": "#d8a440",
+     "index": 25
+    },
+    {
+     "id": "tooth_35",
+     "fdi": 35,
+     "name": "Lower left second premolar (35)",
+     "color": "#d7ab56",
+     "index": 26
+    },
+    {
+     "id": "tooth_36",
+     "fdi": 36,
+     "name": "Lower left first molar (36)",
+     "color": "#d8b36c",
+     "index": 27
+    },
+    {
+     "id": "tooth_37",
+     "fdi": 37,
+     "name": "Lower left second molar (37)",
+     "color": "#d9bb80",
+     "index": 28
+    },
+    {
+     "id": "tooth_38",
+     "fdi": 38,
+     "name": "Lower left third molar (38)",
+     "color": "#dbc394",
+     "index": 29
+    },
+    {
+     "id": "tooth_41",
+     "fdi": 41,
+     "name": "Lower right central incisor (41)",
+     "color": "#bf185e",
+     "index": 30
+    },
+    {
+     "id": "tooth_42",
+     "fdi": 42,
+     "name": "Lower right lateral incisor (42)",
+     "color": "#cd1f68",
+     "index": 31
+    },
+    {
+     "id": "tooth_43",
+     "fdi": 43,
+     "name": "Lower right canine (43)",
+     "color": "#d92973",
+     "index": 32
+    },
+    {
+     "id": "tooth_44",
+     "fdi": 44,
+     "name": "Lower right first premolar (44)",
+     "color": "#d84080",
+     "index": 33
+    },
+    {
+     "id": "tooth_45",
+     "fdi": 45,
+     "name": "Lower right second premolar (45)",
+     "color": "#d7568c",
+     "index": 34
+    },
+    {
+     "id": "tooth_46",
+     "fdi": 46,
+     "name": "Lower right first molar (46)",
+     "color": "#d86c99",
+     "index": 35
+    },
+    {
+     "id": "tooth_47",
+     "fdi": 47,
+     "name": "Lower right second molar (47)",
+     "color": "#d980a6",
+     "index": 36
+    },
+    {
+     "id": "tooth_48",
+     "fdi": 48,
+     "name": "Lower right third molar (48)",
+     "color": "#db94b2",
+     "index": 37
+    }
+   ]
+  }
+ ],
+ "orientation": {
+  "original": "LPS",
+  "ambiguous": false,
+  "canonical": "RPI",
+  "reoriented": true,
+  "unverified": false,
+  "tilt_degrees": 8.04,
+  "direction_cosines": [
+   0.9941,
+   0.9902,
+   0.9932
+  ]
+ }
+}

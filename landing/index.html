@@ -1,0 +1,603 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentistry CBCT — every tooth numbered, the canal found</title>
+<meta name="description" content="Upload a dental CBCT and get both jaws, the mandibular canal and every tooth in FDI notation — as RTSTRUCT, STL, NIfTI and a browser viewer. One model on one GPU, and every quality check in the report.">
+<link rel="canonical" href="https://dentistry.dicomsegvr.com/">
+<meta name="theme-color" content="#0a0e13">
+
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<meta property="og:type" content="website">
+<meta property="og:site_name" content="Dentistry CBCT">
+<meta property="og:title" content="Dentistry CBCT — every tooth numbered, the canal found">
+<meta property="og:description" content="47 structures from one cone-beam CT: both jaws, the mandibular canal and every tooth in FDI notation. RTSTRUCT, STL and NIfTI out.">
+<meta property="og:url" content="https://dentistry.dicomsegvr.com/">
+<meta property="og:image" content="https://dentistry.dicomsegvr.com/assets/og-image.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:image:alt" content="A segmented dental CBCT: translucent jaws with every tooth in its own colour and the mandibular canal in red.">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Dentistry CBCT — every tooth numbered, the canal found">
+<meta name="twitter:description" content="47 structures from one cone-beam CT, with every quality check in the report whether it passes or not.">
+<meta name="twitter:image" content="https://dentistry.dicomsegvr.com/assets/og-image.png">
+
+<link rel="preload" href="/assets/fonts/Archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="preload" href="/assets/fonts/Geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/styles.css">
+
+<!-- Real-time WebGL dental hero (assets/hero3d.js). Three.js r169 is vendored
+     locally (no runtime CDN, offline-safe) and resolved via this import map. -->
+<link rel="modulepreload" href="/assets/vendor/three/three.module.js">
+<script type="importmap">
+{
+  "imports": {
+    "three": "/assets/vendor/three/three.module.js",
+    "three/addons/": "/assets/vendor/three/jsm/"
+  }
+}
+</script>
+<noscript><style>
+  .filmstage__bg { position: relative !important; height: 54svh !important; }
+  .filmstage__canvas { display: none !important; }
+  .filmstage__poster { opacity: 1 !important; }
+  .filmstage__content { margin-top: 0 !important; }
+  .filmstage__content .hero { min-height: auto !important; padding-top: 3rem; }
+  .hero__cue { display: none !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+</style></noscript>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Dentistry CBCT",
+  "applicationCategory": "MedicalApplication",
+  "operatingSystem": "Web",
+  "url": "https://dentistry.dicomsegvr.com/",
+  "description": "Automatic segmentation of dental cone-beam CT: 47 structures including both jaws, the mandibular canal and every tooth in FDI notation, exported as RTSTRUCT, STL and NIfTI.",
+  "publisher": { "@type": "Organization", "name": "DicomSegVR", "address": { "@type": "PostalAddress", "addressCountry": "BR" } },
+  "offers": [
+    { "@type": "Offer", "name": "Explorer",   "price": "12.99",  "priceCurrency": "USD", "category": "subscription" },
+    { "@type": "Offer", "name": "Pro",        "price": "49.99",  "priceCurrency": "USD", "category": "subscription" },
+    { "@type": "Offer", "name": "Enterprise", "price": "199.99", "priceCurrency": "USD", "category": "subscription" }
+  ]
+}
+</script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+
+<header class="nav" id="top">
+  <div class="nav__inner">
+    <a class="brand" href="#top">
+      <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/>
+        </linearGradient></defs>
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bm)"/>
+        <path d="M16 8.2c-2.6 0-3.3 1.1-5 1.1-1.9 0-3.1 1.5-3.1 3.9 0 3.1 1.1 5.4 1.9 7.6.7 1.9 1.2 3.4 2.4 3.4 1.3 0 1.5-1.9 1.7-3.6.2-1.5.5-2.6 2.1-2.6s1.9 1.1 2.1 2.6c.2 1.7.4 3.6 1.7 3.6 1.2 0 1.7-1.5 2.4-3.4.8-2.2 1.9-4.5 1.9-7.6 0-2.4-1.2-3.9-3.1-3.9-1.7 0-2.4-1.1-5-1.1z" fill="#0a0e13" fill-opacity=".82"/>
+      </svg>
+      Dentistry<span class="brand__sub">CBCT</span>
+    </a>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Open menu">
+      <span></span><span></span><span></span>
+    </button>
+    <nav class="nav__menu" id="navMenu">
+      <a href="#outputs">What you get</a>
+      <a href="#arch">The arch</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#faq">FAQ</a>
+      <div class="nav__actions">
+        <a class="btn btn--ghost" href="/app">Sign in</a>
+        <a class="btn btn--primary" href="/app">Start free trial</a>
+      </div>
+    </nav>
+  </div>
+</header>
+<div class="nav__scrim" id="navScrim" hidden></div>
+
+<main id="main">
+<div class="filmstage" data-filmstage>
+  <div class="filmstage__bg" aria-hidden="true">
+    <canvas class="filmstage__canvas" id="heroCanvas"></canvas>
+    <img class="filmstage__poster" src="/assets/hero-poster.png" alt="" loading="eager" decoding="async">
+    <div class="filmstage__scrim"></div>
+  </div>
+
+  <div class="filmstage__content">
+    <section class="hero">
+      <div class="hero__inner panel">
+        <p class="eyebrow">Dental CBCT segmentation</p>
+        <h1 class="display">Every tooth gets <span class="lit">one number</span></h1>
+        <p class="hero__sub">Upload a cone-beam CT. Get both jaws, the mandibular canal and
+          all 32 tooth positions in FDI notation — as an RTSTRUCT your planning software
+          already reads, printable STLs, and a labelled NIfTI on your own grid.</p>
+        <p class="hero__beat">
+          <b>Upload</b><span class="beat-sep">/</span><b>Segment</b><span class="beat-sep">/</span><b>Export</b>
+        </p>
+        <div class="hero__cta">
+          <div>
+            <a class="btn btn--primary btn--lg" href="/app">Start free trial</a>
+            <p class="hero__note">30 scans · 14 days · no card</p>
+          </div>
+          <a class="btn btn--ghost btn--lg" href="#outputs">See what comes back</a>
+        </div>
+        <p class="hero__disclaimer">Research preview. Not a medical device, and not for
+          diagnostic use. Every finding is reported, never silently repaired.</p>
+      </div>
+      <div class="hero__cue" aria-hidden="true"><span>Scroll</span><span>↓</span></div>
+    </section>
+
+    <section class="cred reveal">
+      <ul class="cred__row container">
+        <li><span class="cred__dot" style="background:#d9c9a3"></span><b>47</b> structures</li>
+        <li><span class="cred__dot" style="background:#ff3b30"></span>the <b>mandibular canal</b>, never merged into a jaw</li>
+        <li><span class="cred__dot" style="background:#8b5cf6"></span><b>one</b> model, every check reported</li>
+        <li><span class="cred__dot" style="background:#4fc0a5"></span><b>54–93 s</b> on one GPU</li>
+      </ul>
+    </section>
+
+    <section class="band band--tick" id="outputs">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">What comes back</p>
+          <h2 class="display">Four files, not a screenshot</h2>
+          <p class="section-sub">A segmentation you cannot load into the software you already
+            use is a demo. Everything here is written in the coordinate frame you uploaded.</p>
+        </div>
+        <div class="panel reveal" style="padding:1.6rem clamp(1.2rem,3vw,2rem)">
+          <ul class="outputs">
+            <li>
+              <span class="o__name">RTSTRUCT</span>
+              <p class="o__desc">An RT Structure Set with one ROI per structure. ROI names are
+                capped at <b>16 characters</b> so they load in Varian Eclipse, and checked for
+                collisions at that length. Round-tripped through an independent reader:
+                34 ROIs, <b>median Dice 0.9920</b>. Upload NIfTI instead of DICOM and a
+                <b>DERIVED\SECONDARY</b> CT series ships in the same zip — an RTSTRUCT that
+                references nothing will not load in any planning system.</p>
+            </li>
+            <li>
+              <span class="o__name">STL</span>
+              <p class="o__desc">One mesh per structure, in patient LPS millimetres, Taubin
+                smoothed and quadric decimated. Iso-surfaced from a smoothed field rather
+                than a smoothed label map, so no thin cortical wall is ever pinched apart.</p>
+            </li>
+            <li>
+              <span class="o__name">NIfTI</span>
+              <p class="o__desc">The multi-label map, on <b>the grid you uploaded</b> — not the
+                canonical frame the network ran in. Re-export the same scan as LPS, RPI, RAS or
+                PIR and the labels come back <b>100.000000%</b> identical.</p>
+            </li>
+            <li>
+              <span class="o__name">Viewer</span>
+              <p class="o__desc">Three synced planes plus a 3D pane in the browser, with a
+                clickable FDI chart: pick a tooth and every view jumps to its centroid.
+                Centroids are computed in-browser and agree with SimpleITK to
+                <b>0.0000 mm</b>.</p>
+            </li>
+          </ul>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="canal">
+      <div class="container">
+        <div class="grid grid--2">
+          <div class="section-head reveal" style="margin-bottom:0">
+            <p class="eyebrow">The high-stakes one</p>
+            <h2 class="display">The canal gets its own colour</h2>
+            <p class="section-sub">The inferior alveolar nerve is the structure you plan an
+              implant around. It is never merged into the mandible, and it is the one thing
+              on screen in red. Two models draw the nerves between them: the base model
+              draws the inferior alveolar canal itself, and a second, purpose-trained model
+              owns the three accessory canals &mdash; the two incisive canals and the
+              lingual canal &mdash; taking the main canal only as context.</p>
+          </div>
+          <div class="grid reveal">
+            <article class="card">
+              <span class="card__kicker">Measured, without labels</span>
+              <h3>0.11 mm from the image edge</h3>
+              <p>The exported surface sits 0.11 mm inside where the image intensity crosses
+                half-way — 23% of one voxel, below the scan's own point-spread function,
+                over 25,487 sampled points. That is a precision number that needs no
+                ground truth.</p>
+            </article>
+            <article class="card">
+              <span class="card__kicker">Thin things fragment</span>
+              <h3>Reported, never repaired</h3>
+              <p>A canal legitimately comes out in two pieces, so small-island removal is
+                switched off for it alone. Nothing is cleaned up behind your back:
+                the component count is in the report.</p>
+            </article>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band band--tick" id="how">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">How it works</p>
+          <h2 class="display">One model, and everything it will not tell you</h2>
+          <p class="section-sub">A single network labels all 47 structures, including a class
+            per tooth. What it cannot do is mark its own mistakes, so the checks are separate
+            and they are all in the report.</p>
+        </div>
+        <ol class="flow">
+          <li class="reveal"><div class="flow__card">
+            <span class="flow__index">Step 01</span>
+            <h3>Into one known frame</h3>
+            <p>Teeth are numbered by <em>position</em>, so a scan in the wrong frame gets
+              every tooth mirrored. Every upload is canonicalised before a voxel is read,
+              including scans with a real patient tilt.</p>
+          </div></li>
+          <li class="reveal"><div class="flow__card">
+            <span class="flow__index">Step 02</span>
+            <h3>All 47 structures at once</h3>
+            <p>Both jaws, the mandibular canal, the maxillary sinuses, the pharynx, the
+              accessory canals, dental work, and a separate class for every FDI position —
+              from a single network, in about 20 s on one GPU.</p>
+          </div></li>
+          <li class="reveal"><div class="flow__card">
+            <span class="flow__index">Step 03</span>
+            <h3>Fragments removed, per class</h3>
+            <p>A speck of enamel is not a tooth. Each class is filtered against the smallest
+              that structure has ever legitimately been — except the canals, which are thin
+              tubes that come out in pieces and would be deleted by their own filter.</p>
+          </div></li>
+          <li class="reveal"><div class="flow__card">
+            <span class="flow__index">Check</span>
+            <h3>Checked against anatomy, not against itself</h3>
+            <p>Per-tooth component counts, contralateral volume symmetry, occlusal contact,
+              four laterality checks and an upper/lower check — all in the report, whether
+              they pass or not.</p>
+          </div></li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="climax" aria-hidden="true" style="min-height:78svh"></section>
+  </div>
+</div>
+
+<section class="arch" id="arch">
+  <div class="container">
+    <div class="section-head reveal" style="text-align:center">
+      <p class="eyebrow" style="justify-content:center">FDI notation</p>
+      <h2 class="display">Thirty-two positions. Twenty-nine found.</h2>
+      <p class="section-sub" style="margin-inline:auto">This is a real result on a real scan —
+        the same case the model above is built from. Hover a tooth for what the pipeline
+        actually reported. The dashed outlines are positions it found nothing at.</p>
+    </div>
+
+    <div class="arch__chart reveal" id="archChart" role="group" aria-label="FDI dental chart">
+      <!-- ARCH:BEGIN -->
+          <div class="arch__row arch__row--upper">
+            <div class="arch__quad" aria-label="Upper right quadrant, FDI 1x">
+              <button type="button" class="tooth tooth--absent" data-fdi="18" data-vol="" data-comp="" aria-label="18, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">18</span></button>
+              <button type="button" class="tooth" style="--c:#80aed9" data-fdi="17" data-vol="0.74" data-comp="1" aria-label="17, upper right second molar, 0.74 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">17</span></button>
+              <button type="button" class="tooth" style="--c:#6ca4d8" data-fdi="16" data-vol="0.94" data-comp="1" aria-label="16, upper right first molar, 0.94 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">16</span></button>
+              <button type="button" class="tooth" style="--c:#5699d7" data-fdi="15" data-vol="0.47" data-comp="1" aria-label="15, upper right second premolar, 0.47 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">15</span></button>
+              <button type="button" class="tooth" style="--c:#408fd8" data-fdi="14" data-vol="0.45" data-comp="1" aria-label="14, upper right first premolar, 0.45 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">14</span></button>
+              <button type="button" class="tooth" style="--c:#2984d9" data-fdi="13" data-vol="0.65" data-comp="1" aria-label="13, upper right canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">13</span></button>
+              <button type="button" class="tooth" style="--c:#1f7acd" data-fdi="12" data-vol="0.39" data-comp="1" aria-label="12, upper right lateral incisor, 0.39 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">12</span></button>
+              <button type="button" class="tooth" style="--c:#186ebf" data-fdi="11" data-vol="0.54" data-comp="1" aria-label="11, upper right central incisor, 0.54 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">11</span></button>
+            </div>
+            <span class="arch__mid" aria-hidden="true"></span>
+            <div class="arch__quad" aria-label="Upper left quadrant, FDI 2x">
+              <button type="button" class="tooth" style="--c:#18bf8d" data-fdi="21" data-vol="0.58" data-comp="1" aria-label="21, upper left central incisor, 0.58 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">21</span></button>
+              <button type="button" class="tooth" style="--c:#1fcd99" data-fdi="22" data-vol="0.41" data-comp="1" aria-label="22, upper left lateral incisor, 0.41 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">22</span></button>
+              <button type="button" class="tooth" style="--c:#29d9a4" data-fdi="23" data-vol="0.65" data-comp="1" aria-label="23, upper left canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">23</span></button>
+              <button type="button" class="tooth" style="--c:#40d8aa" data-fdi="24" data-vol="0.48" data-comp="1" aria-label="24, upper left first premolar, 0.48 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">24</span></button>
+              <button type="button" class="tooth" style="--c:#56d7b1" data-fdi="25" data-vol="0.51" data-comp="1" aria-label="25, upper left second premolar, 0.51 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">25</span></button>
+              <button type="button" class="tooth" style="--c:#6cd8b7" data-fdi="26" data-vol="0.86" data-comp="1" aria-label="26, upper left first molar, 0.86 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">26</span></button>
+              <button type="button" class="tooth" style="--c:#80d9be" data-fdi="27" data-vol="0.74" data-comp="1" aria-label="27, upper left second molar, 0.74 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">27</span></button>
+              <button type="button" class="tooth tooth--absent" data-fdi="28" data-vol="" data-comp="" aria-label="28, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">28</span></button>
+            </div>
+          </div>
+          <div class="arch__row arch__row--lower">
+            <div class="arch__quad" aria-label="Lower right quadrant, FDI 4x">
+              <button type="button" class="tooth" style="--c:#db94b2" data-fdi="48" data-vol="0.90" data-comp="1" aria-label="48, lower right third molar, 0.90 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">48</span></button>
+              <button type="button" class="tooth" style="--c:#d980a6" data-fdi="47" data-vol="1.04" data-comp="1" aria-label="47, lower right second molar, 1.04 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">47</span></button>
+              <button type="button" class="tooth tooth--absent" data-fdi="46" data-vol="" data-comp="" aria-label="46, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">46</span></button>
+              <button type="button" class="tooth" style="--c:#d7568c" data-fdi="45" data-vol="0.44" data-comp="1" aria-label="45, lower right second premolar, 0.44 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">45</span></button>
+              <button type="button" class="tooth" style="--c:#d84080" data-fdi="44" data-vol="0.38" data-comp="1" aria-label="44, lower right first premolar, 0.38 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">44</span></button>
+              <button type="button" class="tooth" style="--c:#d92973" data-fdi="43" data-vol="0.65" data-comp="1" aria-label="43, lower right canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">43</span></button>
+              <button type="button" class="tooth" style="--c:#cd1f68" data-fdi="42" data-vol="0.32" data-comp="1" aria-label="42, lower right lateral incisor, 0.32 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">42</span></button>
+              <button type="button" class="tooth" style="--c:#bf185e" data-fdi="41" data-vol="0.28" data-comp="1" aria-label="41, lower right central incisor, 0.28 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">41</span></button>
+            </div>
+            <span class="arch__mid" aria-hidden="true"></span>
+            <div class="arch__quad" aria-label="Lower left quadrant, FDI 3x">
+              <button type="button" class="tooth" style="--c:#bf8618" data-fdi="31" data-vol="0.28" data-comp="1" aria-label="31, lower left central incisor, 0.28 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">31</span></button>
+              <button type="button" class="tooth" style="--c:#cd921f" data-fdi="32" data-vol="0.31" data-comp="1" aria-label="32, lower left lateral incisor, 0.31 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">32</span></button>
+              <button type="button" class="tooth" style="--c:#d99d29" data-fdi="33" data-vol="0.62" data-comp="1" aria-label="33, lower left canine, 0.62 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">33</span></button>
+              <button type="button" class="tooth" style="--c:#d8a440" data-fdi="34" data-vol="0.37" data-comp="1" aria-label="34, lower left first premolar, 0.37 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">34</span></button>
+              <button type="button" class="tooth" style="--c:#d7ab56" data-fdi="35" data-vol="0.44" data-comp="1" aria-label="35, lower left second premolar, 0.44 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">35</span></button>
+              <button type="button" class="tooth" style="--c:#d8b36c" data-fdi="36" data-vol="1.01" data-comp="1" aria-label="36, lower left first molar, 1.01 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">36</span></button>
+              <button type="button" class="tooth" style="--c:#d9bb80" data-fdi="37" data-vol="0.27" data-comp="1" aria-label="37, lower left second molar, 0.27 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">37</span></button>
+              <button type="button" class="tooth" style="--c:#dbc394" data-fdi="38" data-vol="0.87" data-comp="1" aria-label="38, lower left third molar, 0.87 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">38</span></button>
+            </div>
+          </div>
+      <!-- ARCH:END -->
+    </div>
+
+    <p class="arch__legend reveal">
+      <span><i style="background:#6ca4d8"></i>Q1 upper right</span>
+      <span><i style="background:#4fc0a5"></i>Q2 upper left</span>
+      <span><i style="background:#d9a13f"></i>Q3 lower left</span>
+      <span><i style="background:#e0568f"></i>Q4 lower right</span>
+    </p>
+
+    <p class="arch__readout reveal" id="archReadout" aria-live="polite">
+      Hover a tooth to see what the segmentation found.
+    </p>
+
+    <p class="arch__foot reveal">Colour runs by quadrant and lightens from the midline
+      backwards, so a mis-numbered tooth reads as a break in the ramp rather than merely
+      a different colour. The third molars are absent because this patient does not have
+      them — the chart says so instead of guessing.</p>
+  </div>
+</section>
+
+<section class="band limits" id="limits">
+  <div class="container--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">Before you trust it</p>
+      <h2 class="display">What we do not claim</h2>
+    </div>
+    <div class="limits__panel reveal">
+      <ul class="limits__list">
+        <li><b>None of these numbers are accuracy.</b> The example cases are public sample
+          data with no ground truth. "29 of 32 teeth" is how many labels the model
+          <em>produced</em>, not how many it got right.</li>
+        <li><b>The checks are consistency, not correctness.</b> Symmetry, laterality and
+          component counts catch gross failure and say nothing about whether tooth 26 is
+          really tooth 26. There is no ground truth on a patient scan, so nothing here is
+          an accuracy figure.</li>
+        <li><b>The same scan twice is not bit-identical.</b> Three runs of one file differ by
+          <b>108–185 voxels out of 42.8 million</b> — ordinary GPU non-determinism, almost
+          all of it single voxels on a soft-tissue boundary. No numbered tooth differs by
+          more than one voxel, but do not quote these figures to four significant digits.</li>
+        <li><b>CBCT grey values are not calibrated Hounsfield units.</b> Anything that looks
+          like a density measurement is not one.</li>
+        <li><b>Nothing is repaired.</b> Quality findings — extra components, a tooth sitting
+          in the wrong arch, asymmetric contralateral volumes — are reported. The exported
+          label map is exactly what the models produced.</li>
+        <li><b>Research preview. Not a medical device, not for diagnostic use.</b> A
+          clinician reads every result.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="band band--tick band--elev" id="pricing">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Plans</p>
+      <h2 class="display">Priced by the scan</h2>
+      <p class="section-sub">One segmentation job is one scan through the full pipeline, with
+        every export. Unused jobs do not roll over.</p>
+    </div>
+
+    <div class="grid grid--3 plans">
+      <article class="plan reveal">
+        <span class="plan__trial">14-day free trial</span>
+        <h3 class="plan__name">Explorer</h3>
+        <p class="plan__tagline">For a single clinician, a researcher, or anyone deciding
+          whether this belongs in their workflow.</p>
+        <p class="plan__price"><span class="plan__amount" data-count="12.99" data-prefix="$" data-decimals="2">$12.99</span><span class="plan__period">per month</span></p>
+        <p class="plan__jobs">30 segmentations / month</p>
+        <ul class="plan__features">
+          <li>All 47 structures, every export format</li>
+          <li>RTSTRUCT, STL, NIfTI and the browser viewer</li>
+          <li>Results kept 72 hours, then purged</li>
+          <li>Uploads deleted the moment a job finishes</li>
+        </ul>
+        <a class="btn btn--ghost btn--block" href="/app">Start free trial</a>
+        <p class="plan__cta-note">No card required · Cancel anytime</p>
+      </article>
+
+      <article class="plan plan--featured reveal">
+        <span class="plan__pill">Most popular</span>
+        <h3 class="plan__name">Pro</h3>
+        <p class="plan__tagline">For a practice running implant or orthognathic planning as
+          routine work rather than the occasional case.</p>
+        <p class="plan__price"><span class="plan__amount" data-count="49.99" data-prefix="$" data-decimals="2">$49.99</span><span class="plan__period">per month</span></p>
+        <p class="plan__jobs">60 segmentations / month</p>
+        <ul class="plan__features">
+          <li>Everything in Explorer</li>
+          <li>Twice the monthly volume</li>
+          <li>Priority in the GPU queue</li>
+          <li>Full measurement report per case</li>
+        </ul>
+        <a class="btn btn--primary btn--block" href="/app?plan=clinician">Choose Pro</a>
+        <p class="plan__cta-note">Starts your 14-day trial first</p>
+      </article>
+
+      <article class="plan reveal">
+        <h3 class="plan__name">Enterprise</h3>
+        <p class="plan__tagline">For a clinic group or a lab where several people send scans
+          from the same account.</p>
+        <p class="plan__price"><span class="plan__amount" data-count="199.99" data-prefix="$" data-decimals="2">$199.99</span><span class="plan__period">per month</span></p>
+        <p class="plan__jobs">120 segmentations / month</p>
+        <ul class="plan__features">
+          <li>Everything in Pro</li>
+          <li>Four times the monthly volume</li>
+          <li>Shared case list across your account</li>
+          <li>Direct line for support</li>
+        </ul>
+        <a class="btn btn--ghost btn--block" href="/app?plan=enterprise">Choose Enterprise</a>
+        <p class="plan__cta-note">Talk to us about higher volumes</p>
+      </article>
+    </div>
+
+    <p class="pricing__secure">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+        <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
+      </svg>
+      Secure checkout powered by Stripe · PCI-DSS Level 1
+    </p>
+    <p class="pricing__note">Your trial is 30 segmentations over 14 days, whichever runs out
+      first, and it needs no card. Uploads are deleted as soon as a job completes; results
+      expire after 72 hours. Subscriptions are billed monthly and cancel from your account
+      page at any time.</p>
+  </div>
+</section>
+
+<section class="band" id="faq">
+  <div class="container--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">Reference</p>
+      <h2 class="display">Questions worth asking</h2>
+    </div>
+    <div class="faq">
+      <details class="faq__item reveal">
+        <summary>What can I upload?</summary>
+        <p>A DICOM series as a <b>.zip</b>, or a single-file volume: <b>.nii</b> / <b>.nii.gz</b>.
+          Upload DICOM if you can — the RTSTRUCT then references your own series, which is
+          what makes it drop straight into a planning system.</p>
+        <p>There is a hard <b>100 MB</b> ceiling per upload at our edge, which a 0.25 mm
+          full-head CBCT can exceed. Chunked upload for larger scans is not built yet, and
+          the app tells you before it wastes your time rather than after.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>Whose models are these?</summary>
+        <p>Ours, finetuned from someone else&rsquo;s. The architecture is
+          <b>U-Mamba2</b> (Wu et al., MICCAI 2025), which won both ToothFairy3 tasks; we
+          finetuned it on the <b>ToothFairy3</b> challenge dataset — 512 annotated CBCT
+          volumes from the University of Modena and Reggio Emilia — and that checkpoint is
+          what runs here. The service used to run two published models instead; it does not
+          any more.</p>
+        <p>Because the training data is <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener"><b>CC BY-NC-SA 4.0</b></a>,
+          so is the model: attribution, share-alike, and <b>non-commercial use only</b>.
+          This is a research preview and is licensed as one.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>Does the orientation of my scan matter?</summary>
+        <p>No, and this is worth being specific about because it is the failure everyone
+          hits. The model numbers teeth by <em>position</em>, so a scan in the wrong frame
+          gets every tooth mirrored — 11 becomes 21, left becomes right. Every upload is
+          canonicalised first, including scans with a real patient tilt. Re-export the same
+          scan as LPS, RPI, RAS or PIR and the labels come back <b>100.000000%</b> identical
+          over 4.8 million voxels.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>How long does a scan take?</summary>
+        <p><b>54 to 93 seconds</b> of GPU time on the seeded example cases, plus roughly a
+          minute of CPU for the merge, the quality checks, the meshes and the viewer tiles.
+          There is one GPU, so a job may queue behind another; the app shows you where you
+          are.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>What happens to my data?</summary>
+        <p>The upload is deleted the moment a job reaches <em>done</em> — it is never read
+          again. Results expire <b>72 hours</b> after completion and the endpoint then answers
+          <b>410 Gone</b> rather than a 404 that would read like a bug. Each account's cases
+          are stored under their own prefix and no account can see another's.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>Can I trust it for planning?</summary>
+        <p>Treat it as a first pass that a clinician checks, which is what the
+          <a href="#limits">limits</a> section is for. It is a research preview, not a
+          medical device, and it is not for diagnostic use. The useful question is not
+          whether it is perfect but whether checking its canal is faster than tracing one —
+          and the report tells you where it is unsure.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>What counts as one segmentation?</summary>
+        <p>One scan through the full pipeline, with every export produced. Re-running the same
+          scan counts again. A job that fails does not count, and a job you cancel before it
+          reaches the GPU does not count either.</p>
+      </details>
+    </div>
+  </div>
+</section>
+
+<section class="final-cta">
+  <div class="container--narrow">
+    <div class="final-cta__panel reveal">
+      <h2 class="display">Send one scan through it</h2>
+      <p class="final-cta__sub">Thirty segmentations and fourteen days, no card. If the canal
+        it finds is not worth checking, you have lost an upload.</p>
+      <a class="btn btn--primary btn--lg" href="/app">Start free trial</a>
+      <p class="final-cta__contact">Questions, or a volume that does not fit these plans?
+        <a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a></p>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="footer__grid">
+      <div>
+        <a class="brand" href="#top" style="margin-right:0">
+          <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+            <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bm)"/>
+            <path d="M16 8.2c-2.6 0-3.3 1.1-5 1.1-1.9 0-3.1 1.5-3.1 3.9 0 3.1 1.1 5.4 1.9 7.6.7 1.9 1.2 3.4 2.4 3.4 1.3 0 1.5-1.9 1.7-3.6.2-1.5.5-2.6 2.1-2.6s1.9 1.1 2.1 2.6c.2 1.7.4 3.6 1.7 3.6 1.2 0 1.7-1.5 2.4-3.4.8-2.2 1.9-4.5 1.9-7.6 0-2.4-1.2-3.9-3.1-3.9-1.7 0-2.4-1.1-5-1.1z" fill="#0a0e13" fill-opacity=".82"/>
+          </svg>
+          Dentistry<span class="brand__sub">CBCT</span>
+        </a>
+        <p class="footer__tagline">Automatic segmentation of dental cone-beam CT. Part of
+          DicomSegVR.</p>
+        <p class="footer__copy">© 2026 DicomSegVR</p>
+      </div>
+      <div>
+        <h4>Product</h4>
+        <ul>
+          <li><a href="#outputs">What you get</a></li>
+          <li><a href="#arch">The FDI arch</a></li>
+          <li><a href="#pricing">Pricing</a></li>
+          <li><a href="/app">Open the app</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Honesty</h4>
+        <ul>
+          <li><a href="#limits">What we do not claim</a></li>
+          <li><a href="#faq">FAQ</a></li>
+          <li><a href="/privacy.html">Privacy</a></li>
+          <li><a href="/terms.html">Terms</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4>Contact</h4>
+        <ul>
+          <li><a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a></li>
+          <li><a href="https://dicomsegvr.com">dicomsegvr.com</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="footer__credits">
+      Segmentation uses a <strong>U-Mamba2</strong> checkpoint we finetuned on the
+      <strong>ToothFairy3</strong> dataset, and therefore inherits that dataset&rsquo;s
+      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener">CC BY-NC-SA 4.0</a>
+      licence — non-commercial, share-alike.
+      ToothFairy3 — Bolelli F, et al., University of Modena and Reggio Emilia
+      (<a href="https://ditto.ing.unimore.it/toothfairy3" rel="noopener">ditto.ing.unimore.it/toothfairy3</a>).
+      U-Mamba2 — Wu J, et al., MICCAI 2025 (<a href="https://arxiv.org/abs/2509.12069" rel="noopener">arXiv:2509.12069</a>).
+      Built on nnU-Net — Isensee F, et al., <em>Nature Methods</em> 2021.
+      Example cases are 3D Slicer public sample data.
+      Cases segmented before 2026-08-25 came from two CC BY 4.0 checkpoints we no longer
+      run, and their downloads still derive from them: <strong>DentalSegmentator</strong> —
+      Dot G, et al., <em>Journal of Dentistry</em> 2024; <strong>ToothSeg</strong> —
+      van Nistelrooij N, et al., <em>IEEE JBHI</em> 2025.
+      No upstream author endorses this service.
+      <br><br>
+      This is a research preview. It is <strong>not a medical device</strong>, has no
+      regulatory clearance, and is <strong>not for diagnostic use</strong>. CBCT grey values
+      are not calibrated Hounsfield units. Every result requires review by a qualified
+      clinician.
+    </p>
+  </div>
+</footer>
+
+<script src="/main.js" defer></script>
+<script type="module" src="/assets/hero3d.js?v=3"></script>
+</body>
+</html>

@@ -1,0 +1,420 @@
+{
+ "source": "b145baba-609c-4218-bea1-b0b7a297c375",
+ "hinge": {
+  "pivot": [
+   -0.24054872760347598,
+   14.367273905459898,
+   -44.89380562526249
+  ],
+  "intercondylar_mm": 102.2,
+  "incisor_reach_mm": 78.9,
+  "axis": [
+   1,
+   0,
+   0
+  ],
+  "sign": 1,
+  "open_degrees": 30.0,
+  "translate_mm": 18.0,
+  "translate_dir": [
+   0.0,
+   -0.7071,
+   0.7071
+  ],
+  "interincisal_closed_mm": -3.5,
+  "interincisal_rotation_only_mm": 27.6,
+  "interincisal_open_mm": 40.3
+ },
+ "teeth_found": [
+  11,
+  12,
+  13,
+  14,
+  15,
+  16,
+  17,
+  21,
+  22,
+  23,
+  24,
+  25,
+  26,
+  27,
+  31,
+  32,
+  33,
+  34,
+  35,
+  36,
+  37,
+  38,
+  41,
+  42,
+  43,
+  44,
+  45,
+  47,
+  48
+ ],
+ "teeth_absent": [
+  18,
+  28,
+  46
+ ],
+ "opacity": {
+  "maxilla": 0.22,
+  "mandible": 0.34
+ },
+ "structures": [
+  {
+   "id": "canal",
+   "name": "Mandibular canal",
+   "fdi": null,
+   "colour": "#ff3b30",
+   "group": "lower",
+   "triangles": 7000,
+   "volume_cm3": 0.809,
+   "components": 2
+  },
+  {
+   "id": "lower_teeth_unnumbered",
+   "name": "Lower teeth (unnumbered)",
+   "fdi": null,
+   "colour": "#8b96a6",
+   "group": "lower",
+   "triangles": 2000,
+   "volume_cm3": 0.836,
+   "components": 3
+  },
+  {
+   "id": "mandible",
+   "name": "Mandible",
+   "fdi": null,
+   "colour": "#c2a878",
+   "group": "lower",
+   "triangles": 13999,
+   "volume_cm3": 50.314,
+   "components": 1
+  },
+  {
+   "id": "maxilla",
+   "name": "Maxilla & upper skull",
+   "fdi": null,
+   "colour": "#d9c9a3",
+   "group": "upper",
+   "triangles": 11999,
+   "volume_cm3": 68.614,
+   "components": 1
+  },
+  {
+   "id": "tooth_11",
+   "name": "Upper right central incisor (11)",
+   "fdi": 11,
+   "colour": "#186ebf",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.54,
+   "components": 1
+  },
+  {
+   "id": "tooth_12",
+   "name": "Upper right lateral incisor (12)",
+   "fdi": 12,
+   "colour": "#1f7acd",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.387,
+   "components": 1
+  },
+  {
+   "id": "tooth_13",
+   "name": "Upper right canine (13)",
+   "fdi": 13,
+   "colour": "#2984d9",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.653,
+   "components": 1
+  },
+  {
+   "id": "tooth_14",
+   "name": "Upper right first premolar (14)",
+   "fdi": 14,
+   "colour": "#408fd8",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.45,
+   "components": 1
+  },
+  {
+   "id": "tooth_15",
+   "name": "Upper right second premolar (15)",
+   "fdi": 15,
+   "colour": "#5699d7",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.474,
+   "components": 1
+  },
+  {
+   "id": "tooth_16",
+   "name": "Upper right first molar (16)",
+   "fdi": 16,
+   "colour": "#6ca4d8",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.936,
+   "components": 1
+  },
+  {
+   "id": "tooth_17",
+   "name": "Upper right second molar (17)",
+   "fdi": 17,
+   "colour": "#80aed9",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.742,
+   "components": 1
+  },
+  {
+   "id": "tooth_21",
+   "name": "Upper left central incisor (21)",
+   "fdi": 21,
+   "colour": "#18bf8d",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.578,
+   "components": 1
+  },
+  {
+   "id": "tooth_22",
+   "name": "Upper left lateral incisor (22)",
+   "fdi": 22,
+   "colour": "#1fcd99",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.407,
+   "components": 1
+  },
+  {
+   "id": "tooth_23",
+   "name": "Upper left canine (23)",
+   "fdi": 23,
+   "colour": "#29d9a4",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.653,
+   "components": 1
+  },
+  {
+   "id": "tooth_24",
+   "name": "Upper left first premolar (24)",
+   "fdi": 24,
+   "colour": "#40d8aa",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.483,
+   "components": 1
+  },
+  {
+   "id": "tooth_25",
+   "name": "Upper left second premolar (25)",
+   "fdi": 25,
+   "colour": "#56d7b1",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.51,
+   "components": 1
+  },
+  {
+   "id": "tooth_26",
+   "name": "Upper left first molar (26)",
+   "fdi": 26,
+   "colour": "#6cd8b7",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.863,
+   "components": 1
+  },
+  {
+   "id": "tooth_27",
+   "name": "Upper left second molar (27)",
+   "fdi": 27,
+   "colour": "#80d9be",
+   "group": "upper",
+   "triangles": 1400,
+   "volume_cm3": 0.739,
+   "components": 1
+  },
+  {
+   "id": "tooth_31",
+   "name": "Lower left central incisor (31)",
+   "fdi": 31,
+   "colour": "#bf8618",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.283,
+   "components": 1
+  },
+  {
+   "id": "tooth_32",
+   "name": "Lower left lateral incisor (32)",
+   "fdi": 32,
+   "colour": "#cd921f",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.306,
+   "components": 1
+  },
+  {
+   "id": "tooth_33",
+   "name": "Lower left canine (33)",
+   "fdi": 33,
+   "colour": "#d99d29",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.616,
+   "components": 1
+  },
+  {
+   "id": "tooth_34",
+   "name": "Lower left first premolar (34)",
+   "fdi": 34,
+   "colour": "#d8a440",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.372,
+   "components": 1
+  },
+  {
+   "id": "tooth_35",
+   "name": "Lower left second premolar (35)",
+   "fdi": 35,
+   "colour": "#d7ab56",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.44,
+   "components": 1
+  },
+  {
+   "id": "tooth_36",
+   "name": "Lower left first molar (36)",
+   "fdi": 36,
+   "colour": "#d8b36c",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 1.007,
+   "components": 1
+  },
+  {
+   "id": "tooth_37",
+   "name": "Lower left second molar (37)",
+   "fdi": 37,
+   "colour": "#d9bb80",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.27,
+   "components": 1
+  },
+  {
+   "id": "tooth_38",
+   "name": "Lower left third molar (38)",
+   "fdi": 38,
+   "colour": "#dbc394",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.866,
+   "components": 1
+  },
+  {
+   "id": "tooth_41",
+   "name": "Lower right central incisor (41)",
+   "fdi": 41,
+   "colour": "#bf185e",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.277,
+   "components": 1
+  },
+  {
+   "id": "tooth_42",
+   "name": "Lower right lateral incisor (42)",
+   "fdi": 42,
+   "colour": "#cd1f68",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.323,
+   "components": 1
+  },
+  {
+   "id": "tooth_43",
+   "name": "Lower right canine (43)",
+   "fdi": 43,
+   "colour": "#d92973",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.654,
+   "components": 1
+  },
+  {
+   "id": "tooth_44",
+   "name": "Lower right first premolar (44)",
+   "fdi": 44,
+   "colour": "#d84080",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.377,
+   "components": 1
+  },
+  {
+   "id": "tooth_45",
+   "name": "Lower right second premolar (45)",
+   "fdi": 45,
+   "colour": "#d7568c",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.443,
+   "components": 1
+  },
+  {
+   "id": "tooth_47",
+   "name": "Lower right second molar (47)",
+   "fdi": 47,
+   "colour": "#d980a6",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 1.045,
+   "components": 1
+  },
+  {
+   "id": "tooth_48",
+   "name": "Lower right third molar (48)",
+   "fdi": 48,
+   "colour": "#db94b2",
+   "group": "lower",
+   "triangles": 1400,
+   "volume_cm3": 0.902,
+   "components": 1
+  },
+  {
+   "id": "upper_teeth_unnumbered",
+   "name": "Upper teeth (unnumbered)",
+   "fdi": null,
+   "colour": "#9aa3ad",
+   "group": "upper",
+   "triangles": 2000,
+   "volume_cm3": 0.439,
+   "components": 32
+  }
+ ],
+ "lods": {
+  "desktop": {
+   "file": "arch.glb",
+   "triangles": 77598
+  },
+  "mobile": {
+   "file": "arch-mobile.glb",
+   "triangles": 32553
+  }
+ }
+}

@@ -1,0 +1,17 @@
+# The GPU worker's own dependencies, on top of requirements-api.txt.
+#
+# Reconstructed 2026-09-01. The versions that are pinned are the ones the destroyed
+# environment is KNOWN to have run, from the worker's own startup log line:
+#     torch 2.13.0+cu130 cuda=True device=NVIDIA GeForce RTX 3080
+# and from the serving venv's site-packages listing (nnunetv2 2.8.1, its own
+# batchgeneratorsv2 0.3.5 and dynamic_network_architectures 0.4.4 come with it).
+#
+# torch is installed separately from the cu130 index -- see scripts/rebuild_venv.sh.
+nnunetv2==2.8.1
+SimpleITK
+pydicom
+Pillow
+scipy
+numpy
+blosc2
+scikit-image

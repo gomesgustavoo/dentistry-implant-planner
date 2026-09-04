@@ -1,0 +1,35 @@
+# Secrets. The ONLY file in this tree that holds real credentials; the k8s manifests
+# reference a cluster Secret by name (`secretKeyRef`) and carry no values.
+.worker.env
+*.env
+!.env.example
+
+# Model weights, ~2.2 GB. Trained on ToothFairy3, which is CC BY-NC-SA 4.0.
+models/
+
+# Patient volumes, uploads and per-job results.
+data/
+
+# Third-party downloads and build caches.
+vendor/
+venv/
+node_modules/
+dist/
+.pytest_cache/
+__pycache__/
+*.pyc
+
+# Evaluation artifacts: ~1 GB of per-case .npy dumps and predictions. The metrics and
+# the write-ups that cite them ARE committed -- see the force-adds in the first commit.
+eval/
+
+# Harness fixtures derived from a real CBCT: two JPEGs cut from a held-out ToothFairy3
+# case plus the manifests generated from it. Regenerate with
+#   ./venv/bin/python scripts/make_web_fixtures.py <results-dir>
+# Kept out because publishing them would redistribute imagery from a CC BY-NC-SA
+# dataset, which is a licensing decision this repo should not make on its own.
+web-auth/fixtures/assets/
+
+# Scratch
+*.bak
+*.v1-old/

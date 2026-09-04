@@ -1,0 +1,23 @@
+apiVersion: v1
+data:
+  DENT_DATA_DIR: /data
+  DENT_DB_HOST: postgres.platform.svc.cluster.local
+  DENT_DB_NAME: dentistry
+  DENT_DB_PORT: '5432'
+  DENT_DB_USER: dentistry
+  DENT_OIDC_AUDIENCE: dentistry-api
+  DENT_OIDC_ISSUER: https://auth.dicomsegvr.com/realms/dicomsegvr
+  DENT_OIDC_JWKS_URL: http://keycloak.platform.svc.cluster.local:8080/realms/dicomsegvr/protocol/openid-connect/certs
+  DENT_PUBLIC_BASE_URL: https://dentistry.dicomsegvr.com
+  DENT_REQUIRE_AUTH: 'true'
+  DENT_RESULT_TTL_HOURS: '72'
+  DENT_STRIPE_PRICE_CLINICIAN: price_1Tgcc8DfzGeKIj3alzyYIC1U
+  DENT_STRIPE_PRICE_ENTERPRISE: price_1Tgcc9DfzGeKIj3aueUrTFZJ
+  DENT_STRIPE_PRICE_EXPLORER: price_1Tgcc7DfzGeKIj3aV8hraA5G
+  DENT_STRIPE_PRODUCT_TAG: dentistry
+  DENT_TRIAL_DAYS: '14'
+  DENT_UPLOAD_MAX_MB: '1024'
+kind: ConfigMap
+metadata:
+  name: dentistry-config
+  namespace: dentistry

@@ -1,0 +1,16 @@
+venv/
+venv-umamba/
+__pycache__/
+*.pyc
+data/
+models/
+eval/
+tests/
+scripts/
+worker/
+training/
+vendor/
+k8s/
+node_modules/
+.worker.env
+*.log

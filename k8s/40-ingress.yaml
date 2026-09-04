@@ -1,0 +1,120 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-headers@kubernetescrd
+  name: dentistry-api
+  namespace: dentistry
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: dentistry.dicomsegvr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: dentistry-api
+            port:
+              number: 8000
+        path: /v1
+        pathType: Prefix
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-app-slash@kubernetescrd,dentistry-dentistry-app-strip@kubernetescrd,dentistry-dentistry-headers@kubernetescrd
+  name: dentistry-app
+  namespace: dentistry
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: dentistry.dicomsegvr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: dentistry-web
+            port:
+              number: 80
+        path: /app
+        pathType: Prefix
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-app-strip@kubernetescrd,dentistry-dentistry-headers@kubernetescrd
+  name: dentistry-app-api
+  namespace: dentistry
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: dentistry.dicomsegvr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: dentistry-api
+            port:
+              number: 8000
+        path: /app/v1
+        pathType: Prefix
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-headers@kubernetescrd
+  name: dentistry-landing
+  namespace: dentistry
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: dentistry.dicomsegvr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: dentistry-landing
+            port:
+              number: 80
+        path: /
+        pathType: Prefix
+
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    traefik.ingress.kubernetes.io/router.entrypoints: web
+    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-auth@kubernetescrd,dentistry-dentistry-slash@kubernetescrd,dentistry-dentistry-strip@kubernetescrd
+  name: dentistry-path
+  namespace: dentistry
+spec:
+  ingressClassName: traefik
+  rules:
+  - host: voxtell.dicomsegvr.com
+    http:
+      paths:
+      - backend:
+          service:
+            name: dentistry-api
+            port:
+              number: 8000
+        path: /dentistry/v1
+        pathType: Prefix
+      - backend:
+          service:
+            name: dentistry-web
+            port:
+              number: 80
+        path: /dentistry
+        pathType: Prefix

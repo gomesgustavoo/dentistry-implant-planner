@@ -1,0 +1,512 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Dentistry CBCT — DicomSegVR</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238b5cf6'/%3E%3Cpath d='M16 6c-3.6 0-6.4 1.9-6.4 5.2 0 2.4.9 3.6 1.4 6.1.4 2 .4 4.3 1 6.4.3 1 .8 2.3 1.7 2.3 1.1 0 1.3-1.6 1.5-3.1.2-1.6.4-3.1 .8-3.1s.6 1.5.8 3.1c.2 1.5.4 3.1 1.5 3.1.9 0 1.4-1.3 1.7-2.3.6-2.1.6-4.4 1-6.4.5-2.5 1.4-3.7 1.4-6.1C22.4 7.9 19.6 6 16 6z' fill='%23fff'/%3E%3C/svg%3E">
+<!-- `?v=` is stamped with the image tag at build time (see Dockerfile.web).
+     nginx.conf asks for `no-cache` on css/js and Cloudflare overrides it with its
+     own 4-hour Browser Cache TTL, so a redeploy served new HTML against old CSS --
+     which rendered the topbar links unstyled for anyone with a warm cache. A
+     versioned URL is a different resource and cannot be served stale by anything;
+     index.html itself is `no-cache` and CF does honour that. -->
+<link rel="stylesheet" href="app.css?v=dev">
+</head>
+<body>
+
+<!-- ============================================================== the topbar
+     ONE row, three zones: identity, context, account. The context zone swaps
+     between the view tabs and the open case's title, so the bar never grows a
+     second line and the case title never competes with navigation. -->
+<header class="topbar">
+  <a class="brand" href="#/cases" id="brand">
+    <span class="mark" aria-hidden="true"></span>
+    <span class="brand-name">Dentistry CBCT</span>
+  </a>
+
+  <nav class="nav" id="nav" aria-label="Views">
+    <a class="nav-item" data-view="cases" href="#/cases">Cases</a>
+    <a class="nav-item" data-view="settings" href="#/settings">Settings</a>
+  </nav>
+
+  <!-- Replaces the nav while a case is open. -->
+  <div class="casebar" id="casebar" hidden>
+    <button class="iconbtn" id="backHome" type="button" title="All cases  ( Esc )"
+            aria-label="Back to all cases">&#8592;</button>
+    <span class="casebar-title" id="caseTitle">Case</span>
+    <span class="casebar-sub" id="caseSub"></span>
+  </div>
+
+  <div class="topbar-right">
+    <button class="iconbtn" id="railToggle" type="button" hidden
+            title="Collapse the side panel  ( [ )" aria-expanded="true"
+            aria-label="Toggle the side panel">&#9776;</button>
+
+    <!-- Queue depth. Collapses to just the dot below 900px. -->
+    <div class="sysstrip" id="sysstrip" title="Queue depth and worker state">
+      <span class="dot" id="sysdot"></span><span class="sysstrip-text" id="systext">connecting&hellip;</span>
+    </div>
+
+    <!-- Usage, at a FIXED size. This replaced a full-width strip whose text grew
+         with the window; see app.css .usagechip. -->
+    <a class="usagechip" id="usageChip" href="#/settings" hidden
+       title="Segmentations left — open Settings for details">
+      <span class="usagechip-meter"><i id="usageFill"></i></span>
+      <span class="usagechip-text" id="usageText"></span>
+    </a>
+
+    <div class="acctwrap">
+      <button class="avatar" id="acctBtn" type="button" aria-haspopup="menu"
+              aria-expanded="false" aria-label="Account"><span id="acctInitials">&mdash;</span></button>
+      <div class="menu" id="acctMenu" role="menu" hidden></div>
+    </div>
+  </div>
+</header>
+
+<!-- ============================================================== the views
+     Exactly ONE in-flow child under the topbar, so `grid-template-rows: auto 1fr`
+     always lands its 1fr on this element. The previous shell had a variable number
+     of body children, which handed the 1fr row to whichever happened to be second
+     -- the account strip -- and stretched it to fill the window. -->
+<div id="views">
+
+  <!-- Pre-auth. Not an error state: the landing page is the public face of this
+       service and this is the application behind it. -->
+  <section class="gate" id="signinGate" hidden>
+    <div class="gate__panel">
+      <h1>Sign in to segment a scan</h1>
+      <p>Your cases, your account. Uploads are deleted the moment a job finishes and
+        results expire after 72 hours.</p>
+      <button class="btn btn--primary" id="signinBtn" type="button">Sign in</button>
+      <p class="gate__foot">No account yet? Signing in creates one, with a 14-day
+        trial of 30 segmentations and no card. <a href="/">Back to the site</a></p>
+    </div>
+  </section>
+
+  <!-- Landing spot for an invite link. Its own view rather than a modal: the URL
+       carries the token, so it has to survive the sign-in redirect and come back. -->
+  <section class="gate" id="inviteGate" hidden>
+    <div class="gate__panel" id="invitePanel"></div>
+  </section>
+
+  <!-- ======================================================= view: cases -->
+  <main id="home" hidden>
+    <section class="panel hero">
+      <div class="hero-copy">
+        <h1>Segment a cone-beam CT</h1>
+        <p class="lede">
+          Both jaws, the mandibular canal, every tooth numbered in FDI notation, and
+          the sinuses, airway and nerve canals around them. One model on one GPU, with
+          every quality check in the report whether it passes or not.
+        </p>
+        <ul class="hero-facts">
+          <li><b id="factStructures">&mdash;</b><span>structures</span></li>
+          <li><b>32</b><span>teeth, FDI-numbered</span></li>
+          <li><b>4</b><span>export formats</span></li>
+        </ul>
+      </div>
+      <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a file to segment">
+        <input type="file" id="fileInput" accept=".nii,.nii.gz,.zip" hidden>
+        <div class="drop-inner">
+          <span class="drop-icon" aria-hidden="true"></span>
+          <span class="drop-title">Drop a CBCT here, or click to choose</span>
+          <span class="drop-sub">NIfTI (<code>.nii</code>, <code>.nii.gz</code>) or a DICOM series as <code>.zip</code></span>
+        </div>
+        <div class="upbar" id="upbar" hidden><div class="upbar-fill" id="upbarFill"></div></div>
+      </div>
+      <p class="notice" id="uploadNotice" hidden></p>
+    </section>
+
+    <section class="panel" id="examplesPanel" hidden>
+      <div class="panel-head">
+        <h2>Example cases</h2>
+        <span class="hint">already segmented &mdash; open one to see the output</span>
+      </div>
+      <div class="examples" id="examples"></div>
+    </section>
+
+    <section class="panel" id="jobsPanel">
+      <div class="panel-head">
+        <h2>Your cases</h2>
+        <div class="panel-tools">
+          <div class="seg" id="jobFilter" role="group" aria-label="Filter cases">
+            <button class="segb on" data-filter="all" type="button">All</button>
+            <button class="segb" data-filter="active" type="button">Active</button>
+            <button class="segb" data-filter="done" type="button">Done</button>
+            <button class="segb" data-filter="failed" type="button">Failed</button>
+          </div>
+          <button class="iconbtn" id="refreshJobs" type="button"
+                  title="Refresh" aria-label="Refresh the case list">&#8635;</button>
+        </div>
+      </div>
+      <div class="jobs" id="jobs"><p class="empty">No cases yet.</p></div>
+    </section>
+
+    <footer id="homeFoot">
+      <p>
+        Segmentation by our own <a href="https://ditto.ing.unimore.it/toothfairy3" target="_blank" rel="noopener">ToothFairy3</a>-finetuned
+        <a href="https://github.com/MIC-DKFZ/nnUNet" target="_blank" rel="noopener">nnU-Net</a> with a
+        <a href="https://arxiv.org/abs/2509.12069" target="_blank" rel="noopener">U-Mamba2</a> bottleneck,
+        under <b>CC BY-NC-SA 4.0</b> &mdash; research and non-commercial use only.
+        Research preview &mdash; not a medical device, and not for diagnostic use.
+      </p>
+    </footer>
+  </main>
+
+  <!-- ==================================================== view: settings -->
+  <main id="settings" hidden>
+    <div class="settings">
+      <header class="settings-head">
+        <h1>Settings</h1>
+        <p class="lede" id="settingsWho">&nbsp;</p>
+      </header>
+
+      <!-- Profile ------------------------------------------------------ -->
+      <section class="panel" id="profilePanel">
+        <div class="panel-head"><h2>Profile</h2></div>
+        <form class="form" id="profileForm">
+          <label class="field">
+            <span>Display name</span>
+            <input type="text" id="pfName" maxlength="120" autocomplete="name"
+                   placeholder="How you want to be addressed">
+          </label>
+          <label class="field">
+            <span>Organisation</span>
+            <input type="text" id="pfOrg" maxlength="160" autocomplete="organization"
+                   placeholder="Clinic, department or university">
+          </label>
+          <div class="form-foot">
+            <button class="btn btn--primary" id="pfSave" type="submit">Save</button>
+            <span class="form-note" id="pfNote"></span>
+          </div>
+        </form>
+        <!-- Email, password and MFA belong to Keycloak and this service holds no
+             admin credentials for it. Saying so beats a field that cannot save. -->
+        <div class="kvblock" id="identityBlock"></div>
+      </section>
+
+      <!-- Workspace and members ---------------------------------------- -->
+      <!-- A workspace with one member is still a workspace; the panel just has
+           less to say. It is NOT hidden in that case, because "invite someone"
+           is the whole discoverability of the feature. -->
+      <section class="panel" id="teamPanel">
+        <div class="panel-head">
+          <h2>Workspace</h2>
+          <span class="hint" id="teamHint"></span>
+        </div>
+        <div id="teamBody"><p class="empty">Loading&hellip;</p></div>
+      </section>
+
+      <!-- Plan and billing --------------------------------------------- -->
+      <section class="panel" id="planPanel">
+        <div class="panel-head">
+          <h2>Plan &amp; billing</h2>
+          <span class="hint" id="planHint"></span>
+        </div>
+        <div id="planBody"><p class="empty">Loading&hellip;</p></div>
+      </section>
+
+      <!-- Usage --------------------------------------------------------- -->
+      <section class="panel" id="usagePanel">
+        <div class="panel-head">
+          <h2>Usage</h2>
+          <span class="hint">segmentations submitted, by month</span>
+        </div>
+        <div id="usageBody"><p class="empty">Loading&hellip;</p></div>
+      </section>
+
+      <!-- Credits, which now have a permanent home instead of a modal ---- -->
+      <section class="panel" id="aboutPanel">
+        <div class="panel-head"><h2>Credits &amp; scope</h2></div>
+        <p class="credits-body">
+          Segmentation by a single model of our own: an
+          <a href="https://arxiv.org/abs/2509.12069" target="_blank" rel="noopener">U-Mamba2</a>
+          (Wu et al., MICCAI 2025 &mdash; first place in both ToothFairy3 tasks) finetuned on the
+          <a href="https://ditto.ing.unimore.it/toothfairy3" target="_blank" rel="noopener">ToothFairy3</a>
+          challenge dataset (University of Modena and Reggio Emilia), trained here on 512
+          CBCT volumes and built on
+          <a href="https://github.com/MIC-DKFZ/nnUNet" target="_blank" rel="noopener">nnU-Net</a>
+          (Isensee et al., <em>Nature Methods</em> 2021).
+        </p>
+        <p class="credits-body">
+          The model inherits the ToothFairy3 dataset licence, <b>CC BY-NC-SA 4.0</b>:
+          attribution, share-alike, and <b>non-commercial use only</b>.
+        </p>
+        <p class="credits-body">
+          Cases segmented before 2026-08-25 came from two published checkpoints we no
+          longer run, both CC BY 4.0, and their downloads are still derived from those
+          weights: <a href="https://doi.org/10.1016/j.jdent.2024.105130" target="_blank" rel="noopener">DentalSegmentator</a>
+          (Dot et al.) and <a href="https://doi.org/10.5281/zenodo.14893540" target="_blank" rel="noopener">ToothSeg</a>
+          (van Nistelrooij, Kr&auml;mer, Isensee et al.). Neither author endorses this service.
+        </p>
+        <p class="credits-body warn">
+          Research preview &mdash; <b>not a medical device, and not for diagnostic use.</b>
+          CBCT grey values are not calibrated Hounsfield units, and these scans have no
+          ground truth: every number in the quality panel is a claim about internal
+          consistency, not about accuracy.
+        </p>
+      </section>
+    </div>
+  </main>
+
+  <!-- =================================================== view: workspace -->
+  <div class="workspace" id="workspace" hidden>
+    <aside class="rail">
+      <!-- The dental chart: the one control that is native to this domain. -->
+      <div class="card chart-card">
+        <div class="card-head">
+          <h3>Dental chart</h3>
+          <span class="hint" id="chartHint">click a tooth</span>
+        </div>
+        <div id="archChart" class="arch"></div>
+        <p class="chart-legend">
+          <span>patient&rsquo;s right</span><span>patient&rsquo;s left</span>
+        </p>
+      </div>
+
+      <div class="card" id="findingsCard"></div>
+
+      <!-- Measured accuracy, and ONLY where a measurement genuinely exists: the two
+           published examples are held-out cases from an annotated research dataset.
+           renderAccuracy hides this structurally when `report.accuracy` is absent,
+           which is every upload. Sits between Findings and Structures deliberately --
+           it qualifies the Findings above it and captions the rail below it. -->
+      <div class="card" id="accuracyCard" hidden></div>
+
+      <!-- The holdout error budget: a PRIOR about the model, never a measurement of
+           this scan. Deliberately a separate card from #accuracyCard (which only ever
+           renders for a published example WITH ground truth) so the two can never be
+           read as one number. -->
+      <details class="card" id="priorsCard" hidden>
+        <summary><h3>How accurate is the model?</h3></summary>
+        <div id="priorsBody"></div>
+      </details>
+
+      <div class="card" id="structuresCard">
+        <div class="card-head">
+          <h3>Structures</h3>
+          <div class="card-actions">
+            <button class="link" id="isolateClear" type="button" hidden>clear isolate</button>
+            <button class="link" id="toggleAll" type="button">hide all</button>
+          </div>
+        </div>
+        <p class="hint card-hint">name to isolate &middot; swatch to show or hide</p>
+        <div id="structures"></div>
+      </div>
+
+      <details class="card fold" id="seriesCard" open>
+        <summary><h3>Series</h3><span class="fold-mark" aria-hidden="true"></span></summary>
+        <div id="seriesBody"></div>
+      </details>
+
+      <div class="card">
+        <div class="card-head"><h3>Downloads</h3></div>
+        <div class="dl" id="downloads"></div>
+      </div>
+
+      <details class="card fold" id="runCard">
+        <summary><h3>Run details</h3><span class="fold-mark" aria-hidden="true"></span></summary>
+        <div id="runBody"></div>
+      </details>
+    </aside>
+
+    <section class="stage">
+      <!-- ONE compact row. Everything that is not a view switch lives behind the
+           Display popover, because a control you touch once per session does not
+           deserve permanent width next to the image. -->
+      <div class="stage-bar">
+        <div class="modes" role="tablist">
+          <button role="tab" class="mode on" data-mode="volume">MPR &amp; 3D</button>
+          <button role="tab" class="mode" data-mode="slices">Slices</button>
+          <!-- Hidden until a job carries `planning`. Every archived job predates it,
+               and a tab that opens onto nothing is worse than no tab. -->
+          <button role="tab" class="mode" data-mode="plan" id="planTab" hidden>Implant plan</button>
+        </div>
+
+        <div class="stage-tools">
+          <div class="seg" id="layoutPicker" role="group" aria-label="Pane layout">
+            <button class="segb on" data-layout="grid" type="button" title="Four panes  ( 0 )">&#9636;</button>
+            <button class="segb" data-layout="focus" type="button" title="One large, three small  ( 1-4 )">&#9647;</button>
+            <button class="segb" data-layout="solo" type="button" title="Single pane  ( f )">&#9723;</button>
+          </div>
+
+          <div class="popwrap">
+            <button class="iconbtn" id="displayBtn" type="button" aria-haspopup="dialog"
+                    aria-expanded="false" title="Display options  ( d )">&#9881;</button>
+            <div class="pop" id="displayPop" hidden>
+              <div class="pop-row">
+                <span class="pop-label">3D</span>
+                <div class="seg" id="modePicker3d" role="group" aria-label="3D rendering">
+                  <button class="segb on" data-3d="surfaces" type="button" title="Segmented structures as surfaces">Surfaces</button>
+                  <button class="segb" data-3d="bone" type="button" title="Volume-rendered bone">Bone</button>
+                  <button class="segb" data-3d="both" type="button">Both</button>
+                </div>
+              </div>
+              <label class="pop-row slider">
+                <span class="pop-label">Fill</span>
+                <input type="range" id="fillAlpha" min="0" max="100" value="45">
+              </label>
+              <label class="pop-row slider">
+                <span class="pop-label">Outline</span>
+                <input type="range" id="outlineW" min="0" max="3" step="1" value="2">
+              </label>
+              <div class="pop-row pop-row--end">
+                <button class="btn btn--sm" id="mprReset" type="button">Reset views</button>
+              </div>
+              <p class="pop-help" id="popHelp"></p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 2x2 by default; `data-pane` drives the focus/solo layouts. The elements are
+           NEVER reordered in the DOM -- mount() binds elements[i] to VIEWPORTS[i] by
+           position, so moving one would silently relabel a plane, and moving a mounted
+           .cs element detaches Cornerstone's canvas. Layout is CSS only. -->
+      <div class="grid4" id="mprStage">
+        <div class="pane" data-pane="axial"><span class="pane-label">Axial</span><div class="cs" id="csAxial"></div></div>
+        <div class="pane" data-pane="coronal"><span class="pane-label">Coronal</span><div class="cs" id="csCoronal"></div></div>
+        <div class="pane" data-pane="sagittal"><span class="pane-label">Sagittal</span><div class="cs" id="csSagittal"></div></div>
+        <div class="pane pane-3d" data-pane="3d">
+          <span class="pane-label">3D</span>
+          <div class="cs" id="cs3d"></div>
+          <span class="pane-note" id="surfaceNote"></span>
+        </div>
+        <div class="stage-overlay" id="mprLoading">
+          <div class="spinner" aria-hidden="true"></div>
+          <span id="mprMeta">loading volume&hellip;</span>
+        </div>
+      </div>
+
+      <!-- The pre-rendered tiles: instant, and the fastest way to scrub. -->
+      <div class="tileview" id="sliceStage" hidden>
+        <div class="planes" role="tablist" id="planeTabs">
+          <button role="tab" class="plane on" data-plane="axial" type="button">Axial</button>
+          <button role="tab" class="plane" data-plane="coronal" type="button">Coronal</button>
+          <button role="tab" class="plane" data-plane="sagittal" type="button">Sagittal</button>
+        </div>
+        <div class="canvas-wrap">
+          <canvas id="canvas" width="512" height="512"></canvas>
+          <div class="stage-empty" id="stageEmpty">loading&hellip;</div>
+        </div>
+        <label class="slider">
+          <span id="sliceLabel">slice</span>
+          <input type="range" id="slice" min="0" max="0" value="0">
+        </label>
+      </div>
+
+      <!-- The implant-planning views: a panoramic reconstruction swept along the
+           fitted arch, and the buccolingual cross-section perpendicular to it. Both
+           are rendered SERVER-side from the full-resolution grid and publish an exact
+           pixel_mm, which is what makes the ruler on them honest -- the volume the
+           Cornerstone panes show is 8-bit and downsampled to ~0.66 mm. -->
+      <!-- Two columns: the pictures, and a sidebar that scrolls.
+           The sidebar exists because the plan's text UI used to be nested INSIDE
+           `.xs-wrap` -- a black, `place-items: center`, `overflow: hidden` image
+           letterbox. Measured with two implants placed: 3297 px of measurements inside
+           a 518 px box with no scrollbar, so 84% of the output the server had correctly
+           computed was unreachable, and every control was shrink-to-fit and centred on
+           the image's own background. Text does not live in a picture frame. -->
+      <div class="planview" id="planStage" hidden>
+        <!-- The tools row. It used to be jaw tabs only, with a separate 38 px slider
+             row under the pictures. Height is the binding constraint on the section --
+             it is a 36 x 68 mm portrait picture, so `object-fit: contain` fits it BY
+             HEIGHT and extra width becomes black bars -- so the slider was folded in
+             here. Nothing was lost: a click on the panoramic already scrubs sections
+             through `jumpToArcColumn`. -->
+        <div class="planes plantools" role="tablist" id="planJawTabs">
+          <button role="tab" class="plane on" data-jaw="mandible" type="button">Lower</button>
+          <button role="tab" class="plane" data-jaw="maxilla" type="button">Upper</button>
+          <label class="slider" id="xsSliderWrap">
+            <span id="xsLabel">cross-section</span>
+            <input type="range" id="xsSlider" min="0" max="0" value="0">
+          </label>
+          <!-- Structure outlines on the section: off / the ones this plan is graded
+               against / everything the section cuts. Defaults to the middle one. -->
+          <button class="iconbtn ovbtn" id="xsOverlayBtn" type="button"
+                  title="Structure outlines on the section  ( o )">outlines: key</button>
+          <!-- The section is 36 x 68 mm and fits by HEIGHT, so showing all of it wastes
+               every pixel of width. Cropped to the site by default; this shows all of
+               it again. -->
+          <button class="iconbtn ovbtn" id="xsFitBtn" type="button"
+                  title="How much of the section to show  ( z )">view: site</button>
+          <span class="planhint" id="planArcHint"></span>
+          <!-- The worst verdict per implant, and it survives the sidebar collapsing.
+               A collapse that hides the verdict is worse than no collapse. -->
+          <span class="verdstrip" id="verdStrip"></span>
+          <button class="iconbtn" id="sideToggle" type="button"
+                  aria-expanded="true" aria-label="Toggle the measurements panel"
+                  title="Collapse the measurements panel  ( ] )">&#9776;</button>
+        </div>
+
+        <div class="plan-views">
+          <!-- A locator, not a measuring surface: the horizontal axis is arc length
+               through a curved trough, which the server already publishes as
+               `metric_axes: "vertical_only"`. So it gets a strip, and the space goes to
+               the two views you actually plan against. -->
+          <div class="pan-wrap">
+            <canvas id="panCanvas" width="900" height="300"></canvas>
+            <div class="stage-empty" id="planEmpty">loading&hellip;</div>
+          </div>
+          <div class="plan-panes">
+            <div class="xs-wrap">
+              <canvas id="xsCanvas" width="480" height="480"></canvas>
+              <div class="xs-meta" id="xsMeta"></div>
+              <div class="stage-empty" id="xsEmpty" hidden></div>
+              <span class="pane-tag">SECTION &mdash; place &amp; angle</span>
+            </div>
+            <!-- Host for the LIVE Cornerstone 3-D viewport, moved here out of
+                 `#mprStage` whenever the plan tab is open and moved back on the way
+                 out. Reparenting the mounted element and calling
+                 `DentistryViewer.resize()` keeps the WebGL context, all 42 surfaces and
+                 the implant actors; a second viewport would cost another copy of the
+                 volume on the GPU for the same picture. Verified on the RTX 3080. -->
+            <div class="pane3d-wrap" id="plan3d">
+              <div class="stage-empty" id="plan3dEmpty">3-D needs the volume</div>
+              <span class="pane-tag">3D &mdash; verify</span>
+            </div>
+          </div>
+        </div>
+
+        <aside class="plan-side" id="planSide">
+          <!-- Saving, reopening and exporting a plan. -->
+          <div class="planbar" id="planBar"></div>
+          <!-- Implant placement and its measurements. Empty for every job without a
+               measurement pack, which is every job processed before this existed. -->
+          <div class="implants" id="implantPanel"></div>
+          <!-- Measurements taken on THIS section. The cross-section is an isometric
+               plane with an exact published pitch, so a ruler on it is exact; the
+               panoramic offers a vertical-only one because its horizontal axis is
+               arc length through a curved trough. See the ruler block in app.js. -->
+          <div class="ruler-list" id="rulerList"></div>
+          <!-- The holdout error budget, as a prior. Screen-visible now; it used to be
+               reachable only by printing, which is a strange place to keep the one
+               number that separates this product from its competitors. -->
+          <div class="plan-priors" id="planPriors"></div>
+          <div class="planactions">
+            <button class="link" id="planPrint" type="button">print this plan</button>
+          </div>
+        </aside>
+
+        <!-- Screen-hidden, print-only: every measurement with its basis, every caveat,
+             the per-structure error budget and the no-guide notice. Filled by
+             `planPrintTable()` at print time. -->
+        <div class="printsheet" id="planPrintSheet" aria-hidden="true"></div>
+      </div>
+    </section>
+  </div>
+
+<!-- Repeated at the foot of every printed page. Hidden on screen. -->
+<div class="printbanner" id="printBanner"></div>
+
+</div><!-- /#views -->
+
+<!-- auth.js before app.js: app.js reads window.DentistryAuth at module top level.
+     Built by `npm --prefix web-auth run build`, committed like viewer.js because
+     the web image has no build step. -->
+<script src="auth.js?v=dev"></script>
+<script src="viewer.js?v=dev"></script>
+<script src="app.js?v=dev"></script>
+</body>
+</html>

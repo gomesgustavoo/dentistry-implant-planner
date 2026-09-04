@@ -1,0 +1,6013 @@
+{
+ "roi": {
+  "halo": 31,
+  "mode": "tiled",
+  "notes": [],
+  "blocks": 6,
+  "fov_box": [
+   [
+    74,
+    550
+   ],
+   [
+    0,
+    600
+   ],
+   [
+    0,
+    600
+   ]
+  ],
+  "seconds": 157.4,
+  "fov_pad_mm": 45.0,
+  "block_shape": [
+   158,
+   600,
+   600
+  ],
+  "logit_gib_full": 17.33,
+  "logit_gib_peak": 4.98,
+  "model_input_shape": [
+   550,
+   600,
+   600
+  ],
+  "fov_dropped_voxels": 699511
+ },
+ "bake": {
+  "files": {
+   "report.json": {
+    "bytes": 82413,
+    "sha256_16": "f3317b33b547d431",
+    "gzip_bytes": 10591
+   },
+   "stl/pulp.stl": {
+    "bytes": 976284,
+    "sha256_16": "6eeca5d202358682"
+   },
+   "mesh/pulp.msh": {
+    "bytes": 355216,
+    "sha256_16": "00bb780ab6af2ae8",
+    "gzip_bytes": 176717
+   },
+   "stl/canal.stl": {
+    "bytes": 964684,
+    "sha256_16": "992e91b50a324f1d"
+   },
+   "stl/crown.stl": {
+    "bytes": 42284,
+    "sha256_16": "c2e67e77084c012b"
+   },
+   "mesh/canal.msh": {
+    "bytes": 217180,
+    "sha256_16": "3049787712d032a9",
+    "gzip_bytes": 108132
+   },
+   "mesh/crown.msh": {
+    "bytes": 15304,
+    "sha256_16": "091dce8156b05fa1",
+    "gzip_bytes": 7685
+   },
+   "stl/maxilla.stl": {
+    "bytes": 12707084,
+    "sha256_16": "024cd40bb5b1c89b"
+   },
+   "stl/pharynx.stl": {
+    "bytes": 1834584,
+    "sha256_16": "04d709d301f30a79"
+   },
+   "mesh/maxilla.msh": {
+    "bytes": 1080760,
+    "sha256_16": "e024b9d780b22898",
+    "gzip_bytes": 569500
+   },
+   "mesh/pharynx.msh": {
+    "bytes": 450484,
+    "sha256_16": "c4f5936d3952815e",
+    "gzip_bytes": 225230
+   },
+   "stl/mandible.stl": {
+    "bytes": 15000034,
+    "sha256_16": "07d5fbc9b38ff3e0"
+   },
+   "stl/tooth_11.stl": {
+    "bytes": 190284,
+    "sha256_16": "2c2af25089bfbb60"
+   },
+   "stl/tooth_12.stl": {
+    "bytes": 147884,
+    "sha256_16": "3cce66b4ffa0e791"
+   },
+   "stl/tooth_13.stl": {
+    "bytes": 233884,
+    "sha256_16": "a1bd4f4f68b3c612"
+   },
+   "stl/tooth_14.stl": {
+    "bytes": 226884,
+    "sha256_16": "59cb20c7c2ded6c7"
+   },
+   "stl/tooth_15.stl": {
+    "bytes": 251684,
+    "sha256_16": "3558e4af82a4b8bc"
+   },
+   "stl/tooth_17.stl": {
+    "bytes": 425184,
+    "sha256_16": "24807823fab38a0f"
+   },
+   "stl/tooth_18.stl": {
+    "bytes": 117684,
+    "sha256_16": "83baf23084ea9260"
+   },
+   "stl/tooth_21.stl": {
+    "bytes": 237284,
+    "sha256_16": "67cabe42dff0f6ae"
+   },
+   "stl/tooth_22.stl": {
+    "bytes": 199084,
+    "sha256_16": "309390b1ed7098ff"
+   },
+   "stl/tooth_23.stl": {
+    "bytes": 257284,
+    "sha256_16": "90e0387a7ae248e1"
+   },
+   "stl/tooth_24.stl": {
+    "bytes": 269284,
+    "sha256_16": "6386627d7d4c5358"
+   },
+   "stl/tooth_25.stl": {
+    "bytes": 243484,
+    "sha256_16": "c9793159b50661c3"
+   },
+   "stl/tooth_26.stl": {
+    "bytes": 199484,
+    "sha256_16": "0c01299f8ff8e581"
+   },
+   "stl/tooth_27.stl": {
+    "bytes": 374484,
+    "sha256_16": "373b0a564bde0cc2"
+   },
+   "stl/tooth_28.stl": {
+    "bytes": 105284,
+    "sha256_16": "61cca9f8e62ade4c"
+   },
+   "stl/tooth_31.stl": {
+    "bytes": 142084,
+    "sha256_16": "2360193595c376ba"
+   },
+   "stl/tooth_32.stl": {
+    "bytes": 179284,
+    "sha256_16": "789c911d4bbe91b5"
+   },
+   "stl/tooth_33.stl": {
+    "bytes": 266284,
+    "sha256_16": "6b4cb6abbeb23d10"
+   },
+   "stl/tooth_34.stl": {
+    "bytes": 221084,
+    "sha256_16": "e7585a1ae74c2d07"
+   },
+   "stl/tooth_35.stl": {
+    "bytes": 221884,
+    "sha256_16": "922589e522106ac1"
+   },
+   "stl/tooth_36.stl": {
+    "bytes": 446684,
+    "sha256_16": "81d1ef42b35a82fb"
+   },
+   "stl/tooth_37.stl": {
+    "bytes": 309584,
+    "sha256_16": "4f17075a85541b2c"
+   },
+   "stl/tooth_41.stl": {
+    "bytes": 147684,
+    "sha256_16": "e397eb906d32ecf2"
+   },
+   "stl/tooth_42.stl": {
+    "bytes": 156684,
+    "sha256_16": "5da7a8870f64ab5d"
+   },
+   "stl/tooth_43.stl": {
+    "bytes": 242884,
+    "sha256_16": "55eb8c4c92a900a1"
+   },
+   "stl/tooth_44.stl": {
+    "bytes": 234084,
+    "sha256_16": "4cbaeec066c577c1"
+   },
+   "stl/tooth_45.stl": {
+    "bytes": 228484,
+    "sha256_16": "ebffb268626559ee"
+   },
+   "stl/tooth_46.stl": {
+    "bytes": 434084,
+    "sha256_16": "d8d1f0d17d11b9ac"
+   },
+   "stl/tooth_47.stl": {
+    "bytes": 417684,
+    "sha256_16": "d030df026265da72"
+   },
+   "stl/tooth_48.stl": {
+    "bytes": 213484,
+    "sha256_16": "a7ddf95bb456e3cc"
+   },
+   "volume/image.raw": {
+    "bytes": 5346000,
+    "sha256_16": "77690d97baab86c5",
+    "gzip_bytes": 1449054
+   },
+   "volume/meta.json": {
+    "bytes": 10738,
+    "sha256_16": "f6430362b7134747",
+    "gzip_bytes": 1874
+   },
+   "mesh/mandible.msh": {
+    "bytes": 1080544,
+    "sha256_16": "e8fdc68b399ed9fc",
+    "gzip_bytes": 588676
+   },
+   "mesh/tooth_11.msh": {
+    "bytes": 68512,
+    "sha256_16": "07766ef531eaf0b7",
+    "gzip_bytes": 33802
+   },
+   "mesh/tooth_12.msh": {
+    "bytes": 53224,
+    "sha256_16": "91d091e5232adb6c",
+    "gzip_bytes": 26018
+   },
+   "mesh/tooth_13.msh": {
+    "bytes": 84256,
+    "sha256_16": "b1c633121d234ec5",
+    "gzip_bytes": 41713
+   },
+   "mesh/tooth_14.msh": {
+    "bytes": 81712,
+    "sha256_16": "b3ad8f6315079ecc",
+    "gzip_bytes": 40261
+   },
+   "mesh/tooth_15.msh": {
+    "bytes": 90664,
+    "sha256_16": "84dffd0ffd6077b9",
+    "gzip_bytes": 44458
+   },
+   "mesh/tooth_17.msh": {
+    "bytes": 107944,
+    "sha256_16": "76b4838e874ce661",
+    "gzip_bytes": 52603
+   },
+   "mesh/tooth_18.msh": {
+    "bytes": 42376,
+    "sha256_16": "3e1fa61e892c8c58",
+    "gzip_bytes": 21275
+   },
+   "mesh/tooth_21.msh": {
+    "bytes": 85432,
+    "sha256_16": "4b395e68003aec5f",
+    "gzip_bytes": 42281
+   },
+   "mesh/tooth_22.msh": {
+    "bytes": 71704,
+    "sha256_16": "c4f3b13c96418f7d",
+    "gzip_bytes": 35193
+   },
+   "mesh/tooth_23.msh": {
+    "bytes": 92656,
+    "sha256_16": "db6df6b6f6384fb0",
+    "gzip_bytes": 45493
+   },
+   "mesh/tooth_24.msh": {
+    "bytes": 96928,
+    "sha256_16": "eca58d9709f41d53",
+    "gzip_bytes": 47513
+   },
+   "mesh/tooth_25.msh": {
+    "bytes": 87688,
+    "sha256_16": "280a4cbd1b62b157",
+    "gzip_bytes": 42928
+   },
+   "mesh/tooth_26.msh": {
+    "bytes": 71872,
+    "sha256_16": "046cba4d45b20eac",
+    "gzip_bytes": 35250
+   },
+   "mesh/tooth_27.msh": {
+    "bytes": 108016,
+    "sha256_16": "9b766c1b7a9da878",
+    "gzip_bytes": 52492
+   },
+   "mesh/tooth_28.msh": {
+    "bytes": 37936,
+    "sha256_16": "7923a2b64ab277ec",
+    "gzip_bytes": 19125
+   },
+   "mesh/tooth_31.msh": {
+    "bytes": 51184,
+    "sha256_16": "6af6cbd991ee5c5f",
+    "gzip_bytes": 24751
+   },
+   "mesh/tooth_32.msh": {
+    "bytes": 64576,
+    "sha256_16": "b1d8800482bb9f4b",
+    "gzip_bytes": 31248
+   },
+   "mesh/tooth_33.msh": {
+    "bytes": 95896,
+    "sha256_16": "ac874b167b277e6f",
+    "gzip_bytes": 47006
+   },
+   "mesh/tooth_34.msh": {
+    "bytes": 79624,
+    "sha256_16": "322d6da90efc6bad",
+    "gzip_bytes": 39279
+   },
+   "mesh/tooth_35.msh": {
+    "bytes": 79912,
+    "sha256_16": "fedd3eaa58fe6b7a",
+    "gzip_bytes": 39230
+   },
+   "mesh/tooth_36.msh": {
+    "bytes": 107992,
+    "sha256_16": "0f0aab488d2f6ba4",
+    "gzip_bytes": 52964
+   },
+   "mesh/tooth_37.msh": {
+    "bytes": 107896,
+    "sha256_16": "0cacc56a7b86632e",
+    "gzip_bytes": 52395
+   },
+   "mesh/tooth_41.msh": {
+    "bytes": 53200,
+    "sha256_16": "ff6b3c8eca40939b",
+    "gzip_bytes": 25576
+   },
+   "mesh/tooth_42.msh": {
+    "bytes": 56440,
+    "sha256_16": "e66f230dfbd4b976",
+    "gzip_bytes": 27040
+   },
+   "mesh/tooth_43.msh": {
+    "bytes": 87472,
+    "sha256_16": "d9f8a2f16b92c7d4",
+    "gzip_bytes": 43250
+   },
+   "mesh/tooth_44.msh": {
+    "bytes": 84304,
+    "sha256_16": "dd91a398f8b05437",
+    "gzip_bytes": 41809
+   },
+   "mesh/tooth_45.msh": {
+    "bytes": 82288,
+    "sha256_16": "4eef7e588d88472d",
+    "gzip_bytes": 40680
+   },
+   "mesh/tooth_46.msh": {
+    "bytes": 108040,
+    "sha256_16": "56c9cf47dd2a8817",
+    "gzip_bytes": 52893
+   },
+   "mesh/tooth_47.msh": {
+    "bytes": 107968,
+    "sha256_16": "eb0517c2332484e3",
+    "gzip_bytes": 53032
+   },
+   "mesh/tooth_48.msh": {
+    "bytes": 76864,
+    "sha256_16": "4a325ca1e1dc06cd",
+    "gzip_bytes": 38202
+   },
+   "volume/labels.raw": {
+    "bytes": 5346000,
+    "sha256_16": "11a2f59d80ded344",
+    "gzip_bytes": 46152
+   },
+   "segmentation.nii.gz": {
+    "bytes": 314284,
+    "sha256_16": "28bd4f0cec102f33"
+   },
+   "rtstruct/rtstruct.zip": {
+    "bytes": 25779555,
+    "sha256_16": "98e674b168b68b1c"
+   },
+   "stl/lingual_canal.stl": {
+    "bytes": 23684,
+    "sha256_16": "b19a4b0681e7460d"
+   },
+   "mesh/lingual_canal.msh": {
+    "bytes": 8992,
+    "sha256_16": "7e5b8a4a2f6e0f28",
+    "gzip_bytes": 4725
+   },
+   "preview/axial/0000.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0001.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0002.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0003.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0004.jpg": {
+    "bytes": 5242,
+    "sha256_16": "472c7bdffd8f255a"
+   },
+   "preview/axial/0005.jpg": {
+    "bytes": 5350,
+    "sha256_16": "bff144e84252ede6"
+   },
+   "preview/axial/0006.jpg": {
+    "bytes": 5321,
+    "sha256_16": "b059267a15db552f"
+   },
+   "preview/axial/0007.jpg": {
+    "bytes": 5432,
+    "sha256_16": "5847b490b25735ed"
+   },
+   "preview/axial/0008.jpg": {
+    "bytes": 5652,
+    "sha256_16": "09255c14037f34ad"
+   },
+   "preview/axial/0009.jpg": {
+    "bytes": 5603,
+    "sha256_16": "e08816d3a99bd244"
+   },
+   "preview/axial/0010.jpg": {
+    "bytes": 5749,
+    "sha256_16": "5487c7dd5653d2f2"
+   },
+   "preview/axial/0011.jpg": {
+    "bytes": 5848,
+    "sha256_16": "7b9844e97ae00979"
+   },
+   "preview/axial/0012.jpg": {
+    "bytes": 5754,
+    "sha256_16": "dbc3982fe11437a9"
+   },
+   "preview/axial/0013.jpg": {
+    "bytes": 5976,
+    "sha256_16": "a2a532f45831333d"
+   },
+   "preview/axial/0014.jpg": {
+    "bytes": 5874,
+    "sha256_16": "bab87a996594e8f8"
+   },
+   "preview/axial/0015.jpg": {
+    "bytes": 6050,
+    "sha256_16": "809a4051472d2175"
+   },
+   "preview/axial/0016.jpg": {
+    "bytes": 6223,
+    "sha256_16": "2c99203ea5e890b7"
+   },
+   "preview/axial/0017.jpg": {
+    "bytes": 6207,
+    "sha256_16": "9007413016aa9b2f"
+   },
+   "preview/axial/0018.jpg": {
+    "bytes": 6263,
+    "sha256_16": "5f89403564b23425"
+   },
+   "preview/axial/0019.jpg": {
+    "bytes": 6354,
+    "sha256_16": "92cda3d79dd2af29"
+   },
+   "preview/axial/0020.jpg": {
+    "bytes": 6383,
+    "sha256_16": "8c8850a8506804b7"
+   },
+   "preview/axial/0021.jpg": {
+    "bytes": 6358,
+    "sha256_16": "3b7da9cb85999ec1"
+   },
+   "preview/axial/0022.jpg": {
+    "bytes": 6459,
+    "sha256_16": "248946ba5b4fd024"
+   },
+   "preview/axial/0023.jpg": {
+    "bytes": 6487,
+    "sha256_16": "bf67d2a75aba4141"
+   },
+   "preview/axial/0024.jpg": {
+    "bytes": 6588,
+    "sha256_16": "0eab714a3272b135"
+   },
+   "preview/axial/0025.jpg": {
+    "bytes": 6547,
+    "sha256_16": "09647ae6be414e35"
+   },
+   "preview/axial/0026.jpg": {
+    "bytes": 6578,
+    "sha256_16": "987aa2285c1ed548"
+   },
+   "preview/axial/0027.jpg": {
+    "bytes": 6577,
+    "sha256_16": "54d087019b71ae4c"
+   },
+   "preview/axial/0028.jpg": {
+    "bytes": 6747,
+    "sha256_16": "cd619f64f49ad764"
+   },
+   "preview/axial/0029.jpg": {
+    "bytes": 6823,
+    "sha256_16": "bf8699c63c0c36f9"
+   },
+   "preview/axial/0030.jpg": {
+    "bytes": 6735,
+    "sha256_16": "47e7fbe3b9e8d969"
+   },
+   "preview/axial/0031.jpg": {
+    "bytes": 6741,
+    "sha256_16": "5504323df29b5882"
+   },
+   "preview/axial/0032.jpg": {
+    "bytes": 6986,
+    "sha256_16": "b9db7909f7ae3c23"
+   },
+   "preview/axial/0033.jpg": {
+    "bytes": 6922,
+    "sha256_16": "7fa8c229f388d30d"
+   },
+   "preview/axial/0034.jpg": {
+    "bytes": 6830,
+    "sha256_16": "b8c77b965b561e37"
+   },
+   "preview/axial/0035.jpg": {
+    "bytes": 6817,
+    "sha256_16": "ce4b746997b317d1"
+   },
+   "preview/axial/0036.jpg": {
+    "bytes": 6981,
+    "sha256_16": "14ad0118895ef7c5"
+   },
+   "preview/axial/0037.jpg": {
+    "bytes": 6935,
+    "sha256_16": "dd7bcb690e73d98b"
+   },
+   "preview/axial/0038.jpg": {
+    "bytes": 6861,
+    "sha256_16": "105c3f732ff7c193"
+   },
+   "preview/axial/0039.jpg": {
+    "bytes": 6931,
+    "sha256_16": "c42d36bf4bd1148a"
+   },
+   "preview/axial/0040.jpg": {
+    "bytes": 6871,
+    "sha256_16": "a0c5e72a7806149f"
+   },
+   "preview/axial/0041.jpg": {
+    "bytes": 6735,
+    "sha256_16": "61659423ecec3982"
+   },
+   "preview/axial/0042.jpg": {
+    "bytes": 6888,
+    "sha256_16": "884dda1330e9458d"
+   },
+   "preview/axial/0043.jpg": {
+    "bytes": 6838,
+    "sha256_16": "136bb9ecefc11bee"
+   },
+   "preview/axial/0044.jpg": {
+    "bytes": 6681,
+    "sha256_16": "e2fbe4a7d7e4091b"
+   },
+   "preview/axial/0045.jpg": {
+    "bytes": 6871,
+    "sha256_16": "fc3a69654ec404f6"
+   },
+   "preview/axial/0046.jpg": {
+    "bytes": 6893,
+    "sha256_16": "76c5f182a1aef4e2"
+   },
+   "preview/axial/0047.jpg": {
+    "bytes": 6817,
+    "sha256_16": "9174488229d6c3d4"
+   },
+   "preview/axial/0048.jpg": {
+    "bytes": 6908,
+    "sha256_16": "11fef804782b90f8"
+   },
+   "preview/axial/0049.jpg": {
+    "bytes": 6914,
+    "sha256_16": "95062ac40610ebfc"
+   },
+   "preview/axial/0050.jpg": {
+    "bytes": 6866,
+    "sha256_16": "ab5b41048951f00a"
+   },
+   "preview/axial/0051.jpg": {
+    "bytes": 6804,
+    "sha256_16": "defe8a7b116e79a7"
+   },
+   "preview/axial/0052.jpg": {
+    "bytes": 7016,
+    "sha256_16": "ed07f9cf04dac29f"
+   },
+   "preview/axial/0053.jpg": {
+    "bytes": 7106,
+    "sha256_16": "7154357bf5bcdb08"
+   },
+   "preview/axial/0054.jpg": {
+    "bytes": 7174,
+    "sha256_16": "104f6fd48820f078"
+   },
+   "preview/axial/0055.jpg": {
+    "bytes": 7449,
+    "sha256_16": "ca4457414d471bff"
+   },
+   "preview/axial/0056.jpg": {
+    "bytes": 7678,
+    "sha256_16": "8a30451a3a23b1de"
+   },
+   "preview/axial/0057.jpg": {
+    "bytes": 7689,
+    "sha256_16": "810d148f202425f7"
+   },
+   "preview/axial/0058.jpg": {
+    "bytes": 7939,
+    "sha256_16": "87a1cb8bbcf39c50"
+   },
+   "preview/axial/0059.jpg": {
+    "bytes": 7972,
+    "sha256_16": "48afdd26899dc294"
+   },
+   "preview/axial/0060.jpg": {
+    "bytes": 8022,
+    "sha256_16": "7b43e501664aceb0"
+   },
+   "preview/axial/0061.jpg": {
+    "bytes": 8027,
+    "sha256_16": "2db1874609041be3"
+   },
+   "preview/axial/0062.jpg": {
+    "bytes": 8054,
+    "sha256_16": "22a75e60a3e2eb62"
+   },
+   "preview/axial/0063.jpg": {
+    "bytes": 8050,
+    "sha256_16": "6b077e13dbd5f482"
+   },
+   "preview/axial/0064.jpg": {
+    "bytes": 8032,
+    "sha256_16": "a194ff92af9c61f4"
+   },
+   "preview/axial/0065.jpg": {
+    "bytes": 8008,
+    "sha256_16": "89e2d3d1f97ee867"
+   },
+   "preview/axial/0066.jpg": {
+    "bytes": 8239,
+    "sha256_16": "6f7858ab785b47c2"
+   },
+   "preview/axial/0067.jpg": {
+    "bytes": 8170,
+    "sha256_16": "20ddb039c9e3668a"
+   },
+   "preview/axial/0068.jpg": {
+    "bytes": 8260,
+    "sha256_16": "f475948413379616"
+   },
+   "preview/axial/0069.jpg": {
+    "bytes": 8303,
+    "sha256_16": "571a5edc0a0c20ed"
+   },
+   "preview/axial/0070.jpg": {
+    "bytes": 8276,
+    "sha256_16": "5d6ead64bc8d3e69"
+   },
+   "preview/axial/0071.jpg": {
+    "bytes": 8330,
+    "sha256_16": "58e155399ee8cfa3"
+   },
+   "preview/axial/0072.jpg": {
+    "bytes": 8256,
+    "sha256_16": "51cda03221d6f29b"
+   },
+   "preview/axial/0073.jpg": {
+    "bytes": 8204,
+    "sha256_16": "939eeff612c2c013"
+   },
+   "preview/axial/0074.jpg": {
+    "bytes": 8195,
+    "sha256_16": "48ec5783c5f643e7"
+   },
+   "preview/axial/0075.jpg": {
+    "bytes": 8115,
+    "sha256_16": "da33854829bffc3e"
+   },
+   "preview/axial/0076.jpg": {
+    "bytes": 8097,
+    "sha256_16": "e08353fe4bc5cce0"
+   },
+   "preview/axial/0077.jpg": {
+    "bytes": 8060,
+    "sha256_16": "2e8a8e79534e26d0"
+   },
+   "preview/axial/0078.jpg": {
+    "bytes": 8010,
+    "sha256_16": "c1caf0ace235a28e"
+   },
+   "preview/axial/0079.jpg": {
+    "bytes": 7830,
+    "sha256_16": "0072f8a1d7b69446"
+   },
+   "preview/axial/0080.jpg": {
+    "bytes": 7900,
+    "sha256_16": "6ccb5e28f82049ba"
+   },
+   "preview/axial/0081.jpg": {
+    "bytes": 7880,
+    "sha256_16": "c20994a6872f9b3b"
+   },
+   "preview/axial/0082.jpg": {
+    "bytes": 7877,
+    "sha256_16": "bfd2ce2b2e079dd4"
+   },
+   "preview/axial/0083.jpg": {
+    "bytes": 7820,
+    "sha256_16": "c02ba342af9f4c04"
+   },
+   "preview/axial/0084.jpg": {
+    "bytes": 7751,
+    "sha256_16": "e1c12066059a5242"
+   },
+   "preview/axial/0085.jpg": {
+    "bytes": 7569,
+    "sha256_16": "76fac63925a843cf"
+   },
+   "preview/axial/0086.jpg": {
+    "bytes": 7346,
+    "sha256_16": "4769cd4ffa45b83d"
+   },
+   "preview/axial/0087.jpg": {
+    "bytes": 7399,
+    "sha256_16": "93b063515d82492d"
+   },
+   "preview/axial/0088.jpg": {
+    "bytes": 7305,
+    "sha256_16": "df80072456529b2b"
+   },
+   "preview/axial/0089.jpg": {
+    "bytes": 7239,
+    "sha256_16": "9370fa40164bf36c"
+   },
+   "preview/axial/0090.jpg": {
+    "bytes": 7240,
+    "sha256_16": "f5fdbc7968a59e83"
+   },
+   "preview/axial/0091.jpg": {
+    "bytes": 7106,
+    "sha256_16": "ae7471aaebef81c4"
+   },
+   "preview/axial/0092.jpg": {
+    "bytes": 6906,
+    "sha256_16": "977765ca02c58b4c"
+   },
+   "preview/axial/0093.jpg": {
+    "bytes": 6756,
+    "sha256_16": "51d059d46afe0ac8"
+   },
+   "preview/axial/0094.jpg": {
+    "bytes": 6663,
+    "sha256_16": "6830e0e01bee236c"
+   },
+   "preview/axial/0095.jpg": {
+    "bytes": 6574,
+    "sha256_16": "c8398f370ebfddcd"
+   },
+   "preview/axial/0096.jpg": {
+    "bytes": 6375,
+    "sha256_16": "8e353abb0e85fa8e"
+   },
+   "preview/axial/0097.jpg": {
+    "bytes": 6377,
+    "sha256_16": "a1874d1fd337b05e"
+   },
+   "preview/axial/0098.jpg": {
+    "bytes": 6389,
+    "sha256_16": "55fecec118200a67"
+   },
+   "preview/axial/0099.jpg": {
+    "bytes": 6270,
+    "sha256_16": "3d20e28868ed96f4"
+   },
+   "preview/axial/0100.jpg": {
+    "bytes": 6280,
+    "sha256_16": "0bf9404aae6ab88b"
+   },
+   "preview/axial/0101.jpg": {
+    "bytes": 6337,
+    "sha256_16": "9bb9581c44027555"
+   },
+   "preview/axial/0102.jpg": {
+    "bytes": 6477,
+    "sha256_16": "c6a26a136274bc2d"
+   },
+   "preview/axial/0103.jpg": {
+    "bytes": 6607,
+    "sha256_16": "1f3fca280db4aea3"
+   },
+   "preview/axial/0104.jpg": {
+    "bytes": 6783,
+    "sha256_16": "d1c5252f68fa3050"
+   },
+   "preview/axial/0105.jpg": {
+    "bytes": 6698,
+    "sha256_16": "58ffd19e0f2e1228"
+   },
+   "preview/axial/0106.jpg": {
+    "bytes": 6825,
+    "sha256_16": "852ab8290ebed6e3"
+   },
+   "preview/axial/0107.jpg": {
+    "bytes": 6832,
+    "sha256_16": "d31618a6ba000658"
+   },
+   "preview/axial/0108.jpg": {
+    "bytes": 6862,
+    "sha256_16": "13bef87ede83fce7"
+   },
+   "preview/axial/0109.jpg": {
+    "bytes": 6630,
+    "sha256_16": "2ce965497f18689f"
+   },
+   "preview/axial/0110.jpg": {
+    "bytes": 6633,
+    "sha256_16": "76f2c6336bfacc13"
+   },
+   "preview/axial/0111.jpg": {
+    "bytes": 6576,
+    "sha256_16": "53ce43088edde271"
+   },
+   "preview/axial/0112.jpg": {
+    "bytes": 6513,
+    "sha256_16": "ab00594e3893f827"
+   },
+   "preview/axial/0113.jpg": {
+    "bytes": 6650,
+    "sha256_16": "929d2f75646a5ad5"
+   },
+   "preview/axial/0114.jpg": {
+    "bytes": 6638,
+    "sha256_16": "8cdd18469ac5b3eb"
+   },
+   "preview/axial/0115.jpg": {
+    "bytes": 6347,
+    "sha256_16": "1f6771236763d1bd"
+   },
+   "preview/axial/0116.jpg": {
+    "bytes": 6092,
+    "sha256_16": "15793f79892abca3"
+   },
+   "preview/axial/0117.jpg": {
+    "bytes": 5951,
+    "sha256_16": "ea8bc458aa8fb66a"
+   },
+   "preview/axial/0118.jpg": {
+    "bytes": 5828,
+    "sha256_16": "28e0985e27e30908"
+   },
+   "preview/axial/0119.jpg": {
+    "bytes": 5903,
+    "sha256_16": "826ecea0c23d0d64"
+   },
+   "preview/axial/0120.jpg": {
+    "bytes": 5851,
+    "sha256_16": "b161cead85025798"
+   },
+   "preview/axial/0121.jpg": {
+    "bytes": 5731,
+    "sha256_16": "d18da87be7723f74"
+   },
+   "preview/axial/0122.jpg": {
+    "bytes": 5767,
+    "sha256_16": "e54c28f454f8937a"
+   },
+   "preview/axial/0123.jpg": {
+    "bytes": 5601,
+    "sha256_16": "19733f8271f95ef8"
+   },
+   "preview/axial/0124.jpg": {
+    "bytes": 5544,
+    "sha256_16": "4b0469224eb80210"
+   },
+   "preview/axial/0125.jpg": {
+    "bytes": 5450,
+    "sha256_16": "e51c0ce1b9e5c3fb"
+   },
+   "preview/axial/0126.jpg": {
+    "bytes": 5408,
+    "sha256_16": "3d8855f9981e74aa"
+   },
+   "preview/axial/0127.jpg": {
+    "bytes": 5423,
+    "sha256_16": "e7fa1b2f5fd74130"
+   },
+   "preview/axial/0128.jpg": {
+    "bytes": 5316,
+    "sha256_16": "1dfcdf4f6337d842"
+   },
+   "preview/axial/0129.jpg": {
+    "bytes": 5399,
+    "sha256_16": "87b4069a710ef370"
+   },
+   "preview/axial/0130.jpg": {
+    "bytes": 5331,
+    "sha256_16": "4aaacac2a4a034f4"
+   },
+   "preview/axial/0131.jpg": {
+    "bytes": 5255,
+    "sha256_16": "e0604918ba09bb60"
+   },
+   "preview/axial/0132.jpg": {
+    "bytes": 5227,
+    "sha256_16": "3db42857b90660ba"
+   },
+   "preview/axial/0133.jpg": {
+    "bytes": 5191,
+    "sha256_16": "75292e91ab22d730"
+   },
+   "preview/axial/0134.jpg": {
+    "bytes": 5051,
+    "sha256_16": "cf0122133d58b14a"
+   },
+   "preview/axial/0135.jpg": {
+    "bytes": 5097,
+    "sha256_16": "691ee9dd039da440"
+   },
+   "preview/axial/0136.jpg": {
+    "bytes": 5076,
+    "sha256_16": "7731e965b44c9274"
+   },
+   "preview/axial/0137.jpg": {
+    "bytes": 4965,
+    "sha256_16": "c1662f75bb6f1f44"
+   },
+   "preview/axial/0138.jpg": {
+    "bytes": 4778,
+    "sha256_16": "97ed7a0e9a2b5dd8"
+   },
+   "preview/axial/0139.jpg": {
+    "bytes": 4782,
+    "sha256_16": "76c20d974d2f3a23"
+   },
+   "preview/axial/0140.jpg": {
+    "bytes": 4657,
+    "sha256_16": "22fc7fb1954b8af9"
+   },
+   "preview/axial/0141.jpg": {
+    "bytes": 4484,
+    "sha256_16": "858005964e687902"
+   },
+   "preview/axial/0142.jpg": {
+    "bytes": 4348,
+    "sha256_16": "2939354293ff9780"
+   },
+   "preview/axial/0143.jpg": {
+    "bytes": 4226,
+    "sha256_16": "732a7da85a3c2eb6"
+   },
+   "preview/axial/0144.jpg": {
+    "bytes": 4066,
+    "sha256_16": "89010c3fbbd26765"
+   },
+   "preview/axial/0145.jpg": {
+    "bytes": 3842,
+    "sha256_16": "016cc9c6f506eec2"
+   },
+   "preview/axial/0146.jpg": {
+    "bytes": 3638,
+    "sha256_16": "9da5ccd3edf27c50"
+   },
+   "preview/axial/0147.jpg": {
+    "bytes": 3550,
+    "sha256_16": "c5984db494ff83b1"
+   },
+   "preview/axial/0148.jpg": {
+    "bytes": 3542,
+    "sha256_16": "16b9f90338cc3b08"
+   },
+   "preview/axial/0149.jpg": {
+    "bytes": 3526,
+    "sha256_16": "e341deb7d46237a6"
+   },
+   "preview/axial/0150.jpg": {
+    "bytes": 3384,
+    "sha256_16": "3c67c5e335daf92e"
+   },
+   "preview/axial/0151.jpg": {
+    "bytes": 3310,
+    "sha256_16": "5fd6274628c77f36"
+   },
+   "preview/axial/0152.jpg": {
+    "bytes": 3131,
+    "sha256_16": "bea13246ce7b7b07"
+   },
+   "preview/axial/0153.jpg": {
+    "bytes": 3063,
+    "sha256_16": "b9c7ed14e1caf60b"
+   },
+   "preview/axial/0154.jpg": {
+    "bytes": 2927,
+    "sha256_16": "b0ddfb4ec70d5060"
+   },
+   "preview/axial/0155.jpg": {
+    "bytes": 2874,
+    "sha256_16": "09883e90e49fe613"
+   },
+   "preview/axial/0156.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0157.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0158.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "preview/axial/0159.jpg": {
+    "bytes": 667,
+    "sha256_16": "2e3080c4c84dc1d4"
+   },
+   "stl/sinus_max_left.stl": {
+    "bytes": 265284,
+    "sha256_16": "92c39db2f431e689"
+   },
+   "mesh/sinus_max_left.msh": {
+    "bytes": 95848,
+    "sha256_16": "7bec8815a5083cdf",
+    "gzip_bytes": 47431
+   },
+   "stl/sinus_max_right.stl": {
+    "bytes": 413484,
+    "sha256_16": "dd226fc7a1994db0"
+   },
+   "mesh/sinus_max_right.msh": {
+    "bytes": 149224,
+    "sha256_16": "a1739b73c7b52aee",
+    "gzip_bytes": 73854
+   },
+   "preview/coronal/0000.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0001.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0002.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0003.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0004.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0005.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0006.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0007.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0008.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0009.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0010.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0011.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0012.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0013.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0014.jpg": {
+    "bytes": 638,
+    "sha256_16": "7e039679ca0fdca1"
+   },
+   "preview/coronal/0015.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0016.jpg": {
+    "bytes": 635,
+    "sha256_16": "13a74ceea39bf13a"
+   },
+   "preview/coronal/0017.jpg": {
+    "bytes": 635,
+    "sha256_16": "41945a9c91a473d0"
+   },
+   "preview/coronal/0018.jpg": {
+    "bytes": 636,
+    "sha256_16": "46ee991be5a1d73b"
+   },
+   "preview/coronal/0019.jpg": {
+    "bytes": 705,
+    "sha256_16": "ae91628a62f83719"
+   },
+   "preview/coronal/0020.jpg": {
+    "bytes": 730,
+    "sha256_16": "50cedb861cbf6634"
+   },
+   "preview/coronal/0021.jpg": {
+    "bytes": 759,
+    "sha256_16": "b501d0eee5a2f262"
+   },
+   "preview/coronal/0022.jpg": {
+    "bytes": 799,
+    "sha256_16": "cf88aa758f001234"
+   },
+   "preview/coronal/0023.jpg": {
+    "bytes": 859,
+    "sha256_16": "78b5319af9a22605"
+   },
+   "preview/coronal/0024.jpg": {
+    "bytes": 872,
+    "sha256_16": "de3ee355a5ce8144"
+   },
+   "preview/coronal/0025.jpg": {
+    "bytes": 917,
+    "sha256_16": "67ee38b2086627da"
+   },
+   "preview/coronal/0026.jpg": {
+    "bytes": 933,
+    "sha256_16": "1b4d014d7fb26797"
+   },
+   "preview/coronal/0027.jpg": {
+    "bytes": 938,
+    "sha256_16": "e5570a8bdd5507a5"
+   },
+   "preview/coronal/0028.jpg": {
+    "bytes": 966,
+    "sha256_16": "e1b9f485db9f4bb1"
+   },
+   "preview/coronal/0029.jpg": {
+    "bytes": 1058,
+    "sha256_16": "e9695bb8572d0233"
+   },
+   "preview/coronal/0030.jpg": {
+    "bytes": 1227,
+    "sha256_16": "3756fe4617859c7f"
+   },
+   "preview/coronal/0031.jpg": {
+    "bytes": 1350,
+    "sha256_16": "aa5e6bd5a69cdd0f"
+   },
+   "preview/coronal/0032.jpg": {
+    "bytes": 1458,
+    "sha256_16": "17c43cc73c92e708"
+   },
+   "preview/coronal/0033.jpg": {
+    "bytes": 1702,
+    "sha256_16": "6fcfeb4f4835d3af"
+   },
+   "preview/coronal/0034.jpg": {
+    "bytes": 2024,
+    "sha256_16": "d5d966662e109ec7"
+   },
+   "preview/coronal/0035.jpg": {
+    "bytes": 2259,
+    "sha256_16": "ee46f7f53f05fc3e"
+   },
+   "preview/coronal/0036.jpg": {
+    "bytes": 2550,
+    "sha256_16": "154d1f01931e97bb"
+   },
+   "preview/coronal/0037.jpg": {
+    "bytes": 2918,
+    "sha256_16": "725d5ff0cfd95235"
+   },
+   "preview/coronal/0038.jpg": {
+    "bytes": 3248,
+    "sha256_16": "30d7e7c8b1fb49c0"
+   },
+   "preview/coronal/0039.jpg": {
+    "bytes": 3615,
+    "sha256_16": "b622076fb3568cdc"
+   },
+   "preview/coronal/0040.jpg": {
+    "bytes": 3949,
+    "sha256_16": "9da94c7457dd5021"
+   },
+   "preview/coronal/0041.jpg": {
+    "bytes": 4503,
+    "sha256_16": "d617052129c70104"
+   },
+   "preview/coronal/0042.jpg": {
+    "bytes": 4693,
+    "sha256_16": "d79272f1fba0d874"
+   },
+   "preview/coronal/0043.jpg": {
+    "bytes": 5072,
+    "sha256_16": "7dfb0a9e675ae7e7"
+   },
+   "preview/coronal/0044.jpg": {
+    "bytes": 5297,
+    "sha256_16": "1cbb56f629e5e019"
+   },
+   "preview/coronal/0045.jpg": {
+    "bytes": 5616,
+    "sha256_16": "85cff729ec220b15"
+   },
+   "preview/coronal/0046.jpg": {
+    "bytes": 5797,
+    "sha256_16": "ad5bbaa13bdc5486"
+   },
+   "preview/coronal/0047.jpg": {
+    "bytes": 5925,
+    "sha256_16": "fae3b6cabd84b9a7"
+   },
+   "preview/coronal/0048.jpg": {
+    "bytes": 6142,
+    "sha256_16": "0094a4d79628a60a"
+   },
+   "preview/coronal/0049.jpg": {
+    "bytes": 6275,
+    "sha256_16": "6155dbfc754890f6"
+   },
+   "preview/coronal/0050.jpg": {
+    "bytes": 6537,
+    "sha256_16": "42b891ceb5e3e1d1"
+   },
+   "preview/coronal/0051.jpg": {
+    "bytes": 6539,
+    "sha256_16": "ea48376fb42b9f33"
+   },
+   "preview/coronal/0052.jpg": {
+    "bytes": 6505,
+    "sha256_16": "0810a8ca733f3653"
+   },
+   "preview/coronal/0053.jpg": {
+    "bytes": 6668,
+    "sha256_16": "e3bdcf185e0f7e17"
+   },
+   "preview/coronal/0054.jpg": {
+    "bytes": 6691,
+    "sha256_16": "28f121f45c7c419b"
+   },
+   "preview/coronal/0055.jpg": {
+    "bytes": 6869,
+    "sha256_16": "c93e0894fdec6fc8"
+   },
+   "preview/coronal/0056.jpg": {
+    "bytes": 6936,
+    "sha256_16": "035faad7ea7cb928"
+   },
+   "preview/coronal/0057.jpg": {
+    "bytes": 7076,
+    "sha256_16": "ffc36ba64fb2f4c1"
+   },
+   "preview/coronal/0058.jpg": {
+    "bytes": 7066,
+    "sha256_16": "1360bfdde9b4a725"
+   },
+   "preview/coronal/0059.jpg": {
+    "bytes": 7193,
+    "sha256_16": "4eb36c8c7de27caf"
+   },
+   "preview/coronal/0060.jpg": {
+    "bytes": 7452,
+    "sha256_16": "09633de6e98bedf4"
+   },
+   "preview/coronal/0061.jpg": {
+    "bytes": 7400,
+    "sha256_16": "aa94aeae6566ba1b"
+   },
+   "preview/coronal/0062.jpg": {
+    "bytes": 7722,
+    "sha256_16": "376583c74b443be3"
+   },
+   "preview/coronal/0063.jpg": {
+    "bytes": 7717,
+    "sha256_16": "087fc393a8a9c81c"
+   },
+   "preview/coronal/0064.jpg": {
+    "bytes": 7843,
+    "sha256_16": "2dce94ba7aa70bc5"
+   },
+   "preview/coronal/0065.jpg": {
+    "bytes": 7753,
+    "sha256_16": "ea5761e140adf67d"
+   },
+   "preview/coronal/0066.jpg": {
+    "bytes": 7759,
+    "sha256_16": "1ee38c00df614ac9"
+   },
+   "preview/coronal/0067.jpg": {
+    "bytes": 7858,
+    "sha256_16": "2570b86fb3140752"
+   },
+   "preview/coronal/0068.jpg": {
+    "bytes": 7761,
+    "sha256_16": "b44809788c9082ca"
+   },
+   "preview/coronal/0069.jpg": {
+    "bytes": 7934,
+    "sha256_16": "0ecb5b7c26620aa2"
+   },
+   "preview/coronal/0070.jpg": {
+    "bytes": 7808,
+    "sha256_16": "08d86c7ff7d211ae"
+   },
+   "preview/coronal/0071.jpg": {
+    "bytes": 7814,
+    "sha256_16": "894b4a7dea369f74"
+   },
+   "preview/coronal/0072.jpg": {
+    "bytes": 7807,
+    "sha256_16": "b626a04b38e457f1"
+   },
+   "preview/coronal/0073.jpg": {
+    "bytes": 7757,
+    "sha256_16": "32a03b633eb98452"
+   },
+   "preview/coronal/0074.jpg": {
+    "bytes": 7941,
+    "sha256_16": "abec41fd6cc9f23d"
+   },
+   "preview/coronal/0075.jpg": {
+    "bytes": 7884,
+    "sha256_16": "c8245b9292871697"
+   },
+   "preview/coronal/0076.jpg": {
+    "bytes": 7934,
+    "sha256_16": "0ab487eb5f71ccf0"
+   },
+   "preview/coronal/0077.jpg": {
+    "bytes": 7839,
+    "sha256_16": "2a15197a98afcc4f"
+   },
+   "preview/coronal/0078.jpg": {
+    "bytes": 7999,
+    "sha256_16": "bd33a1109ef8e1fc"
+   },
+   "preview/coronal/0079.jpg": {
+    "bytes": 7912,
+    "sha256_16": "ff715b6ac09a7304"
+   },
+   "preview/coronal/0080.jpg": {
+    "bytes": 7848,
+    "sha256_16": "280b19aed8df915f"
+   },
+   "preview/coronal/0081.jpg": {
+    "bytes": 7862,
+    "sha256_16": "41ecd1157c7c90c8"
+   },
+   "preview/coronal/0082.jpg": {
+    "bytes": 7638,
+    "sha256_16": "9156caa6d5f41333"
+   },
+   "preview/coronal/0083.jpg": {
+    "bytes": 7728,
+    "sha256_16": "5d5ca496f700b745"
+   },
+   "preview/coronal/0084.jpg": {
+    "bytes": 7605,
+    "sha256_16": "0045fe049a242a96"
+   },
+   "preview/coronal/0085.jpg": {
+    "bytes": 7710,
+    "sha256_16": "003965160fff6aba"
+   },
+   "preview/coronal/0086.jpg": {
+    "bytes": 7615,
+    "sha256_16": "7e1671cd2e1ce65f"
+   },
+   "preview/coronal/0087.jpg": {
+    "bytes": 7620,
+    "sha256_16": "e23f9e91552d6e2d"
+   },
+   "preview/coronal/0088.jpg": {
+    "bytes": 7587,
+    "sha256_16": "a9694c2e5e96f12e"
+   },
+   "preview/coronal/0089.jpg": {
+    "bytes": 7462,
+    "sha256_16": "45a3498c949c4f93"
+   },
+   "preview/coronal/0090.jpg": {
+    "bytes": 7521,
+    "sha256_16": "eb3fd2e621ccfaeb"
+   },
+   "preview/coronal/0091.jpg": {
+    "bytes": 7444,
+    "sha256_16": "847de98b8b49ce85"
+   },
+   "preview/coronal/0092.jpg": {
+    "bytes": 7602,
+    "sha256_16": "08c0baa392bf022c"
+   },
+   "preview/coronal/0093.jpg": {
+    "bytes": 7556,
+    "sha256_16": "1a5b5c44103581ee"
+   },
+   "preview/coronal/0094.jpg": {
+    "bytes": 7551,
+    "sha256_16": "7cfaa695c00e6e7e"
+   },
+   "preview/coronal/0095.jpg": {
+    "bytes": 7575,
+    "sha256_16": "dda76fcf3280a96c"
+   },
+   "preview/coronal/0096.jpg": {
+    "bytes": 7483,
+    "sha256_16": "90a9ddb697945aa9"
+   },
+   "preview/coronal/0097.jpg": {
+    "bytes": 7574,
+    "sha256_16": "66bd25000830051c"
+   },
+   "preview/coronal/0098.jpg": {
+    "bytes": 7306,
+    "sha256_16": "ec3a920525bffe3c"
+   },
+   "preview/coronal/0099.jpg": {
+    "bytes": 7454,
+    "sha256_16": "b3126fe0297d53c3"
+   },
+   "preview/coronal/0100.jpg": {
+    "bytes": 7268,
+    "sha256_16": "26897546ea3f9c6e"
+   },
+   "preview/coronal/0101.jpg": {
+    "bytes": 7273,
+    "sha256_16": "45f1c3b37f03a8aa"
+   },
+   "preview/coronal/0102.jpg": {
+    "bytes": 7309,
+    "sha256_16": "e0067ecd0de8ba1d"
+   },
+   "preview/coronal/0103.jpg": {
+    "bytes": 7111,
+    "sha256_16": "1a9176bb02cecce0"
+   },
+   "preview/coronal/0104.jpg": {
+    "bytes": 7291,
+    "sha256_16": "2fa8e2da549f2bbc"
+   },
+   "preview/coronal/0105.jpg": {
+    "bytes": 7149,
+    "sha256_16": "42803f8a71c9b831"
+   },
+   "preview/coronal/0106.jpg": {
+    "bytes": 7340,
+    "sha256_16": "d6e69debd6683830"
+   },
+   "preview/coronal/0107.jpg": {
+    "bytes": 7423,
+    "sha256_16": "50c35d492984183f"
+   },
+   "preview/coronal/0108.jpg": {
+    "bytes": 7581,
+    "sha256_16": "96690304cf5f3cbe"
+   },
+   "preview/coronal/0109.jpg": {
+    "bytes": 7743,
+    "sha256_16": "c58d94ea0b2cbeea"
+   },
+   "preview/coronal/0110.jpg": {
+    "bytes": 7709,
+    "sha256_16": "b3080e75f91ff1bf"
+   },
+   "preview/coronal/0111.jpg": {
+    "bytes": 7976,
+    "sha256_16": "75330fe67efeeb48"
+   },
+   "preview/coronal/0112.jpg": {
+    "bytes": 7989,
+    "sha256_16": "9574f6f9ed601b69"
+   },
+   "preview/coronal/0113.jpg": {
+    "bytes": 8240,
+    "sha256_16": "5ccc9ed05b3f1c6d"
+   },
+   "preview/coronal/0114.jpg": {
+    "bytes": 8315,
+    "sha256_16": "96bd0d8e1e89e6b8"
+   },
+   "preview/coronal/0115.jpg": {
+    "bytes": 8461,
+    "sha256_16": "5a9afc56a06ccdcc"
+   },
+   "preview/coronal/0116.jpg": {
+    "bytes": 8469,
+    "sha256_16": "dc3593b01025431c"
+   },
+   "preview/coronal/0117.jpg": {
+    "bytes": 8463,
+    "sha256_16": "22ab48107fe3a52b"
+   },
+   "preview/coronal/0118.jpg": {
+    "bytes": 8491,
+    "sha256_16": "bb02b35e7e167379"
+   },
+   "preview/coronal/0119.jpg": {
+    "bytes": 8347,
+    "sha256_16": "f519376ca0087962"
+   },
+   "preview/coronal/0120.jpg": {
+    "bytes": 8350,
+    "sha256_16": "63bd5d2d61e05700"
+   },
+   "preview/coronal/0121.jpg": {
+    "bytes": 8364,
+    "sha256_16": "8ac8af8238d12680"
+   },
+   "preview/coronal/0122.jpg": {
+    "bytes": 8331,
+    "sha256_16": "dde603a82833bb86"
+   },
+   "preview/coronal/0123.jpg": {
+    "bytes": 8481,
+    "sha256_16": "94481bef210395dd"
+   },
+   "preview/coronal/0124.jpg": {
+    "bytes": 8357,
+    "sha256_16": "17e71131e8cdb61e"
+   },
+   "preview/coronal/0125.jpg": {
+    "bytes": 8280,
+    "sha256_16": "b54b0651ce4ff2fb"
+   },
+   "preview/coronal/0126.jpg": {
+    "bytes": 8102,
+    "sha256_16": "deedd45920bcba6e"
+   },
+   "preview/coronal/0127.jpg": {
+    "bytes": 8236,
+    "sha256_16": "3d06563e77c331d2"
+   },
+   "preview/coronal/0128.jpg": {
+    "bytes": 8081,
+    "sha256_16": "a47c37a4bc132e63"
+   },
+   "preview/coronal/0129.jpg": {
+    "bytes": 7935,
+    "sha256_16": "6f31f7b0f0584cc1"
+   },
+   "preview/coronal/0130.jpg": {
+    "bytes": 7690,
+    "sha256_16": "ae598984ddde1d3d"
+   },
+   "preview/coronal/0131.jpg": {
+    "bytes": 7540,
+    "sha256_16": "da84421a0c07d861"
+   },
+   "preview/coronal/0132.jpg": {
+    "bytes": 7392,
+    "sha256_16": "e03a4b0945499712"
+   },
+   "preview/coronal/0133.jpg": {
+    "bytes": 7176,
+    "sha256_16": "6f112aaac3d87407"
+   },
+   "preview/coronal/0134.jpg": {
+    "bytes": 7132,
+    "sha256_16": "2b513bf5c2f11f96"
+   },
+   "preview/coronal/0135.jpg": {
+    "bytes": 6906,
+    "sha256_16": "fb629dc8ef99484f"
+   },
+   "preview/coronal/0136.jpg": {
+    "bytes": 6806,
+    "sha256_16": "f5579dcbb48572e0"
+   },
+   "preview/coronal/0137.jpg": {
+    "bytes": 6687,
+    "sha256_16": "7abfdf0cdf774382"
+   },
+   "preview/coronal/0138.jpg": {
+    "bytes": 6343,
+    "sha256_16": "0fa657c9768aeb83"
+   },
+   "preview/coronal/0139.jpg": {
+    "bytes": 6382,
+    "sha256_16": "b6469e50eb2acac8"
+   },
+   "preview/coronal/0140.jpg": {
+    "bytes": 5879,
+    "sha256_16": "c9d9974e886464cb"
+   },
+   "preview/coronal/0141.jpg": {
+    "bytes": 5794,
+    "sha256_16": "70ca6dc50723ac88"
+   },
+   "preview/coronal/0142.jpg": {
+    "bytes": 5547,
+    "sha256_16": "6ae4e8385b02f9dc"
+   },
+   "preview/coronal/0143.jpg": {
+    "bytes": 5460,
+    "sha256_16": "fde49559ddd51a24"
+   },
+   "preview/coronal/0144.jpg": {
+    "bytes": 5252,
+    "sha256_16": "8fa6b46be465f407"
+   },
+   "preview/coronal/0145.jpg": {
+    "bytes": 5134,
+    "sha256_16": "8fa3db421af9c686"
+   },
+   "preview/coronal/0146.jpg": {
+    "bytes": 4980,
+    "sha256_16": "0f17e38bb031660b"
+   },
+   "preview/coronal/0147.jpg": {
+    "bytes": 4812,
+    "sha256_16": "673e2ef0f4aab3c0"
+   },
+   "preview/coronal/0148.jpg": {
+    "bytes": 4674,
+    "sha256_16": "5ee01b6ffb3975f7"
+   },
+   "preview/coronal/0149.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0150.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0151.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0152.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0153.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0154.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0155.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0156.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0157.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0158.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/coronal/0159.jpg": {
+    "bytes": 633,
+    "sha256_16": "e4c195d4fd14de2a"
+   },
+   "preview/sagittal/0000.jpg": {
+    "bytes": 653,
+    "sha256_16": "b26b9711071f8e8f"
+   },
+   "preview/sagittal/0001.jpg": {
+    "bytes": 649,
+    "sha256_16": "141b5ee9ed11c34f"
+   },
+   "preview/sagittal/0002.jpg": {
+    "bytes": 657,
+    "sha256_16": "caa0f899cf8be08b"
+   },
+   "preview/sagittal/0003.jpg": {
+    "bytes": 656,
+    "sha256_16": "97578013867da3df"
+   },
+   "preview/sagittal/0004.jpg": {
+    "bytes": 664,
+    "sha256_16": "81393e1e71e5e748"
+   },
+   "preview/sagittal/0005.jpg": {
+    "bytes": 682,
+    "sha256_16": "486964b7ddedd7b7"
+   },
+   "preview/sagittal/0006.jpg": {
+    "bytes": 702,
+    "sha256_16": "9c9755a86f3fd0b9"
+   },
+   "preview/sagittal/0007.jpg": {
+    "bytes": 716,
+    "sha256_16": "d16942f05ab6455e"
+   },
+   "preview/sagittal/0008.jpg": {
+    "bytes": 754,
+    "sha256_16": "a7d7bcdb6ae61ecb"
+   },
+   "preview/sagittal/0009.jpg": {
+    "bytes": 854,
+    "sha256_16": "b47e9409e2429bb6"
+   },
+   "preview/sagittal/0010.jpg": {
+    "bytes": 1010,
+    "sha256_16": "00011c88085d6da4"
+   },
+   "preview/sagittal/0011.jpg": {
+    "bytes": 1088,
+    "sha256_16": "0b71bab6285a508a"
+   },
+   "preview/sagittal/0012.jpg": {
+    "bytes": 1144,
+    "sha256_16": "4f5bb4f2f3053655"
+   },
+   "preview/sagittal/0013.jpg": {
+    "bytes": 1299,
+    "sha256_16": "0ea83fbdb567c549"
+   },
+   "preview/sagittal/0014.jpg": {
+    "bytes": 1547,
+    "sha256_16": "f6db958e8c78395d"
+   },
+   "preview/sagittal/0015.jpg": {
+    "bytes": 1705,
+    "sha256_16": "7029fed6767bcd5a"
+   },
+   "preview/sagittal/0016.jpg": {
+    "bytes": 1900,
+    "sha256_16": "f2ac19d49d30a92f"
+   },
+   "preview/sagittal/0017.jpg": {
+    "bytes": 2174,
+    "sha256_16": "097eeac03dc8589c"
+   },
+   "preview/sagittal/0018.jpg": {
+    "bytes": 2610,
+    "sha256_16": "f63f40ac44a12e9a"
+   },
+   "preview/sagittal/0019.jpg": {
+    "bytes": 2821,
+    "sha256_16": "fe92f865f152f3d9"
+   },
+   "preview/sagittal/0020.jpg": {
+    "bytes": 2997,
+    "sha256_16": "7775ef6630b25a77"
+   },
+   "preview/sagittal/0021.jpg": {
+    "bytes": 3141,
+    "sha256_16": "f7cfdd252c2d16c4"
+   },
+   "preview/sagittal/0022.jpg": {
+    "bytes": 3380,
+    "sha256_16": "44b8057bfeff76a3"
+   },
+   "preview/sagittal/0023.jpg": {
+    "bytes": 3549,
+    "sha256_16": "7aa93c437bf8e6b4"
+   },
+   "preview/sagittal/0024.jpg": {
+    "bytes": 3744,
+    "sha256_16": "1eb9865060b92127"
+   },
+   "preview/sagittal/0025.jpg": {
+    "bytes": 3916,
+    "sha256_16": "6ab198d803b2b14c"
+   },
+   "preview/sagittal/0026.jpg": {
+    "bytes": 4179,
+    "sha256_16": "fc5a3ea254c660a0"
+   },
+   "preview/sagittal/0027.jpg": {
+    "bytes": 4375,
+    "sha256_16": "314dc68b441eb157"
+   },
+   "preview/sagittal/0028.jpg": {
+    "bytes": 4515,
+    "sha256_16": "19790dfcca88caea"
+   },
+   "preview/sagittal/0029.jpg": {
+    "bytes": 4588,
+    "sha256_16": "f7b8ea13b02bf125"
+   },
+   "preview/sagittal/0030.jpg": {
+    "bytes": 4792,
+    "sha256_16": "3367480d78c0ee5c"
+   },
+   "preview/sagittal/0031.jpg": {
+    "bytes": 4874,
+    "sha256_16": "5181f343aadaf4af"
+   },
+   "preview/sagittal/0032.jpg": {
+    "bytes": 5037,
+    "sha256_16": "96aac36679c0a9cd"
+   },
+   "preview/sagittal/0033.jpg": {
+    "bytes": 5147,
+    "sha256_16": "8c96cc3f85389fa2"
+   },
+   "preview/sagittal/0034.jpg": {
+    "bytes": 5337,
+    "sha256_16": "a490c063ec5bd2f8"
+   },
+   "preview/sagittal/0035.jpg": {
+    "bytes": 5363,
+    "sha256_16": "059a28d5fce0b63c"
+   },
+   "preview/sagittal/0036.jpg": {
+    "bytes": 5472,
+    "sha256_16": "1c62e0ae9e2fdcac"
+   },
+   "preview/sagittal/0037.jpg": {
+    "bytes": 5679,
+    "sha256_16": "21c69d09624a2128"
+   },
+   "preview/sagittal/0038.jpg": {
+    "bytes": 5818,
+    "sha256_16": "40e8c0e8a4ffff8c"
+   },
+   "preview/sagittal/0039.jpg": {
+    "bytes": 5999,
+    "sha256_16": "bd2e79ca139ee6eb"
+   },
+   "preview/sagittal/0040.jpg": {
+    "bytes": 5991,
+    "sha256_16": "061024b2a3f7545e"
+   },
+   "preview/sagittal/0041.jpg": {
+    "bytes": 6171,
+    "sha256_16": "d08de42fd9c1f445"
+   },
+   "preview/sagittal/0042.jpg": {
+    "bytes": 6213,
+    "sha256_16": "f9c4111ba1c21db0"
+   },
+   "preview/sagittal/0043.jpg": {
+    "bytes": 6261,
+    "sha256_16": "ab08438693f6c10c"
+   },
+   "preview/sagittal/0044.jpg": {
+    "bytes": 6251,
+    "sha256_16": "4e6fef5bccbd657f"
+   },
+   "preview/sagittal/0045.jpg": {
+    "bytes": 6304,
+    "sha256_16": "29f346531f626ca0"
+   },
+   "preview/sagittal/0046.jpg": {
+    "bytes": 6302,
+    "sha256_16": "0d2c9c870d8be299"
+   },
+   "preview/sagittal/0047.jpg": {
+    "bytes": 6213,
+    "sha256_16": "6fb495f527ea3a99"
+   },
+   "preview/sagittal/0048.jpg": {
+    "bytes": 6343,
+    "sha256_16": "69554f52501566be"
+   },
+   "preview/sagittal/0049.jpg": {
+    "bytes": 6296,
+    "sha256_16": "c63fd46151224efa"
+   },
+   "preview/sagittal/0050.jpg": {
+    "bytes": 6440,
+    "sha256_16": "8535371c56579b86"
+   },
+   "preview/sagittal/0051.jpg": {
+    "bytes": 6523,
+    "sha256_16": "5daa8e6a4fd31a67"
+   },
+   "preview/sagittal/0052.jpg": {
+    "bytes": 6489,
+    "sha256_16": "affbea64a9eefc7e"
+   },
+   "preview/sagittal/0053.jpg": {
+    "bytes": 6767,
+    "sha256_16": "b48737cce075b501"
+   },
+   "preview/sagittal/0054.jpg": {
+    "bytes": 6741,
+    "sha256_16": "aeed819bf5d1b186"
+   },
+   "preview/sagittal/0055.jpg": {
+    "bytes": 6984,
+    "sha256_16": "77c44b9ffde54be5"
+   },
+   "preview/sagittal/0056.jpg": {
+    "bytes": 7104,
+    "sha256_16": "d1e135711422aa28"
+   },
+   "preview/sagittal/0057.jpg": {
+    "bytes": 7395,
+    "sha256_16": "397da415298b0f63"
+   },
+   "preview/sagittal/0058.jpg": {
+    "bytes": 7474,
+    "sha256_16": "ec7a15cfa80ae5a6"
+   },
+   "preview/sagittal/0059.jpg": {
+    "bytes": 7531,
+    "sha256_16": "6e751c2e7a16b7a1"
+   },
+   "preview/sagittal/0060.jpg": {
+    "bytes": 7738,
+    "sha256_16": "84e91f312e8d0ae5"
+   },
+   "preview/sagittal/0061.jpg": {
+    "bytes": 7851,
+    "sha256_16": "25da4f602599d709"
+   },
+   "preview/sagittal/0062.jpg": {
+    "bytes": 8070,
+    "sha256_16": "a3a299f23f4c5b7f"
+   },
+   "preview/sagittal/0063.jpg": {
+    "bytes": 8004,
+    "sha256_16": "d92c1e3d642958db"
+   },
+   "preview/sagittal/0064.jpg": {
+    "bytes": 8215,
+    "sha256_16": "4db7d6a77ffdac01"
+   },
+   "preview/sagittal/0065.jpg": {
+    "bytes": 8148,
+    "sha256_16": "f0234e9cc94236bc"
+   },
+   "preview/sagittal/0066.jpg": {
+    "bytes": 8080,
+    "sha256_16": "24db6681db9e2e84"
+   },
+   "preview/sagittal/0067.jpg": {
+    "bytes": 8134,
+    "sha256_16": "1e38a62e05afcd1d"
+   },
+   "preview/sagittal/0068.jpg": {
+    "bytes": 8204,
+    "sha256_16": "0ace70cdba8ddfac"
+   },
+   "preview/sagittal/0069.jpg": {
+    "bytes": 8381,
+    "sha256_16": "13c56bb7d429f095"
+   },
+   "preview/sagittal/0070.jpg": {
+    "bytes": 8260,
+    "sha256_16": "6f896cb6ca7c18cb"
+   },
+   "preview/sagittal/0071.jpg": {
+    "bytes": 8357,
+    "sha256_16": "4f702e754c35e691"
+   },
+   "preview/sagittal/0072.jpg": {
+    "bytes": 8294,
+    "sha256_16": "ddfb9c3570bb40d5"
+   },
+   "preview/sagittal/0073.jpg": {
+    "bytes": 8375,
+    "sha256_16": "fb3f86cf8238dda9"
+   },
+   "preview/sagittal/0074.jpg": {
+    "bytes": 8465,
+    "sha256_16": "eeefa36b89b1a039"
+   },
+   "preview/sagittal/0075.jpg": {
+    "bytes": 8319,
+    "sha256_16": "5ea5b7abc4f5c4d5"
+   },
+   "preview/sagittal/0076.jpg": {
+    "bytes": 8558,
+    "sha256_16": "86a33585f51d8470"
+   },
+   "preview/sagittal/0077.jpg": {
+    "bytes": 8513,
+    "sha256_16": "c37050d7c0a628b8"
+   },
+   "preview/sagittal/0078.jpg": {
+    "bytes": 8681,
+    "sha256_16": "2c97730405814c7c"
+   },
+   "preview/sagittal/0079.jpg": {
+    "bytes": 8679,
+    "sha256_16": "8fe4f20c3851612b"
+   },
+   "preview/sagittal/0080.jpg": {
+    "bytes": 8641,
+    "sha256_16": "ea5f1efc4a8fc4b2"
+   },
+   "preview/sagittal/0081.jpg": {
+    "bytes": 8695,
+    "sha256_16": "40ce778ac3975fc2"
+   },
+   "preview/sagittal/0082.jpg": {
+    "bytes": 8631,
+    "sha256_16": "6985e1b048953757"
+   },
+   "preview/sagittal/0083.jpg": {
+    "bytes": 8689,
+    "sha256_16": "c33dc9d2ecc01be7"
+   },
+   "preview/sagittal/0084.jpg": {
+    "bytes": 8554,
+    "sha256_16": "9df94ccb196d11df"
+   },
+   "preview/sagittal/0085.jpg": {
+    "bytes": 8573,
+    "sha256_16": "8f6bd4cc6426ac21"
+   },
+   "preview/sagittal/0086.jpg": {
+    "bytes": 8532,
+    "sha256_16": "2ee32a757efec31f"
+   },
+   "preview/sagittal/0087.jpg": {
+    "bytes": 8547,
+    "sha256_16": "54af584e1adcbac7"
+   },
+   "preview/sagittal/0088.jpg": {
+    "bytes": 8365,
+    "sha256_16": "b66ea82e85a6530e"
+   },
+   "preview/sagittal/0089.jpg": {
+    "bytes": 8248,
+    "sha256_16": "e3e691d2a4320cb5"
+   },
+   "preview/sagittal/0090.jpg": {
+    "bytes": 8360,
+    "sha256_16": "bae837d26a4551d4"
+   },
+   "preview/sagittal/0091.jpg": {
+    "bytes": 8180,
+    "sha256_16": "a1c1915c3933c6c2"
+   },
+   "preview/sagittal/0092.jpg": {
+    "bytes": 8271,
+    "sha256_16": "ad4cf5491b20bffa"
+   },
+   "preview/sagittal/0093.jpg": {
+    "bytes": 8165,
+    "sha256_16": "9955a6a099cd26dc"
+   },
+   "preview/sagittal/0094.jpg": {
+    "bytes": 8213,
+    "sha256_16": "2bbc01c831bf7cd1"
+   },
+   "preview/sagittal/0095.jpg": {
+    "bytes": 8147,
+    "sha256_16": "b855c20cb2c17eb1"
+   },
+   "preview/sagittal/0096.jpg": {
+    "bytes": 8077,
+    "sha256_16": "069207e2f7f83bdf"
+   },
+   "preview/sagittal/0097.jpg": {
+    "bytes": 7985,
+    "sha256_16": "3ebef985412cca82"
+   },
+   "preview/sagittal/0098.jpg": {
+    "bytes": 7834,
+    "sha256_16": "0188f0211132f8b0"
+   },
+   "preview/sagittal/0099.jpg": {
+    "bytes": 7772,
+    "sha256_16": "de365ff0062d49a3"
+   },
+   "preview/sagittal/0100.jpg": {
+    "bytes": 7587,
+    "sha256_16": "726efcc5582cbd39"
+   },
+   "preview/sagittal/0101.jpg": {
+    "bytes": 7452,
+    "sha256_16": "bdf38579f7f9a3e9"
+   },
+   "preview/sagittal/0102.jpg": {
+    "bytes": 7311,
+    "sha256_16": "52952801eb1b0761"
+   },
+   "preview/sagittal/0103.jpg": {
+    "bytes": 6950,
+    "sha256_16": "866917998c948378"
+   },
+   "preview/sagittal/0104.jpg": {
+    "bytes": 6889,
+    "sha256_16": "edc54beea6a62b6e"
+   },
+   "preview/sagittal/0105.jpg": {
+    "bytes": 6608,
+    "sha256_16": "04459923ba1edd2e"
+   },
+   "preview/sagittal/0106.jpg": {
+    "bytes": 6639,
+    "sha256_16": "0e33f538e7e2d5f7"
+   },
+   "preview/sagittal/0107.jpg": {
+    "bytes": 6452,
+    "sha256_16": "e1f93a6a86523b98"
+   },
+   "preview/sagittal/0108.jpg": {
+    "bytes": 6432,
+    "sha256_16": "a80b9e9dda9aa83b"
+   },
+   "preview/sagittal/0109.jpg": {
+    "bytes": 6347,
+    "sha256_16": "05f654bb7515f92f"
+   },
+   "preview/sagittal/0110.jpg": {
+    "bytes": 6226,
+    "sha256_16": "a5a4857aecf938ba"
+   },
+   "preview/sagittal/0111.jpg": {
+    "bytes": 6370,
+    "sha256_16": "27eef656b9db5220"
+   },
+   "preview/sagittal/0112.jpg": {
+    "bytes": 6266,
+    "sha256_16": "d83f9e36f7f87a1f"
+   },
+   "preview/sagittal/0113.jpg": {
+    "bytes": 6401,
+    "sha256_16": "e73741b400102ad9"
+   },
+   "preview/sagittal/0114.jpg": {
+    "bytes": 6343,
+    "sha256_16": "5c35d2ebccb861b0"
+   },
+   "preview/sagittal/0115.jpg": {
+    "bytes": 6295,
+    "sha256_16": "4eecbe1abe841102"
+   },
+   "preview/sagittal/0116.jpg": {
+    "bytes": 6245,
+    "sha256_16": "bdab3992f3abf425"
+   },
+   "preview/sagittal/0117.jpg": {
+    "bytes": 6164,
+    "sha256_16": "2a7daea415552699"
+   },
+   "preview/sagittal/0118.jpg": {
+    "bytes": 6222,
+    "sha256_16": "1407e277f28ace62"
+   },
+   "preview/sagittal/0119.jpg": {
+    "bytes": 5972,
+    "sha256_16": "745345b108cc7493"
+   },
+   "preview/sagittal/0120.jpg": {
+    "bytes": 5973,
+    "sha256_16": "5f313eb225f3a6eb"
+   },
+   "preview/sagittal/0121.jpg": {
+    "bytes": 5909,
+    "sha256_16": "0bd80ad2e50d8cf0"
+   },
+   "preview/sagittal/0122.jpg": {
+    "bytes": 5717,
+    "sha256_16": "1a73a86d4bc8b68b"
+   },
+   "preview/sagittal/0123.jpg": {
+    "bytes": 5562,
+    "sha256_16": "e7b8db14574248a4"
+   },
+   "preview/sagittal/0124.jpg": {
+    "bytes": 5449,
+    "sha256_16": "5eed720a462f308d"
+   },
+   "preview/sagittal/0125.jpg": {
+    "bytes": 5371,
+    "sha256_16": "17f58fc4c00fcfcf"
+   },
+   "preview/sagittal/0126.jpg": {
+    "bytes": 5164,
+    "sha256_16": "f06539b1ad28f3b9"
+   },
+   "preview/sagittal/0127.jpg": {
+    "bytes": 5121,
+    "sha256_16": "fc64a711f8a6474f"
+   },
+   "preview/sagittal/0128.jpg": {
+    "bytes": 4883,
+    "sha256_16": "83f887e6b0468e12"
+   },
+   "preview/sagittal/0129.jpg": {
+    "bytes": 4686,
+    "sha256_16": "15378e911dc07a05"
+   },
+   "preview/sagittal/0130.jpg": {
+    "bytes": 4576,
+    "sha256_16": "2861bcb425085b18"
+   },
+   "preview/sagittal/0131.jpg": {
+    "bytes": 4398,
+    "sha256_16": "c3d40401fb606e7d"
+   },
+   "preview/sagittal/0132.jpg": {
+    "bytes": 4373,
+    "sha256_16": "bb0d1352c3eedc3c"
+   },
+   "preview/sagittal/0133.jpg": {
+    "bytes": 4139,
+    "sha256_16": "001fccda2924b912"
+   },
+   "preview/sagittal/0134.jpg": {
+    "bytes": 3971,
+    "sha256_16": "ea4067681b7be0b0"
+   },
+   "preview/sagittal/0135.jpg": {
+    "bytes": 3787,
+    "sha256_16": "cc65c69cdcf351ec"
+   },
+   "preview/sagittal/0136.jpg": {
+    "bytes": 3717,
+    "sha256_16": "a95cf0f6f324dfba"
+   },
+   "preview/sagittal/0137.jpg": {
+    "bytes": 3640,
+    "sha256_16": "54259b273fbddcb8"
+   },
+   "preview/sagittal/0138.jpg": {
+    "bytes": 3500,
+    "sha256_16": "be76e48f314b8706"
+   },
+   "preview/sagittal/0139.jpg": {
+    "bytes": 3425,
+    "sha256_16": "486602ac943e51cc"
+   },
+   "preview/sagittal/0140.jpg": {
+    "bytes": 3301,
+    "sha256_16": "15e921af059e4f0f"
+   },
+   "preview/sagittal/0141.jpg": {
+    "bytes": 3144,
+    "sha256_16": "1daf5c57897d9aa5"
+   },
+   "preview/sagittal/0142.jpg": {
+    "bytes": 2835,
+    "sha256_16": "7e34eb9ef241719e"
+   },
+   "preview/sagittal/0143.jpg": {
+    "bytes": 2482,
+    "sha256_16": "ef57d7171dc86011"
+   },
+   "preview/sagittal/0144.jpg": {
+    "bytes": 2330,
+    "sha256_16": "1f3cd47a9fdb92db"
+   },
+   "preview/sagittal/0145.jpg": {
+    "bytes": 2080,
+    "sha256_16": "93aeb08df3dcb94a"
+   },
+   "preview/sagittal/0146.jpg": {
+    "bytes": 1808,
+    "sha256_16": "a0498e672ba0b728"
+   },
+   "preview/sagittal/0147.jpg": {
+    "bytes": 1597,
+    "sha256_16": "69202a2d5441ca74"
+   },
+   "preview/sagittal/0148.jpg": {
+    "bytes": 1446,
+    "sha256_16": "c2176f3e84606700"
+   },
+   "preview/sagittal/0149.jpg": {
+    "bytes": 1305,
+    "sha256_16": "398e50fbef5ad328"
+   },
+   "preview/sagittal/0150.jpg": {
+    "bytes": 1230,
+    "sha256_16": "9409cf0ecfb69291"
+   },
+   "preview/sagittal/0151.jpg": {
+    "bytes": 1104,
+    "sha256_16": "8e00ae7bca99031e"
+   },
+   "preview/sagittal/0152.jpg": {
+    "bytes": 980,
+    "sha256_16": "dfe38aa931216a83"
+   },
+   "preview/sagittal/0153.jpg": {
+    "bytes": 990,
+    "sha256_16": "161855be61ec48a0"
+   },
+   "preview/sagittal/0154.jpg": {
+    "bytes": 930,
+    "sha256_16": "24e89143e83c021c"
+   },
+   "preview/sagittal/0155.jpg": {
+    "bytes": 875,
+    "sha256_16": "4cd8623f733e5ec8"
+   },
+   "preview/sagittal/0156.jpg": {
+    "bytes": 853,
+    "sha256_16": "946c30558d85485e"
+   },
+   "preview/sagittal/0157.jpg": {
+    "bytes": 842,
+    "sha256_16": "e68e4227a9fc51de"
+   },
+   "preview/sagittal/0158.jpg": {
+    "bytes": 809,
+    "sha256_16": "2a1609af331bc8fb"
+   },
+   "preview/sagittal/0159.jpg": {
+    "bytes": 796,
+    "sha256_16": "b9000697926c07cb"
+   },
+   "preview/contours.axial.json": {
+    "bytes": 889013,
+    "sha256_16": "a221b515cb3384c2",
+    "gzip_bytes": 224216
+   },
+   "stl/incisive_canal_left.stl": {
+    "bytes": 49484,
+    "sha256_16": "fc0020b08f5b0abc"
+   },
+   "mesh/incisive_canal_left.msh": {
+    "bytes": 17896,
+    "sha256_16": "bedd165e0e394403",
+    "gzip_bytes": 9258
+   },
+   "stl/incisive_canal_right.stl": {
+    "bytes": 401184,
+    "sha256_16": "0dd9ea20d6c7f565"
+   },
+   "mesh/incisive_canal_right.msh": {
+    "bytes": 144664,
+    "sha256_16": "9463970314e43f55",
+    "gzip_bytes": 70989
+   },
+   "preview/contours.coronal.json": {
+    "bytes": 698044,
+    "sha256_16": "7fb6e805f0ecaa34",
+    "gzip_bytes": 183870
+   },
+   "preview/contours.sagittal.json": {
+    "bytes": 678463,
+    "sha256_16": "4c2fb4ba6e2b6e47",
+    "gzip_bytes": 177275
+   }
+  },
+  "precompressed": 48,
+  "precompressed_bytes": 19091359,
+  "precompressed_gzip_bytes": 5164989
+ },
+ "input": {
+  "kind": "volume",
+  "n_files": 1,
+  "size_xyz": [
+   360,
+   360,
+   330
+  ],
+  "warnings": [
+   "Scan was stored LPS; reoriented to RPI for inference and mapped back for the download."
+  ],
+  "acquisition": null,
+  "orientation": {
+   "original": "LPS",
+   "ambiguous": false,
+   "canonical": "RPI",
+   "reoriented": true,
+   "unverified": false,
+   "tilt_degrees": 0.0,
+   "direction_cosines": [
+    1.0,
+    1.0,
+    1.0
+   ]
+  },
+  "spacing_xyz": [
+   0.5,
+   0.5,
+   0.5
+  ],
+  "dicom_reference": false,
+  "series_description": null
+ },
+ "meshes": {
+  "frame": {
+   "note": "Vertices are x,y,z in patient LPS millimetres -- the same physical space in the canonical and the as-uploaded frame, so one mesh serves both the STL download and the viewer.",
+   "space": "LPS",
+   "units": "mm",
+   "origin": [
+    179.5,
+    0.0,
+    164.5
+   ],
+   "direction": [
+    -1.0,
+    0.0,
+    0.0,
+    0.0,
+    1.0,
+    0.0,
+    0.0,
+    0.0,
+    -1.0
+   ],
+   "spacing_zyx": [
+    0.5,
+    0.5,
+    0.5
+   ]
+  },
+  "detail": {
+   "pulp": {
+    "frame": "LPS_mm",
+    "voxels": 8266,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/pulp.stl",
+    "vertices": 10076,
+    "web_file": "mesh/pulp.msh",
+    "step_size": 1,
+    "triangles": 19524,
+    "web_bytes": 355216,
+    "triangles_raw": 19524,
+    "web_triangles": 19524,
+    "mean_thickness_mm": 1.1
+   },
+   "canal": {
+    "frame": "LPS_mm",
+    "voxels": 8356,
+    "sigma_mm": 0.25,
+    "stl_file": "stl/canal.stl",
+    "vertices": 9766,
+    "web_file": "mesh/canal.msh",
+    "step_size": 1,
+    "triangles": 19292,
+    "web_bytes": 217180,
+    "triangles_raw": 19292,
+    "web_triangles": 12000,
+    "web_volume_drift": 0.00023,
+    "mean_thickness_mm": 1.36
+   },
+   "crown": {
+    "frame": "LPS_mm",
+    "voxels": 352,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/crown.stl",
+    "vertices": 430,
+    "web_file": "mesh/crown.msh",
+    "step_size": 1,
+    "triangles": 844,
+    "web_bytes": 15304,
+    "triangles_raw": 844,
+    "web_triangles": 844,
+    "mean_thickness_mm": 1.06
+   },
+   "maxilla": {
+    "frame": "LPS_mm",
+    "voxels": 210670,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/maxilla.stl",
+    "vertices": 127178,
+    "web_file": "mesh/maxilla.msh",
+    "step_size": 1,
+    "triangles": 254140,
+    "web_bytes": 1080760,
+    "triangles_raw": 254140,
+    "web_triangles": 59998,
+    "web_volume_drift": 0.0012,
+    "mean_thickness_mm": 2.02
+   },
+   "pharynx": {
+    "frame": "LPS_mm",
+    "voxels": 229863,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/pharynx.stl",
+    "vertices": 18425,
+    "web_file": "mesh/pharynx.msh",
+    "step_size": 2,
+    "triangles": 36690,
+    "web_bytes": 450484,
+    "triangles_raw": 36690,
+    "web_triangles": 25000,
+    "web_volume_drift": 0.0012,
+    "mean_thickness_mm": 3.48
+   },
+   "mandible": {
+    "frame": "LPS_mm",
+    "voxels": 640054,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/mandible.stl",
+    "vertices": 263981,
+    "web_file": "mesh/mandible.msh",
+    "step_size": 1,
+    "triangles": 527606,
+    "web_bytes": 1080544,
+    "stl_triangles": 299999,
+    "triangles_raw": 527606,
+    "web_triangles": 59999,
+    "stl_volume_drift": 0.0001,
+    "web_volume_drift": 0.00094,
+    "mean_thickness_mm": 2.59
+   },
+   "tooth_11": {
+    "frame": "LPS_mm",
+    "voxels": 2206,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_11.stl",
+    "vertices": 1904,
+    "web_file": "mesh/tooth_11.msh",
+    "step_size": 1,
+    "triangles": 3804,
+    "web_bytes": 68512,
+    "triangles_raw": 3804,
+    "web_triangles": 3804,
+    "mean_thickness_mm": 1.36
+   },
+   "tooth_12": {
+    "frame": "LPS_mm",
+    "voxels": 1231,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_12.stl",
+    "vertices": 1478,
+    "web_file": "mesh/tooth_12.msh",
+    "step_size": 1,
+    "triangles": 2956,
+    "web_bytes": 53224,
+    "triangles_raw": 2956,
+    "web_triangles": 2956,
+    "mean_thickness_mm": 1.14
+   },
+   "tooth_13": {
+    "frame": "LPS_mm",
+    "voxels": 2870,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_13.stl",
+    "vertices": 2344,
+    "web_file": "mesh/tooth_13.msh",
+    "step_size": 1,
+    "triangles": 4676,
+    "web_bytes": 84256,
+    "triangles_raw": 4676,
+    "web_triangles": 4676,
+    "mean_thickness_mm": 1.37
+   },
+   "tooth_14": {
+    "frame": "LPS_mm",
+    "voxels": 3297,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_14.stl",
+    "vertices": 2272,
+    "web_file": "mesh/tooth_14.msh",
+    "step_size": 1,
+    "triangles": 4536,
+    "web_bytes": 81712,
+    "triangles_raw": 4536,
+    "web_triangles": 4536,
+    "mean_thickness_mm": 1.56
+   },
+   "tooth_15": {
+    "frame": "LPS_mm",
+    "voxels": 2806,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_15.stl",
+    "vertices": 2522,
+    "web_file": "mesh/tooth_15.msh",
+    "step_size": 1,
+    "triangles": 5032,
+    "web_bytes": 90664,
+    "triangles_raw": 5032,
+    "web_triangles": 5032,
+    "mean_thickness_mm": 1.32
+   },
+   "tooth_17": {
+    "frame": "LPS_mm",
+    "voxels": 4104,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_17.stl",
+    "vertices": 4245,
+    "web_file": "mesh/tooth_17.msh",
+    "step_size": 1,
+    "triangles": 8502,
+    "web_bytes": 107944,
+    "triangles_raw": 8502,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00054,
+    "mean_thickness_mm": 1.24
+   },
+   "tooth_18": {
+    "frame": "LPS_mm",
+    "voxels": 1005,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_18.stl",
+    "vertices": 1178,
+    "web_file": "mesh/tooth_18.msh",
+    "step_size": 1,
+    "triangles": 2352,
+    "web_bytes": 42376,
+    "triangles_raw": 2352,
+    "web_triangles": 2352,
+    "mean_thickness_mm": 1.11
+   },
+   "tooth_21": {
+    "frame": "LPS_mm",
+    "voxels": 2761,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_21.stl",
+    "vertices": 2374,
+    "web_file": "mesh/tooth_21.msh",
+    "step_size": 1,
+    "triangles": 4744,
+    "web_bytes": 85432,
+    "triangles_raw": 4744,
+    "web_triangles": 4744,
+    "mean_thickness_mm": 1.33
+   },
+   "tooth_22": {
+    "frame": "LPS_mm",
+    "voxels": 2256,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_22.stl",
+    "vertices": 1994,
+    "web_file": "mesh/tooth_22.msh",
+    "step_size": 1,
+    "triangles": 3980,
+    "web_bytes": 71704,
+    "triangles_raw": 3980,
+    "web_triangles": 3980,
+    "mean_thickness_mm": 1.33
+   },
+   "tooth_23": {
+    "frame": "LPS_mm",
+    "voxels": 3524,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_23.stl",
+    "vertices": 2576,
+    "web_file": "mesh/tooth_23.msh",
+    "step_size": 1,
+    "triangles": 5144,
+    "web_bytes": 92656,
+    "triangles_raw": 5144,
+    "web_triangles": 5144,
+    "mean_thickness_mm": 1.52
+   },
+   "tooth_24": {
+    "frame": "LPS_mm",
+    "voxels": 3348,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_24.stl",
+    "vertices": 2692,
+    "web_file": "mesh/tooth_24.msh",
+    "step_size": 1,
+    "triangles": 5384,
+    "web_bytes": 96928,
+    "triangles_raw": 5384,
+    "web_triangles": 5384,
+    "mean_thickness_mm": 1.42
+   },
+   "tooth_25": {
+    "frame": "LPS_mm",
+    "voxels": 3619,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_25.stl",
+    "vertices": 2438,
+    "web_file": "mesh/tooth_25.msh",
+    "step_size": 1,
+    "triangles": 4868,
+    "web_bytes": 87688,
+    "triangles_raw": 4868,
+    "web_triangles": 4868,
+    "mean_thickness_mm": 1.53
+   },
+   "tooth_26": {
+    "frame": "LPS_mm",
+    "voxels": 1746,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_26.stl",
+    "vertices": 2000,
+    "web_file": "mesh/tooth_26.msh",
+    "step_size": 1,
+    "triangles": 3988,
+    "web_bytes": 71872,
+    "triangles_raw": 3988,
+    "web_triangles": 3988,
+    "mean_thickness_mm": 1.24
+   },
+   "tooth_27": {
+    "frame": "LPS_mm",
+    "voxels": 3824,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_27.stl",
+    "vertices": 3744,
+    "web_file": "mesh/tooth_27.msh",
+    "step_size": 1,
+    "triangles": 7488,
+    "web_bytes": 108016,
+    "triangles_raw": 7488,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00027,
+    "mean_thickness_mm": 1.32
+   },
+   "tooth_28": {
+    "frame": "LPS_mm",
+    "voxels": 1192,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_28.stl",
+    "vertices": 1056,
+    "web_file": "mesh/tooth_28.msh",
+    "step_size": 1,
+    "triangles": 2104,
+    "web_bytes": 37936,
+    "triangles_raw": 2104,
+    "web_triangles": 2104,
+    "mean_thickness_mm": 1.39
+   },
+   "tooth_31": {
+    "frame": "LPS_mm",
+    "voxels": 1845,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_31.stl",
+    "vertices": 1424,
+    "web_file": "mesh/tooth_31.msh",
+    "step_size": 1,
+    "triangles": 2840,
+    "web_bytes": 51184,
+    "triangles_raw": 2840,
+    "web_triangles": 2840,
+    "mean_thickness_mm": 1.43
+   },
+   "tooth_32": {
+    "frame": "LPS_mm",
+    "voxels": 2247,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_32.stl",
+    "vertices": 1796,
+    "web_file": "mesh/tooth_32.msh",
+    "step_size": 1,
+    "triangles": 3584,
+    "web_bytes": 64576,
+    "triangles_raw": 3584,
+    "web_triangles": 3584,
+    "mean_thickness_mm": 1.4
+   },
+   "tooth_33": {
+    "frame": "LPS_mm",
+    "voxels": 3475,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_33.stl",
+    "vertices": 2666,
+    "web_file": "mesh/tooth_33.msh",
+    "step_size": 1,
+    "triangles": 5324,
+    "web_bytes": 95896,
+    "triangles_raw": 5324,
+    "web_triangles": 5324,
+    "mean_thickness_mm": 1.42
+   },
+   "tooth_34": {
+    "frame": "LPS_mm",
+    "voxels": 2689,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_34.stl",
+    "vertices": 2214,
+    "web_file": "mesh/tooth_34.msh",
+    "step_size": 1,
+    "triangles": 4420,
+    "web_bytes": 79624,
+    "triangles_raw": 4420,
+    "web_triangles": 4420,
+    "mean_thickness_mm": 1.39
+   },
+   "tooth_35": {
+    "frame": "LPS_mm",
+    "voxels": 2881,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_35.stl",
+    "vertices": 2222,
+    "web_file": "mesh/tooth_35.msh",
+    "step_size": 1,
+    "triangles": 4436,
+    "web_bytes": 79912,
+    "triangles_raw": 4436,
+    "web_triangles": 4436,
+    "mean_thickness_mm": 1.46
+   },
+   "tooth_36": {
+    "frame": "LPS_mm",
+    "voxels": 6080,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_36.stl",
+    "vertices": 4466,
+    "web_file": "mesh/tooth_36.msh",
+    "step_size": 1,
+    "triangles": 8932,
+    "web_bytes": 107992,
+    "triangles_raw": 8932,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00021,
+    "mean_thickness_mm": 1.55
+   },
+   "tooth_37": {
+    "frame": "LPS_mm",
+    "voxels": 2516,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_37.stl",
+    "vertices": 3085,
+    "web_file": "mesh/tooth_37.msh",
+    "step_size": 1,
+    "triangles": 6190,
+    "web_bytes": 107896,
+    "triangles_raw": 6190,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00033,
+    "mean_thickness_mm": 1.17
+   },
+   "tooth_41": {
+    "frame": "LPS_mm",
+    "voxels": 1853,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_41.stl",
+    "vertices": 1480,
+    "web_file": "mesh/tooth_41.msh",
+    "step_size": 1,
+    "triangles": 2952,
+    "web_bytes": 53200,
+    "triangles_raw": 2952,
+    "web_triangles": 2952,
+    "mean_thickness_mm": 1.42
+   },
+   "tooth_42": {
+    "frame": "LPS_mm",
+    "voxels": 1859,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_42.stl",
+    "vertices": 1570,
+    "web_file": "mesh/tooth_42.msh",
+    "step_size": 1,
+    "triangles": 3132,
+    "web_bytes": 56440,
+    "triangles_raw": 3132,
+    "web_triangles": 3132,
+    "mean_thickness_mm": 1.38
+   },
+   "tooth_43": {
+    "frame": "LPS_mm",
+    "voxels": 3281,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_43.stl",
+    "vertices": 2432,
+    "web_file": "mesh/tooth_43.msh",
+    "step_size": 1,
+    "triangles": 4856,
+    "web_bytes": 87472,
+    "triangles_raw": 4856,
+    "web_triangles": 4856,
+    "mean_thickness_mm": 1.49
+   },
+   "tooth_44": {
+    "frame": "LPS_mm",
+    "voxels": 3152,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_44.stl",
+    "vertices": 2344,
+    "web_file": "mesh/tooth_44.msh",
+    "step_size": 1,
+    "triangles": 4680,
+    "web_bytes": 84304,
+    "triangles_raw": 4680,
+    "web_triangles": 4680,
+    "mean_thickness_mm": 1.53
+   },
+   "tooth_45": {
+    "frame": "LPS_mm",
+    "voxels": 2960,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_45.stl",
+    "vertices": 2288,
+    "web_file": "mesh/tooth_45.msh",
+    "step_size": 1,
+    "triangles": 4568,
+    "web_bytes": 82288,
+    "triangles_raw": 4568,
+    "web_triangles": 4568,
+    "mean_thickness_mm": 1.44
+   },
+   "tooth_46": {
+    "frame": "LPS_mm",
+    "voxels": 6564,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_46.stl",
+    "vertices": 4342,
+    "web_file": "mesh/tooth_46.msh",
+    "step_size": 1,
+    "triangles": 8680,
+    "web_bytes": 108040,
+    "triangles_raw": 8680,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00017,
+    "mean_thickness_mm": 1.58
+   },
+   "tooth_47": {
+    "frame": "LPS_mm",
+    "voxels": 3534,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_47.stl",
+    "vertices": 4176,
+    "web_file": "mesh/tooth_47.msh",
+    "step_size": 1,
+    "triangles": 8352,
+    "web_bytes": 107968,
+    "triangles_raw": 8352,
+    "web_triangles": 6000,
+    "web_volume_drift": 0.00019,
+    "mean_thickness_mm": 1.19
+   },
+   "tooth_48": {
+    "frame": "LPS_mm",
+    "voxels": 2672,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/tooth_48.stl",
+    "vertices": 2136,
+    "web_file": "mesh/tooth_48.msh",
+    "step_size": 1,
+    "triangles": 4268,
+    "web_bytes": 76864,
+    "triangles_raw": 4268,
+    "web_triangles": 4268,
+    "mean_thickness_mm": 1.38
+   },
+   "lingual_canal": {
+    "frame": "LPS_mm",
+    "voxels": 107,
+    "sigma_mm": 0.25,
+    "stl_file": "stl/lingual_canal.stl",
+    "vertices": 276,
+    "web_file": "mesh/lingual_canal.msh",
+    "step_size": 1,
+    "triangles": 472,
+    "web_bytes": 8992,
+    "triangles_raw": 472,
+    "web_triangles": 472,
+    "mean_thickness_mm": 1.02
+   },
+   "sinus_max_left": {
+    "frame": "LPS_mm",
+    "voxels": 2792,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/sinus_max_left.stl",
+    "vertices": 2682,
+    "web_file": "mesh/sinus_max_left.msh",
+    "step_size": 1,
+    "triangles": 5304,
+    "web_bytes": 95848,
+    "triangles_raw": 5304,
+    "web_triangles": 5304,
+    "mean_thickness_mm": 1.3
+   },
+   "sinus_max_right": {
+    "frame": "LPS_mm",
+    "voxels": 4297,
+    "sigma_mm": 0.4,
+    "stl_file": "stl/sinus_max_right.stl",
+    "vertices": 4166,
+    "web_file": "mesh/sinus_max_right.msh",
+    "step_size": 1,
+    "triangles": 8268,
+    "web_bytes": 149224,
+    "triangles_raw": 8268,
+    "web_triangles": 8268,
+    "mean_thickness_mm": 1.23
+   },
+   "incisive_canal_left": {
+    "frame": "LPS_mm",
+    "voxels": 280,
+    "sigma_mm": 0.25,
+    "stl_file": "stl/incisive_canal_left.stl",
+    "vertices": 502,
+    "web_file": "mesh/incisive_canal_left.msh",
+    "step_size": 1,
+    "triangles": 988,
+    "web_bytes": 17896,
+    "triangles_raw": 988,
+    "web_triangles": 988,
+    "mean_thickness_mm": 1.14
+   },
+   "incisive_canal_right": {
+    "frame": "LPS_mm",
+    "voxels": 3447,
+    "sigma_mm": 0.25,
+    "stl_file": "stl/incisive_canal_right.stl",
+    "vertices": 4065,
+    "web_file": "mesh/incisive_canal_right.msh",
+    "step_size": 1,
+    "triangles": 8022,
+    "web_bytes": 144664,
+    "triangles_raw": 8022,
+    "web_triangles": 8000,
+    "web_volume_drift": 0.00032,
+    "mean_thickness_mm": 1.47
+   }
+  },
+  "taubin": {
+   "nu": -0.53,
+   "lambda": 0.5,
+   "iterations": 12
+  },
+  "totals": {
+   "stl_bytes": 40019194,
+   "triangles": 800315,
+   "web_bytes": 6040688,
+   "structures": 41,
+   "web_triangles": 335025,
+   "web_structures": 41
+  },
+  "web_mesh_format": {
+   "magic": "DSVM",
+   "endian": "little",
+   "layout": "u32 version, u32 n_points, u32 n_tris, f32[3n] xyz LPS mm, u32[3m] indices",
+   "version": 1
+  },
+  "stl_triangle_budget": 300000,
+  "web_triangle_budget": {
+   "pulp": 30000,
+   "canal": 12000,
+   "crown": 8000,
+   "tooth": 6000,
+   "bridge": 8000,
+   "implant": 8000,
+   "maxilla": 60000,
+   "pharynx": 25000,
+   "mandible": 60000,
+   "lingual_canal": 8000,
+   "sinus_max_left": 20000,
+   "sinus_max_right": 20000,
+   "incisive_canal_left": 8000,
+   "incisive_canal_right": 8000,
+   "lower_teeth_unnumbered": 8000,
+   "upper_teeth_unnumbered": 8000
+  }
+ },
+ "models": [
+  {
+   "name": "ToothFairy3 U-Mamba2 (Task 1)",
+   "seconds": 166.04,
+   "checkpoint": "toothfairy3/fold_all/checkpoint_final.pth"
+  }
+ ],
+ "volume": {
+  "note": "Display volume: grey is windowed to 8-bit and downsampled, and the labelmap is resampled by smoothed-indicator argmax. Use segmentation.nii.gz on the original grid for anything measured.",
+  "image": {
+   "file": "image.raw",
+   "dtype": "uint8",
+   "window": [
+    3000.0,
+    1000.0
+   ]
+  },
+  "colors": {
+   "1": {
+    "id": "maxilla",
+    "name": "Maxilla",
+    "color": "#d9c9a3",
+    "group": "Jaws"
+   },
+   "2": {
+    "id": "mandible",
+    "name": "Mandible",
+    "color": "#c2a878",
+    "group": "Jaws"
+   },
+   "3": {
+    "id": "canal",
+    "name": "Mandibular canal",
+    "color": "#ff3b30",
+    "group": "Nerve canal"
+   },
+   "6": {
+    "id": "tooth_11",
+    "name": "Upper right central incisor (11)",
+    "color": "#186ebf",
+    "group": "Upper teeth"
+   },
+   "7": {
+    "id": "tooth_12",
+    "name": "Upper right lateral incisor (12)",
+    "color": "#1f7acd",
+    "group": "Upper teeth"
+   },
+   "8": {
+    "id": "tooth_13",
+    "name": "Upper right canine (13)",
+    "color": "#2984d9",
+    "group": "Upper teeth"
+   },
+   "9": {
+    "id": "tooth_14",
+    "name": "Upper right first premolar (14)",
+    "color": "#408fd8",
+    "group": "Upper teeth"
+   },
+   "10": {
+    "id": "tooth_15",
+    "name": "Upper right second premolar (15)",
+    "color": "#5699d7",
+    "group": "Upper teeth"
+   },
+   "12": {
+    "id": "tooth_17",
+    "name": "Upper right second molar (17)",
+    "color": "#80aed9",
+    "group": "Upper teeth"
+   },
+   "13": {
+    "id": "tooth_18",
+    "name": "Upper right third molar (18)",
+    "color": "#94b9db",
+    "group": "Upper teeth"
+   },
+   "14": {
+    "id": "tooth_21",
+    "name": "Upper left central incisor (21)",
+    "color": "#18bf8d",
+    "group": "Upper teeth"
+   },
+   "15": {
+    "id": "tooth_22",
+    "name": "Upper left lateral incisor (22)",
+    "color": "#1fcd99",
+    "group": "Upper teeth"
+   },
+   "16": {
+    "id": "tooth_23",
+    "name": "Upper left canine (23)",
+    "color": "#29d9a4",
+    "group": "Upper teeth"
+   },
+   "17": {
+    "id": "tooth_24",
+    "name": "Upper left first premolar (24)",
+    "color": "#40d8aa",
+    "group": "Upper teeth"
+   },
+   "18": {
+    "id": "tooth_25",
+    "name": "Upper left second premolar (25)",
+    "color": "#56d7b1",
+    "group": "Upper teeth"
+   },
+   "19": {
+    "id": "tooth_26",
+    "name": "Upper left first molar (26)",
+    "color": "#6cd8b7",
+    "group": "Upper teeth"
+   },
+   "20": {
+    "id": "tooth_27",
+    "name": "Upper left second molar (27)",
+    "color": "#80d9be",
+    "group": "Upper teeth"
+   },
+   "21": {
+    "id": "tooth_28",
+    "name": "Upper left third molar (28)",
+    "color": "#94dbc6",
+    "group": "Upper teeth"
+   },
+   "22": {
+    "id": "tooth_31",
+    "name": "Lower left central incisor (31)",
+    "color": "#bf8618",
+    "group": "Lower teeth"
+   },
+   "23": {
+    "id": "tooth_32",
+    "name": "Lower left lateral incisor (32)",
+    "color": "#cd921f",
+    "group": "Lower teeth"
+   },
+   "24": {
+    "id": "tooth_33",
+    "name": "Lower left canine (33)",
+    "color": "#d99d29",
+    "group": "Lower teeth"
+   },
+   "25": {
+    "id": "tooth_34",
+    "name": "Lower left first premolar (34)",
+    "color": "#d8a440",
+    "group": "Lower teeth"
+   },
+   "26": {
+    "id": "tooth_35",
+    "name": "Lower left second premolar (35)",
+    "color": "#d7ab56",
+    "group": "Lower teeth"
+   },
+   "27": {
+    "id": "tooth_36",
+    "name": "Lower left first molar (36)",
+    "color": "#d8b36c",
+    "group": "Lower teeth"
+   },
+   "28": {
+    "id": "tooth_37",
+    "name": "Lower left second molar (37)",
+    "color": "#d9bb80",
+    "group": "Lower teeth"
+   },
+   "30": {
+    "id": "tooth_41",
+    "name": "Lower right central incisor (41)",
+    "color": "#bf185e",
+    "group": "Lower teeth"
+   },
+   "31": {
+    "id": "tooth_42",
+    "name": "Lower right lateral incisor (42)",
+    "color": "#cd1f68",
+    "group": "Lower teeth"
+   },
+   "32": {
+    "id": "tooth_43",
+    "name": "Lower right canine (43)",
+    "color": "#d92973",
+    "group": "Lower teeth"
+   },
+   "33": {
+    "id": "tooth_44",
+    "name": "Lower right first premolar (44)",
+    "color": "#d84080",
+    "group": "Lower teeth"
+   },
+   "34": {
+    "id": "tooth_45",
+    "name": "Lower right second premolar (45)",
+    "color": "#d7568c",
+    "group": "Lower teeth"
+   },
+   "35": {
+    "id": "tooth_46",
+    "name": "Lower right first molar (46)",
+    "color": "#d86c99",
+    "group": "Lower teeth"
+   },
+   "36": {
+    "id": "tooth_47",
+    "name": "Lower right second molar (47)",
+    "color": "#d980a6",
+    "group": "Lower teeth"
+   },
+   "37": {
+    "id": "tooth_48",
+    "name": "Lower right third molar (48)",
+    "color": "#db94b2",
+    "group": "Lower teeth"
+   },
+   "38": {
+    "id": "sinus_max_left",
+    "name": "Left maxillary sinus",
+    "color": "#4fb3bf",
+    "group": "Airway & sinuses"
+   },
+   "39": {
+    "id": "sinus_max_right",
+    "name": "Right maxillary sinus",
+    "color": "#2e8b96",
+    "group": "Airway & sinuses"
+   },
+   "40": {
+    "id": "pharynx",
+    "name": "Pharynx",
+    "color": "#b07fd6",
+    "group": "Airway & sinuses"
+   },
+   "41": {
+    "id": "incisive_canal_left",
+    "name": "Left mandibular incisive canal",
+    "color": "#ff8f3b",
+    "group": "Nerve canal"
+   },
+   "42": {
+    "id": "incisive_canal_right",
+    "name": "Right mandibular incisive canal",
+    "color": "#e0722a",
+    "group": "Nerve canal"
+   },
+   "45": {
+    "id": "crown",
+    "name": "Crown",
+    "color": "#d4af37",
+    "group": "Dental work"
+   },
+   "47": {
+    "id": "pulp",
+    "name": "Pulp",
+    "color": "#ff5fa2",
+    "group": "Tooth pulp"
+   }
+  },
+  "labels": {
+   "file": "labels.raw",
+   "dtype": "uint8",
+   "present": [
+    1,
+    2,
+    3,
+    6,
+    7,
+    8,
+    9,
+    10,
+    12,
+    13,
+    14,
+    15,
+    16,
+    17,
+    18,
+    19,
+    20,
+    21,
+    22,
+    23,
+    24,
+    25,
+    26,
+    27,
+    28,
+    30,
+    31,
+    32,
+    33,
+    34,
+    35,
+    36,
+    37,
+    38,
+    39,
+    40,
+    41,
+    42,
+    45,
+    47
+   ],
+   "lost_to_downsampling": [
+    "lingual_canal"
+   ]
+  },
+  "origin": [
+   179.5,
+   0.0,
+   164.5
+  ],
+  "spacing": [
+   1.0,
+   1.0,
+   1.0
+  ],
+  "resample": {
+   "lost": [
+    "lingual_canal"
+   ],
+   "sigma_mm": 0.4,
+   "out_shape": [
+    165,
+    180,
+    180
+   ],
+   "structures": {
+    "pulp": {
+     "voxels_source": 8266,
+     "voxels_display": 419
+    },
+    "canal": {
+     "voxels_source": 8356,
+     "voxels_display": 896
+    },
+    "crown": {
+     "voxels_source": 352,
+     "voxels_display": 11
+    },
+    "maxilla": {
+     "voxels_source": 210670,
+     "voxels_display": 30818
+    },
+    "pharynx": {
+     "voxels_source": 229863,
+     "voxels_display": 27256
+    },
+    "mandible": {
+     "voxels_source": 640054,
+     "voxels_display": 82915
+    },
+    "tooth_11": {
+     "voxels_source": 2206,
+     "voxels_display": 286
+    },
+    "tooth_12": {
+     "voxels_source": 1231,
+     "voxels_display": 157
+    },
+    "tooth_13": {
+     "voxels_source": 2870,
+     "voxels_display": 394
+    },
+    "tooth_14": {
+     "voxels_source": 3297,
+     "voxels_display": 424
+    },
+    "tooth_15": {
+     "voxels_source": 2806,
+     "voxels_display": 361
+    },
+    "tooth_17": {
+     "voxels_source": 4104,
+     "voxels_display": 585
+    },
+    "tooth_18": {
+     "voxels_source": 1005,
+     "voxels_display": 113
+    },
+    "tooth_21": {
+     "voxels_source": 2761,
+     "voxels_display": 352
+    },
+    "tooth_22": {
+     "voxels_source": 2256,
+     "voxels_display": 280
+    },
+    "tooth_23": {
+     "voxels_source": 3524,
+     "voxels_display": 458
+    },
+    "tooth_24": {
+     "voxels_source": 3348,
+     "voxels_display": 443
+    },
+    "tooth_25": {
+     "voxels_source": 3619,
+     "voxels_display": 475
+    },
+    "tooth_26": {
+     "voxels_source": 1746,
+     "voxels_display": 235
+    },
+    "tooth_27": {
+     "voxels_source": 3824,
+     "voxels_display": 554
+    },
+    "tooth_28": {
+     "voxels_source": 1192,
+     "voxels_display": 158
+    },
+    "tooth_31": {
+     "voxels_source": 1845,
+     "voxels_display": 224
+    },
+    "tooth_32": {
+     "voxels_source": 2247,
+     "voxels_display": 289
+    },
+    "tooth_33": {
+     "voxels_source": 3475,
+     "voxels_display": 459
+    },
+    "tooth_34": {
+     "voxels_source": 2689,
+     "voxels_display": 347
+    },
+    "tooth_35": {
+     "voxels_source": 2881,
+     "voxels_display": 357
+    },
+    "tooth_36": {
+     "voxels_source": 6080,
+     "voxels_display": 765
+    },
+    "tooth_37": {
+     "voxels_source": 2516,
+     "voxels_display": 424
+    },
+    "tooth_41": {
+     "voxels_source": 1853,
+     "voxels_display": 204
+    },
+    "tooth_42": {
+     "voxels_source": 1859,
+     "voxels_display": 223
+    },
+    "tooth_43": {
+     "voxels_source": 3281,
+     "voxels_display": 419
+    },
+    "tooth_44": {
+     "voxels_source": 3152,
+     "voxels_display": 381
+    },
+    "tooth_45": {
+     "voxels_source": 2960,
+     "voxels_display": 381
+    },
+    "tooth_46": {
+     "voxels_source": 6564,
+     "voxels_display": 852
+    },
+    "tooth_47": {
+     "voxels_source": 3534,
+     "voxels_display": 635
+    },
+    "tooth_48": {
+     "voxels_source": 2672,
+     "voxels_display": 365
+    },
+    "lingual_canal": {
+     "voxels_source": 107,
+     "voxels_display": 0
+    },
+    "sinus_max_left": {
+     "voxels_source": 2792,
+     "voxels_display": 346
+    },
+    "sinus_max_right": {
+     "voxels_source": 4297,
+     "voxels_display": 507
+    },
+    "incisive_canal_left": {
+     "voxels_source": 280,
+     "voxels_display": 18
+    },
+    "incisive_canal_right": {
+     "voxels_source": 3447,
+     "voxels_display": 348
+    }
+   }
+  },
+  "conflicts": null,
+  "direction": [
+   -1.0,
+   0.0,
+   0.0,
+   0.0,
+   1.0,
+   0.0,
+   0.0,
+   0.0,
+   -1.0
+  ],
+  "dimensions": [
+   180,
+   180,
+   165
+  ],
+  "downsample_factor": 2
+ },
+ "outputs": {
+  "stl": {
+   "pulp": "stl/pulp.stl",
+   "canal": "stl/canal.stl",
+   "crown": "stl/crown.stl",
+   "maxilla": "stl/maxilla.stl",
+   "pharynx": "stl/pharynx.stl",
+   "mandible": "stl/mandible.stl",
+   "tooth_11": "stl/tooth_11.stl",
+   "tooth_12": "stl/tooth_12.stl",
+   "tooth_13": "stl/tooth_13.stl",
+   "tooth_14": "stl/tooth_14.stl",
+   "tooth_15": "stl/tooth_15.stl",
+   "tooth_17": "stl/tooth_17.stl",
+   "tooth_18": "stl/tooth_18.stl",
+   "tooth_21": "stl/tooth_21.stl",
+   "tooth_22": "stl/tooth_22.stl",
+   "tooth_23": "stl/tooth_23.stl",
+   "tooth_24": "stl/tooth_24.stl",
+   "tooth_25": "stl/tooth_25.stl",
+   "tooth_26": "stl/tooth_26.stl",
+   "tooth_27": "stl/tooth_27.stl",
+   "tooth_28": "stl/tooth_28.stl",
+   "tooth_31": "stl/tooth_31.stl",
+   "tooth_32": "stl/tooth_32.stl",
+   "tooth_33": "stl/tooth_33.stl",
+   "tooth_34": "stl/tooth_34.stl",
+   "tooth_35": "stl/tooth_35.stl",
+   "tooth_36": "stl/tooth_36.stl",
+   "tooth_37": "stl/tooth_37.stl",
+   "tooth_41": "stl/tooth_41.stl",
+   "tooth_42": "stl/tooth_42.stl",
+   "tooth_43": "stl/tooth_43.stl",
+   "tooth_44": "stl/tooth_44.stl",
+   "tooth_45": "stl/tooth_45.stl",
+   "tooth_46": "stl/tooth_46.stl",
+   "tooth_47": "stl/tooth_47.stl",
+   "tooth_48": "stl/tooth_48.stl",
+   "lingual_canal": "stl/lingual_canal.stl",
+   "sinus_max_left": "stl/sinus_max_left.stl",
+   "sinus_max_right": "stl/sinus_max_right.stl",
+   "incisive_canal_left": "stl/incisive_canal_left.stl",
+   "incisive_canal_right": "stl/incisive_canal_right.stl"
+  },
+  "mesh": {
+   "pulp": "mesh/pulp.msh",
+   "canal": "mesh/canal.msh",
+   "crown": "mesh/crown.msh",
+   "maxilla": "mesh/maxilla.msh",
+   "pharynx": "mesh/pharynx.msh",
+   "mandible": "mesh/mandible.msh",
+   "tooth_11": "mesh/tooth_11.msh",
+   "tooth_12": "mesh/tooth_12.msh",
+   "tooth_13": "mesh/tooth_13.msh",
+   "tooth_14": "mesh/tooth_14.msh",
+   "tooth_15": "mesh/tooth_15.msh",
+   "tooth_17": "mesh/tooth_17.msh",
+   "tooth_18": "mesh/tooth_18.msh",
+   "tooth_21": "mesh/tooth_21.msh",
+   "tooth_22": "mesh/tooth_22.msh",
+   "tooth_23": "mesh/tooth_23.msh",
+   "tooth_24": "mesh/tooth_24.msh",
+   "tooth_25": "mesh/tooth_25.msh",
+   "tooth_26": "mesh/tooth_26.msh",
+   "tooth_27": "mesh/tooth_27.msh",
+   "tooth_28": "mesh/tooth_28.msh",
+   "tooth_31": "mesh/tooth_31.msh",
+   "tooth_32": "mesh/tooth_32.msh",
+   "tooth_33": "mesh/tooth_33.msh",
+   "tooth_34": "mesh/tooth_34.msh",
+   "tooth_35": "mesh/tooth_35.msh",
+   "tooth_36": "mesh/tooth_36.msh",
+   "tooth_37": "mesh/tooth_37.msh",
+   "tooth_41": "mesh/tooth_41.msh",
+   "tooth_42": "mesh/tooth_42.msh",
+   "tooth_43": "mesh/tooth_43.msh",
+   "tooth_44": "mesh/tooth_44.msh",
+   "tooth_45": "mesh/tooth_45.msh",
+   "tooth_46": "mesh/tooth_46.msh",
+   "tooth_47": "mesh/tooth_47.msh",
+   "tooth_48": "mesh/tooth_48.msh",
+   "lingual_canal": "mesh/lingual_canal.msh",
+   "sinus_max_left": "mesh/sinus_max_left.msh",
+   "sinus_max_right": "mesh/sinus_max_right.msh",
+   "incisive_canal_left": "mesh/incisive_canal_left.msh",
+   "incisive_canal_right": "mesh/incisive_canal_right.msh"
+  },
+  "nifti": "segmentation.nii.gz",
+  "volume": "volume/meta.json",
+  "contours": "preview/contours.axial.json",
+  "rtstruct": "rtstruct/rtstruct.zip"
+ },
+ "preview": {
+  "planes": {
+   "axial": {
+    "size": [
+     360,
+     360
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.5,
+     0.5
+    ],
+    "total_slices": 330,
+    "source_indices": [
+     0,
+     2,
+     4,
+     6,
+     8,
+     10,
+     12,
+     14,
+     17,
+     19,
+     21,
+     23,
+     25,
+     27,
+     29,
+     31,
+     33,
+     35,
+     37,
+     39,
+     41,
+     43,
+     46,
+     48,
+     50,
+     52,
+     54,
+     56,
+     58,
+     60,
+     62,
+     64,
+     66,
+     68,
+     70,
+     72,
+     74,
+     77,
+     79,
+     81,
+     83,
+     85,
+     87,
+     89,
+     91,
+     93,
+     95,
+     97,
+     99,
+     101,
+     103,
+     106,
+     108,
+     110,
+     112,
+     114,
+     116,
+     118,
+     120,
+     122,
+     124,
+     126,
+     128,
+     130,
+     132,
+     134,
+     137,
+     139,
+     141,
+     143,
+     145,
+     147,
+     149,
+     151,
+     153,
+     155,
+     157,
+     159,
+     161,
+     163,
+     166,
+     168,
+     170,
+     172,
+     174,
+     176,
+     178,
+     180,
+     182,
+     184,
+     186,
+     188,
+     190,
+     192,
+     195,
+     197,
+     199,
+     201,
+     203,
+     205,
+     207,
+     209,
+     211,
+     213,
+     215,
+     217,
+     219,
+     221,
+     223,
+     226,
+     228,
+     230,
+     232,
+     234,
+     236,
+     238,
+     240,
+     242,
+     244,
+     246,
+     248,
+     250,
+     252,
+     255,
+     257,
+     259,
+     261,
+     263,
+     265,
+     267,
+     269,
+     271,
+     273,
+     275,
+     277,
+     279,
+     281,
+     283,
+     286,
+     288,
+     290,
+     292,
+     294,
+     296,
+     298,
+     300,
+     302,
+     304,
+     306,
+     308,
+     310,
+     312,
+     315,
+     317,
+     319,
+     321,
+     323,
+     325,
+     327,
+     329
+    ]
+   },
+   "coronal": {
+    "size": [
+     330,
+     360
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.5,
+     0.5
+    ],
+    "total_slices": 360,
+    "source_indices": [
+     0,
+     2,
+     5,
+     7,
+     9,
+     11,
+     14,
+     16,
+     18,
+     20,
+     23,
+     25,
+     27,
+     29,
+     32,
+     34,
+     36,
+     38,
+     41,
+     43,
+     45,
+     47,
+     50,
+     52,
+     54,
+     56,
+     59,
+     61,
+     63,
+     65,
+     68,
+     70,
+     72,
+     75,
+     77,
+     79,
+     81,
+     84,
+     86,
+     88,
+     90,
+     93,
+     95,
+     97,
+     99,
+     102,
+     104,
+     106,
+     108,
+     111,
+     113,
+     115,
+     117,
+     120,
+     122,
+     124,
+     126,
+     129,
+     131,
+     133,
+     135,
+     138,
+     140,
+     142,
+     145,
+     147,
+     149,
+     151,
+     154,
+     156,
+     158,
+     160,
+     163,
+     165,
+     167,
+     169,
+     172,
+     174,
+     176,
+     178,
+     181,
+     183,
+     185,
+     187,
+     190,
+     192,
+     194,
+     196,
+     199,
+     201,
+     203,
+     205,
+     208,
+     210,
+     212,
+     214,
+     217,
+     219,
+     221,
+     224,
+     226,
+     228,
+     230,
+     233,
+     235,
+     237,
+     239,
+     242,
+     244,
+     246,
+     248,
+     251,
+     253,
+     255,
+     257,
+     260,
+     262,
+     264,
+     266,
+     269,
+     271,
+     273,
+     275,
+     278,
+     280,
+     282,
+     284,
+     287,
+     289,
+     291,
+     294,
+     296,
+     298,
+     300,
+     303,
+     305,
+     307,
+     309,
+     312,
+     314,
+     316,
+     318,
+     321,
+     323,
+     325,
+     327,
+     330,
+     332,
+     334,
+     336,
+     339,
+     341,
+     343,
+     345,
+     348,
+     350,
+     352,
+     354,
+     357,
+     359
+    ]
+   },
+   "sagittal": {
+    "size": [
+     330,
+     360
+    ],
+    "count": 160,
+    "pixel_mm": [
+     0.5,
+     0.5
+    ],
+    "total_slices": 360,
+    "source_indices": [
+     0,
+     2,
+     5,
+     7,
+     9,
+     11,
+     14,
+     16,
+     18,
+     20,
+     23,
+     25,
+     27,
+     29,
+     32,
+     34,
+     36,
+     38,
+     41,
+     43,
+     45,
+     47,
+     50,
+     52,
+     54,
+     56,
+     59,
+     61,
+     63,
+     65,
+     68,
+     70,
+     72,
+     75,
+     77,
+     79,
+     81,
+     84,
+     86,
+     88,
+     90,
+     93,
+     95,
+     97,
+     99,
+     102,
+     104,
+     106,
+     108,
+     111,
+     113,
+     115,
+     117,
+     120,
+     122,
+     124,
+     126,
+     129,
+     131,
+     133,
+     135,
+     138,
+     140,
+     142,
+     145,
+     147,
+     149,
+     151,
+     154,
+     156,
+     158,
+     160,
+     163,
+     165,
+     167,
+     169,
+     172,
+     174,
+     176,
+     178,
+     181,
+     183,
+     185,
+     187,
+     190,
+     192,
+     194,
+     196,
+     199,
+     201,
+     203,
+     205,
+     208,
+     210,
+     212,
+     214,
+     217,
+     219,
+     221,
+     224,
+     226,
+     228,
+     230,
+     233,
+     235,
+     237,
+     239,
+     242,
+     244,
+     246,
+     248,
+     251,
+     253,
+     255,
+     257,
+     260,
+     262,
+     264,
+     266,
+     269,
+     271,
+     273,
+     275,
+     278,
+     280,
+     282,
+     284,
+     287,
+     289,
+     291,
+     294,
+     296,
+     298,
+     300,
+     303,
+     305,
+     307,
+     309,
+     312,
+     314,
+     316,
+     318,
+     321,
+     323,
+     325,
+     327,
+     330,
+     332,
+     334,
+     336,
+     339,
+     341,
+     343,
+     345,
+     348,
+     350,
+     352,
+     354,
+     357,
+     359
+    ]
+   }
+  },
+  "window": {
+   "level": 1000.0,
+   "width": 3000.0
+  }
+ },
+ "quality": {
+  "warnings": [
+   "3 tooth/teeth outside the plausible volume range: 18 (126 mm3), 26 (218 mm3), 28 (149 mm3)",
+   "canal has 5 significant component(s); expected 2 (one per side)",
+   "2 contralateral pair(s) differ by more than 30% in volume, worst 12/22 at 59%"
+  ],
+  "components": {
+   "pulp": 35,
+   "canal": 5,
+   "crown": 4,
+   "maxilla": 5,
+   "pharynx": 4,
+   "mandible": 2,
+   "tooth_11": 1,
+   "tooth_12": 1,
+   "tooth_13": 1,
+   "tooth_14": 1,
+   "tooth_15": 1,
+   "tooth_17": 2,
+   "tooth_18": 1,
+   "tooth_21": 1,
+   "tooth_22": 1,
+   "tooth_23": 1,
+   "tooth_24": 1,
+   "tooth_25": 1,
+   "tooth_26": 3,
+   "tooth_27": 2,
+   "tooth_28": 1,
+   "tooth_31": 1,
+   "tooth_32": 1,
+   "tooth_33": 1,
+   "tooth_34": 1,
+   "tooth_35": 1,
+   "tooth_36": 1,
+   "tooth_37": 1,
+   "tooth_41": 1,
+   "tooth_42": 1,
+   "tooth_43": 1,
+   "tooth_44": 1,
+   "tooth_45": 1,
+   "tooth_46": 1,
+   "tooth_47": 3,
+   "tooth_48": 1,
+   "lingual_canal": 5,
+   "sinus_max_left": 7,
+   "sinus_max_right": 6,
+   "incisive_canal_left": 2,
+   "incisive_canal_right": 3
+  },
+  "spacing_mm": [
+   0.5,
+   0.5,
+   0.5
+  ],
+  "teeth_found": 30,
+  "vertical_ok": true,
+  "volumes_cm3": {
+   "pulp": 1.033,
+   "canal": 1.044,
+   "crown": 0.044,
+   "maxilla": 26.334,
+   "pharynx": 28.733,
+   "mandible": 80.007,
+   "tooth_11": 0.276,
+   "tooth_12": 0.154,
+   "tooth_13": 0.359,
+   "tooth_14": 0.412,
+   "tooth_15": 0.351,
+   "tooth_17": 0.513,
+   "tooth_18": 0.126,
+   "tooth_21": 0.345,
+   "tooth_22": 0.282,
+   "tooth_23": 0.441,
+   "tooth_24": 0.418,
+   "tooth_25": 0.452,
+   "tooth_26": 0.218,
+   "tooth_27": 0.478,
+   "tooth_28": 0.149,
+   "tooth_31": 0.231,
+   "tooth_32": 0.281,
+   "tooth_33": 0.434,
+   "tooth_34": 0.336,
+   "tooth_35": 0.36,
+   "tooth_36": 0.76,
+   "tooth_37": 0.315,
+   "tooth_41": 0.232,
+   "tooth_42": 0.232,
+   "tooth_43": 0.41,
+   "tooth_44": 0.394,
+   "tooth_45": 0.37,
+   "tooth_46": 0.821,
+   "tooth_47": 0.442,
+   "tooth_48": 0.334,
+   "lingual_canal": 0.013,
+   "sinus_max_left": 0.349,
+   "sinus_max_right": 0.537,
+   "incisive_canal_left": 0.035,
+   "incisive_canal_right": 0.431
+  },
+  "arch_checked": false,
+  "laterality_ok": true,
+  "arch_conflicts": [],
+  "arch_wrong_mm3": 0.0,
+  "tooth_fragments": [
+   {
+    "fdi": 15,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0007
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0007
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 15,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 2.55,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 17,
+    "mm3": 201.1,
+    "arch": null,
+    "gap_mm": 3.2,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.6483
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.5,
+    "arch": null,
+    "gap_mm": 3.35,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.5,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 17,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 18,
+    "mm3": 1.6,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0135
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.6,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0052
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.6,
+    "arch": null,
+    "gap_mm": 1.0,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0052
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.6,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0052
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 1.0,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0031
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 1.41,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0031
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0021
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0021
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.66,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.22,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 18,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.41,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 21,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 22,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 26,
+    "mm3": 40.6,
+    "arch": null,
+    "gap_mm": 1.22,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.2547
+   },
+   {
+    "fdi": 26,
+    "mm3": 13.9,
+    "arch": null,
+    "gap_mm": 3.64,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.087
+   },
+   {
+    "fdi": 26,
+    "mm3": 1.2,
+    "arch": null,
+    "gap_mm": 2.83,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0078
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.6,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0039
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 3.74,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0024
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 1.87,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 2.12,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 2.6,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 4.61,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 3.94,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 2.35,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.5,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.41,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 26,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 27,
+    "mm3": 188.4,
+    "arch": null,
+    "gap_mm": 4.42,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.6518
+   },
+   {
+    "fdi": 27,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 4.15,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0009
+   },
+   {
+    "fdi": 27,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 4.3,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 27,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 8.22,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 27,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 5.05,
+    "expected_arch": "upper",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 34,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 35,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.001
+   },
+   {
+    "fdi": 36,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.22,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0002
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.5,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0016
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.0,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.58,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 37,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 47,
+    "mm3": 179.4,
+    "arch": null,
+    "gap_mm": 46.5,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.8017
+   },
+   {
+    "fdi": 47,
+    "mm3": 29.0,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.1296
+   },
+   {
+    "fdi": 47,
+    "mm3": 4.0,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0179
+   },
+   {
+    "fdi": 47,
+    "mm3": 2.8,
+    "arch": null,
+    "gap_mm": 4.95,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0123
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 1.22,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0017
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 7.89,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 7.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.22,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 4.3,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 47,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 5.52,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0006
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.4,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0011
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.2,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0008
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 1.12,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.87,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   },
+   {
+    "fdi": 48,
+    "mm3": 0.1,
+    "arch": null,
+    "gap_mm": 0.71,
+    "expected_arch": "lower",
+    "fraction_of_tooth": 0.0004
+   }
+  ],
+  "vertical_checks": [
+   {
+    "check": "arches_stacked",
+    "detail": "upper and lower teeth are separated along the slice axis",
+    "result": "ok",
+    "source": "teeth",
+    "separation_voxels": 33.9
+   },
+   {
+    "check": "matches_image_orientation",
+    "detail": "upper structures are superior to lower ones, as the scan's direction cosines describe",
+    "result": "ok"
+   }
+  ],
+  "canal_components": 5,
+  "teeth_fragmented": [
+   17,
+   26,
+   27,
+   47
+  ],
+  "voxel_volume_mm3": 0.125,
+  "arch_conflict_mm3": 0.0,
+  "laterality_checks": [
+   {
+    "check": "upper_arch",
+    "detail": "quadrants 1 and 2 are separated",
+    "result": "ok",
+    "separation_voxels": 63.1
+   },
+   {
+    "check": "lower_arch",
+    "detail": "quadrants 4 and 3 are separated",
+    "result": "ok",
+    "separation_voxels": 57.7
+   },
+   {
+    "check": "arches_agree",
+    "detail": "the upper and lower arches place the patient's right on the same side",
+    "result": "ok"
+   },
+   {
+    "check": "matches_image_orientation",
+    "detail": "FDI right/left matches the scan's direction cosines",
+    "result": "ok"
+   }
+  ],
+  "arch_wrong_by_tooth": [],
+  "symmetry_violations": [
+   {
+    "mm3": [
+     154.0,
+     282.0
+    ],
+    "pair": [
+     12,
+     22
+    ],
+    "difference": 0.587
+   },
+   {
+    "mm3": [
+     442.0,
+     315.0
+    ],
+    "pair": [
+     47,
+     37
+    ],
+    "difference": 0.336
+   }
+  ],
+  "vertical_violations": [],
+  "occlusal_contact_mm2": 15.8,
+  "laterality_violations": [],
+  "occlusal_contact_pairs": [
+   {
+    "mm2": 8.0,
+    "lower": 44,
+    "upper": 13
+   },
+   {
+    "mm2": 5.0,
+    "lower": 33,
+    "upper": 22
+   },
+   {
+    "mm2": 2.8,
+    "lower": 34,
+    "upper": 23
+   }
+  ]
+ },
+ "contours": {
+  "bytes": 2265520,
+  "files": {
+   "axial": {
+    "file": "contours.axial.json",
+    "bytes": 889013
+   },
+   "coronal": {
+    "file": "contours.coronal.json",
+    "bytes": 698044
+   },
+   "sagittal": {
+    "file": "contours.sagittal.json",
+    "bytes": 678463
+   }
+  },
+  "points": 162604,
+  "polygons": 8199,
+  "sigma_mm": 0.4,
+  "fallback_iso": 0.35,
+  "tolerance_mm": 0.1,
+  "thin_sigma_mm": 0.25,
+  "fallback_area_mm2": 5.0,
+  "slices_without_contour": {
+   "pulp": 264,
+   "canal": 38,
+   "crown": 39,
+   "maxilla": 42,
+   "pharynx": 14,
+   "mandible": 2,
+   "tooth_11": 2,
+   "tooth_12": 11,
+   "tooth_13": 2,
+   "tooth_15": 5,
+   "tooth_17": 2,
+   "tooth_18": 10,
+   "tooth_21": 2,
+   "tooth_22": 4,
+   "tooth_23": 9,
+   "tooth_24": 4,
+   "tooth_26": 4,
+   "tooth_28": 3,
+   "tooth_32": 1,
+   "tooth_33": 3,
+   "tooth_34": 5,
+   "tooth_35": 1,
+   "tooth_36": 1,
+   "tooth_37": 15,
+   "tooth_42": 3,
+   "tooth_43": 2,
+   "tooth_45": 2,
+   "tooth_47": 21,
+   "tooth_48": 10,
+   "lingual_canal": 12,
+   "sinus_max_left": 138,
+   "sinus_max_right": 113,
+   "incisive_canal_left": 5,
+   "incisive_canal_right": 33
+  },
+  "slices_without_contour_count": 294,
+  "slices_recovered_at_lower_iso": {
+   "pulp": 1,
+   "maxilla": 1,
+   "tooth_18": 1,
+   "sinus_max_right": 2
+  }
+ },
+ "pipeline": {
+  "name": "toothfairy3-umamba2",
+  "taxonomy": 47,
+  "orientation": "RPI"
+ },
+ "rtstruct": {
+  "file": "rtstruct/rtstruct.zip",
+  "note": "The upload was not DICOM, so there was no series to reference. The zip contains a CT series generated from the uploaded volume (marked DERIVED/SECONDARY) plus RS.dcm, which references it. Import both.",
+  "rois": {
+   "pulp": {
+    "name": "Pulp",
+    "points": 3870,
+    "contours": 508,
+    "roi_number": 41
+   },
+   "canal": {
+    "name": "IAN_Canal",
+    "points": 2973,
+    "contours": 253,
+    "roi_number": 3
+   },
+   "crown": {
+    "name": "Crown",
+    "points": 142,
+    "contours": 17,
+    "roi_number": 40
+   },
+   "maxilla": {
+    "name": "Maxilla",
+    "points": 29825,
+    "contours": 1579,
+    "roi_number": 1
+   },
+   "pharynx": {
+    "name": "Pharynx",
+    "points": 15504,
+    "contours": 535,
+    "roi_number": 36
+   },
+   "mandible": {
+    "name": "Mandible",
+    "points": 54036,
+    "contours": 1896,
+    "roi_number": 2
+   },
+   "tooth_11": {
+    "name": "Tooth_11",
+    "points": 570,
+    "contours": 49,
+    "roi_number": 4
+   },
+   "tooth_12": {
+    "name": "Tooth_12",
+    "points": 531,
+    "contours": 43,
+    "roi_number": 5
+   },
+   "tooth_13": {
+    "name": "Tooth_13",
+    "points": 737,
+    "contours": 67,
+    "roi_number": 6
+   },
+   "tooth_14": {
+    "name": "Tooth_14",
+    "points": 681,
+    "contours": 51,
+    "roi_number": 7
+   },
+   "tooth_15": {
+    "name": "Tooth_15",
+    "points": 780,
+    "contours": 65,
+    "roi_number": 8
+   },
+   "tooth_17": {
+    "name": "Tooth_17",
+    "points": 1181,
+    "contours": 70,
+    "roi_number": 9
+   },
+   "tooth_18": {
+    "name": "Tooth_18",
+    "points": 331,
+    "contours": 27,
+    "roi_number": 10
+   },
+   "tooth_21": {
+    "name": "Tooth_21",
+    "points": 730,
+    "contours": 64,
+    "roi_number": 11
+   },
+   "tooth_22": {
+    "name": "Tooth_22",
+    "points": 644,
+    "contours": 55,
+    "roi_number": 12
+   },
+   "tooth_23": {
+    "name": "Tooth_23",
+    "points": 777,
+    "contours": 66,
+    "roi_number": 13
+   },
+   "tooth_24": {
+    "name": "Tooth_24",
+    "points": 847,
+    "contours": 64,
+    "roi_number": 14
+   },
+   "tooth_25": {
+    "name": "Tooth_25",
+    "points": 720,
+    "contours": 51,
+    "roi_number": 15
+   },
+   "tooth_26": {
+    "name": "Tooth_26",
+    "points": 664,
+    "contours": 65,
+    "roi_number": 16
+   },
+   "tooth_27": {
+    "name": "Tooth_27",
+    "points": 1020,
+    "contours": 71,
+    "roi_number": 17
+   },
+   "tooth_28": {
+    "name": "Tooth_28",
+    "points": 257,
+    "contours": 18,
+    "roi_number": 18
+   },
+   "tooth_31": {
+    "name": "Tooth_31",
+    "points": 463,
+    "contours": 42,
+    "roi_number": 19
+   },
+   "tooth_32": {
+    "name": "Tooth_32",
+    "points": 570,
+    "contours": 51,
+    "roi_number": 20
+   },
+   "tooth_33": {
+    "name": "Tooth_33",
+    "points": 841,
+    "contours": 71,
+    "roi_number": 21
+   },
+   "tooth_34": {
+    "name": "Tooth_34",
+    "points": 731,
+    "contours": 64,
+    "roi_number": 22
+   },
+   "tooth_35": {
+    "name": "Tooth_35",
+    "points": 695,
+    "contours": 61,
+    "roi_number": 23
+   },
+   "tooth_36": {
+    "name": "Tooth_36",
+    "points": 1156,
+    "contours": 93,
+    "roi_number": 24
+   },
+   "tooth_37": {
+    "name": "Tooth_37",
+    "points": 919,
+    "contours": 65,
+    "roi_number": 25
+   },
+   "tooth_41": {
+    "name": "Tooth_41",
+    "points": 503,
+    "contours": 44,
+    "roi_number": 26
+   },
+   "tooth_42": {
+    "name": "Tooth_42",
+    "points": 522,
+    "contours": 47,
+    "roi_number": 27
+   },
+   "tooth_43": {
+    "name": "Tooth_43",
+    "points": 809,
+    "contours": 67,
+    "roi_number": 28
+   },
+   "tooth_44": {
+    "name": "Tooth_44",
+    "points": 746,
+    "contours": 61,
+    "roi_number": 29
+   },
+   "tooth_45": {
+    "name": "Tooth_45",
+    "points": 736,
+    "contours": 60,
+    "roi_number": 30
+   },
+   "tooth_46": {
+    "name": "Tooth_46",
+    "points": 1061,
+    "contours": 70,
+    "roi_number": 31
+   },
+   "tooth_47": {
+    "name": "Tooth_47",
+    "points": 1184,
+    "contours": 113,
+    "roi_number": 32
+   },
+   "tooth_48": {
+    "name": "Tooth_48",
+    "points": 542,
+    "contours": 30,
+    "roi_number": 33
+   },
+   "lingual_canal": {
+    "name": "LingualCanal",
+    "points": 84,
+    "contours": 13,
+    "roi_number": 39
+   },
+   "sinus_max_left": {
+    "name": "Sinus_Max_L",
+    "points": 740,
+    "contours": 74,
+    "roi_number": 34
+   },
+   "sinus_max_right": {
+    "name": "Sinus_Max_R",
+    "points": 1105,
+    "contours": 94,
+    "roi_number": 35
+   },
+   "incisive_canal_left": {
+    "name": "IncisiveCanal_L",
+    "points": 151,
+    "contours": 13,
+    "roi_number": 37
+   },
+   "incisive_canal_right": {
+    "name": "IncisiveCanal_R",
+    "points": 1231,
+    "contours": 102,
+    "roi_number": 38
+   }
+  },
+  "bytes": 25779555,
+  "skipped": [],
+  "roi_count": 41,
+  "total_points": 131609,
+  "derived_series": true,
+  "derived_slices": 330
+ },
+ "structures": [
+  {
+   "group": "Jaws",
+   "structures": [
+    {
+     "id": "maxilla",
+     "fdi": null,
+     "name": "Maxilla",
+     "color": "#d9c9a3",
+     "index": 1
+    },
+    {
+     "id": "mandible",
+     "fdi": null,
+     "name": "Mandible",
+     "color": "#c2a878",
+     "index": 2
+    }
+   ]
+  },
+  {
+   "group": "Nerve canal",
+   "structures": [
+    {
+     "id": "canal",
+     "fdi": null,
+     "name": "Mandibular canal",
+     "color": "#ff3b30",
+     "index": 3
+    },
+    {
+     "id": "incisive_canal_left",
+     "fdi": null,
+     "name": "Left mandibular incisive canal",
+     "color": "#ff8f3b",
+     "index": 41
+    },
+    {
+     "id": "incisive_canal_right",
+     "fdi": null,
+     "name": "Right mandibular incisive canal",
+     "color": "#e0722a",
+     "index": 42
+    },
+    {
+     "id": "lingual_canal",
+     "fdi": null,
+     "name": "Lingual canal",
+     "color": "#ffd23b",
+     "index": 43
+    }
+   ]
+  },
+  {
+   "group": "Airway & sinuses",
+   "structures": [
+    {
+     "id": "sinus_max_left",
+     "fdi": null,
+     "name": "Left maxillary sinus",
+     "color": "#4fb3bf",
+     "index": 38
+    },
+    {
+     "id": "sinus_max_right",
+     "fdi": null,
+     "name": "Right maxillary sinus",
+     "color": "#2e8b96",
+     "index": 39
+    },
+    {
+     "id": "pharynx",
+     "fdi": null,
+     "name": "Pharynx",
+     "color": "#b07fd6",
+     "index": 40
+    }
+   ]
+  },
+  {
+   "group": "Dental work",
+   "structures": [
+    {
+     "id": "bridge",
+     "fdi": null,
+     "name": "Bridge",
+     "color": "#5b6b8c",
+     "index": 44
+    },
+    {
+     "id": "crown",
+     "fdi": null,
+     "name": "Crown",
+     "color": "#d4af37",
+     "index": 45
+    },
+    {
+     "id": "implant",
+     "fdi": null,
+     "name": "Implant",
+     "color": "#3f4a5a",
+     "index": 46
+    }
+   ]
+  },
+  {
+   "group": "Upper teeth",
+   "structures": [
+    {
+     "id": "upper_teeth_unnumbered",
+     "fdi": null,
+     "name": "Upper teeth (unnumbered)",
+     "color": "#9aa3ad",
+     "index": 4
+    },
+    {
+     "id": "tooth_11",
+     "fdi": 11,
+     "name": "Upper right central incisor (11)",
+     "color": "#186ebf",
+     "index": 6
+    },
+    {
+     "id": "tooth_12",
+     "fdi": 12,
+     "name": "Upper right lateral incisor (12)",
+     "color": "#1f7acd",
+     "index": 7
+    },
+    {
+     "id": "tooth_13",
+     "fdi": 13,
+     "name": "Upper right canine (13)",
+     "color": "#2984d9",
+     "index": 8
+    },
+    {
+     "id": "tooth_14",
+     "fdi": 14,
+     "name": "Upper right first premolar (14)",
+     "color": "#408fd8",
+     "index": 9
+    },
+    {
+     "id": "tooth_15",
+     "fdi": 15,
+     "name": "Upper right second premolar (15)",
+     "color": "#5699d7",
+     "index": 10
+    },
+    {
+     "id": "tooth_16",
+     "fdi": 16,
+     "name": "Upper right first molar (16)",
+     "color": "#6ca4d8",
+     "index": 11
+    },
+    {
+     "id": "tooth_17",
+     "fdi": 17,
+     "name": "Upper right second molar (17)",
+     "color": "#80aed9",
+     "index": 12
+    },
+    {
+     "id": "tooth_18",
+     "fdi": 18,
+     "name": "Upper right third molar (18)",
+     "color": "#94b9db",
+     "index": 13
+    },
+    {
+     "id": "tooth_21",
+     "fdi": 21,
+     "name": "Upper left central incisor (21)",
+     "color": "#18bf8d",
+     "index": 14
+    },
+    {
+     "id": "tooth_22",
+     "fdi": 22,
+     "name": "Upper left lateral incisor (22)",
+     "color": "#1fcd99",
+     "index": 15
+    },
+    {
+     "id": "tooth_23",
+     "fdi": 23,
+     "name": "Upper left canine (23)",
+     "color": "#29d9a4",
+     "index": 16
+    },
+    {
+     "id": "tooth_24",
+     "fdi": 24,
+     "name": "Upper left first premolar (24)",
+     "color": "#40d8aa",
+     "index": 17
+    },
+    {
+     "id": "tooth_25",
+     "fdi": 25,
+     "name": "Upper left second premolar (25)",
+     "color": "#56d7b1",
+     "index": 18
+    },
+    {
+     "id": "tooth_26",
+     "fdi": 26,
+     "name": "Upper left first molar (26)",
+     "color": "#6cd8b7",
+     "index": 19
+    },
+    {
+     "id": "tooth_27",
+     "fdi": 27,
+     "name": "Upper left second molar (27)",
+     "color": "#80d9be",
+     "index": 20
+    },
+    {
+     "id": "tooth_28",
+     "fdi": 28,
+     "name": "Upper left third molar (28)",
+     "color": "#94dbc6",
+     "index": 21
+    }
+   ]
+  },
+  {
+   "group": "Lower teeth",
+   "structures": [
+    {
+     "id": "lower_teeth_unnumbered",
+     "fdi": null,
+     "name": "Lower teeth (unnumbered)",
+     "color": "#8b96a6",
+     "index": 5
+    },
+    {
+     "id": "tooth_31",
+     "fdi": 31,
+     "name": "Lower left central incisor (31)",
+     "color": "#bf8618",
+     "index": 22
+    },
+    {
+     "id": "tooth_32",
+     "fdi": 32,
+     "name": "Lower left lateral incisor (32)",
+     "color": "#cd921f",
+     "index": 23
+    },
+    {
+     "id": "tooth_33",
+     "fdi": 33,
+     "name": "Lower left canine (33)",
+     "color": "#d99d29",
+     "index": 24
+    },
+    {
+     "id": "tooth_34",
+     "fdi": 34,
+     "name": "Lower left first premolar (34)",
+     "color": "#d8a440",
+     "index": 25
+    },
+    {
+     "id": "tooth_35",
+     "fdi": 35,
+     "name": "Lower left second premolar (35)",
+     "color": "#d7ab56",
+     "index": 26
+    },
+    {
+     "id": "tooth_36",
+     "fdi": 36,
+     "name": "Lower left first molar (36)",
+     "color": "#d8b36c",
+     "index": 27
+    },
+    {
+     "id": "tooth_37",
+     "fdi": 37,
+     "name": "Lower left second molar (37)",
+     "color": "#d9bb80",
+     "index": 28
+    },
+    {
+     "id": "tooth_38",
+     "fdi": 38,
+     "name": "Lower left third molar (38)",
+     "color": "#dbc394",
+     "index": 29
+    },
+    {
+     "id": "tooth_41",
+     "fdi": 41,
+     "name": "Lower right central incisor (41)",
+     "color": "#bf185e",
+     "index": 30
+    },
+    {
+     "id": "tooth_42",
+     "fdi": 42,
+     "name": "Lower right lateral incisor (42)",
+     "color": "#cd1f68",
+     "index": 31
+    },
+    {
+     "id": "tooth_43",
+     "fdi": 43,
+     "name": "Lower right canine (43)",
+     "color": "#d92973",
+     "index": 32
+    },
+    {
+     "id": "tooth_44",
+     "fdi": 44,
+     "name": "Lower right first premolar (44)",
+     "color": "#d84080",
+     "index": 33
+    },
+    {
+     "id": "tooth_45",
+     "fdi": 45,
+     "name": "Lower right second premolar (45)",
+     "color": "#d7568c",
+     "index": 34
+    },
+    {
+     "id": "tooth_46",
+     "fdi": 46,
+     "name": "Lower right first molar (46)",
+     "color": "#d86c99",
+     "index": 35
+    },
+    {
+     "id": "tooth_47",
+     "fdi": 47,
+     "name": "Lower right second molar (47)",
+     "color": "#d980a6",
+     "index": 36
+    },
+    {
+     "id": "tooth_48",
+     "fdi": 48,
+     "name": "Lower right third molar (48)",
+     "color": "#db94b2",
+     "index": 37
+    }
+   ]
+  },
+  {
+   "group": "Tooth pulp",
+   "structures": [
+    {
+     "id": "pulp",
+     "fdi": null,
+     "name": "Pulp",
+     "color": "#ff5fa2",
+     "index": 47
+    }
+   ]
+  }
+ ],
+ "orientation": {
+  "original": "LPS",
+  "ambiguous": false,
+  "canonical": "RPI",
+  "reoriented": true,
+  "unverified": false,
+  "tilt_degrees": 0.0,
+  "direction_cosines": [
+   1.0,
+   1.0,
+   1.0
+  ]
+ },
+ "postprocess": {
+  "cc_filter": {
+   "exempt": [
+    3,
+    4,
+    43,
+    44,
+    45
+   ],
+   "percentile": 2.0,
+   "removed_voxels": {
+    "5": 9,
+    "7": 2196,
+    "8": 86,
+    "11": 60,
+    "12": 71,
+    "13": 13,
+    "14": 2148,
+    "15": 185,
+    "16": 4513,
+    "17": 586,
+    "18": 13,
+    "19": 123,
+    "20": 17,
+    "21": 135,
+    "22": 396,
+    "23": 331,
+    "25": 416,
+    "27": 36,
+    "28": 102,
+    "29": 52,
+    "33": 1,
+    "34": 1670,
+    "35": 263,
+    "36": 139,
+    "39": 12,
+    "40": 58,
+    "42": 24,
+    "46": 221
+   }
+  }
+ }
+}

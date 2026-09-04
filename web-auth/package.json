@@ -1,0 +1,18 @@
+{
+  "name": "dentistry-web-auth",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The DentistryAuth bundle. Built output is committed to web/auth.js because the web image has no build step.",
+  "type": "module",
+  "scripts": {
+    "build": "esbuild src/auth.js --bundle --format=iife --global-name=DentistryAuth --minify --target=es2020 --outfile=../web/auth.js",
+    "build:candidate": "esbuild src/auth.js --bundle --format=iife --global-name=DentistryAuth --minify --target=es2020 --outfile=dist/auth.js",
+    "check": "node ../web-auth/check-app.js"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0"
+  },
+  "dependencies": {
+    "oidc-client-ts": "^3.1.0"
+  }
+}

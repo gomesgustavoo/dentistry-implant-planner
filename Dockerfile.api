@@ -1,0 +1,41 @@
+# The API: FastAPI on uvicorn, serving job rows out of Postgres and artifacts off
+# the shared hostPath. Two-stage so the runtime image carries no compiler.
+#
+# Recovered 2026-09-01 from `docker history dentistry/api:0.10.0`, which supplied the
+# python version (3.12.13 -> python:3.12-slim), the /venv layout, the uid-1000 `app`
+# user, the env block and the import smoke test below.
+#
+# IMPORTANT: this image has NO numpy and NO scipy -- see requirements-api.txt, which
+# is itself a recovery of what the deployed container had installed. `api/` therefore
+# imports only the torch-free, numpy-free half of `dentistry/` (auth, billing, config,
+# db, labels, quota, storage). Anything the API executes must be stdlib; that is why
+# dentistry/plan_metrics.py and dentistry/plan_safety.py are written numpy-free.
+FROM python:3.12-slim AS builder
+COPY requirements-api.txt /tmp/requirements-api.txt
+RUN python -m venv /venv \
+    && /venv/bin/pip install --no-cache-dir -U pip \
+    && /venv/bin/pip install --no-cache-dir -r /tmp/requirements-api.txt
+
+FROM python:3.12-slim
+RUN groupadd -g 1000 app && useradd -u 1000 -g app -s /usr/sbin/nologin app
+COPY --from=builder /venv /venv
+ENV PATH=/venv/bin:$PATH \
+    PYTHONPATH=/srv \
+    PYTHONUNBUFFERED=1 \
+    DENT_DATA_DIR=/data
+
+COPY dentistry/ /srv/dentistry/
+COPY api/ /srv/api/
+
+# Fail the build, not the rollout, when a route goes missing or an import breaks.
+# The deployment's readiness probe hits /v1/health; this catches the class of error
+# that would make every replica fail that probe simultaneously.
+RUN python -c "import sys; sys.path.insert(0, '/srv'); from api.main import app; \
+    routes = [r.path for r in app.routes]; \
+    assert '/v1/jobs' in routes, routes; print('api import OK:', len(routes), 'routes')"
+
+ARG VERSION=dev
+ENV DENT_VERSION=${VERSION}
+USER app
+EXPOSE 8000
+CMD ["uvicorn", "api.main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "2"]
