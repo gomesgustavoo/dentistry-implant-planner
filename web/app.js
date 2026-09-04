@@ -5187,13 +5187,99 @@ function addImplant(s_mm, fdi) {
                 // a user could see.
                 site_fdi: fdi == null ? siteAt(info, s_mm) : Number(fdi) };
   alignToSite(info, imp);
+  // Seeded, not chosen. `autofitAfterMeasure` shortens it if the server's own canal
+  // clearance says the seed is tight, and clears the flag the moment it settles.
+  imp.autofit = true;
   p.implants.push(imp);
   p.selected = id;
   const i = nearestXsIndex(info, s_mm);
   if (i !== p.index) selectXs(i); else { drawRulers('xs'); }
+  // The seeding measure is the auto-fit's FIRST pass, not a user edit, so it must not
+  // clear the flag it was just given.
+  _autofitPass = true;
   requestMeasure(0);
   renderImplantPanel();
   return imp;
+}
+
+/** Shorten a freshly seeded implant until the server says its canal clearance is CLEAR.
+ *
+ *  ## Why seeding needed a feedback loop rather than a better formula
+ *
+ *  `alignToSite` sizes from `site.height_mm`, and that is already the right quantity:
+ *  `ridge.py` publishes it as "cortical crest to the roof of the drawn inferior alveolar
+ *  canal, read from the same distance field the implant clearance is measured against".
+ *  It is not a proxy for the canal distance -- it IS a canal distance.
+ *
+ *  It still disagreed with the verdict by about 0.85 mm at a real site, and the reasons
+ *  are geometric rather than fixable by tuning a reserve:
+ *
+ *    * the height is sampled on ONE line -- the crest midline, or wherever the canal
+ *      roof is closest, which on the measured case was 2.0 mm buccal of it -- while the
+ *      clearance is the minimum over the whole implant surface;
+ *    * the implant is a CAPSULE. Its apex is a hemisphere of radius d/2, so the nearest
+ *      point to the canal is on a curved shoulder, not at the axis tip, and how much
+ *      that costs depends on the angle between the axis and the canal;
+ *    * `tight` is a band above `breach`, so clearing the breach threshold that
+ *      `APICAL_RESERVE_MM` approximates still lands inside it.
+ *
+ *  Any constant that made this site seed clear would be wrong at the next one. So the
+ *  seed is a first guess and the SERVER's own number is what settles it: if the canal
+ *  comes back tight or breached, step down one catalogue length and ask again. That is
+ *  the same number the verdict is computed from, which is the only one that cannot
+ *  disagree with the verdict.
+ *
+ *  Bounded at three steps, and it stops at the shortest implant in the catalogue: a site
+ *  where even that is not clear is a site this planner should be SAYING is short of
+ *  bone, not one it should keep shrinking an implant into. `lengthFrom` records which
+ *  ending happened, and the panel prints it.
+ *
+ *  Only ever on `autofit`, which `addImplant` sets and any human edit clears -- a reader
+ *  who deliberately chooses 13 mm over a canal must keep the 13 mm and the red verdict.
+ */
+const AUTOFIT_MAX_STEPS = 3;
+
+/** Any deliberate change ends the seeding loop. Driven from `requestMeasure` rather than
+ *  from each edit path -- see `_autofitPass`. */
+function cancelAutofit(imp) {
+  if (!imp || !imp.autofit) return;
+  delete imp.autofit;
+  delete imp.autofitSteps;
+}
+function autofitAfterMeasure(p) {
+  const imp = p.implants.find((i) => i.autofit);
+  if (!imp) return false;
+  const m = p.measured[imp.id] || {};
+  const level = ((m.verdict || {}).level) || null;
+  const steps = Number(imp.autofitSteps) || 0;
+  // Clear, ungradeable, or out of steps: this is the length, whatever it is.
+  if (level === 'clear' || level == null || level === 'no_verdict'
+      || steps >= AUTOFIT_MAX_STEPS) {
+    delete imp.autofit; delete imp.autofitSteps;
+    if (steps > 0 && level === 'clear') {
+      imp.lengthFrom = `shortened ${steps} size${steps === 1 ? '' : 's'} — `
+        + 'the longest length that measures clear of the canal here';
+    } else if (steps > 0) {
+      imp.lengthFrom = 'the shortest this planner will seed — the canal is close at '
+        + 'this site and no catalogue length measured clear';
+    }
+    renderImplantPanel();
+    return false;
+  }
+  const cat = implantSizes();
+  const shorter = cat.length.filter((L) => L < imp.length_mm);
+  if (!shorter.length) {
+    delete imp.autofit; delete imp.autofitSteps;
+    imp.lengthFrom = 'the shortest implant in the catalogue, and the canal is still '
+      + 'closer than the margin — this site may not take an implant';
+    renderImplantPanel();
+    return false;
+  }
+  imp.length_mm = Math.max(...shorter);
+  imp.autofitSteps = steps + 1;
+  _autofitPass = true;
+  requestMeasure(0);
+  return true;
 }
 
 /** Select an implant: the section follows it, the 3-D pane frames it, the panel
@@ -5720,8 +5806,20 @@ function wirePanImplants() {
 
 let _measureTimer = null;
 /** Ask the server. Debounced during a drag; immediate on release. */
+/** True only while `autofitAfterMeasure` is asking for its own re-measure.
+ *
+ *  ONE flag instead of a `cancelAutofit` at each of a dozen call sites. Every other route
+ *  into `requestMeasure` -- the size selects, the three angle inputs, the section drag,
+ *  the panoramic drag, the keyboard nudges, `alignToSite` on a re-seat -- is a deliberate
+ *  act by the reader, and a reader who has touched the implant owns it from that moment,
+ *  verdict and all. Enumerating those routes would mean the one that got added later was
+ *  the one that fought the user. */
+let _autofitPass = false;
+
 function requestMeasure(delayMs) {
   const p = implantState();
+  if (!_autofitPass) p.implants.forEach(cancelAutofit);
+  _autofitPass = false;
   if (_measureTimer) clearTimeout(_measureTimer);
   if (!p.implants.length) { p.measured = {}; renderImplantPanel(); return; }
   p.measuring = true;
@@ -5774,6 +5872,8 @@ function requestMeasure(delayMs) {
       p.implants.forEach((imp) => DentistryViewer.setImplantVerdict(
         imp.id, worstVerdict(imp, p, { gradedOnly: true })));
     }
+    // A freshly seeded implant shortens itself until the MEASUREMENT says clear.
+    if (autofitAfterMeasure(p)) return;      // it re-measured; this pass is superseded
   }, delayMs);
 }
 
@@ -6339,7 +6439,9 @@ function renderImplantPanel() {
   box.querySelectorAll('select[data-f]').forEach((sel) => {
     sel.onchange = () => {
       const imp = p.implants.find((i) => i.id === sel.dataset.id);
-      if (imp) { imp[sel.dataset.f] = Number(sel.value); drawRulers('xs'); requestMeasure(0); }
+      if (!imp) return;
+      imp[sel.dataset.f] = Number(sel.value);
+      drawRulers('xs'); requestMeasure(0);
     };
   });
   // Angulation was drag-only, on the apex, at 3 degrees per pixel -- unusable for a
