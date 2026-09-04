@@ -202,10 +202,12 @@
       <div class="models">
         <div class="models-3d">
           <div class="models-canvas" id="modelPreview"></div>
-          <p class="models-note">
-            A schematic dentition, drawn from a curve &mdash; <b>not</b> a segmentation,
-            and not your scan. Hover a model to see which structures it is authoritative
-            for.
+          <!-- Filled by `renderPreviewNote` from the baked bundle's own manifest, so
+               the caption can never name a case other than the one on screen. The
+               fallback text below is what shows if the bundle does not load. -->
+          <p class="models-note" id="modelsNote">
+            A real segmentation &mdash; <b>not</b> your scan. Hover a model to see which
+            structures it is authoritative for.
           </p>
         </div>
         <div class="models-list" id="modelList">

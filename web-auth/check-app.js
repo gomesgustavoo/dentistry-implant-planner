@@ -52,6 +52,7 @@ const REQUIRED = [
   'mountVolume', 'afterLayoutChange',
   // --- the right dock: tools, and the structures they write into -----------
   'toggleDock', 'wireDock', 'renderEditBudget', 'budgetFieldFor', 'editGridSpacing',
+  'renderPreviewNote',
   // --- the implant-planning tab -------------------------------------------
   'planState', 'archUrl', 'xsUrl', 'panUrl', 'loadArch', 'selectJaw',
   'drawPanoramic', 'drawArcMarker', 'selectXs', 'wirePlan',

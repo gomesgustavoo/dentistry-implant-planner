@@ -810,6 +810,8 @@ async function route() {
   // The schematic holds a WebGL context, so it is mounted with the view and disposed
   // when the view leaves. This SPA hides and shows its views rather than reloading, so
   // a leaked context per visit is the kind of thing that works for a week.
+  // Not awaited: the router must not block on six mesh fetches, and the picker beside
+  // the pane is fully usable without it. Failures are reported inside.
   if (r.view === 'cases') { wireModelsPanel(); mountModelSchematic(); }
   else unmountModelSchematic();
   if (r.view === 'case') await openCase(r.jobId);
@@ -1012,23 +1014,57 @@ function wireModelsPanel() {
  *  than shipping a second WebGL stack. It is deliberately tolerant of failure: no
  *  WebGL, or a bundle that has not arrived, costs the reader a diagram and nothing
  *  else, and the picker beside it is fully usable without it. */
-function mountModelSchematic() {
+async function mountModelSchematic() {
   const host = $('modelPreview');
   if (!host || !window.DentistryViewer || !DentistryViewer.mountModelPreview) return false;
   if (host.dataset.mounted === '1') { DentistryViewer.resizeModelPreview(); return true; }
-  const got = DentistryViewer.mountModelPreview(host);
+  // `mounting` guards the await: the router can show this page twice before the six
+  // meshes land, and two concurrent mounts would leak the first one's WebGL context.
+  if (host.dataset.mounted === 'pending') return false;
+  host.dataset.mounted = 'pending';
+  let got = null;
+  try {
+    got = await DentistryViewer.mountModelPreview(host);
+  } catch (e) {
+    console.warn('dentistry: the model preview failed to mount: ' + e.message);
+  }
   if (!got) {
-    host.innerHTML = '<p class="empty">3-D needs WebGL, which this browser did not give us.</p>';
+    host.dataset.mounted = '';
+    host.innerHTML = '<p class="empty">The 3-D preview needs WebGL and a loaded asset '
+      + 'bundle; one of the two did not arrive. The model list beside it is unaffected.</p>';
     return false;
   }
   host.dataset.mounted = '1';
   DentistryViewer.spinModelPreview(true);
+  renderPreviewNote();
   return true;
+}
+
+/** Name the case on screen, from the bundle's own manifest.
+ *
+ *  The picker used to draw a parametric schematic and the caption said so. It draws a
+ *  REAL segmentation now, which is a stronger claim and therefore needs a stricter
+ *  caption: the title, the dataset and the licence come from the manifest the baker
+ *  wrote, so the words on the pane cannot name a case other than the one rendered. */
+function renderPreviewNote() {
+  const note = $('modelsNote');
+  if (!note || !window.DentistryViewer || !DentistryViewer.previewSource) return;
+  const src = DentistryViewer.previewSource();
+  if (!src) return;
+  const absent = (src.absent || []).length
+    ? ` This case has no ${src.absent.join(' or ')}, so that group is named in the list
+        but not drawn here.`
+    : '';
+  note.innerHTML = `<b>${esc(src.title)}</b> &mdash; a real segmentation of a published
+    example case, not your scan. ${esc(src.attribution)}. Hover a model to see which
+    structures it is authoritative for.${absent}`;
 }
 
 function unmountModelSchematic() {
   const host = $('modelPreview');
-  if (!host || host.dataset.mounted !== '1') return;
+  // 'pending' counts: a mount in flight has to be able to finish and find the flag
+  // cleared, or leaving and returning to the page would wedge it forever.
+  if (!host || !host.dataset.mounted) return;
   if (window.DentistryViewer && DentistryViewer.disposeModelPreview) {
     DentistryViewer.disposeModelPreview();
   }
