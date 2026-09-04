@@ -1266,12 +1266,46 @@ function renderEditBar() {
     }
   }
   if (sel) sel.value = String(e.segment);
+  // The colour of the thing you are about to paint, beside the picker. Without it the
+  // only cue is a name in a dropdown, while every other surface in this app identifies a
+  // structure by its swatch.
+  const swatch = $('editSwatch');
+  if (swatch) {
+    const st = (allStructures() || []).find((x) => x.index === e.segment);
+    swatch.style.background = st ? st.color : 'transparent';
+    swatch.style.borderColor = st ? st.color : 'var(--border-2)';
+    swatch.title = st ? st.name : 'background (erase)';
+  }
 
   const tools = $('editTools');
   if (tools) {
-    tools.innerHTML = editToolList().map((t) => `
-      <button class="segb ${e.tool === t.key ? 'on' : ''}" data-tool="${t.key}"
-        type="button" title="${esc(t.hint)}">${esc(t.label)}</button>`).join('');
+    // GROUPED BY WHAT THE TOOL DOES, not listed in declaration order. Eight equal text
+    // buttons in a grid made the reader work out from the words which ones add and which
+    // ones remove -- and "erase" and "erase 3-D" sat between "brush 3-D" and "circle",
+    // so the two destructive tools were the least conspicuous things in the panel.
+    // Adding and removing are the only distinction that matters before a stroke.
+    const glyph = {
+      brush: '\u270E', brush3d: '\u25C9', circle: '\u25EF', rect: '\u25A2',
+      sphere: '\u2B24', fill: '\u25E9', erase: '\u232B', erase3d: '\u25CE',
+    };
+    const short = {
+      brush: 'Brush', brush3d: 'Brush 3-D', circle: 'Circle', rect: 'Rectangle',
+      sphere: 'Sphere', fill: 'Fill', erase: 'Erase', erase3d: 'Erase 3-D',
+    };
+    const all = editToolList();
+    const btn = (t) => `
+      <button class="etool ${e.tool === t.key ? 'on' : ''}" data-tool="${t.key}"
+        type="button" title="${esc(t.hint)}">
+        <span class="etool-i" aria-hidden="true">${glyph[t.key] || '\u25A0'}</span>
+        <span class="etool-l">${esc(short[t.key] || t.label)}</span>
+      </button>`;
+    const group = (name, keys, cls) => {
+      const rows = all.filter((t) => keys.includes(t.key));
+      return rows.length ? `<div class="etool-group ${cls}">
+        <h4>${name}</h4><div class="etool-grid">${rows.map(btn).join('')}</div></div>` : '';
+    };
+    tools.innerHTML = group('Add', ['brush', 'brush3d', 'circle', 'rect', 'sphere', 'fill'], 'is-add')
+      + group('Remove', ['erase', 'erase3d'], 'is-remove');
   }
   const size = $('editSize');
   if (size) size.value = String(e.brush);
@@ -2181,6 +2215,23 @@ function setMode(mode) {
   // the tile view or the implant tab.
   ['layoutPicker', 'modePicker3d', 'mprReset', 'editBtn']
     .forEach((id) => { const el = $(id); if (el) el.hidden = !volume; });
+  // CORRECTING THE MASK IS AN MPR-ONLY MODE, and leaving it armed anywhere else is a
+  // bug rather than an untidiness. The brush binds Cornerstone's PRIMARY MOUSE BUTTON on
+  // the MPR tool group; the plan tab draws on its own canvases, so a tool left active
+  // there is invisible, un-undoable from that tab, and still holding the button the
+  // moment the reader goes back. It also offered a panel that cannot do anything: there
+  // is no labelmap on a server-rendered cross-section to paint into.
+  //
+  // Enforced HERE, in the one function that changes mode, rather than in the tab's click
+  // handler -- `setMode` is also called by `openCase` and by the router, and only two of
+  // those three paths went through that handler.
+  if (!volume) {
+    const ed = editState();
+    if (ed && ed.on) setEditMode(false);
+    const bar = $('editBar');
+    if (bar) bar.hidden = true;
+    document.body.classList.remove('editing');
+  }
   // The mode has to be recorded BEFORE the early return: renderArch branches on
   // `v.mode === 'plan'` to turn the FDI chart into an implant-site picker, and for
   // as long as this line sat below the return, that mode was never once set.
@@ -4835,7 +4886,12 @@ const NEIGHBOUR_SPAN_MM = 14;
  * The jaw goes lower than the teeth because it fully encloses the implant, while a
  * neighbouring root only crosses part of it.
  */
-const PLAN_JAW_OPACITY = 0.10;
+// 0.10 was tuned on a full dentition, where 32 opaque teeth carry the picture and the
+// jaw is genuinely just a wrapper. On a partially edentulous case -- which is the case an
+// implant is actually planned on -- the jaw IS the anatomy, and at 0.10 the pane showed
+// two red canals floating in black. 0.18 keeps the implant dominant and gives the ridge
+// back its shape.
+const PLAN_JAW_OPACITY = 0.18;
 const PLAN_TOOTH_OPACITY = 0.30;
 
 /** Keep the 3-D pane's focus in step with the selection. */
@@ -5362,8 +5418,45 @@ const SUBCRESTAL_MM = 0.5;
  *  inward error, which is exactly the surface the verdict is graded against. */
 const APICAL_RESERVE_MM = 2.5;
 
-/** Buccal and lingual plate this app will not plan through, per side. */
+/** Buccal and lingual plate this app will not plan through, per side.
+ *
+ *  0.75 is the FLOOR -- what the geometry forbids, not what a surgeon would accept. The
+ *  restorative-driven diameter below is what is actually offered; this only ever narrows
+ *  it. */
 const PLATE_RESERVE_MM = 0.75;
+
+/** The diameter a site WANTS, by the tooth being replaced, before the ridge has a say.
+ *
+ *  This is the half of implant selection the previous version had backwards. It chose
+ *  "the widest that leaves 0.75 mm of plate", which on a 9.4 mm molar ridge is a 6.0 mm
+ *  implant -- an implant nobody places at a first molar, sitting in a site that would
+ *  then have 1.7 mm of bone a side. Diameter is chosen by the RESTORATION: what tooth is
+ *  being replaced, and what emergence profile its crown needs. The ridge then narrows
+ *  that choice or refuses the site; it never widens it.
+ *
+ *  Central values, by FDI position number. Wider than these exist and are placed, but a
+ *  planner's STARTING point is a standard-platform implant for the tooth, and the reader
+ *  changes it from a sensible number rather than down from an extreme one. */
+const SITE_DIAMETER_MM = {
+  1: 3.5,   // central incisor
+  2: 3.3,   // lateral incisor -- the narrowest site in the mouth
+  3: 3.75,  // canine
+  4: 4.1,   // first premolar
+  5: 4.1,   // second premolar
+  6: 4.8,   // first molar
+  7: 4.8,   // second molar
+  8: 4.3,   // third molar, when it is restored at all
+};
+
+/** Longer is not better, and this is the cap that says so.
+ *
+ *  Beyond roughly 13 mm there is no survival benefit in the literature, and the binding
+ *  constraint on a lower posterior implant is the inferior alveolar canal rather than
+ *  the total height of the mandible. A 24 mm site does not license a 16 mm implant; it
+ *  licenses the same 10-13 mm implant with more bone under it. */
+const MAX_PLANNED_LENGTH_MM = 13;
+/** What a planner reaches for first when the bone allows it. */
+const PREFERRED_LENGTH_MM = 10;
 
 /** Put a new implant where a clinician would start it, not where the code found it easy.
  *
@@ -5372,14 +5465,22 @@ const PLATE_RESERVE_MM = 0.75;
  *  crown the implant spawned floating in the tooth, and every plan began by dragging it
  *  down. `ridge.py` has published `crest_z_mm` per site all along.
  *
- *  So: platform half a millimetre below the crest, and the SIZE chosen to fit the bone
- *  that is actually there --
- *    - length: the longest catalogue length whose apex still clears the canal (or the
- *      sinus floor) by the margin the verdict is graded against;
- *    - diameter: the widest that leaves 0.75 mm of plate on each side of the crest.
- *  Both fall back to the catalogue default when the site publishes no measurement,
- *  and the fallback is a REFUSAL to guess rather than a guess: the default is not
- *  claimed to fit.
+ *  So: platform half a millimetre below the crest, and a size a clinician would actually
+ *  start from --
+ *    - diameter: what the TOOTH needs (`SITE_DIAMETER_MM`), narrowed by the measured
+ *      ridge if the ridge cannot take it;
+ *    - length: 10 mm where the bone allows, the longest that fits below that, and never
+ *      more than 13 -- capped independently of how much bone is underneath.
+ *
+ *  This used to take the widest and the longest that geometrically fit, which produced a
+ *  6.0 x 16 mm implant at a lower first molar with 23.9 mm of height and a 9.4 mm ridge.
+ *  Both numbers were true and neither was a plan: nobody places a 6 mm implant at a 46,
+ *  and the extra 6 mm of length buys nothing while spending the clearance the whole
+ *  product exists to grade. Fitting is a CONSTRAINT, not an objective.
+ *
+ *  Both fall back to the catalogue default when the site publishes no measurement, and
+ *  the fallback is a REFUSAL to guess rather than a guess: the default is not claimed to
+ *  fit.
  */
 function alignToSite(info, imp) {
   const cat = implantSizes();
@@ -5400,21 +5501,50 @@ function alignToSite(info, imp) {
   imp.roll_deg = 0;
   imp.alignedTo = crest != null ? 'crest' : 'occlusal';
 
+  // LENGTH. Preferred first, capped second, and only then limited by the bone.
   const h = site && site.height_mm != null ? site.height_mm : null;
   if (h != null) {
-    const usable = h - SUBCRESTAL_MM - APICAL_RESERVE_MM;
+    const usable = Math.min(h - SUBCRESTAL_MM - APICAL_RESERVE_MM, MAX_PLANNED_LENGTH_MM);
     const fits = cat.length.filter((L) => L <= usable);
-    imp.length_mm = fits.length ? Math.max(...fits) : Math.min(...cat.length);
-    imp.lengthFrom = fits.length ? 'fits the measured height' : 'shortest available';
+    if (!fits.length) {
+      imp.length_mm = Math.min(...cat.length);
+      imp.lengthFrom = 'shortest available — this site is short of bone';
+    } else if (fits.includes(PREFERRED_LENGTH_MM)) {
+      imp.length_mm = PREFERRED_LENGTH_MM;
+      imp.lengthFrom = 'the usual starting length, and the bone takes it';
+    } else {
+      imp.length_mm = Math.max(...fits);
+      imp.lengthFrom = usable >= MAX_PLANNED_LENGTH_MM
+        ? 'the longest this planner offers' : 'the longest the measured height takes';
+    }
   } else {
     imp.lengthFrom = null;
   }
+
+  // DIAMETER. What the tooth needs, narrowed by the ridge — never widened by it.
   const w = site && site.width_mm != null ? site.width_mm : null;
+  const pos = imp.site_fdi != null ? Number(String(imp.site_fdi).slice(-1)) : null;
+  const wanted = (pos != null && SITE_DIAMETER_MM[pos]) || null;
   if (w != null) {
     const usable = w - 2 * PLATE_RESERVE_MM;
     const fits = cat.diameter.filter((D) => D <= usable);
-    imp.diameter_mm = fits.length ? Math.max(...fits) : Math.min(...cat.diameter);
-    imp.diameterFrom = fits.length ? 'fits the measured width' : 'narrowest available';
+    if (!fits.length) {
+      imp.diameter_mm = Math.min(...cat.diameter);
+      imp.diameterFrom = 'narrowest available — this ridge is too thin for it';
+    } else if (wanted != null && fits.some((D) => D >= wanted)) {
+      // The catalogue value nearest what the tooth wants, from those the ridge allows.
+      imp.diameter_mm = fits.reduce((best, D) =>
+        Math.abs(D - wanted) < Math.abs(best - wanted) ? D : best, fits[0]);
+      imp.diameterFrom = 'the usual platform for this tooth, and the ridge takes it';
+    } else {
+      imp.diameter_mm = Math.max(...fits);
+      imp.diameterFrom = wanted != null
+        ? 'narrowed from the usual platform — the ridge is too thin for it'
+        : 'the widest the measured ridge takes';
+    }
+  } else if (wanted != null) {
+    imp.diameter_mm = wanted;
+    imp.diameterFrom = 'the usual platform for this tooth — this ridge was not measured';
   } else {
     imp.diameterFrom = null;
   }

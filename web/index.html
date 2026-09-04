@@ -179,6 +179,19 @@
       <p class="uploadplan" id="uploadPlan"></p>
     </section>
 
+    <!-- ============================================== example cases
+         FIRST, above the model picker. The picker is a pre-upload choice most readers
+         never change, and with a 3-D pane beside it, it was the largest thing on the
+         page -- so the finished segmentations somebody actually came to look at sat
+         below the fold, under a control panel. Order by what the reader wants. -->
+    <section class="panel" id="examplesPanel" hidden>
+      <div class="panel-head">
+        <h2>Example cases</h2>
+        <span class="hint">already segmented &mdash; open one to place an implant</span>
+      </div>
+      <div class="examples" id="examples"></div>
+    </section>
+
     <!-- ============================================== which models run on your scan
          The board has been configurable per DEPLOYMENT since it was built -- one base
          model plus specialists that each overwrite only the ids they own -- and there
@@ -221,13 +234,6 @@
       </p>
     </section>
 
-    <section class="panel" id="examplesPanel" hidden>
-      <div class="panel-head">
-        <h2>Example cases</h2>
-        <span class="hint">already segmented &mdash; open one to see the output</span>
-      </div>
-      <div class="examples" id="examples"></div>
-    </section>
 
     <section class="panel" id="jobsPanel">
       <div class="panel-head">
@@ -660,20 +666,22 @@
           <h3>Correct the mask</h3>
           <button class="link" id="editClose" type="button">done</button>
         </div>
-        <div class="editbar-row">
-          <label class="editpick">
-            <span>paint</span>
+        <label class="editpick">
+          <span class="editpick-label">Painting into</span>
+          <span class="editpick-row">
+            <i class="editswatch" id="editSwatch" aria-hidden="true"></i>
             <select id="editSegment" aria-label="Which structure the tools write"></select>
-          </label>
-        </div>
-        <div class="editbar-row">
-          <div class="seg" id="editTools" role="group" aria-label="Editing tool"></div>
-        </div>
-        <div class="editbar-row">
+          </span>
+        </label>
+
+        <div id="editTools" role="group" aria-label="Editing tool"></div>
+
+        <div class="editbar-row editsize-row">
           <label class="editsize">
-            <span id="editSizeLabel">2.0 mm</span>
+            <span class="editsize-name">Brush</span>
             <input type="range" id="editSize" min="0.3" max="8" step="0.1" value="2"
                    aria-label="Brush radius in millimetres">
+            <span id="editSizeLabel">2.0 mm</span>
           </label>
           <button class="iconbtn" id="editUndo" type="button"
                   title="Undo the last stroke  ( &#8984;Z )">&#8630;</button>

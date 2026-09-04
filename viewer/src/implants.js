@@ -67,6 +67,10 @@ const DOME_RINGS = 6;
 const SHELL_AZIMUTH = 160;
 const SHELL_DOME_RINGS = 20;
 
+/** Half-height of the 3-D frame, in implant lengths, when one is selected. See
+ *  `framedScale`: the pane's job is the implant's neighbourhood, not the implant. */
+const CONTEXT_FRAME = 2.2;
+
 /* ------------------------------------------------------- the drawn screw
  * The measured solid is a CAPSULE -- a cylinder of the stated diameter closed by an
  * apical hemisphere. `dentistry/implants.py` already says so to the user: "the solid
@@ -1053,8 +1057,15 @@ function framedScale(entry, len) {
     const side = d[0] * e1[0] + d[1] * e1[1] + d[2] * e1[2];
     hi = Math.max(hi, Math.abs(along - len / 2), Math.abs(side));
   }
-  // A little air, so the envelope is not flush against the pane edge.
-  return Math.max(0.95 * len, hi * 1.15);
+  // ENOUGH ANATOMY TO JUDGE THE PLAN BY, not a portrait of the implant.
+  //
+  // This framed to `0.95 * len` -- half a pane-height per implant length -- so a 10 mm
+  // implant filled the pane and nothing else was in it. That is a picture the 2-D
+  // section already gives, better and to scale. What only the 3-D pane can show is the
+  // implant IN ITS NEIGHBOURHOOD: the canal running under it, the roots either side, the
+  // ridge it is seated in. At 2.2 a 10 mm implant frames ~44 mm of anatomy, which on a
+  // mandible reaches the canal below and a tooth on each side.
+  return Math.max(CONTEXT_FRAME * len, hi * 1.15);
 }
 
 export function focusImplant(id, opts) {

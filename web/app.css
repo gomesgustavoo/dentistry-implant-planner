@@ -1455,13 +1455,18 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 .uploadplan b { color: var(--ink); }
 .models {
   display: grid; gap: 1rem;
-  grid-template-columns: minmax(0, clamp(320px, 26vw, 560px)) minmax(0, 1fr);
+  /* MODEST. This was widened to clamp(320px, 26vw, 560px) when the pane started
+     drawing a real segmentation, and at that size the model picker became the largest
+     thing on the catalogue page -- a pre-upload control most readers never change,
+     outweighing the finished cases they came to look at. The 3-D stays, because it is
+     the one picture of what this product does; it just stops being the headline. */
+  grid-template-columns: minmax(0, 240px) minmax(0, 1fr);
   align-items: start;
 }
 .models-3d { display: grid; gap: .4rem; }
 .models-canvas {
-  position: relative; width: 100%; aspect-ratio: 1 / 1;
-  min-height: 220px; background: #0d1218;
+  position: relative; width: 100%; aspect-ratio: 4 / 3;
+  min-height: 150px; max-height: 190px; background: #0d1218;
   border: 1px solid var(--border); border-radius: var(--radius-sm); overflow: hidden;
 }
 .models-canvas canvas { display: block; width: 100% !important; height: 100% !important; }
@@ -1552,24 +1557,56 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
    the correction is actually drawn in, and the structure being painted was in the
    opposite corner of the screen from the tool painting it. In the dock it costs the
    panes nothing in either state, and the tool sits directly above the structure list. */
-.editbar { display: grid; gap: .45rem; }
+.editbar { display: grid; gap: .6rem; }
 .editbar-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.editbar-foot { border-top: 1px solid var(--border); padding-top: .45rem; }
-.editpick { display: flex; align-items: center; gap: .35rem; font-size: 12px;
-  color: var(--muted); width: 100%; }
-.editpick select { flex: 1; min-width: 0; }
-.editsize { display: flex; align-items: center; gap: .4rem; font-size: 12px;
+.editbar-foot { border-top: 1px solid var(--border); padding-top: .5rem; }
+
+/* WHAT YOU ARE PAINTING INTO, with its colour. The picker used to be a bare select
+   labelled "paint", which named the structure and showed nothing -- while every other
+   surface in this app identifies a structure by its swatch. */
+.editpick { display: grid; gap: .28rem; }
+.editpick-label { font-size: 10.5px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); }
+.editpick-row { display: flex; align-items: center; gap: .45rem; }
+.editswatch { width: 14px; height: 14px; flex: none; border-radius: 4px;
+  border: 1px solid var(--border-2); }
+.editpick select { flex: 1; min-width: 0; font-size: 13px; padding: .34rem .45rem; }
+
+/* THE TOOLS, grouped by what they do. Eight equal text buttons made the reader work out
+   from the words which ones add and which ones remove, and put the two destructive tools
+   in the middle of the list where they were the least conspicuous things in the panel. */
+.etool-group { display: grid; gap: .3rem; margin-top: .1rem; }
+.etool-group h4 { margin: 0; font-size: 10.5px; font-weight: 600; letter-spacing: .07em;
+  text-transform: uppercase; color: var(--muted); }
+.etool-group.is-remove h4 { color: var(--bad); }
+.etool-grid { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .3rem; }
+.etool {
+  display: grid; justify-items: center; gap: .18rem;
+  padding: .45rem .2rem; min-height: 3.1rem;
+  font: inherit; color: var(--muted); cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+}
+.etool:hover { color: var(--ink); border-color: var(--border-2); background: var(--surface-3); }
+.etool:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.etool-i { font-size: 15px; line-height: 1; }
+.etool-l { font-size: 10.5px; line-height: 1.1; text-align: center; }
+/* The active tool is the one holding the primary mouse button. That is a MODE, and it
+   is worth the strongest treatment in the panel. */
+.etool.on { color: #fff; background: var(--accent-2); border-color: var(--accent-2); }
+.etool-group.is-remove .etool.on { background: var(--bad); border-color: var(--bad);
+  color: #1a0d0d; }
+
+.editsize-row { gap: .35rem; }
+.editsize { display: flex; align-items: center; gap: .45rem; font-size: 12px;
   color: var(--muted); flex: 1; min-width: 0; }
-.editsize input[type=range] { flex: 1; min-width: 4rem; }
-.editsize span { font: 600 11px var(--mono); min-width: 3.6rem; }
+.editsize input[type=range] { flex: 1; min-width: 3rem; }
+.editsize-name { font-size: 11px; }
+#editSizeLabel { font: 600 11px var(--mono); min-width: 3.4rem; text-align: right;
+  color: var(--ink); }
 .editcount { font: 500 12px var(--mono); color: var(--muted); }
 .editbar-foot .btn { margin-left: auto; }
 .btn--sm { padding: .3rem .7rem; font-size: 12.5px; }
-/* The dock's tools stack vertically, so the tool group wraps into a grid rather than a
-   single scrolling row. Eight tools at three per row reads as a palette. */
-#editTools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: .25rem; width: 100%; }
-#editTools button { width: 100%; }
 /* THE ERROR BUDGET, BEFORE THE STROKE. This is the one thing in the dock that is not a
    control, and it is here because the product's whole claim is that it tells you how
    wrong it might be -- so the arithmetic belongs in front of the person about to hand-
