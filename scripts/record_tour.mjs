@@ -18,22 +18,47 @@
  * `window.DentistryAuth` at load, so a defineProperty guard has to win the race against
  * `auth.js`.
  *
- * ## The GPU is real, and that is the point
+ * ## The GPU is real, and getting it required NOT using a display
  *
- * `--use-angle=gl-egl` with no `--disable-gpu` puts Chrome on the RTX 3080 under Xvfb --
- * the same configuration `viewer/check-equivalence.mjs` asserts a renderer string for.
- * A tour recorded on SwiftShader would be a video of a software rasteriser: the volume
- * render and the 42 surfaces are exactly what would be too slow to look real.
+ * The obvious recording rig -- Xvfb plus `ffmpeg -f x11grab` -- was built first and is
+ * the wrong one on this box. Chrome on the X11 backend goes through DRI3, which this
+ * virtual display does not provide, and Chrome answers by BLOCKLISTING WebGL entirely:
  *
- * Usage (via the shell wrapper, which owns Xvfb, uvicorn and ffmpeg):
+ *     libEGL warning: DRI3 error: Could not get DRI3 device
+ *     ContextResult::kFatalFailure: WebGL2 blocklisted
+ *
+ * The configuration that does reach the RTX 3080 is the one
+ * `viewer/check-equivalence.mjs` already asserts a renderer string for:
+ * `--headless=new --ozone-platform=headless --use-angle=gl-egl`, and NOT `--disable-gpu`.
+ *
+ * That has no X display to grab, so frames come over CDP. NOT `Page.startScreencast`,
+ * which was tried and emits on compositor damage -- measured here at roughly one frame
+ * every two seconds even while the 3-D pane was turning, i.e. a slideshow. A TIMED
+ * `Page.captureScreenshot` loop asks for frames at a rate this script chooses, which is
+ * both smoother and the reason the captions can be aligned at all: the video's clock and
+ * the storyboard's clock are the same clock.
+ *
+ * Frames are exactly the page's -- no window chrome, no sandbox infobar, no cursor.
+ *
+ * A tour recorded on SwiftShader would be a video of a software rasteriser -- the volume
+ * render and the 42 surfaces are precisely what would be too slow to look real -- so the
+ * renderer string is checked and the run REFUSES rather than producing a slow-looking
+ * video of a fast product.
+ *
+ * Usage (via the shell wrapper, which owns uvicorn, Chrome and ffmpeg):
  *     ./scripts/record_tour.sh
  */
-import { readFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, rmSync } from 'node:fs';
 import path from 'node:path';
 
 const PORT = Number(process.env.TOUR_PORT || 8807);
 const DEBUG_PORT = Number(process.env.TOUR_DEBUG_PORT || 9333);
 const CASE = process.env.TOUR_CASE || '';
+const FRAMES = process.env.TOUR_FRAMES || '/tmp/dentistry-tour/frames';
+// Capture rate. 10 is plenty for a UI tour and keeps a 140 s recording to ~1400 frames;
+// the 3-D turntable is the only continuously moving thing and it turns 0.25 degrees a
+// frame, so it reads as smooth well below cinema rates.
+const FPS = Number(process.env.TOUR_FPS || 10);
 const ROOT = path.dirname(path.dirname(new URL(import.meta.url).pathname));
 
 /* ------------------------------------------------------------------ CDP plumbing */
@@ -49,32 +74,50 @@ async function cdp(debugPort) {
   }
   const ws = new WebSocket(info.webSocketDebuggerUrl);
   await new Promise((ok, no) => { ws.onopen = ok; ws.onerror = () => no(new Error('cdp connect failed')); });
-  let id = 0; const waiting = new Map();
+  let id = 0; const waiting = new Map(); const handlers = new Map();
   ws.onmessage = (m) => {
     const msg = JSON.parse(m.data);
     if (msg.id && waiting.has(msg.id)) {
       const { ok, no } = waiting.get(msg.id); waiting.delete(msg.id);
       msg.error ? no(new Error(JSON.stringify(msg.error))) : ok(msg.result);
+    } else if (msg.method && handlers.has(msg.method)) {
+      handlers.get(msg.method).forEach((f) => f(msg.params));
     }
   };
   const send = (method, params = {}, sessionId) => new Promise((ok, no) => {
     id += 1; waiting.set(id, { ok, no });
     ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }));
   });
-  return { send, ws };
+  const on = (method, fn) => {
+    if (!handlers.has(method)) handlers.set(method, []);
+    handlers.get(method).push(fn);
+  };
+  return { send, on, ws };
 }
 
-/* The browser-side auth stub. `app.js` reads `window.DentistryAuth` at module top level
- * and `auth.js` assigns it, so this has to be a defineProperty that swallows the later
- * assignment -- a plain object would be overwritten before boot() ran. Lifted from
- * `check-rail.mjs`, which learned it the hard way. */
+/* The browser-side auth stub.
+ *
+ * Two things it has to get right, and the first recording got the second one wrong.
+ *
+ * 1. `app.js` reads `window.DentistryAuth` at module top level and `auth.js` assigns it,
+ *    so this has to be a defineProperty that swallows the later assignment -- a plain
+ *    object would be overwritten before boot() ran. Lifted from `check-rail.mjs`.
+ *
+ * 2. **`init()` must RESOLVE TO A USER.** `boot()` does `let user = await AUTH.init()`
+ *    and calls `showSignIn()` on a falsy result -- so an `async () => {}` stub is signed
+ *    in by `isSignedIn()` and signed OUT by the only test that decides what renders.
+ *    `check-rail.mjs` never meets this because it sets `DENTISTRY_NO_BOOT` and calls
+ *    render functions directly; a recording drives the real boot path and does.
+ *    The first tour was 143 seconds of the sign-in gate for exactly this reason. */
 const AUTH_STUB = `
+const __tourUser = { sub: 'tour', name: 'Demo', email: 'demo@example.invalid',
+                     preferred_username: 'demo' };
 Object.defineProperty(window, 'DentistryAuth', {
   configurable: true,
   get: () => ({
-    init: async () => {},
+    init: async () => __tourUser,
     isSignedIn: () => true,
-    profile: () => ({ name: 'Demo', email: 'demo@example.invalid' }),
+    profile: () => __tourUser,
     signIn: () => {}, signOut: () => {},
     token: () => 'tour',
   }),
@@ -94,7 +137,7 @@ function beat(caption, note = '') {
 }
 
 async function main() {
-  const { send } = await cdp(DEBUG_PORT);
+  const { send, on } = await cdp(DEBUG_PORT);
   const targets = await send('Target.getTargets');
   const page = targets.targetInfos.find((t) => t.type === 'page');
   const { sessionId } = await send('Target.attachToTarget', { targetId: page.targetId, flatten: true });
@@ -114,10 +157,23 @@ async function main() {
   };
 
   const base = `http://127.0.0.1:${PORT}`;
+  // A HASH-ONLY navigation does not reload the document, so
+  // `addScriptToEvaluateOnNewDocument` never fires and the auth stub never exists -- the
+  // first recording of this tour was 143 seconds of the sign-in gate for exactly that
+  // reason. A cache-busting query forces a real document load every time; the app's own
+  // router reads the hash either way.
+  let nav = 0;
   const go = async (hash) => {
-    await ev('Page.navigate', { url: `${base}/index.html${hash}` });
-    await sleep(1200);
+    nav += 1;
+    await ev('Page.navigate', { url: `${base}/index.html?tour=${nav}${hash}` });
+    await sleep(1800);
   };
+
+  // 2560x1440 regardless of any window the platform did or did not give us. Headless
+  // Chrome's default viewport is 800x600 and would record a phone-shaped app.
+  await ev('Emulation.setDeviceMetricsOverride', {
+    width: 2560, height: 1440, deviceScaleFactor: 1, mobile: false,
+  });
 
   // Confirm the GPU before recording anything. A tour on SwiftShader is a video of a
   // software rasteriser and is not worth the disk.
@@ -131,9 +187,20 @@ async function main() {
     return d ? gl.getParameter(d.UNMASKED_RENDERER_WEBGL) : 'unknown';
   })()`);
   console.log(`renderer: ${renderer}`);
-  if (/swiftshader|software/i.test(String(renderer))) {
-    throw new Error(`refusing to record on a software rasteriser: ${renderer}`);
+  // "no webgl" has to fail too. The first run reported it and recorded anyway, because
+  // the guard only looked for the word SwiftShader -- an absent context is a worse
+  // outcome than a slow one, and it slipped through the check meant to catch it.
+  if (!/nvidia|geforce/i.test(String(renderer))) {
+    throw new Error(`refusing to record without the GPU: renderer is "${renderer}"`);
   }
+  // ...and the app has to be PAST the gate. Asserted on the DOM rather than on
+  // `isSignedIn()`: the first recording passed that check and filmed the sign-in card
+  // anyway, because what decides the render is `await AUTH.init()` returning a user.
+  const gated = await js(`(() => {
+    const g = document.getElementById('signinGate');
+    return !!(g && !g.hidden);
+  })()`);
+  if (gated) throw new Error('the app is showing the sign-in gate: the auth stub did not take');
 
   const caseId = CASE || await js(`(async () => {
     const r = await fetch('/v1/examples').then((x) => x.json());
@@ -144,8 +211,35 @@ async function main() {
   if (!caseId) throw new Error('no finished example case to record');
   console.log(`case: ${caseId}`);
 
-  console.log('\nrecording — the wrapper is capturing :99\n');
+  // ------------------------------------------------------- the capture loop
+  // A timed loop rather than the compositor's own stream: see the module docstring.
+  // Frames are stamped with elapsed seconds from t0, which is the SAME clock the beats
+  // use, so the captions cannot drift from what they name.
+  //
+  // It runs concurrently with the storyboard and is deliberately not awaited -- a
+  // capture that blocked each step would stretch the very animations it is recording.
+  rmSync(FRAMES, { recursive: true, force: true });
+  mkdirSync(FRAMES, { recursive: true });
+  const shots = [];
+  let capturing = true;
   t0 = Date.now();
+  const capture = (async () => {
+    const period = 1000 / FPS;
+    while (capturing) {
+      const started = Date.now();
+      try {
+        const r = await ev('Page.captureScreenshot', { format: 'jpeg', quality: 88 });
+        const i = shots.length;
+        const name = `f${String(i).padStart(6, '0')}.jpg`;
+        writeFileSync(path.join(FRAMES, name), Buffer.from(r.data, 'base64'));
+        shots.push({ file: name, at: (started - t0) / 1000 });
+      } catch { /* a navigation can drop one; the next tick recovers */ }
+      const spent = Date.now() - started;
+      if (spent < period) await sleep(period - spent);
+    }
+  })();
+
+  console.log('\nrecording\n');
 
   // ---------------------------------------------------------------- 1. the picker
   beat('Every tooth gets one number', 'the catalogue page, real segmented dentition spinning');
@@ -255,9 +349,19 @@ async function main() {
   beat('dentistry.dicomsegvr.com — research preview, not a medical device');
   await sleep(4500);
 
+  capturing = false;
+  await capture;
   const total = (Date.now() - t0) / 1000;
-  console.log(`\nstoryboard ran ${total.toFixed(1)}s`);
-  console.log(JSON.stringify({ seconds: total, renderer, case: caseId, beats }));
+  if (shots.length < 30) {
+    throw new Error(`only ${shots.length} frames captured; the screencast did not run`);
+  }
+  // Already relative to t0, which is also the beats' zero -- no rebasing, which is the
+  // point of sharing the clock.
+  writeFileSync(path.join(FRAMES, 'frames.json'), JSON.stringify(
+    shots.map((s) => ({ file: s.file, at: Number(s.at.toFixed(3)) })), null, 0));
+  console.log(`\nstoryboard ran ${total.toFixed(1)}s, ${shots.length} frames`);
+  console.log(JSON.stringify({ seconds: total, renderer, case: caseId,
+                               frames: shots.length, beats }));
   return 0;
 }
 
