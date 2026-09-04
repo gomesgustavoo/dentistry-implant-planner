@@ -1,0 +1,1286 @@
+/* DicomSegVR surface stack, with a violet accent that collides with nothing in the
+   structure palette (teeth use blue / green / orange / pink, the canal is red, the
+   jaws are bone tones) and is distinct from DicomSegVR's rose and VoxTell's cyan,
+   so the three siblings stay tellable apart.
+
+   Structure colours are NEVER declared here. They come from the server catalog and
+   are applied as inline styles, because a build step that prunes unreferenced
+   colour variables silently stripped 22 of 23 of them in a sibling app. There is
+   no build step here, and still nothing for one to prune. */
+:root {
+  --ground: #0a0e13;
+  --surface: #131a25;
+  --surface-2: #1b2230;
+  --surface-3: #222b3b;
+  --border: #232d3d;
+  --border-2: #2e3a4d;
+  --ink: #f4f7fa;
+  --muted: #93a1b8;
+  --accent: #8b5cf6;
+  --accent-2: #6366f1;
+  --accent-grad: linear-gradient(135deg, #8b5cf6, #6366f1);
+  --ok: #34d399;
+  --warn: #fbbf24;
+  --bad: #f87171;
+  /* `--text` and `--line` were referenced six times and defined nowhere, which is not a
+     cosmetic miss: `var()` with no fallback on an undefined property is invalid at
+     computed-value time, so the declaration is DROPPED, not defaulted. The casualty
+     was `.cbar-rule { background: var(--text) }` -- read back live as
+     `rgba(0, 0, 0, 0)`, i.e. the 2 px rule marking the required safety margin painted
+     nothing at all. That mark is the whole point of the clearance bar. `--line` took
+     out the `.pairs` and `.scanfacts` separators the same way. Aliases, deliberately:
+     these names read better at the use site than `--ink`/`--border` do. */
+  --text: #f4f7fa;
+  --line: #232d3d;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --mono: ui-monospace, "SF Mono", "Geist Mono", Menlo, Consolas, monospace;
+  --sans: system-ui, -apple-system, "Geist", "Segoe UI", Roboto, sans-serif;
+  /* Scales with the window instead of pinning 330px, which left a 4K monitor with the
+     same cramped panel as a laptop. Clamped at both ends: below 300px the dental
+     chart's tooth labels collide, above 420px the rail is just whitespace. */
+  --rail: clamp(300px, 21vw, 420px);
+  --shadow: 0 10px 30px -12px rgba(0, 0, 0, .65);
+  --topbar-h: 54px;
+  /* The reading measure for text-shaped views. The workspace deliberately ignores
+     it -- an image viewport should use the whole monitor -- but a settings form at
+     2000px wide is a form nobody can read. */
+  --page: min(1400px, 92vw);
+  --page-narrow: 820px;
+}
+
+* { box-sizing: border-box; }
+/* A class that sets `display` beats the UA stylesheet's `[hidden] { display: none }`,
+   so every grid/flex container below would ignore the attribute the app toggles.
+   That is not a hypothetical: it rendered the whole workspace underneath the home
+   page on first load. One !important here is cheaper than remembering to write
+   `.thing[hidden]` for every future container. */
+[hidden] { display: none !important; }
+html, body { margin: 0; padding: 0; }
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+a { color: var(--accent); }
+h1, h2, h3, h4 { letter-spacing: -.02em; }
+
+/* ------------------------------------------------------------- the shell */
+/* Two rows, and exactly TWO in-flow children: the topbar and #views. That is the
+   whole point of #views. The previous shell put the account strip, the sign-in
+   gate, the home view, the workspace and the footer directly in the body grid, so
+   `1fr` landed on whichever was second in the DOM -- the account strip -- and
+   stretched a one-line status bar to fill the window. On a large monitor that
+   read as "the trial day count is giant". A wrapper makes it unrepresentable. */
+/* The COLUMN is explicit. Without it the body grid has one IMPLICIT `auto` column,
+   which sizes to the max-content of its contents rather than to the viewport -- so any
+   descendant wide enough drags the whole shell past the window edge, and `body` is the
+   one element whose width is not supposed to be negotiable. Measured at 1100 px with
+   the plan tab open: the body's single track came out 1135.69 px, `#views` and
+   `#workspace` inherited it, and the plan sidebar sat 16 px off the right of the screen
+   with `Save plan` cut in half. `minmax(0, 1fr)` fills the viewport and cannot exceed
+   it. `min-width: 0` on `#views` bounds the MIN-content contribution and never had
+   anything to say about the auto track's max-content sizing. */
+body { display: grid; grid-template-rows: auto 1fr; grid-template-columns: minmax(0, 1fr);
+  min-height: 100vh; }
+#views { min-height: 0; min-width: 0; }
+/* With a case open the page does not scroll: the viewport gets the window and the
+   rail scrolls inside itself. `height` (not `min-height`) is what gives the 1fr row
+   a DEFINITE size -- without it the row sizes to its content and the panes grow off
+   the bottom of the screen. `dvh` because on mobile Safari `vh` is the
+   address-bar-less height and clips. */
+body.in-case { height: 100dvh; overflow: hidden; }
+body.in-case #views { height: 100%; min-height: 0; overflow: hidden; }
+
+/* ---------------------------------------------------------------- topbar */
+.topbar {
+  display: flex; align-items: center; gap: .9rem;
+  height: var(--topbar-h); padding: 0 1rem;
+  border-bottom: 1px solid var(--border);
+  background: color-mix(in srgb, var(--surface) 82%, transparent);
+  position: sticky; top: 0; z-index: 40;
+  backdrop-filter: blur(10px);
+}
+.brand {
+  display: flex; align-items: center; gap: .55rem;
+  color: inherit; text-decoration: none; flex: none;
+}
+.brand-name { font-weight: 650; font-size: .92rem; letter-spacing: -.02em; white-space: nowrap; }
+.brand .mark {
+  width: 22px; height: 22px; border-radius: 7px; background: var(--accent-grad);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, .07) inset; flex: none;
+}
+
+/* The view tabs. An underline rather than a pill, so the bar reads as navigation
+   and not as another segmented control -- there are three of those inside a case
+   already. */
+.nav { display: flex; align-items: center; gap: .2rem; height: 100%; }
+.nav-item {
+  display: inline-flex; align-items: center; height: 100%;
+  padding: 0 .7rem; font-size: .84rem; color: var(--muted);
+  text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px;
+}
+.nav-item:hover { color: var(--ink); }
+.nav-item.on { color: var(--ink); border-bottom-color: var(--accent); }
+
+/* Case context. Swaps in where the nav was, so the header keeps one row. */
+.casebar { display: flex; align-items: baseline; gap: .55rem; min-width: 0; }
+.casebar-title {
+  font-size: .9rem; font-weight: 600; white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 34vw;
+}
+.casebar-sub {
+  font-size: .72rem; color: var(--muted); white-space: nowrap;
+  overflow: hidden; text-overflow: ellipsis; max-width: 30vw;
+}
+
+.topbar-right { display: flex; align-items: center; gap: .5rem; margin-left: auto; }
+
+.iconbtn {
+  display: inline-flex; align-items: center; justify-content: center;
+  width: 30px; height: 30px; flex: none;
+  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
+  background: var(--surface-2); color: var(--muted);
+  font: inherit; font-size: .9rem; line-height: 1; cursor: pointer;
+}
+.iconbtn:hover { color: var(--ink); border-color: var(--accent); }
+.iconbtn.on { color: var(--ink); border-color: var(--accent); }
+
+.sysstrip {
+  display: flex; align-items: center; gap: .4rem;
+  font-size: .74rem; color: var(--muted);
+  padding: .26rem .55rem; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); white-space: nowrap;
+}
+.dot { width: 7px; height: 7px; border-radius: 50%; background: var(--muted); flex: none; }
+.dot.ok { background: var(--ok); } .dot.busy { background: var(--warn); }
+.dot.bad { background: var(--bad); }
+
+/* Usage, at a size that does not move. Every dimension here is absolute on
+   purpose: this element replaced a full-bleed strip, and the whole reason it is a
+   chip is that a status readout must not scale with the viewport. */
+.usagechip {
+  display: inline-flex; align-items: center; gap: .45rem;
+  padding: .26rem .6rem; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--surface); text-decoration: none;
+  font-family: var(--mono); font-size: .72rem; line-height: 1.4; color: var(--muted);
+  white-space: nowrap;
+}
+.usagechip:hover { border-color: var(--accent); color: var(--ink); }
+.usagechip-meter {
+  width: 34px; height: 4px; border-radius: 999px; background: var(--surface-3);
+  overflow: hidden; flex: none;
+}
+.usagechip-meter i { display: block; height: 100%; width: 0; background: var(--accent-grad); }
+.usagechip.low .usagechip-meter i { background: var(--warn); }
+.usagechip.out .usagechip-meter i { background: var(--bad); }
+.usagechip.low .usagechip-text { color: var(--warn); }
+.usagechip.out .usagechip-text { color: var(--bad); }
+
+/* ------------------------------------------------------- account menu */
+.acctwrap { position: relative; }
+.avatar {
+  width: 30px; height: 30px; border-radius: 50%; flex: none;
+  border: 1px solid var(--border-2); background: var(--surface-2); color: var(--ink);
+  font: 600 .7rem/1 var(--sans); letter-spacing: .02em; cursor: pointer;
+  display: inline-flex; align-items: center; justify-content: center;
+}
+.avatar:hover, .avatar[aria-expanded="true"] { border-color: var(--accent); }
+.menu {
+  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 60;
+  min-width: 250px; padding: .5rem;
+  background: var(--surface); border: 1px solid var(--border-2);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.menu-head { padding: .35rem .5rem .5rem; display: grid; gap: .1rem; }
+.menu-name { font-size: .84rem; font-weight: 600; }
+.menu-mail { font-size: .72rem; color: var(--muted); word-break: break-all; }
+.menu-plan {
+  display: flex; align-items: center; justify-content: space-between; gap: .6rem;
+  margin: .35rem 0 .1rem; font-size: .72rem; font-family: var(--mono); color: var(--muted);
+}
+.menu-plan b { color: var(--ink); text-transform: uppercase; letter-spacing: .04em; }
+.menu-sep { height: 1px; background: var(--border); margin: .4rem 0; }
+.menu-item {
+  display: flex; align-items: center; gap: .5rem; width: 100%;
+  padding: .42rem .5rem; border: 0; border-radius: var(--radius-sm);
+  background: none; color: var(--ink); font: inherit; font-size: .82rem;
+  text-align: left; text-decoration: none; cursor: pointer;
+}
+.menu-item:hover { background: var(--surface-2); }
+.menu-item.danger { color: var(--muted); }
+.menu-item.danger:hover { color: var(--bad); }
+.menu-note { padding: .2rem .5rem 0; font-size: .68rem; color: var(--warn); }
+
+/* ------------------------------------------------------------ page layout */
+main { max-width: var(--page); margin: 0 auto; padding: 1.4rem 1.25rem 3rem; display: grid; gap: 1.1rem; }
+main#settings { max-width: var(--page-narrow); }
+.panel {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 1.2rem;
+}
+.panel-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; margin-bottom: .85rem; flex-wrap: wrap; }
+.panel-head h2 { margin: 0; font-size: 1rem; }
+.panel-tools { display: flex; align-items: center; gap: .5rem; }
+.hint { font-size: .76rem; color: var(--muted); }
+.hero { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; align-items: center; }
+.hero h1 { margin: 0 0 .5rem; font-size: 1.5rem; }
+.lede { margin: 0 0 1rem; color: var(--muted); font-size: .9rem; }
+.hero-facts { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.4rem; }
+.hero-facts b { display: block; font-size: 1.15rem; }
+.hero-facts span { font-size: .72rem; color: var(--muted); }
+@media (max-width: 860px) { .hero { grid-template-columns: 1fr; } }
+
+.drop {
+  border: 1.5px dashed var(--border-2); border-radius: var(--radius);
+  background: var(--surface-2); padding: 1.5rem 1.2rem; text-align: center;
+  cursor: pointer; transition: border-color .15s, background .15s;
+}
+.drop:hover, .drop:focus-visible, .drop.over {
+  border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-2));
+  outline: none;
+}
+.drop-inner { display: grid; gap: .35rem; }
+.drop-icon {
+  width: 32px; height: 32px; margin: 0 auto .3rem; border-radius: 10px;
+  background: var(--accent-grad); opacity: .9;
+  clip-path: polygon(50% 0, 100% 42%, 72% 42%, 72% 100%, 28% 100%, 28% 42%, 0 42%);
+}
+.drop-title { font-weight: 600; font-size: .9rem; }
+.drop-sub { font-size: .76rem; color: var(--muted); }
+.drop code { font-family: var(--mono); font-size: .72rem; }
+.upbar { height: 4px; border-radius: 999px; background: var(--surface-3); margin-top: .9rem; overflow: hidden; }
+.upbar-fill { height: 100%; width: 0; background: var(--accent-grad); transition: width .15s; }
+
+.notice { margin: .9rem 0 0; font-size: .82rem; padding: .55rem .75rem; border-radius: var(--radius-sm); background: var(--surface-2); }
+.notice.ok { color: var(--ok); } .notice.err { color: var(--bad); }
+
+.examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .7rem; }
+.ex {
+  display: grid; gap: .25rem; text-align: left; cursor: pointer;
+  background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius-sm);
+  padding: .8rem .9rem; color: inherit; font: inherit; transition: border-color .15s, transform .15s;
+}
+.ex:hover { border-color: var(--accent); transform: translateY(-1px); }
+.ex-title { font-weight: 600; font-size: .88rem; }
+.ex-stats { font-size: .74rem; color: var(--muted); }
+.ex-attr { font-size: .68rem; color: var(--muted); opacity: .75; }
+
+/* ------------------------------------------------------------- job cards */
+.jobs { display: grid; gap: .55rem; }
+.job {
+  display: grid; grid-template-columns: auto 1fr auto; gap: .15rem .8rem;
+  align-items: center;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .7rem .9rem;
+  transition: border-color .15s;
+}
+.job:hover { border-color: var(--border-2); }
+.job.is-open { cursor: pointer; }
+.job.is-open:hover { border-color: var(--accent); }
+/* The state reads as a colour before it reads as a word. */
+.job-dot {
+  grid-row: 1 / 3; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--muted); flex: none;
+}
+.job-dot.done { background: var(--ok); }
+.job-dot.failed, .job-dot.cancelled { background: var(--bad); }
+.job-dot.running { background: var(--warn); }
+.job-dot.queued { background: var(--accent); }
+.job-name {
+  font-size: .86rem; font-weight: 600; min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+}
+.job-meta {
+  grid-column: 2; font-size: .73rem; color: var(--muted);
+  display: flex; flex-wrap: wrap; gap: .1rem .5rem;
+}
+.job-meta .sep { opacity: .4; }
+.job-meta .err { color: var(--bad); }
+.job-meta .warn { color: var(--warn); }
+.job-actions { grid-row: 1 / 3; grid-column: 3; display: flex; align-items: center; gap: .35rem; }
+.job-bar { grid-column: 2 / -1; height: 3px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin-top: .3rem; }
+.job-bar i { display: block; height: 100%; background: var(--accent-grad); transition: width .3s; }
+.badge {
+  font-size: .66rem; text-transform: uppercase; letter-spacing: .04em;
+  padding: .14rem .42rem; border-radius: 999px; background: var(--surface-3); color: var(--muted);
+}
+.badge.done { color: var(--ok); } .badge.failed, .badge.cancelled { color: var(--bad); }
+.badge.running { color: var(--warn); }
+.empty { color: var(--muted); font-size: .82rem; margin: .2rem 0; }
+
+/* ------------------------------------------------------------- settings */
+.settings { display: grid; gap: 1.1rem; }
+.settings-head h1 { margin: 0 0 .2rem; font-size: 1.4rem; }
+.settings-head .lede { margin: 0; }
+.form { display: grid; gap: .8rem; }
+.field { display: grid; gap: .3rem; }
+.field > span { font-size: .76rem; color: var(--muted); }
+.field input {
+  font: inherit; font-size: .88rem; color: var(--ink);
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm); padding: .5rem .65rem; width: 100%;
+}
+.field input:focus { outline: none; border-color: var(--accent); }
+.field input::placeholder { color: color-mix(in srgb, var(--muted) 65%, transparent); }
+.form-foot { display: flex; align-items: center; gap: .8rem; }
+.form-note { font-size: .76rem; color: var(--muted); }
+.form-note.ok { color: var(--ok); } .form-note.err { color: var(--bad); }
+
+.kvblock {
+  display: grid; gap: .35rem; margin-top: 1rem; padding-top: .9rem;
+  border-top: 1px solid var(--border);
+}
+.kvrow { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; font-size: .8rem; }
+.kvrow > span:first-child { color: var(--muted); }
+.kvrow > span:last-child { font-family: var(--mono); font-size: .76rem; word-break: break-all; text-align: right; }
+
+/* Plan cards. `auto-fit` rather than a fixed column count: there are three plans
+   today and the catalogue comes from the server, so the count is not ours to
+   assume. */
+.plans { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: .7rem; }
+.plancard {
+  display: grid; gap: .3rem; align-content: start;
+  background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); padding: .9rem;
+}
+.plancard.current { border-color: var(--accent); background: color-mix(in srgb, var(--accent) 8%, var(--surface-2)); }
+.plancard-name { font-weight: 600; font-size: .9rem; display: flex; align-items: center; gap: .45rem; }
+.plancard-price { font-family: var(--mono); font-size: .8rem; color: var(--muted); }
+.plancard-quota { font-size: .74rem; color: var(--muted); }
+.plancard .btn { margin-top: .5rem; }
+.tag {
+  font-size: .6rem; text-transform: uppercase; letter-spacing: .06em;
+  padding: .1rem .4rem; border-radius: 999px;
+  background: var(--accent); color: #0b0713; font-weight: 700;
+}
+.planstate { display: grid; gap: .5rem; margin-bottom: 1rem; }
+.planstate-top { display: flex; align-items: baseline; gap: .6rem; flex-wrap: wrap; }
+.planstate-top b { font-size: 1.1rem; }
+.meterwide { height: 6px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.meterwide i { display: block; height: 100%; background: var(--accent-grad); }
+.meterwide.low i { background: var(--warn); } .meterwide.out i { background: var(--bad); }
+
+/* Usage history. A bar per month, sized against the busiest one. */
+.usagelist { display: grid; gap: .45rem; }
+.usagerow { display: grid; grid-template-columns: 5.5rem 1fr auto; align-items: center; gap: .7rem; font-size: .78rem; }
+.usagerow > span:first-child { color: var(--muted); font-family: var(--mono); font-size: .72rem; }
+.usagebar { height: 8px; background: var(--surface-3); border-radius: 999px; overflow: hidden; }
+.usagebar i { display: block; height: 100%; background: var(--accent-grad); }
+.usagerow > span:last-child { font-family: var(--mono); font-size: .74rem; color: var(--muted); }
+
+/* ------------------------------------------------------------------ teams */
+.menu-label {
+  padding: .35rem .5rem .15rem; font-size: .64rem; text-transform: uppercase;
+  letter-spacing: .07em; color: var(--muted);
+}
+.menu-item.on { background: color-mix(in srgb, var(--accent) 14%, transparent); }
+.menu-item .menu-ws { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+.avatar--sm { width: 24px; height: 24px; font-size: .6rem; }
+.memberlist { display: grid; gap: .1rem; }
+.memberrow {
+  display: grid; grid-template-columns: 24px 1fr auto auto; align-items: center;
+  gap: .6rem; padding: .45rem .3rem; border-radius: var(--radius-sm);
+}
+.memberrow:hover { background: var(--surface-2); }
+.member-name { font-size: .82rem; min-width: 0; display: grid; }
+.member-mail { font-size: .7rem; color: var(--muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.member-acts { display: flex; gap: .6rem; }
+.link.danger { color: var(--muted); }
+.link.danger:hover { color: var(--bad); }
+.tag--quiet {
+  background: var(--surface-3); color: var(--muted); font-weight: 600;
+  text-transform: uppercase;
+}
+.subhead {
+  margin: 1.1rem 0 .4rem; font-size: .68rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.invite-form { margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--border); }
+.select {
+  font: inherit; font-size: .8rem; color: var(--ink);
+  background: var(--surface-2); border: 1px solid var(--border-2);
+  border-radius: var(--radius-sm); padding: .45rem .6rem;
+}
+.select:focus { outline: none; border-color: var(--accent); }
+/* The invite link is shown exactly once, so it has to be selectable and it must not
+   be truncated into something that looks complete and is not. */
+.invitelink {
+  display: flex; align-items: center; gap: .6rem; margin-top: .5rem;
+  padding: .5rem .6rem; background: var(--surface-2);
+  border: 1px solid var(--border-2); border-radius: var(--radius-sm);
+}
+.invitelink code {
+  flex: 1; min-width: 0; font-family: var(--mono); font-size: .7rem;
+  color: var(--ink); word-break: break-all; user-select: all;
+}
+
+/* ------------------------------------------------------------- workspace */
+.workspace {
+  display: grid; grid-template-columns: var(--rail) 1fr;
+  gap: 1rem; padding: 1rem 1.25rem 1.25rem;
+  min-height: 0; min-width: 0; height: 100%;
+}
+/* ONE column, not `0 1fr`. With the rail display:none'd it is out of the flow, so the
+   stage becomes the first grid item and lands in column one -- which under `0 1fr` is
+   zero wide, and the stage then overflowed it at its old size while two thirds of the
+   window sat empty. */
+.workspace.rail-collapsed { grid-template-columns: 1fr; gap: 0; }
+.workspace.rail-collapsed > .rail { display: none; }
+
+/* The rail in the IMPLANT tab. Measured on the live site: 4910 characters, 82% of it
+   scrolled out of reach, and none of it about implant planning -- the findings card,
+   "About this scan", the accuracy and priors cards, the downloads and the run details.
+   The dental chart is the one thing in the rail that belongs here, because in plan mode
+   every FDI position is a placement target; the Structures card stays because it is the
+   only control over what the 3-D pane draws.
+   They come back on the other two tabs, and (see the print block) on paper. */
+.workspace.mode-plan > .rail > .card:not(.chart-card):not(#structuresCard),
+.workspace.mode-plan > .rail > details.card { display: none; }
+/* `grid-template-columns` is stated, and `minmax(0, 1fr)` rather than the implicit
+   `auto`. An `auto` track's minimum is the largest min-content contribution of its
+   items and is allowed to exceed the container -- and grid items stretch -- so ONE
+   card with an unwrappable label floored the track and widened every other card to
+   match, the dental chart included. Measured: 366px cards in a 300px rail.
+   `overflow-x` is deliberately NOT clipped. `visible` beside a non-`visible` value
+   computes to `auto`, which is where the scrollbar came from -- but that bar is the
+   alarm, not the defect. `hidden` would hide the next regression instead of showing
+   it; the guarantee is structural, and check-rail.mjs asserts the bar never fires. */
+.rail {
+  min-height: 0; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  gap: .8rem; align-content: start;
+  overflow-y: auto;
+  padding-right: .2rem;
+}
+.rail::-webkit-scrollbar { width: 8px; }
+.rail::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+.card {
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .9rem;
+  min-width: 0;   /* a card's contents can never grow the card */
+}
+.card-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; margin-bottom: .6rem; }
+.card-head h3 { margin: 0; font-size: .84rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.card-actions { display: flex; gap: .6rem; }
+.link { background: none; border: 0; color: var(--accent); font: inherit; font-size: .74rem; cursor: pointer; padding: 0; }
+.link:hover { text-decoration: underline; }
+
+/* --------------------------------------------------------- the arch chart */
+.arch { display: block; }
+.arch svg { width: 100%; height: auto; display: block; }
+.arch .tooth { cursor: pointer; transition: opacity .12s, stroke .12s; }
+.arch .tooth rect, .arch .tooth path { stroke: rgba(255, 255, 255, .22); stroke-width: .8; }
+.arch .tooth:hover rect, .arch .tooth:hover path { stroke: #fff; stroke-width: 1.6; }
+.arch .tooth.absent { cursor: default; }
+.arch .tooth.absent rect, .arch .tooth.absent path { fill: var(--surface-3) !important; stroke: var(--border-2); }
+.arch .tooth.off { opacity: .28; }
+.arch .tooth.sel rect, .arch .tooth.sel path { stroke: var(--accent); stroke-width: 2.2; }
+.arch text { font-size: 4.4px; fill: var(--muted); font-family: var(--mono); text-anchor: middle; }
+.arch .tooth.absent text { opacity: .45; }
+.chart-legend { display: flex; justify-content: space-between; margin: .35rem 0 0; font-size: .64rem; color: var(--muted); }
+
+/* --------------------------------------------------------------- metrics */
+.metric { display: flex; align-items: baseline; gap: .45rem; }
+.metric b { font-size: 1.5rem; }
+.metric b.ok { color: var(--ok); } .metric b.warn { color: var(--warn); } .metric b.bad { color: var(--bad); }
+.metric span { font-size: .74rem; color: var(--muted); }
+.meter { height: 4px; background: var(--surface-3); border-radius: 999px; overflow: hidden; margin: .45rem 0 .6rem; }
+.meter i { display: block; height: 100%; background: var(--accent-grad); }
+/* Both tracks `minmax(0, ...)`: the label column used to be a bare `auto`, which
+   with `white-space: pre` below made every label an atomic box. A single report
+   field -- the model name -- was enough to push the card past the rail. */
+.kv { display: grid; grid-template-columns: minmax(0, auto) minmax(0, 1fr); gap: .18rem .6rem; margin: 0; font-size: .76rem; }
+/* `white-space: pre` used to be load-bearing: it preserved the two leading spaces
+   that indent a sub-row. `.kv dt.sub` carries that indent now, so the label is free
+   to wrap. `overflow-wrap: anywhere` covers the case no rule can anticipate -- an
+   unbreakable token in scanner-supplied text such as a series description. */
+.kv dt { color: var(--muted); overflow-wrap: anywhere; }
+.kv dt.sub { padding-left: .75rem; }
+.kv dd { margin: 0; text-align: right; font-family: var(--mono); font-size: .72rem; overflow-wrap: anywhere; }
+.kv dd.ok { color: var(--ok); } .kv dd.warn { color: var(--warn); } .kv dd.bad { color: var(--bad); }
+.warnlist { margin: .6rem 0 0; padding-left: 1rem; font-size: .74rem; color: var(--warn); }
+.warnlist li { margin-bottom: .25rem; }
+
+/* ------------------------------------------------------------ structures */
+.sgroup { margin-bottom: .55rem; }
+.sgroup h4 {
+  margin: .3rem 0 .25rem; font-size: .68rem; text-transform: uppercase;
+  letter-spacing: .06em; color: var(--muted);
+}
+.slist { display: grid; gap: 1px; }
+.srow {
+  display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; align-items: center; gap: .5rem;
+  padding: .22rem .3rem; border-radius: 5px; cursor: pointer; font-size: .78rem;
+}
+.srow:hover { background: var(--surface-2); }
+.srow.off { opacity: .38; }
+.srow.sel { background: color-mix(in srgb, var(--accent) 16%, var(--surface-2)); }
+.swatch { width: 12px; height: 12px; border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, .16) inset; }
+.srow .name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.srow .vol { font-family: var(--mono); font-size: .68rem; color: var(--muted); }
+.srow .stl { font-size: .7rem; color: var(--muted); text-decoration: none; opacity: 0; }
+.srow:hover .stl { opacity: 1; }
+.srow .stl:hover { color: var(--accent); }
+
+/* The measured-accuracy column. Present only on the two published examples, so it is
+   gated on `.with-dice` rather than sized unconditionally: a job with no accuracy
+   block keeps the four-track grid it has always had, byte for byte. */
+.slist.with-dice .srow { grid-template-columns: 12px minmax(0, 1fr) auto 2.6rem auto; }
+.dice {
+  font-family: var(--mono); font-size: .68rem; color: var(--muted);
+  text-align: right; cursor: help;
+}
+/* No absolute colour band: these structures span 185 to 1.5M voxels, and a threshold
+   that paints a 1 mm nerve red for a one-voxel wall shift while passing a molar at
+   0.90 is worse than none. Only the two states that are categorically wrong get a
+   colour -- a total miss and a structure the annotation does not contain. */
+.dice.warn { color: var(--warn); }
+.dice.bad  { color: var(--bad); font-weight: 600; }
+/* A structure a specialist drew rather than the base model. A dot, not a badge: the
+   rail is dense and this is provenance, not a warning. */
+.provmark { color: var(--accent); margin-left: .18rem; cursor: help; }
+
+/* ------------------------------------------------------------- downloads */
+.dl { display: grid; gap: .4rem; }
+.dl a {
+  display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: .2rem 1rem; align-items: center;
+  padding: .5rem .6rem; border: 1px solid var(--border); border-radius: var(--radius-sm);
+  background: var(--surface-2); text-decoration: none; color: inherit; transition: border-color .15s;
+}
+.dl a:hover { border-color: var(--accent); }
+.dl b { font-size: .8rem; font-weight: 600; }
+.dl span { font-size: .7rem; color: var(--muted); grid-column: 1/-1; }
+.dl em { font-family: var(--mono); font-size: .68rem; color: var(--muted); font-style: normal; }
+
+/* ----------------------------------------------------------------- stage */
+/* Two rows now, not three. The old third row was a paragraph of prose under the
+   image explaining the mouse bindings; it is in the Display popover instead, which
+   is where you look when you want it and nowhere when you do not. */
+.stage { display: grid; grid-template-rows: auto 1fr; gap: .6rem; min-width: 0; min-height: 0; }
+.stage-bar { display: flex; align-items: center; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.modes, .planes { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.mode, .plane {
+  background: none; border: 0; color: var(--muted); font: inherit; font-size: .78rem;
+  padding: .3rem .75rem; border-radius: 999px; cursor: pointer;
+}
+.mode.on, .plane.on { background: var(--surface-3); color: var(--ink); }
+.stage-tools { display: flex; align-items: center; gap: .5rem; }
+.slider { display: flex; align-items: center; gap: .5rem; font-size: .74rem; color: var(--muted); }
+.slider input { width: 100%; accent-color: var(--accent); }
+
+/* --------------------------------------------------------- the popover */
+.popwrap { position: relative; }
+.pop {
+  position: absolute; top: calc(100% + .5rem); right: 0; z-index: 50;
+  width: 274px; padding: .7rem;
+  background: var(--surface); border: 1px solid var(--border-2);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  display: grid; gap: .6rem;
+}
+.pop-row { display: flex; align-items: center; justify-content: space-between; gap: .6rem; }
+.pop-row.slider { display: grid; grid-template-columns: 3.6rem 1fr; }
+.pop-row--end { justify-content: flex-end; }
+.pop-label { font-size: .72rem; color: var(--muted); }
+.pop-help {
+  margin: 0; padding-top: .5rem; border-top: 1px solid var(--border);
+  font-size: .68rem; line-height: 1.55; color: var(--muted);
+}
+.pop-help kbd {
+  font-family: var(--mono); font-size: .64rem; background: var(--surface-3);
+  border: 1px solid var(--border-2); border-radius: 4px; padding: 0 .25rem;
+}
+
+.grid4 {
+  position: relative; display: grid; gap: .5rem;
+  grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr;
+  min-height: 0; min-width: 0;
+}
+/* Three layouts off one class on the container. Deliberately NO transition on the
+   grid template: Cornerstone has to be told to resize after the boxes settle, and
+   animating them means resizing against an intermediate size and landing wrong. */
+.grid4.focus {
+  grid-template-columns: minmax(0, 3fr) minmax(0, 1fr);
+  grid-template-rows: repeat(3, minmax(0, 1fr));
+}
+.grid4.focus > .pane { grid-column: 2; }
+.grid4.focus > .pane.is-focus { grid-column: 1; grid-row: 1 / -1; }
+.grid4.solo { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+.grid4.solo > .pane:not(.is-focus) { display: none; }
+.pane.is-focus { outline: 1px solid var(--border-2); }
+.pane {
+  position: relative; background: #000; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden; min-height: 0;
+}
+.pane-3d { background: #0a0e13; }
+/* Faint until you look for it. The label is orientation, not decoration, so it
+   stays -- but at 55% it stops competing with the anatomy. */
+.pane-label {
+  position: absolute; top: .35rem; left: .5rem; z-index: 2;
+  font-size: .64rem; text-transform: uppercase; letter-spacing: .06em;
+  color: var(--muted); opacity: .55; pointer-events: none; transition: opacity .15s;
+}
+.pane:hover .pane-label { opacity: 1; }
+.pane-note {
+  position: absolute; bottom: .4rem; left: .55rem; right: .55rem; z-index: 2;
+  font-size: .66rem; color: var(--muted); pointer-events: none;
+}
+.cs { position: absolute; inset: 0; }
+.cs canvas { display: block; }
+.stage-overlay {
+  position: absolute; inset: 0; z-index: 5; display: grid; place-content: center; gap: .7rem;
+  justify-items: center; background: color-mix(in srgb, var(--ground) 82%, transparent);
+  font-size: .8rem; color: var(--muted); backdrop-filter: blur(2px);
+}
+.spinner {
+  width: 26px; height: 26px; border-radius: 50%;
+  border: 2px solid var(--surface-3); border-top-color: var(--accent);
+  animation: spin .8s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.tileview { display: grid; grid-template-rows: auto 1fr auto; gap: .6rem; min-height: 0; }
+.canvas-wrap {
+  position: relative; background: #000; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); display: grid; place-items: center; overflow: hidden; min-height: 0;
+}
+.canvas-wrap canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+.stage-empty { position: absolute; color: var(--muted); font-size: .8rem;
+  text-align: center; padding: 0 .8rem; }
+/* In the plan tab every FDI position is an implant site, so every one is a target. */
+.tooth.site { cursor: crosshair; }
+.tooth.site:hover rect { stroke: var(--accent); stroke-width: 1.4; }
+.tileview .slider input { width: 100%; }
+
+/* The implant-planning stage.
+   Two columns: pictures, and a sidebar that scrolls. The previous shape gave the
+   panoramic `3fr` and everything else `1fr`, which was backwards on two counts. The
+   panoramic is a 3:1 picture in a 1.6:1 box -- half its pane was letterbox -- and it is
+   a LOCATOR, not a measuring surface, because its horizontal axis is arc length through
+   a curved trough (the server publishes `metric_axes: "vertical_only"` for exactly this
+   reason). Meanwhile the cross-section, which is the surface you place and angle the
+   implant on, got 272x272 of a 1105x645 stage and shared even that with every control
+   in the tab. Now: panoramic strip on top, section and 3-D co-equal beneath it, text in
+   a real sidebar. Measured on the same window, the section goes 272 -> ~366 px. */
+.planview {
+  display: grid; gap: .6rem; min-height: 0;
+  /* BOTH tracks are minmax(0, ...) so the grid can never exceed its container. A bare
+     `clamp(20rem, ...)` on the sidebar is a hard 320 px floor, and between the 1000 px
+     stacking breakpoint and about 1200 px the 300 px rail plus that floor plus the two
+     panes overflowed the page -- measured at 1100 px: body scrollWidth 1136 and the Save
+     button 16 px off the right edge. The clamp still expresses the PREFERRED width; the
+     minmax lets it yield rather than push the page sideways. */
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(20rem, 24vw, 27rem));
+  grid-template-rows: auto minmax(0, 1fr);
+}
+.planview .planes { grid-column: 1 / -1; }
+/* Two rows, not three. The section slider moved into the tools row, which is worth
+   38 px of row plus 7.5 px of gap -- and on a 836 px window the section is HEIGHT-bound,
+   so every one of those pixels goes straight into the picture. */
+.plan-views { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: .4rem;
+  min-height: 0; min-width: 0; }
+/* Co-equal in standing, not in width. You re-angulate on the section and confirm on the
+   3-D, so both must be big enough to read -- but a buccolingual cross-section is a TALL
+   NARROW picture (36 mm wide by 68 mm tall on a real case, aspect 0.53) and fits by
+   height long before it fills its column, while the 3-D jaw wants every pixel it can
+   get. An equal split just gave the section black bars. */
+/* An EVEN split, now that the section is cropped to the site.
+   0.62fr existed for one reason: the section was the whole 36 x 68 mm picture, aspect
+   0.53, so it fitted by height and an even split just gave it black bars. Cropped to a
+   ~36 mm window the aspect is ~1.0, width stops being slack, and the even split is what
+   turns it into millimetres per pixel. Pressing `z` restores the whole section, which
+   letterboxes again -- correctly, because that is what the picture is. */
+.plan-panes { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  gap: .4rem; min-height: 0; }
+.pan-wrap, .xs-wrap, .pane3d-wrap {
+  position: relative; background: #000; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); display: grid; place-items: center;
+  overflow: hidden; min-height: 0;
+}
+/* Tall enough to read the arch and find a site, short enough that it is not competing
+   with the two views that carry the measurements.
+   `aspect-ratio` derives the WIDTH from that height, so the pane is exactly the size of
+   the picture and there are no black bars beside it. The ratio is per case -- a
+   panoramic is 124 mm of arch by 68 mm tall on this scan and something else on the next
+   -- so `drawPanoramic` sets `--pan-aspect` from the published `pixel_mm` once the
+   image is in hand. The fallback is only for the frame before that happens. */
+.pan-wrap {
+  /* Was clamp(140px, 26vh, 320px) -- 217 px on the user's 836 px window, a third of the
+     whole picture column, for a strip the code itself calls a locator. Cut to 15vh, and
+     the 92 px it gives up land in the cross-section, which is the surface the implant is
+     actually placed and angled on. At 125 px the strip still shows 124 mm of arch at
+     0.54 mm/px, which is what finding a site needs. The 96 px floor keeps it from
+     vanishing at the harness's 640x900; the 190 px ceiling stops a tall monitor spending
+     the whole gain back on it. */
+  height: clamp(96px, 15vh, 190px);
+  aspect-ratio: var(--pan-aspect, 1.8);
+  /* `width: auto` with a definite height and an aspect-ratio gives a DEFINITE width,
+     which a grid happily treats as a min-content floor and propagates all the way up to
+     the workspace -- that is how the page came to be 36 px wider than the window at
+     1100. `min-width: 0` lets it yield; `max-width: 100%` keeps it inside the column. */
+  width: auto; min-width: 0; max-width: 100%; justify-self: center;
+}
+
+/* ABSOLUTE, not a centred grid item with `max-height: 100%`.
+   That is what it was, and the percentage resolved against the canvas's own GRID AREA
+   -- which an implicit `auto` row had already grown to the canvas's intrinsic height --
+   so the constraint was non-binding by construction. Measured on the live site: a
+   480x906 backing store displayed at 480x906 CSS px inside a 530x431 wrap, clipped by
+   `overflow: hidden`, so more than half the cross-section was simply not on screen and
+   it read as a plausible picture of something else. It was latent while the backing
+   store happened to be smaller than the wrap and became visible the moment the canvas
+   was rendered at 2x.
+   `inset: 0` pins the element box to the wrap, and `object-fit: contain` letterboxes the
+   bitmap inside it -- which is exactly the mapping `canvasPoint` reproduces
+   arithmetically, so the pointer maths is unchanged. */
+.pan-wrap canvas, .xs-wrap canvas {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  object-fit: contain; object-position: center;
+}
+/* The reparented 3-D pane fills its plan-stage host instead of occupying a `.grid4`
+   slot. `.in-plan` is toggled by `move3dPane`, never an inline style, so the pane can
+   go home unchanged. */
+.pane-3d.in-plan {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  border: 0; border-radius: 0; z-index: 1;
+}
+.pane-3d.in-plan > .cs { width: 100%; height: 100%; }
+.pane-3d.in-plan > .pane-tag, .pane-3d.in-plan > .pane-label { display: none; }
+.planhint { margin-left: auto; font-size: .72rem; color: var(--muted); align-self: center; }
+
+/* The tools row: jaw tabs, the section slider, the arc hint, the verdict strip and the
+   sidebar toggle. A wrapping flex row inside a grid track, and `min-width: 0` on the
+   flexible children is load-bearing -- a definite-width child floors the track and
+   propagates all the way up to the workspace, which is exactly how the page came to be
+   36 px wider than the window at 1100 px once before. */
+.plantools { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap;
+  min-width: 0; }
+.plantools .slider { display: flex; align-items: center; gap: .45rem;
+  flex: 1 1 12rem; min-width: 0; margin: 0; }
+.plantools .slider input { flex: 1 1 auto; min-width: 0; }
+.plantools #xsLabel { font-size: .72rem; color: var(--muted); white-space: nowrap; }
+.plantools .planhint { margin-left: 0; }
+.ovbtn { font-size: .68rem; padding: .15rem .45rem; width: auto; letter-spacing: .01em;
+  white-space: nowrap; }
+.ovbtn[disabled] { opacity: .5; cursor: not-allowed; }
+
+/* The worst verdict per implant, and the one thing that must survive the sidebar being
+   collapsed. Words, never colour alone: `no_verdict` and `clear` must not be told apart
+   by hue, because a reader who cannot see the difference reads the safer one. */
+.verdstrip { display: flex; gap: .3rem; align-items: center; min-width: 0;
+  overflow-x: auto; margin-left: auto; }
+.verdstrip:empty { display: none; }
+.vchip { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
+  font-size: .66rem; letter-spacing: .04em; text-transform: uppercase;
+  padding: .12rem .4rem; border-radius: 999px; font-weight: 650; }
+.vchip .vid { opacity: .8; font-weight: 500; text-transform: none; letter-spacing: 0; }
+.v-clear { background: rgba(52,211,153,.16); color: #34d399; border: 1px solid rgba(52,211,153,.4); }
+.v-tight { background: rgba(251,191,36,.16); color: #fbbf24; border: 1px solid rgba(251,191,36,.4); }
+.v-breach { background: rgba(248,113,113,.18); color: #f87171; border: 1px solid rgba(248,113,113,.5); }
+/* Dashed, and muted rather than merely fainter. An ungraded structure is not a safe
+   one, and at low contrast a paler green reads as a paler pass. */
+.v-no_verdict { background: transparent; color: var(--muted);
+  border: 1px dashed var(--border-2); }
+/* `pointer-events: none` is load-bearing, not tidiness. This overlay is absolutely
+   positioned and late in the DOM, so it paints over whatever shares its corner and --
+   measured with `elementFromPoint` on the live site -- it was swallowing the click on
+   the ONLY control that could add an implant. A caption must never be a click target. */
+.xs-meta {
+  position: absolute; left: 6px; bottom: 4px; font-size: .68rem; color: var(--muted);
+  font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000;
+  pointer-events: none; max-width: calc(100% - 12px);
+}
+.pane-tag {
+  position: absolute; left: 6px; top: 4px; font-size: .62rem; letter-spacing: .08em;
+  text-transform: uppercase; color: var(--muted); opacity: .75;
+  pointer-events: none; text-shadow: 0 1px 2px #000;
+}
+
+/* Collapsing the sidebar. Mirrors the rail's own `[` / `.rail-collapsed` shape, down to
+   removing the track rather than zeroing it -- a zero-width track still takes its gap
+   and still lets an overflowing child floor it. The verdict strip stays in the tools
+   row, so collapsing hides the WORKING and never the answer. */
+.planview.side-collapsed { grid-template-columns: minmax(0, 1fr); }
+.planview.side-collapsed > .plan-side { display: none; }
+
+/* One structure, one line. The summary is a four-column grid whose columns are the
+   four things that must never hide: the verdict as a WORD, the label, the millimetres,
+   and the bar on the one shared scale. Everything else -- the headline sentence, the
+   basis, the caveats, the budget arithmetic -- is behind the marker.
+   Measured before this: three `.cblock`s were 816 px and ~1770 characters per implant. */
+.crow { border-top: 1px solid var(--line); }
+.crow > summary {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  grid-template-areas: "chip label mm" "bar bar bar";
+  gap: .1rem .45rem; align-items: center; padding: .3rem 0;
+  cursor: pointer; list-style: none; font-size: .74rem;
+}
+.crow > summary::-webkit-details-marker { display: none; }
+.crow > summary:hover { background: rgba(255,255,255,.03); }
+.crow > summary > .vchip { grid-area: chip; }
+.crow-label { grid-area: label; color: var(--muted); min-width: 0;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.crow-mm { grid-area: mm; color: var(--text); font-weight: 600; white-space: nowrap; }
+.crow > summary > .cbar { grid-area: bar; margin: .1rem 0 0; }
+/* A measurement that carries a caveat. The row is force-open when this is set, so the
+   marker is a pointer to something already on screen rather than a thing to hunt for. */
+.crow-flag { color: var(--warn); font-weight: 800; }
+.crow-none { color: var(--muted); font-style: italic; }
+.crow-why { font-size: .72rem; color: var(--muted); line-height: 1.45;
+  padding: 0 0 .45rem .2rem; }
+.crow-why p { margin: .1rem 0 .25rem; color: var(--text); }
+.crow-why .why { margin: 0; padding-left: 1rem; }
+.crow-site > summary { grid-template-columns: minmax(0, 1fr) auto;
+  grid-template-areas: "label mm"; }
+
+.subnote { margin: .2rem 0 0; }
+.subnote > summary { cursor: pointer; color: var(--muted); font-size: .68rem;
+  list-style: none; }
+.subnote > summary::-webkit-details-marker { display: none; }
+.subnote > summary::before { content: '\25B8 '; }
+.subnote[open] > summary::before { content: '\25BE '; }
+
+/* The standing notices and the error budget: present, one line, one click away. */
+.sidenote { margin-top: .4rem; font-size: .72rem; }
+.sidenote > summary { cursor: pointer; color: var(--muted); padding: .25rem 0;
+  list-style: none; }
+.sidenote > summary::-webkit-details-marker { display: none; }
+.sidenote > summary::before { content: '\25B8 '; }
+.sidenote[open] > summary::before { content: '\25BE '; }
+
+/* The sidebar. Its own scroll region, so the measurement list can be as long as the
+   plan needs without shrinking the pictures or being silently clipped. */
+.plan-side {
+  min-height: 0; overflow-y: auto; overscroll-behavior: contain;
+  display: flex; flex-direction: column; gap: .1rem;
+  padding: .1rem .55rem .6rem .1rem;
+}
+.plan-side::-webkit-scrollbar { width: 8px; }
+.plan-side::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
+.plan-side::-webkit-scrollbar-track { background: transparent; }
+
+/* ------------------------------------------------------- ruler (plan tab) */
+.pan-wrap canvas, .xs-wrap canvas { touch-action: none; }
+.xs-wrap canvas { cursor: crosshair; }
+.ruler-list { margin-top: .35rem; font-size: .72rem; }
+.ruler-list .hint { display: block; line-height: 1.45; }
+ul.rulers { list-style: none; margin: 0; padding: 0; display: grid; gap: .15rem; }
+ul.rulers li {
+  display: grid; grid-template-columns: auto minmax(0, 1fr) auto;
+  gap: .5rem; align-items: baseline;
+}
+ul.rulers .mono { font-family: var(--mono); color: var(--text); }
+ul.rulers .hint { color: var(--muted); }
+@media (max-width: 1000px) {
+  /* One column, and the sidebar stops being a scroll region -- at this width the page
+     itself scrolls (see body.in-case below), and a nested scroller inside a scrolling
+     page is a trap on a touch device. */
+  .planview { grid-template-columns: minmax(0, 1fr); }
+  .planview .planes { grid-column: auto; }
+  .plan-panes { grid-template-columns: minmax(0, 1fr); }
+  .plan-views { grid-template-rows: auto auto auto; }
+  .xs-wrap, .pane3d-wrap { aspect-ratio: 1 / 1; }
+  .plan-side { overflow-y: visible; padding-right: .1rem; }
+  /* Below the stacking breakpoint there is only one column, so there is nothing to
+     collapse and the toggle would only be able to hide the panel outright. */
+  #sideToggle { display: none; }
+  .planview.side-collapsed { grid-template-columns: minmax(0, 1fr); }
+  .planview.side-collapsed > .plan-side { display: flex; }
+}
+
+@media (max-width: 1000px) {
+  /* Narrow: let the page scroll again and stack the panes. A 2x2 grid inside a
+     locked-height viewport is unusable at this width. */
+  body.in-case { height: auto; overflow: visible; }
+  body.in-case #views { height: auto; overflow: visible; }
+  .workspace { grid-template-columns: 1fr; height: auto; }
+  /* Restated because the collapse rule above would otherwise be overridden here and
+     the rail would come back the moment the window narrowed. */
+  .workspace.rail-collapsed { grid-template-columns: 1fr; }
+  .grid4, .grid4.focus, .grid4.solo {
+    grid-template-columns: 1fr; grid-template-rows: repeat(4, 42vh);
+  }
+  .grid4.focus > .pane, .grid4.focus > .pane.is-focus { grid-column: 1; grid-row: auto; }
+}
+@media (max-width: 900px) {
+  .sysstrip-text { display: none; }
+  .sysstrip { padding: .3rem; }
+  .brand-name { display: none; }
+  .casebar-sub { display: none; }
+  .casebar-title { max-width: 40vw; }
+}
+@media (max-width: 620px) {
+  .usagechip-text { display: none; }
+  /* Flex, not a narrower grid. A running card has two `.job-meta` children and a
+     bar; a failed one has neither, so any rule that pins children to row numbers is
+     right for one card shape and scrambles the other -- which is exactly what
+     happened. Flex just follows document order, and `order` moves the one child
+     that needs moving. The dot leaves the flow entirely so it cannot claim a row. */
+  /* `align-items: stretch` is load-bearing: the wide rule sets `center`, which in a
+     COLUMN flex is the horizontal axis, so inheriting it centres every line of the
+     card. */
+  .job {
+    display: flex; flex-direction: column; align-items: stretch;
+    gap: .25rem; position: relative; padding-left: 1.7rem;
+  }
+  .job-dot { position: absolute; left: .8rem; top: 1.08rem; }
+  .job-actions { order: 9; justify-content: flex-end; margin-top: .3rem; }
+}
+
+/* Wide monitors. The workspace was never width-capped, so the only thing wasting a
+   large screen was the fixed rail (now fluid) and a chart that stayed postage-stamp
+   sized no matter how much room it had. The topbar and the usage chip deliberately
+   do NOT scale here -- that was the bug. */
+@media (min-width: 1900px) {
+  .workspace { padding: 1.25rem 2rem 1.5rem; gap: 1.25rem; }
+  .arch text { font-size: 4px; }
+  .kv, .srow { font-size: .8rem; }
+}
+
+/* --------------------------------------------------------------- buttons */
+button.primary, button.ghost, .ghost {
+  font: inherit; font-size: .78rem; padding: .35rem .75rem; border-radius: var(--radius-sm);
+  cursor: pointer; border: 1px solid var(--border-2); background: var(--surface-2); color: var(--ink);
+}
+button.primary { background: var(--accent-grad); border-color: transparent; font-weight: 600; }
+button.ghost:hover, .ghost:hover { border-color: var(--accent); }
+button.sm { font-size: .74rem; padding: .28rem .6rem; }
+button:disabled { opacity: .5; cursor: default; }
+
+.btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: .4rem;
+  padding: .5rem .9rem; border-radius: var(--radius-sm);
+  border: 1px solid var(--border-2); background: var(--surface-2); color: var(--ink);
+  font: 500 .82rem/1 var(--sans); cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
+}
+.btn:hover { background: var(--surface-3); border-color: var(--accent); }
+.btn--sm { padding: .34rem .68rem; font-size: .74rem; }
+.btn--primary { background: var(--accent-grad); border-color: transparent; color: #0b0713; font-weight: 600; }
+.btn--primary:hover { filter: brightness(1.08); }
+.btn--quiet { background: none; border-color: transparent; color: var(--muted); }
+.btn--quiet:hover { color: var(--ink); background: var(--surface-2); }
+.btn:disabled { opacity: .5; cursor: default; }
+
+footer#homeFoot { border-top: 1px solid var(--border); padding: 1rem 0 0; margin-top: .4rem; }
+footer#homeFoot p { margin: 0; font-size: .72rem; color: var(--muted); }
+
+/* ------------------------------------------------- segmented pane controls */
+.seg { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: 2px; }
+.segb {
+  font: inherit; font-size: .74rem; padding: .25rem .6rem; border: 0; border-radius: 999px;
+  background: none; color: var(--muted); cursor: pointer; line-height: 1.3;
+}
+.segb.on { background: var(--surface-3); color: var(--ink); }
+.segb:hover { color: var(--ink); }
+
+/* ------------------------------------------------------- collapsible cards */
+.fold { padding: 0; }
+.fold > summary {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: .8rem .9rem; cursor: pointer; list-style: none; gap: .6rem;
+}
+.fold > summary::-webkit-details-marker { display: none; }
+.fold > summary h3 { margin: 0; font-size: .84rem; text-transform: uppercase; letter-spacing: .05em; color: var(--muted); }
+.fold > summary:hover h3 { color: var(--ink); }
+.fold-mark { width: 7px; height: 7px; border-right: 1.5px solid var(--muted); border-bottom: 1.5px solid var(--muted);
+             transform: rotate(45deg) translate(-2px, -2px); transition: transform .15s; }
+.fold[open] .fold-mark { transform: rotate(225deg) translate(-1px, -1px); }
+.fold > div { padding: 0 .9rem .85rem; }
+.card-hint { margin: -.25rem 0 .5rem; }
+
+/* -------------------------------------------------------- findings & series */
+.finding { display: grid; gap: .1rem; padding: .4rem 0; border-top: 1px solid var(--border); }
+.finding:first-of-type { border-top: 0; }
+.finding-head { display: flex; align-items: baseline; justify-content: space-between; gap: .6rem; font-size: .78rem; min-width: 0; }
+.finding-head > span { min-width: 0; overflow-wrap: anywhere; }
+/* The accuracy card's "this is not a patient scan" paragraph. Bordered rather than
+   muted: it is the sentence that stops a reader generalising one held-out case to
+   their own upload, so it must not read as boilerplate. */
+.acc-ref {
+  margin: .1rem 0 .7rem; padding: .5rem .6rem; font-size: .72rem; line-height: 1.5;
+  color: var(--muted); background: var(--surface-2);
+  border-left: 2px solid var(--accent); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.acc-ref b { color: var(--text); }
+/* Per-side canal coverage. Coverage, never Dice: the merged prediction collapses both
+   inferior alveolar canals into one class and carries no side attribution, so a
+   per-side Dice cannot exist. */
+.acc-side {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: .12rem .5rem;
+  margin-top: .3rem; font-size: .7rem;
+}
+.acc-side span { color: var(--muted); }
+.acc-side b { font-weight: 500; overflow-wrap: anywhere; }
+.finding-head b { font-weight: 600; font-family: var(--mono); font-size: .74rem; }
+.finding-head b.ok { color: var(--ok); } .finding-head b.warn { color: var(--warn); } .finding-head b.bad { color: var(--bad); }
+.finding-why { font-size: .7rem; color: var(--muted); line-height: 1.45; }
+.bars { display: flex; height: 5px; border-radius: 999px; overflow: hidden; margin: .3rem 0 .15rem; background: var(--surface-3); }
+.bars i { display: block; height: 100%; }
+.barkey { display: flex; flex-wrap: wrap; gap: .1rem .7rem; font-size: .67rem; color: var(--muted); }
+.barkey span::before { content: ''; display: inline-block; width: 7px; height: 7px; border-radius: 2px; margin-right: .3rem; background: currentColor; }
+.kv dd.dim { color: var(--muted); opacity: .7; font-style: italic; }
+.credits-body { margin: .2rem 0 .7rem; font-size: .82rem; color: var(--muted); line-height: 1.6; }
+.credits-body.warn { color: var(--warn); margin-bottom: 0; }
+.credits-body a { color: var(--accent); }
+
+/* ------------------------------------------------------------------- gate */
+.gate { min-height: 70vh; display: grid; place-items: center; padding: 2rem 1rem; }
+.gate__panel {
+  max-width: 30rem; text-align: center;
+  padding: clamp(1.5rem, 5vw, 2.6rem);
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+}
+.gate__panel h1 { margin: 0 0 .7rem; font-size: 1.35rem; }
+.gate__panel p { margin: 0 0 1.4rem; color: var(--muted); font-size: .92rem; line-height: 1.6; }
+.gate__foot { margin: 1.3rem 0 0 !important; font-size: .8rem !important; }
+.gate__foot a { color: var(--accent); }
+
+/* ------------------------------------------------ implant placement + bar */
+.implants { display: grid; gap: .45rem; font-size: .74rem; }
+.imp {
+  padding: .5rem .55rem; border: 1px solid var(--border);
+  border-radius: var(--radius-sm); background: var(--surface); cursor: pointer;
+}
+.imp.sel { border-color: var(--accent); background: var(--surface-2); }
+/* Selecting an implant was a click on a bare div. It is a real control now, so it has
+   to look focused and take a key -- see `.imp[tabindex]` handling in app.js. */
+.imp:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.imp-head { display: flex; align-items: center; gap: .4rem; flex-wrap: wrap; }
+.imp-head b { font-size: .78rem; flex: 1 1 auto; }
+.imp-head .imp-del { margin-left: auto; }
+/* The size and angle controls, on their own row with real labels. Two unlabelled
+   selects joined by a bare "x" gave a screen reader two anonymous comboboxes. */
+/* ONE row: diameter, length, tilt. It was a two-row label/value grid carrying the
+   words "Size", "Angle" and "buccolingual" -- 25 characters and a whole row of height
+   to name three controls whose units are already printed beside them. */
+.imp-ctl { display: flex; align-items: center; gap: .25rem; flex-wrap: wrap;
+  min-width: 0; margin: .2rem 0 .1rem; }
+.imp-ctl .sep { color: var(--muted); font-size: .7rem; }
+.imp-ctl input[type=number] { width: 3.2rem; }
+.imp select, .imp input[type=number] {
+  font: inherit; font-size: .74rem; background: var(--surface-2); color: var(--ink);
+  border: 1px solid var(--border-2); border-radius: 5px; padding: .12rem .25rem;
+  min-width: 0;
+}
+.imp input[type=number] { width: 4.1rem; font-variant-numeric: tabular-nums; }
+.imp select:focus-visible, .imp input:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 1px;
+}
+/* The implant is off this section: the list row must say so, because `drawImplants`
+   only paints implants within 1.5 mm of the current plane and an invisible implant with
+   no explanation reads as a lost implant. */
+.imp-off { color: var(--warn); font-size: .7rem; margin: .25rem 0 0; }
+.imp-off button { font: inherit; color: var(--accent); background: none; border: 0;
+  padding: 0; cursor: pointer; text-decoration: underline; }
+.verdict { margin: .3rem 0 .2rem; font-weight: 600; }
+.verdict.clear { color: var(--ok); }
+.verdict.tight { color: var(--warn); }
+.verdict.breach { color: var(--bad); }
+.verdict.no_verdict { color: var(--muted); }
+ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-height: 1.45; }
+
+/* The clearance budget, drawn literally: the measured span, then the hatched band the
+   segmentation may be wrong by, then a hard rule at the required margin. The colour
+   comes ONLY from a server verdict -- never from a drag in flight. */
+.cbar { margin: .35rem 0 .2rem; }
+.cbar-track { position: relative; height: 12px; background: var(--surface-3);
+  border-radius: 3px; overflow: hidden; }
+.cbar-fill { position: absolute; left: 0; top: 0; bottom: 0; background: var(--muted); }
+.cbar.ok .cbar-fill { background: var(--ok); }
+.cbar.warn .cbar-fill { background: var(--warn); }
+.cbar.bad .cbar-fill { background: var(--bad); }
+.cbar-hatch { position: absolute; top: 0; bottom: 0; opacity: .75;
+  background: repeating-linear-gradient(45deg, var(--muted) 0 2px, transparent 2px 5px); }
+.cbar-rule { position: absolute; top: -2px; bottom: -2px; width: 2px; background: var(--text); }
+/* An open-ended fill for the saturated branch: the number is a lower bound, so the bar
+   must not read as "it stops here". */
+.cbar-open {
+  -webkit-mask-image: linear-gradient(to right, #000 76%, transparent 100%);
+  mask-image: linear-gradient(to right, #000 76%, transparent 100%);
+}
+.cbar-legend { margin-top: .22rem; color: var(--muted); line-height: 1.5; }
+.cbar-legend .mono { font-family: var(--mono); color: var(--text); }
+@media print { .cbar-fill, .cbar-hatch, .cbar-rule { print-color-adjust: exact;
+  -webkit-print-color-adjust: exact; } }
+
+.planactions { display: flex; gap: .6rem; align-items: baseline; margin-top: .4rem; }
+
+/* The plan bar: save, reopen, export.
+   The controls carried NO class, so `#planSave` rendered as native browser chrome --
+   a light grey button and a white text field -- inside a dark UI, sitting next to
+   `.link` text buttons. app.css styles buttons only through `.btn*` and
+   `button.primary/.ghost`, and inputs only through `.field input`, and none of those
+   reached here. Styled at the id/context level rather than by adding classes in JS, so
+   the markup stays declarative and there is one place to look. */
+.planbar { margin: .35rem 0 .2rem; display: flex; flex-direction: column; gap: .4rem; }
+.planbar-row { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
+.planbar-row > label.hint { display: inline-flex; align-items: center; gap: .3rem; }
+.planbar input[type=text],
+.planbar select {
+  font: inherit; font-size: .76rem; color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--border-2); border-radius: 6px; padding: .28rem .4rem;
+  min-width: 0;
+}
+.planbar input[type=text] { flex: 1 1 9rem; min-width: 7rem; }
+.planbar input[type=text]::placeholder { color: var(--muted); }
+.planbar input[type=text]:focus-visible,
+.planbar select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+.planbar button:not(.link) {
+  font: inherit; font-size: .76rem; font-weight: 600; cursor: pointer;
+  color: var(--ink); background: var(--surface-3);
+  border: 1px solid var(--border-2); border-radius: 6px; padding: .28rem .6rem;
+}
+.planbar button:not(.link):hover:not(:disabled) { border-color: var(--accent); }
+.planbar button:not(.link):disabled { opacity: .45; cursor: default; }
+/* The one affirmative action in the bar reads as such; "Saved" is a state, not an
+   invitation, so it drops back to the neutral treatment via :disabled. */
+.planbar button#planSave:not(:disabled) {
+  background: var(--accent); border-color: var(--accent); color: #10061f;
+}
+
+/* Section header inside the sidebar: a title and the action that belongs to it. */
+.side-head {
+  display: flex; align-items: center; gap: .5rem; margin: .75rem 0 .1rem;
+}
+.side-head h4 {
+  margin: 0; font-size: .7rem; letter-spacing: .09em; text-transform: uppercase;
+  color: var(--muted); font-weight: 700;
+}
+.side-head .spacer { margin-left: auto; }
+.btn-add {
+  font: inherit; font-size: .72rem; font-weight: 600; cursor: pointer;
+  color: var(--ink); background: var(--surface-3); border: 1px solid var(--border-2);
+  border-radius: 999px; padding: .18rem .6rem; white-space: nowrap;
+}
+.btn-add:hover:not(:disabled) { border-color: var(--accent); color: #fff; }
+.btn-add:disabled { opacity: .45; cursor: default; }
+.btn-add:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+
+/* One block per structure, so the canal, the accessory canals and the teeth read as
+   three separate answers with three separate budgets rather than as one number. */
+.cblock { margin: .5rem 0 .2rem; }
+/* Was `display: inline-block; min-width: 11rem` -- an 11rem gutter inside what is now a
+   sidebar, which pushed every headline onto its own ragged second line. The label is a
+   heading; it gets its own row. */
+.cblabel {
+  display: block; font-weight: 700; opacity: .7; font-size: .68rem;
+  letter-spacing: .05em; text-transform: uppercase; margin-bottom: .1rem;
+}
+.pairs { margin-top: .7rem; border-top: 1px solid var(--line); padding-top: .5rem; }
+.pairs h4 { margin: 0 0 .3rem; font-size: .82rem; }
+
+/* Print-only, screen-hidden. */
+/* Facts about the scan, visually distinct from findings about the segmentation. */
+.scanfacts { margin-top: .7rem; border-top: 1px solid var(--line); padding-top: .5rem; }
+.scanfacts h4 { margin: 0 0 .25rem; font-size: .8rem; }
+.notelist { margin: .3rem 0 0; padding-left: 1.1rem; font-size: .74rem; line-height: 1.4;
+  opacity: .85; }
+.notelist li { margin: .15rem 0; }
+
+/* `.hint bad` was emitted for every measurement and save failure and there was no bare
+   `.bad` rule -- every `.bad` in this file is qualified (`.dice.bad`, `.kv dd.bad`, ...)
+   -- so "Could not measure: ..." resolved to exactly the same colour as ordinary hint
+   prose. Read back live to confirm: both rgb(147, 161, 184). */
+.bad { color: var(--bad); }
+.hint.bad { color: var(--bad); }
+/* Same reasoning as `.bad`: a caveat that reads as ordinary prose is not a caveat. */
+.warn { color: var(--warn); }
+.hint.warn { color: var(--warn); }
+/* A bare `.mono` was emitted into the priors table while the only `.mono` rules were
+   descendant-scoped (`ul.rulers .mono`, `.cbar-legend .mono`), so numbers labelled
+   monospace were not. A utility class costs one rule and removes the trap. */
+.mono { font-family: var(--mono); font-variant-numeric: tabular-nums; }
+
+.printsheet { display: none; }
+.ptable { width: 100%; border-collapse: collapse; font-size: .72rem; }
+/* `.ptable` is a PRINT style -- `border: 1px solid #999` over light `p-*` fills -- and
+   it is also used on screen, on a dark surface, by the priors panels. Overridden rather
+   than forked, so the printed table stays the one the print block was tuned for. */
+.ptable-dark { margin-top: .35rem; }
+.ptable-dark th, .ptable-dark td { border-color: var(--border); }
+.ptable-dark th { color: var(--muted); font-weight: 600; }
+
+.plan-priors { margin-top: .2rem; }
+.plan-priors .notelist { font-size: .72rem; }
+.ptable th, .ptable td { border: 1px solid #999; padding: 3px 5px; text-align: left;
+  vertical-align: top; }
+.ptable small { display: block; opacity: .8; }
+.pbasis { font-size: .7rem; line-height: 1.35; }
+.pnotice { font-size: .7rem; font-weight: 600; margin-top: .5rem; }
+.p-breach { background: #fde8e8; } .p-tight { background: #fdf3e0; }
+.p-clear { background: #e9f7ef; } .pnone { opacity: .6; }
+/* `no_verdict` is a real level that `planPrintTable` emits as `p-no_verdict`; without a
+   rule a not-graded cell printed indistinguishable from a graded one. */
+.p-no_verdict { background: #eef1f4; }
+
+/* ------------------------------------------------------------------ print */
+/* The printable plan is the SCREEN, reduced -- no second renderer and no headless
+   browser in the API image. The canvases are already in the DOM and print as images,
+   which is why this is CSS rather than code. */
+@media print {
+  @page { size: A4 portrait; margin: 14mm; }
+  /* `.railtoggle` and `.stagewrap` matched nothing -- the real element is
+     `#railToggle.iconbtn` -- so the rail toggle printed on every sheet. */
+  #nav, #casebar, #railToggle, #popHelp, .planactions, .modes, .planes,
+  #sliceStage, #mprStage, .stage-empty, .pane-tag, #xsSlider, .slider,
+  ul.rulers button, .imp-head button, .imp select { display: none !important; }
+  /* The size selects are hidden, so the chosen size has to be printed some other way.
+     `renderImplantPanel` writes it into a data attribute for exactly this. */
+  .imp-ctl[data-print]::after { content: attr(data-print); }
+  body, .workspace { display: block !important; height: auto !important;
+    overflow: visible !important; background: #fff !important; color: #000 !important; }
+  body.in-case { position: static !important; }
+  #planStage { display: block !important; }
+  /* The stage is two grid columns and a nested grid on screen; on paper it is one
+     column of blocks. Also un-scroll the sidebar, or the printed page carries only the
+     first 518 px of it -- which is the same clipping bug this refactor removed from the
+     screen, reappearing on the printout. */
+  .plan-views, .plan-panes { display: block !important; }
+  /* HIDDEN on paper, and that is the point. Everything the panel showed is on the
+     print sheet, in a form built for paper -- so leaving the panel visible printed each
+     headline, each bar and the whole error budget TWICE, once inline and once on the
+     sheet. `#planPrintSheet` is a sibling of the aside, so hiding it costs the sheet
+     nothing. `wirePlanPrint` fills the sheet on `beforeprint` as well as on the button,
+     because Ctrl+P never touched the button and would otherwise print an empty one. */
+  .plan-side { display: none !important; }
+  /* ...and the rail comes BACK. It is not in this block's hide list, so the plan-mode
+     rule above would have deleted the findings card from the printout -- the same
+     silent loss the print sheet exists to prevent, applied to the panel that was
+     checked and the rail that was not. */
+  .workspace.mode-plan > .rail > .card,
+  .workspace.mode-plan > .rail > details.card { display: block !important; }
+  .planview.side-collapsed { display: block !important; }
+  .pan-wrap { height: auto !important; }
+  .pane3d-wrap, .pane-3d.in-plan { display: none !important; }
+  .imp-off, .btn-add, .side-head .spacer { display: none !important; }
+  .imp-ctl input[type=number] { border: 0 !important; padding: 0 !important;
+    background: none !important; color: #000 !important; width: auto !important; }
+  /* The measurement table is print-only: on screen the panel already shows it live,
+     and on paper it is the part that has to stand alone. */
+  .printsheet { display: block !important; break-before: page; }
+  .planbar { display: none !important; }
+  .ptable, .pbasis, .pnotice { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  .planview { display: block !important; }
+  .pan-wrap canvas, .xs-wrap canvas { position: static !important; width: auto !important;
+    max-width: 100% !important; height: auto !important; break-inside: avoid; }
+  .card, .imp, .cbar { break-inside: avoid; }
+  /* Every disclosure open on paper. Paper has no marker to click. */
+  details { display: block !important; }
+  details > summary { display: block !important; }
+  details > *:not(summary) { display: block !important; }
+  /* The verdict colour has to survive, or a breach prints as a grey bar. */
+  .cbar-fill, .cbar-hatch, .cbar-rule, .verdict {
+    print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+  /* Repeated on every page rather than once at the top: a multi-page plan must not
+     shed the sentence that says what it is. */
+  .printbanner { display: block !important; position: fixed; bottom: 0; left: 0; right: 0;
+    font-size: 9pt; text-align: center; color: #444; border-top: 1px solid #bbb;
+    padding-top: 3pt; background: #fff; }
+}
+.printbanner { display: none; }

@@ -1,0 +1,24 @@
+{
+  "name": "dentistry-viewer",
+  "private": true,
+  "version": "1.0.0",
+  "description": "The DentistryViewer bundle. Built output is committed to web/viewer.js because the web image has no build step. Reconstructed 2026-09-02 from the shipped bundle, which was the only surviving copy after the 2026-09-01 tree deletion.",
+  "type": "module",
+  "scripts": {
+    "build:candidate": "esbuild src/index.js --bundle --format=iife --global-name=DentistryViewer --minify --target=es2020 --alias:events=./stubs/events.js --alias:url=./stubs/url.js --outfile=dist/viewer.js",
+    "build": "npm run build:candidate && cp dist/viewer.js ../web/viewer.js",
+    "build:debug": "esbuild src/index.js --bundle --format=iife --global-name=DentistryViewer --target=es2020 --sourcemap --alias:events=./stubs/events.js --alias:url=./stubs/url.js --outfile=dist/viewer.debug.js",
+    "check": "node check-bundle.mjs"
+  },
+  "devDependencies": {
+    "esbuild": "0.25.12"
+  },
+  "dependencies": {
+    "@cornerstonejs/core": "5.8.2",
+    "@cornerstonejs/tools": "5.8.2",
+    "@kitware/vtk.js": "36.4.1",
+    "d3-array": "3.2.4",
+    "d3-interpolate": "3.0.1",
+    "gl-matrix": "3.4.3"
+  }
+}

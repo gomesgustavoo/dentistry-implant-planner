@@ -1,0 +1,111 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: dentistry-api
+  name: dentistry-api
+  namespace: dentistry
+spec:
+  progressDeadlineSeconds: 600
+  replicas: 1
+  revisionHistoryLimit: 10
+  selector:
+    matchLabels:
+      app: dentistry-api
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      annotations:
+        kubectl.kubernetes.io/restartedAt: '2026-08-24T05:03:55Z'
+      labels:
+        app: dentistry-api
+    spec:
+      containers:
+      - env:
+        - name: DENT_DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              key: DB_PASSWORD
+              name: dentistry-secrets
+        - name: DENT_STRIPE_SECRET_KEY
+          valueFrom:
+            secretKeyRef:
+              key: STRIPE_SECRET_KEY
+              name: dentistry-secrets
+              optional: true
+        - name: DENT_STRIPE_WEBHOOK_SECRET
+          valueFrom:
+            secretKeyRef:
+              key: STRIPE_WEBHOOK_SECRET
+              name: dentistry-secrets
+              optional: true
+        envFrom:
+        - configMapRef:
+            name: dentistry-config
+        image: dentistry/api:0.13.0
+        imagePullPolicy: IfNotPresent
+        livenessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /v1/health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 20
+          periodSeconds: 30
+          successThreshold: 1
+          timeoutSeconds: 1
+        name: api
+        ports:
+        - containerPort: 8000
+          name: http
+          protocol: TCP
+        readinessProbe:
+          failureThreshold: 3
+          httpGet:
+            path: /v1/health
+            port: http
+            scheme: HTTP
+          initialDelaySeconds: 5
+          periodSeconds: 10
+          successThreshold: 1
+          timeoutSeconds: 1
+        resources:
+          limits:
+            cpu: '2'
+            memory: 1Gi
+          requests:
+            cpu: 100m
+            memory: 192Mi
+        volumeMounts:
+        - mountPath: /data
+          name: data
+      dnsPolicy: ClusterFirst
+      restartPolicy: Always
+      schedulerName: default-scheduler
+      securityContext:
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      terminationGracePeriodSeconds: 30
+      volumes:
+      - hostPath:
+          path: /home/tavulha/dentistry/data
+          type: Directory
+        name: data
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: dentistry-api
+  namespace: dentistry
+spec:
+  ports:
+  - name: http
+    port: 8000
+    protocol: TCP
+    targetPort: 8000
+  selector:
+    app: dentistry-api
+  type: ClusterIP

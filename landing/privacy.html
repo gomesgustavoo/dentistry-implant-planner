@@ -1,0 +1,97 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacy Policy — Dentistry CBCT</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to content</a>
+<header class="nav">
+  <div class="nav__inner">
+    <a class="brand" href="/">
+      <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
+        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
+          <stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/>
+        </linearGradient></defs>
+        <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bm)"/>
+        <path d="M16 8.2c-2.6 0-3.3 1.1-5 1.1-1.9 0-3.1 1.5-3.1 3.9 0 3.1 1.1 5.4 1.9 7.6.7 1.9 1.2 3.4 2.4 3.4 1.3 0 1.5-1.9 1.7-3.6.2-1.5.5-2.6 2.1-2.6s1.9 1.1 2.1 2.6c.2 1.7.4 3.6 1.7 3.6 1.2 0 1.7-1.5 2.4-3.4.8-2.2 1.9-4.5 1.9-7.6 0-2.4-1.2-3.9-3.1-3.9-1.7 0-2.4-1.1-5-1.1z" fill="#0a0e13" fill-opacity=".82"/>
+      </svg>
+      Dentistry<span class="brand__sub">CBCT</span>
+    </a>
+    <nav class="nav__menu"><a href="/#pricing">Pricing</a><a href="/#faq">FAQ</a></nav>
+  </div>
+</header>
+<main id="main" class="legal">
+  <div class="container--narrow">
+    <h1 class="display">Privacy Policy</h1>
+    <p class="legal__meta">Last updated 24 August 2026 · dentistry.dicomsegvr.com</p>
+    <div class="legal__note"><strong>This document is a plain-language template describing
+      what the service actually does technically. It has not been reviewed by counsel and is
+      not legal advice. If you process patient data under HIPAA, GDPR or LGPD, have your own
+      adviser review it and put an appropriate agreement in place before uploading anything.</strong></div>
+
+    <h2>1. What we process</h2>
+    <p>Two things: the <strong>imaging you upload</strong> (a dental CBCT as a DICOM zip or a
+      NIfTI volume) and the <strong>account details</strong> your sign-in provides — an
+      identifier, an email address and a username. Payment is handled entirely by Stripe; we
+      store only a customer reference, never card details.</p>
+
+    <h2>2. Imaging is not de-identified for you</h2>
+    <p>A DICOM series carries patient identifiers in its headers. We read only the geometry we
+      need and we do not index, search or share those headers — but we do not strip them
+      either, and you should not assume a scan you upload has been anonymised.
+      <strong>De-identify before uploading if your obligations require it.</strong></p>
+
+    <h2>3. How long we keep it</h2>
+    <ul>
+      <li><strong>Your upload is deleted the moment a job completes.</strong> It is never read
+        again, so there is no reason to keep it.</li>
+      <li><strong>Results expire 72 hours after completion</strong> and are removed from disk.
+        The download endpoint then answers <em>410 Gone</em>.</li>
+      <li>The job record — timings, structure volumes and quality findings, with no imaging —
+        is kept so your usage count and history remain accurate.</li>
+      <li>Curated example cases are public sample data and are exempt from expiry.</li>
+    </ul>
+
+    <h2>4. Separation between accounts</h2>
+    <p>Every case is stored under its own account's prefix and every request is checked against
+      the account that owns it. A request for another account's case is answered as if the case
+      did not exist.</p>
+
+    <h2>5. No trackers</h2>
+    <p>No analytics, no advertising pixels, no third-party fonts or scripts. Every asset on this
+      site is served from this domain. Sign-in uses our own identity service; your session token
+      lives in your browser tab and is discarded when you close it.</p>
+
+    <h2>6. Processors we use</h2>
+    <ul>
+      <li><strong>Stripe</strong> — payments and subscription management.</li>
+      <li><strong>Cloudflare</strong> — TLS termination and delivery of this site.</li>
+    </ul>
+    <p>Segmentation runs on our own hardware. Your imaging is not sent to any third party and is
+      not used to train anything.</p>
+
+    <h2>7. Your rights</h2>
+    <p>You may ask for a copy of what we hold about you, ask us to correct it, or ask us to
+      delete your account and everything under it. Deletion removes the account's stored cases
+      in one operation. Write to <a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a>.</p>
+
+    <h2>8. Where it runs</h2>
+    <p>Processing and storage are in Brazil. If you are transferring personal data from another
+      jurisdiction, satisfy yourself that you have a lawful basis for doing so.</p>
+
+    <h2>9. Changes</h2>
+    <p>Material changes will be announced on this page with a new date above. Continuing to use
+      the service after that constitutes acceptance.</p>
+
+    <h2>10. Contact</h2>
+    <p><a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a></p>
+    <a class="legal__back" href="/">← Back to the site</a>
+  </div>
+</main>
+</body>
+</html>

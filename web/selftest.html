@@ -1,0 +1,251 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Coordinate self-test</title>
+<!--
+  Runs the SAME golden vectors as tests/test_phantom.py::plan_geometry_checks against the
+  JavaScript half of the coordinate map. The map is written twice -- dentistry/
+  plan_geometry.py for the server, web/app.js for the ruler -- and that seam is the one
+  that drifts silently, because both halves keep working while disagreeing.
+
+  A plain static page on purpose: the web image has no build step and this repo has no
+  node_modules, so anything that needed a bundler could not be run from the deployed
+  artifact. web-auth/check-rail.mjs --selftest drives it headlessly.
+-->
+<style>
+  body { font: 13px/1.5 ui-monospace, monospace; background: #0b0f16; color: #e6edf7; padding: 1.2rem; }
+  .pass { color: #34d399; } .fail { color: #f87171; font-weight: 700; }
+  h1 { font-size: 1rem; margin: 0 0 .8rem; }
+</style>
+<h1>Coordinate self-test &mdash; web/app.js against tests/plan_vectors.json</h1>
+<div id="out">running&hellip;</div>
+<script>window.DENTISTRY_NO_BOOT = true;</script>
+<script src="app.js"></script>
+<script>
+(async () => {
+  const lines = [];
+  let failures = 0;
+  const check = (name, cond, detail) => {
+    lines.push(`<div class="${cond ? 'pass' : 'fail'}">${cond ? 'PASS' : 'FAIL'}  ${name}` +
+               (detail ? ` &mdash; ${detail}` : '') + '</div>');
+    if (!cond) failures += 1;
+  };
+  try {
+    const vec = await (await fetch('plan_vectors.json')).json();
+    const info = vec.manifest;
+
+    // The plan-tab functions read the jaw out of planState(); here they are called
+    // against the manifest directly, which is why xsFrame/xsPixelToTZ take `info`.
+    let worst = 0;
+    for (const v of vec.xs_pixel_to_lps) {
+      const got = xsPixelToLps(info, v.index, v.row, v.col);
+      for (let i = 0; i < 3; i += 1) worst = Math.max(worst, Math.abs(got[i] - v.lps[i]));
+    }
+    check(`cross-section pixel -> LPS over ${vec.xs_pixel_to_lps.length} vectors`,
+          worst < 1e-6, `worst component error ${worst.toExponential(3)} mm`);
+
+    worst = 0;
+    for (const v of vec.pan_pixel_to_lps) {
+      const got = panPixelToLps(info, v.row, v.col);
+      for (let i = 0; i < 3; i += 1) worst = Math.max(worst, Math.abs(got[i] - v.lps[i]));
+    }
+    check(`panoramic pixel -> LPS over ${vec.pan_pixel_to_lps.length} vectors`,
+          worst < 1e-6, `worst component error ${worst.toExponential(3)} mm`);
+
+    // rulerLabel is what the user actually reads, so it is what gets checked -- not a
+    // private helper that happens to agree with Python while the label does not.
+    worst = 0;
+    for (const v of vec.xs_distance_mm) {
+      const label = rulerLabel({ a: { x: v.a[1], y: v.a[0] }, b: { x: v.b[1], y: v.b[0] } },
+                               info, 'xs');
+      worst = Math.max(worst, Math.abs(parseFloat(label) - v.mm));
+    }
+    // The label is shown to 2 dp, so it can only agree to half of that.
+    check(`the ruler LABEL matches Python over ${vec.xs_distance_mm.length} distances`,
+          worst <= 0.005, `worst error ${worst.toExponential(3)} mm (label is 2 dp)`);
+
+    const f = xsFrame(info);
+    check('xsFrame reads the published pitches',
+          Math.abs(f.colPitch - info.cross_sections.pixel_mm[1]) < 1e-12
+          && Math.abs(f.rowPitch - info.cross_sections.pixel_mm[0]) < 1e-12,
+          `row ${f.rowPitch} col ${f.colPitch}`);
+
+    const tz = xsPixelToTZ(info, 0, 0);
+    check('pixel (0,0) is the top-left corner of the published range',
+          Math.abs(tz.t_mm - info.cross_sections.t_range_mm[0]) < 1e-9
+          && Math.abs(tz.z_mm - info.cross_sections.z_top_mm) < 1e-9,
+          `t=${tz.t_mm} z=${tz.z_mm}`);
+
+    // ---- canvasPoint, at the real backing-store scale ---------------------
+    // The plan canvases render at XS_RENDER_SCALE for the overlay's sake, so their
+    // backing store is no longer the image's pixel grid, and `canvasPoint` has to
+    // divide back out. Everything downstream -- xsPixelToTZ, xsPixelToLps, xsFrame's
+    // pitches, the implant drag -- speaks IMAGE pixels against the published
+    // `pixel_mm`, so a scale leaking out of here would move every implant and every
+    // ruler by a factor of two with no error anywhere.
+    //
+    // Driven through a synthetic element rather than a real one: `object-fit: contain`
+    // is reproduced arithmetically inside canvasPoint, so the only thing needed is a
+    // bounding rect and a backing store.
+    const IMG = 480;                       // the server's cross-section JPEG
+    const mkCanvas = (cssW, cssH, scale) => ({
+      width: IMG * scale, height: IMG * scale,
+      getBoundingClientRect: () => ({ left: 100, top: 50, width: cssW, height: cssH }),
+    });
+    // Square image in a square box: no letterbox, so the mapping is a pure scale.
+    let cv = mkCanvas(360, 360, XS_RENDER_SCALE);
+    let pt = canvasPoint(cv, { clientX: 100 + 180, clientY: 50 + 180 });
+    check('canvasPoint returns IMAGE pixels, not backing-store pixels',
+          pt && Math.abs(pt.x - IMG / 2) < 1e-9 && Math.abs(pt.y - IMG / 2) < 1e-9,
+          pt ? `centre of a 360px box -> (${pt.x}, ${pt.y}); image is ${IMG}, `
+             + `backing store ${cv.width}` : 'returned null');
+
+    // Round trip over the whole grid: place the pointer at the CSS position that image
+    // pixel (col, row) occupies, and require canvasPoint to name that pixel back. This
+    // is the assertion that catches the backing-store scale leaking out -- it would be
+    // off by exactly XS_RENDER_SCALE everywhere.
+    {
+      const cssW = 360, cssH = 360, L = 100, T = 50;
+      const box = mkCanvas(cssW, cssH, XS_RENDER_SCALE);
+      const k = Math.min(cssW / IMG, cssH / IMG);       // CSS px per image px
+      const padX = (cssW - IMG * k) / 2, padY = (cssH - IMG * k) / 2;
+      let worstRt = 0;
+      for (const [col, row] of [[0, 0], [1, 1], [123, 47], [240, 240], [479, 479]]) {
+        const got = canvasPoint(box, { clientX: L + padX + col * k, clientY: T + padY + row * k });
+        if (!got) { worstRt = Infinity; break; }
+        worstRt = Math.max(worstRt, Math.abs(got.x - col), Math.abs(got.y - row));
+      }
+      check('canvasPoint round-trips image pixel -> CSS -> image pixel',
+            worstRt < 1e-9, `worst error ${worstRt.toExponential(3)} px at `
+            + `backing store ${box.width} for a ${IMG} px image`);
+    }
+
+    // Letterboxed: a square image in a WIDE box has bars left and right, and a click on
+    // a bar is not a measurement, so it must be refused rather than clamped.
+    cv = mkCanvas(720, 360, XS_RENDER_SCALE);
+    pt = canvasPoint(cv, { clientX: 100 + 360, clientY: 50 + 180 });
+    const onBar = canvasPoint(cv, { clientX: 100 + 10, clientY: 50 + 180 });
+    check('canvasPoint honours object-fit letterboxing and refuses the bars',
+          pt && Math.abs(pt.x - IMG / 2) < 1e-9 && onBar === null,
+          pt ? `centre -> (${pt.x.toFixed(3)}, ${pt.y.toFixed(3)}), bar -> `
+             + `${onBar === null ? 'null' : 'MAPPED'}` : 'centre returned null');
+
+    // planSize is the other half of the conversion; planCtx cannot run without a real
+    // 2-D context, but the size arithmetic can be asserted on its own.
+    check('planSize reports the image grid, not the backing store',
+          planSize({ width: IMG * XS_RENDER_SCALE, height: IMG * XS_RENDER_SCALE }).w === IMG,
+          `${IMG * XS_RENDER_SCALE} backing -> ${planSize({ width: IMG * XS_RENDER_SCALE,
+             height: IMG * XS_RENDER_SCALE }).w}`);
+
+    // ---- the SECTION CROP --------------------------------------------------
+    // The crop is one translation inside the transform planCtx already sets, and it is
+    // invisible to every consumer only if canvasPoint and planSize both undo it. A
+    // regression that forgot the offset would return a row from the wrong part of the
+    // picture and the implant would be placed there -- silently, because the picture
+    // would still look like a plausible section.
+    {
+      const Y0 = 120, ROWS = 240;
+      const cssW2 = 400, cssH2 = 400, L2 = 30, T2 = 70;
+      const cropped = {
+        width: IMG * XS_RENDER_SCALE, height: ROWS * XS_RENDER_SCALE,
+        dsvAx: 1, dsvY0: Y0,
+        getBoundingClientRect: () => ({ left: L2, top: T2, width: cssW2, height: cssH2 }),
+      };
+      const sz = planSize(cropped);
+      check('planSize reports the VISIBLE height under a crop, and the offset with it',
+            sz.h === ROWS && sz.y0 === Y0 && sz.w === IMG,
+            `visible ${sz.w}x${sz.h} at y0 ${sz.y0}, expected ${IMG}x${ROWS} at ${Y0}`);
+
+      const k2 = Math.min(cssW2 / cropped.width, cssH2 / cropped.height);
+      const padX2 = (cssW2 - cropped.width * k2) / 2;
+      const padY2 = (cssH2 - cropped.height * k2) / 2;
+      let worstCrop = 0;
+      for (const [col, row] of [[0, 0], [1, 1], [120, 100], [IMG - 1, ROWS - 1]]) {
+        // Aim at the centre of the pixel, as the isotropic round trip above does.
+        const got = canvasPoint(cropped, {
+          clientX: L2 + padX2 + (col + 0.5) * XS_RENDER_SCALE * k2,
+          clientY: T2 + padY2 + (row + 0.5) * XS_RENDER_SCALE * k2,
+        });
+        if (!got) { worstCrop = Infinity; break; }
+        worstCrop = Math.max(worstCrop,
+          Math.abs(got.x - (col + 0.5)), Math.abs(got.y - (row + 0.5 + Y0)));
+      }
+      check('canvasPoint adds the crop offset back, so a click names a PICTURE row',
+            worstCrop < 1e-9,
+            `worst error ${Number.isFinite(worstCrop) ? worstCrop.toExponential(2) : 'a click was refused'} px`);
+
+      // The break that proves it: with the offset dropped, a click at the top of the
+      // window would name row 0 of the picture instead of row Y0 -- 120 rows, 18 mm.
+      const naive = canvasPoint({ ...cropped, dsvY0: 0 },
+        { clientX: L2 + padX2 + 0.5 * XS_RENDER_SCALE * k2,
+          clientY: T2 + padY2 + 0.5 * XS_RENDER_SCALE * k2 });
+      check('  ... and dropping it really would move the click, so the check is not vacuous',
+            naive && Math.abs(naive.y - 0.5) < 1e-9,
+            `without the offset the same click reads row ${naive ? naive.y.toFixed(1) : 'null'} `
+            + `instead of ${(0.5 + Y0).toFixed(1)} -- ${Y0} rows, about `
+            + `${(Y0 * 0.150442).toFixed(1)} mm of anatomy`);
+    }
+
+    // ---- the ANISOTROPIC panoramic ----------------------------------------
+    // Its columns are 0.5 mm and its rows 0.150442 mm, so the bitmap is portrait while
+    // the anatomy is landscape and the backing store carries a 3.324x correction on x
+    // only. That makes x and y different numbers of screen pixels per image pixel --
+    // the one place in this file where the two axes genuinely disagree, and therefore
+    // the one place a mapping bug would hide.
+    {
+      const ax = panAspectX(info);
+      check('panAspectX reads the published pitches',
+            Math.abs(ax - info.panoramic.pixel_mm[1] / info.panoramic.pixel_mm[0]) < 1e-12,
+            `col/row = ${ax.toFixed(4)}`);
+
+      const PW = info.panoramic.size[1], PH = info.panoramic.size[0];
+      const bw = Math.round(PW * XS_RENDER_SCALE * ax), bh = Math.round(PH * XS_RENDER_SCALE);
+      // A canvas as planCtx would have sized it, with the marker planCtx leaves behind.
+      const cssW = 900, cssH = 200, L = 40, T = 12;
+      const pan = { width: bw, height: bh, dsvAx: ax,
+                    getBoundingClientRect: () => ({ left: L, top: T, width: cssW, height: cssH }) };
+      const g = planSize(pan);
+      // Not exact, and cannot be: a backing store is an integer number of device
+      // pixels, so `Math.round(w * S * ax)` loses up to half a device pixel and the
+      // inverse is off by at most 0.5 / (S * ax) image pixels -- here 0.075 px, which
+      // is 0.038 mm on a 0.5 mm column pitch. The round trip below is exact anyway,
+      // because it divides by the SAME rounded width the forward pass used.
+      const bound = 0.5 / (XS_RENDER_SCALE * ax);
+      check('planSize undoes the panoramic aspect correction',
+            Math.abs(g.w - PW) <= bound && Math.abs(g.h - PH) < 1e-9,
+            `backing ${bw}x${bh} -> ${g.w.toFixed(3)}x${g.h.toFixed(3)} vs published `
+            + `${PW}x${PH}; off by ${Math.abs(g.w - PW).toExponential(2)} px, `
+            + `bound ${bound.toFixed(3)} px from integer rounding`);
+
+      // Round trip again, this time through the anisotropic mapping.
+      const k = Math.min(cssW / bw, cssH / bh);
+      const padX = (cssW - bw * k) / 2, padY = (cssH - bh * k) / 2;
+      let worstPan = 0;
+      for (const [col, row] of [[0, 0], [1, 1], [124, 200], [PW - 1, PH - 1]]) {
+        const got = canvasPoint(pan, {
+          clientX: L + padX + col * k * XS_RENDER_SCALE * ax,
+          clientY: T + padY + row * k * XS_RENDER_SCALE,
+        });
+        if (!got) { worstPan = Infinity; break; }
+        worstPan = Math.max(worstPan, Math.abs(got.x - col), Math.abs(got.y - row));
+      }
+      check('canvasPoint round-trips on the ANISOTROPIC panoramic',
+            worstPan < 1e-6, `worst error ${worstPan.toExponential(3)} px across a `
+            + `${ax.toFixed(3)}x x-correction`);
+
+      // The correction must not leak into y: a vertical panoramic ruler is metric and
+      // reads pixel_mm[0] per image row.
+      const a = canvasPoint(pan, { clientX: L + padX + 10, clientY: T + padY + 0 });
+      const b = canvasPoint(pan, { clientX: L + padX + 10,
+                                   clientY: T + padY + 100 * k * XS_RENDER_SCALE });
+      check('the x correction does not leak into the y axis',
+            a && b && Math.abs((b.y - a.y) - 100) < 1e-6,
+            a && b ? `100 image rows measured as ${(b.y - a.y).toFixed(9)}` : 'null point');
+    }
+  } catch (e) {
+    check('the self-test ran at all', false, String(e && e.message || e));
+  }
+  document.getElementById('out').innerHTML =
+    lines.join('') + `<div style="margin-top:.7rem">${failures ? `FAILURES: ${failures}` : 'ALL PASS'}</div>`;
+  window.__SELFTEST__ = { failures, lines: lines.length };
+})();
+</script>
