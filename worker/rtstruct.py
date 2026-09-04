@@ -58,6 +58,16 @@ def rt_name(structure) -> str:
         "incisive_canal_right": "IncisCanalR", "lingual_canal": "LingualCanal",
         "bridge": "Bridge", "crown": "Crown", "implant": "Implant", "pulp": "Pulp",
     }.get(structure.id)
+    # The extended taxonomy DECIDES its own ROI names rather than deriving them. Title-
+    # casing `medial_pterygoid_right` gives `MedialPterygoi` -- 16 characters, truncated
+    # mid-word, and one character from colliding with its left-side twin. `_check_names`
+    # below would catch the collision at import and take the worker down with it, which
+    # is the right failure but a bad time to discover the name.
+    if short is None:
+        from dentistry import extended as _ext
+        e = _ext.BY_ID.get(structure.id)
+        if e is not None:
+            short = e.roi_name
     if short is None:
         short = structure.id.replace("_", " ").title().replace(" ", "")[:MAX_ROI_NAME]
     return short[:MAX_ROI_NAME]

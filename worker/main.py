@@ -90,6 +90,7 @@ def _segment_toothfairy3(vol, rep, job_id, config=None):
     to merged ids, and the quality assessment.
     """
     from dentistry import crosswalk
+    from dentistry import models as M
     from worker import pipeline
 
     res = pipeline.segment_task1(vol.image, settings, rep=rep, use_lock=True,
@@ -101,6 +102,30 @@ def _segment_toothfairy3(vol, rep, job_id, config=None):
     rep(0.75, "Checking the result")
     merged = crosswalk.task1_to_merged_lut()[seg_case]
     del seg_case
+
+    # --- the EXTENDED pass, after the crosswalk and in merged id space ---------------
+    #
+    # Soft tissue, the airway above the pharynx, the orbit, the great vessels. A second
+    # composition entirely, under a rule that makes it unable to affect anything above:
+    # it paints only where `merged == 0`, and `assert_dental_unchanged` proves it. So a
+    # reader who switches the tongue on cannot thereby move a canal clearance.
+    #
+    # It runs BEFORE `assess`, so the quality block describes the volume that is actually
+    # published, and before every artifact writer, which all iterate `L.STRUCTURES` and
+    # pick the new indices up without being taught about them.
+    from worker import extended_board
+    ext_keys = M.extended_keys(config)
+    if ext_keys:
+        rep(0.78, "Checking whether the CT-trained models transfer to this scan")
+        probe = extended_board.transfer_probe(vol.image, merged, settings,
+                                              use_lock=True)
+        reports["transfer_probe"] = probe
+        rep(0.80, "Segmenting soft tissue and the airway")
+        merged, ext_runs, ext_report = extended_board.compose(
+            merged, vol.image, settings, config, use_lock=True, probe=probe,
+            spacing_zyx=tuple(reversed(vol.spacing_xyz)))
+        reports["extended"] = ext_report
+        reports["extended_runs"] = [vars(r) for r in ext_runs]
 
     spacing_zyx = tuple(reversed(vol.spacing_xyz))
     # No `arch=`: that argument is the other model's opinion, and there is no other

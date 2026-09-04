@@ -101,6 +101,28 @@ class Settings(BaseSettings):
     TF3_TOTALSEG_CHECKPOINT: str = "checkpoint_final.pth"
     TF3_TOTALSEG_MODE: str = "shadow"
     TF3_TOTALSEG_OWNS: tuple = ()
+
+    # --- the extended space: merged ids 48+, composed into background only ---------
+    # Three TotalSegmentator head/neck tasks (Apache-2.0) and the craniofacial model
+    # that gates them. Every fold is "0": TotalSegmentator ships single-fold weights,
+    # where our own models ship `fold_all`, and defaulting these to "all" would look for
+    # a directory that does not exist and report the model as not installed.
+    TF3_HEAD_MUSCLES_DIR: str = ""
+    TF3_HEAD_MUSCLES_FOLD: str = "0"
+    TF3_HEAD_MUSCLES_CHECKPOINT: str = "checkpoint_final.pth"
+    TF3_HEAD_GLANDS_DIR: str = ""
+    TF3_HEAD_GLANDS_FOLD: str = "0"
+    TF3_HEAD_GLANDS_CHECKPOINT: str = "checkpoint_final.pth"
+    TF3_HEADNECK_BONES_DIR: str = ""
+    TF3_HEADNECK_BONES_FOLD: str = "0"
+    TF3_HEADNECK_BONES_CHECKPOINT: str = "checkpoint_final.pth"
+    # The CBCT transfer probe. NOT a model the picker offers: it draws nothing and is
+    # never composed. It runs only when an extended model is requested, and its only
+    # output is one Dice against our own mandible. With this unset, the probe cannot run
+    # and every extended structure is withheld -- a probe that cannot run has not passed.
+    TF3_CRANIOFACIAL_DIR: str = ""
+    TF3_CRANIOFACIAL_FOLD: str = "0"
+    TF3_CRANIOFACIAL_CHECKPOINT: str = "checkpoint_final.pth"
     # The TF3 path's own inference knobs, which differ from the three-model defaults
     # above and deliberately so. Tile step 0.9 is the winners' setting: -12.9%
     # inference time for -0.002 Dice. Mirroring is ON because this checkpoint carries

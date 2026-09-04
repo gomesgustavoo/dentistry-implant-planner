@@ -43,7 +43,7 @@ spec:
         envFrom:
         - configMapRef:
             name: dentistry-config
-        image: dentistry/api:0.13.0
+        image: dentistry/api:0.17.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3

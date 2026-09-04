@@ -1468,6 +1468,18 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 .models-note { margin: 0; font-size: 12px; color: var(--muted); line-height: 1.45; }
 .models-note b { color: var(--warn); }
 .models-list { display: grid; gap: .6rem; }
+/* The divider between the two model spaces. A Task-1 specialist competes for structures
+   the base model also draws; an extended one adds anatomy nothing else draws and cannot
+   overwrite anything. Reading the second as the first would make a CT-trained soft-tissue
+   model look like a rival to the segmentation every measurement comes from. */
+.modelsection { margin: .5rem 0 -.1rem; padding-top: .8rem;
+  border-top: 1px solid var(--border); }
+.modelsection h3 { margin: 0 0 .3rem; font-size: 12px; font-weight: 600; color: var(--ink);
+  text-transform: uppercase; letter-spacing: .07em; }
+.modelsection .hint { display: block; max-width: 62ch; line-height: 1.5; }
+/* The standing caveat on every extended model. Warm rather than red: these are not
+   broken, they are ungraded, and a red card would say the wrong thing. */
+.modelcaveat { margin: .25rem 0 0; font-size: 11.5px; color: var(--warn); }
 .modelcard {
   background: var(--surface-2); border: 1px solid var(--border);
   border-radius: var(--radius-sm); padding: .6rem .7rem; display: grid; gap: .35rem;
