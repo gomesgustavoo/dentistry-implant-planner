@@ -4931,10 +4931,13 @@ function drawImplants(g, info) {
 /** Mirror the implant list into the 3D pane.
  *
  *  Driven off the same `p.implants` array the section draws from, so the two views
- *  cannot show different poses. The verdict travels with each implant, and the same
- *  rule applies as in the 2-D outline: while a measurement is in flight the level is
- *  null, which the viewer paints NEUTRAL. A colour the reader interprets as "safe"
- *  must never come from anything but a completed measurement. */
+ *  cannot show different poses. The verdict that travels with each implant is
+ *  `worstVerdict(..., {gradedOnly: true})` -- the worst grade actually established over
+ *  every structure, not the canal's alone; see that function for why the shell and the
+ *  strip rank `no_verdict` differently on purpose. And the same rule applies as in the
+ *  2-D outline: while a measurement is in flight the level is null, which the viewer
+ *  paints NEUTRAL. A colour the reader interprets as "safe" must never come from
+ *  anything but a completed measurement. */
 function syncImplants3d() {
   if (!window.DentistryViewer || !DentistryViewer.setImplants) return;
   const p = implantState();
@@ -4945,8 +4948,10 @@ function syncImplants3d() {
     // `selected` drives the safety envelope's opacity, so the one being worked on reads
     // clearly and the others stay context rather than becoming soup.
     selected: p.selected === imp.id,
-    verdict: p.measuring ? null
-      : (((p.measured[imp.id] || {}).verdict || {}).level || null),
+    // The worst COMPLETED grade, not the canal's alone -- see `worstVerdict`. Neutral
+    // only when nothing at all was graded; ungradedness is reported by the strip and the
+    // clearance rows, not by draining the colour out of the envelope.
+    verdict: p.measuring ? null : worstVerdict(imp, p, { gradedOnly: true }),
   })));
 }
 
@@ -5484,7 +5489,7 @@ function requestMeasure(delayMs) {
     drawRulers('xs');
     if (window.DentistryViewer && DentistryViewer.setImplantVerdict) {
       p.implants.forEach((imp) => DentistryViewer.setImplantVerdict(
-        imp.id, (((p.measured[imp.id] || {}).verdict) || {}).level || null));
+        imp.id, worstVerdict(imp, p, { gradedOnly: true })));
     }
   }, delayMs);
 }
@@ -6257,22 +6262,61 @@ function siteLine(info, imp) {
  *  worst thing on the page.
  */
 const VERDICT_RANK = { breach: 3, no_verdict: 2, tight: 1, clear: 0 };
+
+/** Every level standing against one implant: the canal, the accessory canals, the
+ *  adjacent teeth, and the other implants. Unordered, `no_verdict` included. */
+function implantLevels(imp, p) {
+  const m = p.measured[imp.id] || {};
+  return [m.verdict, m.accessory_canal_verdict, m.tooth_verdict]
+    .concat((p.pairs || []).filter((pr) => pr.a === imp.id || pr.b === imp.id)
+      .map((pr) => pr.verdict))
+    .map((v) => (v || {}).level).filter(Boolean);
+}
+
+/** The worst verdict standing against one implant.
+ *
+ *  Hoisted out of `renderVerdictStrip` so the 3-D safety envelope stops disagreeing with
+ *  it. It did disagree, visibly: 3-D was fed `m.verdict.level`, the CANAL verdict alone,
+ *  and `plan_safety.canal_verdict` returns `no_verdict` for every maxillary implant
+ *  because there is no inferior alveolar canal in the upper jaw. So an upper implant
+ *  breaching an adjacent tooth showed red in the strip and neutral in 3-D, from one
+ *  measurement, in one frame.
+ *
+ *  ## Two callers, two rankings, and the difference is deliberate
+ *
+ *  The STRIP ranks `no_verdict` ABOVE `tight` (see `VERDICT_RANK`): it is a one-chip
+ *  summary of whether this implant still needs looking at, and an ungraded structure is
+ *  not safer than one measured near its margin.
+ *
+ *  The 3-D SHELL passes `gradedOnly` and takes the worst over completed grades only,
+ *  falling back to neutral just when nothing was graded at all. Applying the strip's
+ *  ranking to the shell was measured on the example case and is wrong for it: a lower
+ *  molar site with the canal CLEAR at 5.81 mm and the incisive canal CLEAR at >9.7 mm
+ *  still carries an ungraded adjacent tooth -- tooth 36 is present, so there is no
+ *  extraction socket to measure to -- and the shell went grey. That is greyer than the
+ *  canal-only behaviour it replaced, on an implant with two completed clear grades.
+ *
+ *  The shell is not the place that reports ungradedness; the strip and the clearance
+ *  rows both already say NOT GRADED, and `clearanceRow` force-opens on it. The shell's
+ *  one job is to colour the envelope by the worst grade actually established, which is
+ *  strictly more than the canal alone ever said -- a maxillary implant breaching a
+ *  neighbour now turns red, and it never did before.
+ */
+function worstVerdict(imp, p, opts) {
+  p = p || implantState();
+  let levels = implantLevels(imp, p);
+  if (opts && opts.gradedOnly) levels = levels.filter((lv) => lv !== 'no_verdict');
+  if (!levels.length) return null;
+  return levels.reduce((a, b) => (VERDICT_RANK[b] > VERDICT_RANK[a] ? b : a));
+}
+
 function renderVerdictStrip() {
   const strip = $('verdStrip');
   if (!strip) return;
   const p = implantState();
   if (p.measuring || !p.implants.length) { strip.innerHTML = ''; return; }
-  const worstOf = (imp) => {
-    const m = p.measured[imp.id] || {};
-    const levels = [m.verdict, m.accessory_canal_verdict, m.tooth_verdict]
-      .concat((p.pairs || []).filter((pr) => pr.a === imp.id || pr.b === imp.id)
-        .map((pr) => pr.verdict))
-      .map((v) => (v || {}).level).filter(Boolean);
-    if (!levels.length) return null;
-    return levels.reduce((a, b) => (VERDICT_RANK[b] > VERDICT_RANK[a] ? b : a));
-  };
   strip.innerHTML = p.implants.map((imp) => {
-    const lv = worstOf(imp);
+    const lv = worstVerdict(imp, p);
     if (!lv) return '';
     const name = imp.site_fdi ? `FDI ${imp.site_fdi}` : imp.id;
     return `<span class="vchip v-${lv}" title="worst verdict on this implant"

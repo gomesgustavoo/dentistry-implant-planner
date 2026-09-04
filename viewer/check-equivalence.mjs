@@ -436,6 +436,17 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
   DentistryViewer.setImplantVerdict('i1', null);
   const neutral = DentistryViewer.debugState().implants;
 
+  // The state the WIRE CAGE lived in. no_verdict is what every maxillary implant gets
+  // -- the upper jaw has no inferior alveolar canal to grade against -- so this is the
+  // common case, not a corner one, and it used to render as 720 grey-white triangle
+  // edges. Captured as its own state vector so the representation can be asserted in it.
+  // (No backticks in this function: it is stringified into the page.)
+  DentistryViewer.setImplantVerdict('i1', 'no_verdict');
+  DentistryViewer.setImplantVerdict('i2', 'no_verdict');
+  const ungraded = DentistryViewer.debugState().implants;
+  DentistryViewer.setImplantVerdict('i1', 'breach');
+  DentistryViewer.setImplantVerdict('i2', 'clear');
+
   const centre = () => {
     const pr = DentistryViewer.implantGeometryForTest('i1');
     let sx = 0, sy = 0, sz = 0, n = pr.points.length / 3;
@@ -530,7 +541,7 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
 
   await DentistryViewer.unmount();
   const st = DentistryViewer.debugState();
-  return { poses, placed, neutral, moved, afterRemove,
+  return { poses, placed, neutral, ungraded, moved, afterRemove,
            originalTriangles, resizedTriangles, originalSpan, resizedSpan,
            yawRefused, yawZeroOk, edit,
            previewGroups, previewBefore, previewFocused, previewAfter,
@@ -795,6 +806,28 @@ if (!existsSync(VECTORS)) {
           res.neutral.colorsMatchVerdicts === true
           && res.neutral.verdicts.i1 === null,
           'the interval between a drag and the server reply must not read as safe');
+    // THE WIRE-CAGE GUARD. The envelope must be a SURFACE in every state, including the
+    // ungraded one -- `no_verdict` used to take a `setRepresentation(1)` branch, and
+    // since the level fed to 3-D was the canal verdict alone, that branch caught every
+    // maxillary implant. The shipped upper arch was a wireframe.
+    check('the safety envelope is a SURFACE in every verdict state, wireframe in none',
+          res.placed.shellsAreSurfaces === true
+          && res.neutral.shellsAreSurfaces === true
+          && res.ungraded.shellsAreSurfaces === true,
+          'including no_verdict, which is what EVERY maxillary implant gets: '
+          + `graded ${res.placed.shellsAreSurfaces}, measuring ${res.neutral.shellsAreSurfaces}`
+          + `, ungraded ${res.ungraded.shellsAreSurfaces}`);
+    check('  ... and it is translucent in every state, neither opaque nor invisible',
+          [res.placed, res.neutral, res.ungraded].every(
+            (s) => Object.values(s.shellOpacities).every((o) => o > 0 && o < 0.5)),
+          'graded ' + JSON.stringify(res.placed.shellOpacities)
+          + ', ungraded ' + JSON.stringify(res.ungraded.shellOpacities));
+    check('  ... and the ungraded shell is DIMMER than any graded one',
+          Math.max(...Object.values(res.ungraded.shellOpacities))
+            < Math.min(...Object.values(res.placed.shellOpacities)),
+          '"we could not grade this" must not be able to read as "clear": ungraded '
+          + `${Math.max(...Object.values(res.ungraded.shellOpacities))} < graded `
+          + `${Math.min(...Object.values(res.placed.shellOpacities))}`);
     check('dragging an implant moves its geometry',
           res.moved > 0.5, `the actor centre moved ${res.moved.toFixed(2)} mm`);
     check('removing one leaves one, envelope and all',
