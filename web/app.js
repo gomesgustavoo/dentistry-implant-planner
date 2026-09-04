@@ -3974,20 +3974,257 @@ function addImplant(s_mm, fdi) {
                       ...p.implants.map((i) => (Number(String(i.id).slice(1)) || 0) + 1));
   const id = `i${p.nextId}`;
   p.nextId += 1;
-  const occl = info.occlusal_z_mm;
-  const imp = {
-    id, jaw: p.jaw, s_mm, t_mm: 0,
-    // Platform a little below the occlusal plane; the user drags it to the crest.
-    z_mm: p.jaw === 'maxilla' ? occl + 1.0 : occl - 1.0,
-    tilt_deg: 0, yaw_deg: 0, length_mm: 10, diameter_mm: 4.1,
-    site_fdi: fdi == null ? null : Number(fdi),
-  };
+  const imp = { id, jaw: p.jaw, s_mm, t_mm: 0, tilt_deg: 0, yaw_deg: 0,
+                length_mm: 10, diameter_mm: 4.1,
+                // Added from the section rather than from the chart? Adopt whatever
+                // site this arc position IS. Without it `+ Add implant` had no site, so
+                // it fell back to the occlusal plane and spawned in the crown -- the
+                // chart path aligned to bone and the button path did not, for no reason
+                // a user could see.
+                site_fdi: fdi == null ? siteAt(info, s_mm) : Number(fdi) };
+  alignToSite(info, imp);
   p.implants.push(imp);
   p.selected = id;
   const i = nearestXsIndex(info, s_mm);
   if (i !== p.index) selectXs(i); else { drawRulers('xs'); }
   requestMeasure(0);
   renderImplantPanel();
+  return imp;
+}
+
+/** Select an implant: the section follows it, the 3-D pane frames it, the panel
+ *  re-renders and the 3-D focus set is recomputed around it. ONE path, shared by the
+ *  panel click, Tab and the canvas -- three copies of this drifted once already. */
+function selectImplant(id) {
+  const p = implantState();
+  const info = ((p.arch || {}).jaws || {})[p.jaw];
+  const imp = p.implants.find((i) => i.id === id);
+  if (!imp) return false;
+  p.selected = id;
+  if (info) selectXs(nearestXsIndex(info, imp.s_mm));
+  // Framed along the arch, swung buccally, so the 3-D pane reproduces the picture the
+  // cross-section shows without looking straight through the neighbouring roots.
+  if (window.DentistryViewer && DentistryViewer.focusImplant) {
+    DentistryViewer.focusImplant(id);
+  }
+  renderImplantPanel();
+  return true;
+}
+
+/* ------------------------------------------------------- implant editing tools
+ * What a planner is expected to let you do, and what this now does.
+ *
+ * Every implant-planning package converges on the same small set: nudge the implant in
+ * the section, change its angulation, change its depth, change its size, step between
+ * implants, re-seat it on the ridge, duplicate one you already like, and undo. Dragging
+ * covers the coarse move; the keyboard is what makes the last tenth of a millimetre
+ * reachable, because a 0.1 mm step is under one screen pixel at ordinary zoom and no
+ * pointer can be asked for it.
+ *
+ * The steps are millimetres and degrees, never pixels, so a nudge means the same thing
+ * at every zoom level and on every screen.
+ */
+const NUDGE_MM = 0.1;
+const NUDGE_COARSE_MM = 1.0;
+const TILT_STEP_DEG = 1;
+const TILT_COARSE_DEG = 5;
+
+/** Undo, over implant edits only. A planner without one makes a drag a commitment. */
+const UNDO_DEPTH = 40;
+function pushUndo(label) {
+  const p = implantState();
+  p.undo = p.undo || [];
+  p.undo.push({ label, implants: JSON.parse(JSON.stringify(p.implants)),
+                selected: p.selected });
+  if (p.undo.length > UNDO_DEPTH) p.undo.shift();
+}
+function popUndo() {
+  const p = implantState();
+  if (!p.undo || !p.undo.length) return false;
+  const prev = p.undo.pop();
+  p.implants = prev.implants;
+  p.selected = prev.selected;
+  requestMeasure(0);
+  drawRulers('xs');
+  renderImplantPanel();
+  return true;
+}
+
+/** Apply a keyboard tool to the selected implant. Returns true if it handled the key. */
+function implantKey(e) {
+  const v = state.viewer;
+  if (!v || v.mode !== 'plan') return false;
+  const p = implantState();
+  const info = ((p.arch || {}).jaws || {})[p.jaw];
+  if (!info || !info.ok) return false;
+  const key = e.key;
+  const mod = e.metaKey || e.ctrlKey;
+
+  if (mod && (key === 'z' || key === 'Z')) { e.preventDefault(); return popUndo(); }
+  // Tab steps between implants even with nothing selected, so a plan is navigable from
+  // the keyboard alone.
+  if (key === 'Tab' && p.implants.length > 1) {
+    e.preventDefault();
+    const i = p.implants.findIndex((x) => x.id === p.selected);
+    const n = p.implants.length;
+    selectImplant(p.implants[((i < 0 ? 0 : i) + (e.shiftKey ? n - 1 : 1)) % n].id);
+    return true;
+  }
+  const imp = p.implants.find((x) => x.id === p.selected);
+  if (!imp || imp.jaw !== p.jaw) return false;
+  const step = e.shiftKey ? NUDGE_COARSE_MM : NUDGE_MM;
+  const down = imp.jaw === 'maxilla' ? 1 : -1;
+  let did = true;
+
+  switch (key) {
+    // Buccolingual and depth, in the section's own axes. Down is APICAL in either jaw,
+    // so the key means the same thing in the maxilla as in the mandible.
+    case 'ArrowLeft': pushUndo('move'); imp.t_mm -= step; break;
+    case 'ArrowRight': pushUndo('move'); imp.t_mm += step; break;
+    case 'ArrowDown': pushUndo('depth'); imp.z_mm += down * step; break;
+    case 'ArrowUp': pushUndo('depth'); imp.z_mm -= down * step; break;
+    // Angulation. Clamped to the same MAX_TILT_DEG the drag and the number field use.
+    case ',': case '<':
+      pushUndo('tilt');
+      imp.tilt_deg = Math.max(-MAX_TILT_DEG,
+        imp.tilt_deg - (e.shiftKey ? TILT_COARSE_DEG : TILT_STEP_DEG));
+      break;
+    case '.': case '>':
+      pushUndo('tilt');
+      imp.tilt_deg = Math.min(MAX_TILT_DEG,
+        imp.tilt_deg + (e.shiftKey ? TILT_COARSE_DEG : TILT_STEP_DEG));
+      break;
+    // Size, stepped through the served catalogue rather than by free arithmetic: a
+    // diameter this app cannot name is a diameter nobody can order.
+    case '+': case '=': pushUndo('length'); stepSize(imp, 'length_mm', +1, e.shiftKey); break;
+    case '-': case '_': pushUndo('length'); stepSize(imp, 'length_mm', -1, e.shiftKey); break;
+    // Re-seat on the ridge: undo a drag that wandered, without deleting the implant.
+    case 'c': case 'C':
+      pushUndo('re-seat');
+      alignToSite(info, imp);
+      break;
+    // Duplicate, offset one tooth-width mesially. The commonest second implant.
+    case 'd': case 'D': {
+      if (p.implants.length >= MAX_IMPLANTS) { did = false; break; }
+      pushUndo('duplicate');
+      const copy = { ...imp, id: null, s_mm: imp.s_mm - 7 };
+      const made = addImplant(copy.s_mm, null);
+      if (made) Object.assign(made, { ...copy, id: made.id, site_fdi: null });
+      break;
+    }
+    case 'Delete': case 'Backspace':
+      pushUndo('remove');
+      p.implants = p.implants.filter((x) => x.id !== imp.id);
+      p.selected = p.implants.length ? p.implants[0].id : null;
+      break;
+    default: did = false;
+  }
+  if (!did) return false;
+  e.preventDefault();
+  clampImplant(info, imp);
+  requestMeasure(220);
+  drawRulers('xs');
+  renderImplantPanel();
+  return true;
+}
+
+/** Move one catalogue step. `wide` steps the DIAMETER instead of the length. */
+function stepSize(imp, field, dir, wide) {
+  const cat = implantSizes();
+  const list = wide ? cat.diameter : cat.length;
+  const f = wide ? 'diameter_mm' : field;
+  const i = list.findIndex((x) => Math.abs(x - imp[f]) < 1e-6);
+  const j = Math.max(0, Math.min(list.length - 1, (i < 0 ? 0 : i) + dir));
+  imp[f] = list[j];
+}
+
+/** Keep an implant inside the picture it is drawn on. A pose the section cannot show is
+ *  a pose the reader cannot check. */
+function clampImplant(info, imp) {
+  const f = xsFrame(info);
+  const tMax = Math.abs(f.tMin) - imp.diameter_mm / 2;
+  imp.t_mm = Math.max(-tMax, Math.min(tMax, imp.t_mm));
+  const zLo = f.zTop - (info.cross_sections.size[0] - 1) * f.rowPitch;
+  imp.z_mm = Math.max(zLo + 1, Math.min(f.zTop - 1, imp.z_mm));
+}
+
+/** How near a published site has to be, along the arch, to count as THIS site.
+ *  Half a premolar: close enough to be the same position, far enough that a click
+ *  between two teeth does not silently claim one of them. */
+const SITE_ADOPT_MM = 3.5;
+
+/** The FDI position this arc coordinate belongs to, or null. */
+function siteAt(info, s_mm) {
+  const sites = info.sites || {};
+  let best = null; let bestD = Infinity;
+  Object.keys(sites).forEach((k) => {
+    const st = sites[k];
+    if (!st || st.s_mm == null) return;
+    const d = Math.abs(st.s_mm - s_mm);
+    if (d < bestD) { bestD = d; best = k; }
+  });
+  return bestD <= SITE_ADOPT_MM ? Number(best) : null;
+}
+
+/** How far below the crest the platform sits. A slightly sub-crestal platform is the
+ *  ordinary placement: it puts the rough surface in bone and gives the soft tissue
+ *  somewhere to sit. */
+const SUBCRESTAL_MM = 0.5;
+
+/** The bone this app will not plan into: the safety margin plus the segmentation's own
+ *  inward error, which is exactly the surface the verdict is graded against. */
+const APICAL_RESERVE_MM = 2.5;
+
+/** Buccal and lingual plate this app will not plan through, per side. */
+const PLATE_RESERVE_MM = 0.75;
+
+/** Put a new implant where a clinician would start it, not where the code found it easy.
+ *
+ *  It used to seed `z = occlusal_z_mm - 1.0`: one millimetre below the BITING SURFACE.
+ *  That is the top of the crown, not the top of the bone -- on a molar site with 8 mm of
+ *  crown the implant spawned floating in the tooth, and every plan began by dragging it
+ *  down. `ridge.py` has published `crest_z_mm` per site all along.
+ *
+ *  So: platform half a millimetre below the crest, and the SIZE chosen to fit the bone
+ *  that is actually there --
+ *    - length: the longest catalogue length whose apex still clears the canal (or the
+ *      sinus floor) by the margin the verdict is graded against;
+ *    - diameter: the widest that leaves 0.75 mm of plate on each side of the crest.
+ *  Both fall back to the catalogue default when the site publishes no measurement,
+ *  and the fallback is a REFUSAL to guess rather than a guess: the default is not
+ *  claimed to fit.
+ */
+function alignToSite(info, imp) {
+  const cat = implantSizes();
+  const site = imp.site_fdi != null
+    ? (info.sites || {})[String(imp.site_fdi)] : null;
+  const down = imp.jaw === 'maxilla' ? 1 : -1;
+  const crest = site && site.crest_z_mm != null ? site.crest_z_mm : null;
+  // No crest: fall back to the occlusal plane, and say so rather than pretending.
+  imp.z_mm = crest != null ? crest + down * SUBCRESTAL_MM
+    : info.occlusal_z_mm + down * 1.0;
+  imp.t_mm = 0;                 // the crest midline, which is where `ridge.py` measures
+  imp.tilt_deg = 0;
+  imp.alignedTo = crest != null ? 'crest' : 'occlusal';
+
+  const h = site && site.height_mm != null ? site.height_mm : null;
+  if (h != null) {
+    const usable = h - SUBCRESTAL_MM - APICAL_RESERVE_MM;
+    const fits = cat.length.filter((L) => L <= usable);
+    imp.length_mm = fits.length ? Math.max(...fits) : Math.min(...cat.length);
+    imp.lengthFrom = fits.length ? 'fits the measured height' : 'shortest available';
+  } else {
+    imp.lengthFrom = null;
+  }
+  const w = site && site.width_mm != null ? site.width_mm : null;
+  if (w != null) {
+    const usable = w - 2 * PLATE_RESERVE_MM;
+    const fits = cat.diameter.filter((D) => D <= usable);
+    imp.diameter_mm = fits.length ? Math.max(...fits) : Math.min(...cat.diameter);
+    imp.diameterFrom = fits.length ? 'fits the measured width' : 'narrowest available';
+  } else {
+    imp.diameterFrom = null;
+  }
   return imp;
 }
 
@@ -4672,19 +4909,7 @@ function renderImplantPanel() {
     };
   });
   box.querySelectorAll('.imp').forEach((el) => {
-    const pick = () => {
-      p.selected = el.dataset.id;
-      const imp = p.implants.find((i) => i.id === p.selected);
-      if (imp) selectXs(nearestXsIndex(info, imp.s_mm));
-      // Frame the 3D pane on it too, looking ALONG the arch so the 3D view reproduces
-      // the picture the cross-section shows. Two views that agree is the point of
-      // having both -- and the 3-D pane is in this stage now, so it is a view the
-      // reader can actually see.
-      if (window.DentistryViewer && DentistryViewer.focusImplant && imp) {
-        DentistryViewer.focusImplant(imp.id);
-      }
-      renderImplantPanel();
-    };
+    const pick = () => selectImplant(el.dataset.id);
     el.onclick = (e) => {
       if (e.target.closest('button, select, input')) return;
       pick();
@@ -5425,10 +5650,19 @@ function wireViewer() {
       if (!$('displayPop').hidden) { closeDisplayPop(); return; }
       closeViewer(); return;
     }
-    // Ignore anything typed into a field, and any chord -- Cmd+1 switches browser
-    // tabs and must keep doing so.
-    if (e.metaKey || e.ctrlKey || e.altKey) return;
     if (/^(INPUT|TEXTAREA|SELECT)$/.test((e.target || {}).tagName || '')) return;
+    // Undo is the one chord this app claims, and it claims it BEFORE the blanket
+    // modifier bail below -- Cmd+Z on a planning surface means undo everywhere else and
+    // has to here too.
+    if ((e.metaKey || e.ctrlKey) && (e.key === 'z' || e.key === 'Z')) {
+      if (implantKey(e)) return;
+    }
+    // Ignore any other chord -- Cmd+1 switches browser tabs and must keep doing so.
+    if (e.metaKey || e.ctrlKey || e.altKey) return;
+    // The implant tools: nudge, angulate, resize, re-seat, duplicate, step, remove.
+    // Before the single-letter view toggles below, so a selected implant owns the keys
+    // that move it and the view keeps the ones that do not.
+    if (implantKey(e)) return;
     if (e.key === '[') { e.preventDefault(); toggleRail(); return; }
     if (e.key === ']' && state.viewer && state.viewer.mode === 'plan') {
       e.preventDefault(); toggleSide(); return;

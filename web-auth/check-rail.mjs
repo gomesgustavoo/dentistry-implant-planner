@@ -246,7 +246,13 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
   // route() normally reveals the workspace; openCase is called directly here so that
   // a failure in one render function is attributable, which means unhiding it by hand.
   for (const id of ['home', 'settings']) { const e = document.getElementById(id); if (e) e.hidden = true; }
-  const ws = document.getElementById('workspace'); if (ws) ws.hidden = false;
+  // The workspace AND the case header. The view tabs moved into the header when the
+  // three stacked bars above the planning stage were folded into two, so a probe that
+  // reveals only the workspace now reports every tab hidden -- which route() would
+  // never do for a case view.
+  for (const id of ['workspace', 'casebar']) {
+    const e = document.getElementById(id); if (e) e.hidden = false;
+  }
   // The two <details> cards are the "folds": collapsed and expanded lay the rail out
   // differently and the expanded one is where the long model/provenance rows live.
   for (const id of ['seriesCard', 'runCard']) {
