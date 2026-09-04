@@ -130,6 +130,13 @@ GROUP_ORDER = [GROUP_JAWS, GROUP_CANAL, GROUP_SINUS, GROUP_WORK,
                GROUP_UPPER, GROUP_LOWER, GROUP_PULP]
 
 
+def _group_order() -> list[str]:
+    """The dental groups, then the extended ones. Imported late to keep the module
+    graph one-way: `extended` names no label group, so it cannot import this back."""
+    from dentistry import extended as _ext
+    return GROUP_ORDER + list(_ext.GROUP_ORDER)
+
+
 def _tooth_color(fdi: int) -> str:
     """Colour teeth by quadrant hue, lightening from the midline backwards.
 
@@ -230,6 +237,21 @@ def _build() -> list[Structure]:
         # single structure and NOT per-tooth. Do not give it an `fdi`.
         Structure(47, "pulp", "Pulp", GROUP_PULP, "#ff5fa2", "toothfairy3"),
     ]
+
+    # --- the extended taxonomy, indices 48+ -------------------------------
+    # Structures outside the dental space entirely -- muscles, the airway above the
+    # pharynx, the orbit, the glands, the great vessels of the neck -- drawn by
+    # CT-trained TotalSegmentator head/neck models and composed by a SECOND pass that
+    # may only paint into background. See `dentistry/extended.py` for why they are not
+    # ToothFairy3 classes and what the invariant buys.
+    #
+    # Appended here rather than kept in a parallel list because every artifact writer in
+    # the worker iterates `L.STRUCTURES` -- meshes, contours, the volume pack, the
+    # structure set, the quality assessment. A second list would need each of them
+    # taught about it, and the one that was forgotten would be the bug.
+    from dentistry import extended as _ext
+    out += [Structure(e.index, e.id, e.name, e.group, e.color, e.model)
+            for e in _ext.EXTENDED]
     return out
 
 
@@ -328,7 +350,7 @@ def grouped() -> list[dict]:
                 for s in buckets[g]
             ],
         }
-        for g in GROUP_ORDER
+        for g in _group_order()
         if g in buckets
     ]
 
