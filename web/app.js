@@ -1041,7 +1041,9 @@ function unmountModelSchematic() {
  * publishing two different ones. */
 const CONTACT = {
   name: 'Gustavo Formento',
-  role: 'Medical physicist and the author of this service',
+  // What I can state without asserting anything I have not verified. A professional
+  // title on a public page is a claim about a person, not a nicety.
+  role: 'The author of this service',
   email: 'gustavo.formento@rtmedical.com.br',
   linkedin: 'https://www.linkedin.com/in/gustavoogomesss/',
   github: 'https://github.com/gomesgustavoo',
