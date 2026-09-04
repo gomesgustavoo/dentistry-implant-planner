@@ -25,7 +25,7 @@ spec:
         app: dentistry-web
     spec:
       containers:
-      - image: dentistry/web:0.15.2
+      - image: dentistry/web:0.15.4
         imagePullPolicy: IfNotPresent
         name: web
         ports:

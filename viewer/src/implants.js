@@ -101,6 +101,14 @@ const BUTTRESS_SHALLOW_FRAC = 1.15;      // ...and of the trailing flank
 const MICRO_PITCH_MM = 0.28;             // circumferential grooves at the collar
 const MICRO_DEPTH_MM = 0.07;
 
+/* The apex. A real implant closes on a small rounded tip, roughly a fifth of its own
+ * radius; the measured capsule closes on a hemisphere of the FULL radius, which on a
+ * 6 mm implant is a 3 mm ball. The drawn tip stays inside that hemisphere and touches
+ * it only at the apex point, so the one dimension the canal verdict depends on -- how
+ * deep the implant goes -- is drawn at full length while the bulb is gone. */
+const APEX_TIP_FRAC = 0.22;
+const APEX_CONE_RINGS = 5;
+
 /** Machined titanium. VERDICT-INDEPENDENT, and that is the point of the change.
  *
  *  The body's hue used to BE the verdict, which cost two things at once: the reader
@@ -481,23 +489,53 @@ function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
     }
   }
 
-  // --- the apical dome, exactly the envelope's ------------------------------------
-  // Left ON the envelope rather than tapered with the body: the apex is where the canal
-  // verdict is decided, and it is the one place worth drawing as the thing that was
-  // actually measured.
-  prev = ring(r, shoulder, 1, 0);
+  // --- the apex: a TAPERED TIP, not a hemisphere ---------------------------------
+  //
+  // The measured capsule ends in a hemisphere of the implant's own radius, and the mesh
+  // used to draw exactly that. On a 6 mm implant that is a 3 mm ball on the end -- a
+  // bullet nose. No implant is shaped like that: the body tapers and closes on a small
+  // rounded tip, and the big smooth dome was the single most unrealistic thing left in
+  // the model.
+  //
+  // So the apex is drawn as the body's taper continuing to a tip of `APEX_TIP_FRAC` of
+  // the radius, closed by a small dome of that radius. Two properties make it safe:
+  //
+  //   - every point of it is INSIDE the measured hemisphere. The cone is a chord of a
+  //     circle between two interior endpoints, and the tip dome satisfies
+  //     |P - centre|^2 = tipR^2 + a^2 + 2a*tipR*sin(theta) with a = r - tipR, whose
+  //     maximum over theta is exactly (a + tipR)^2 = r^2;
+  //   - that maximum is attained only at the apex point itself, so the drawn tip
+  //     REACHES the measured apical depth and is internally tangent there. Apical depth
+  //     is what the canal clearance is about, and it is the one dimension that must not
+  //     be drawn short.
+  const tipR = Math.max(0.18, APEX_TIP_FRAC * r);
+  const bodyEnd = crestAt(zEnd);
+  const domeStart = shoulder + r - tipR;
+  const coneRun = Math.max(1e-4, domeStart - shoulder);
+  const slope = (bodyEnd - tipR) / coneRun;      // radius lost per mm of depth
+  prev = ring(bodyEnd, shoulder, 1, slope);
+  for (let k = 1; k <= APEX_CONE_RINGS; k++) {
+    const f = k / APEX_CONE_RINGS;
+    prev = (() => {
+      const cur = ring(bodyEnd + (tipR - bodyEnd) * f, shoulder + coneRun * f, 1, slope);
+      skin(prev, cur);
+      return cur;
+    })();
+  }
   for (let k = 1; k <= DOME_RINGS; k++) {
     const th = (k / DOME_RINGS) * (Math.PI / 2);
-    const cur = [];
-    for (let i = 0; i < nAz; i++) {
-      const a = (2 * Math.PI * i) / nAz;
-      const cx = Math.cos(a); const cy = Math.sin(a);
-      cur.push(push(r * Math.cos(th) * cx, r * Math.cos(th) * cy,
-                    shoulder + r * Math.sin(th),
-                    cx * Math.cos(th), cy * Math.cos(th), Math.sin(th)));
-    }
+    const cur = ring(tipR * Math.cos(th), domeStart + tipR * Math.sin(th),
+                     Math.cos(th), Math.sin(th));
     skin(prev, cur);
     prev = cur;
+  }
+  // Close on the apex point, which sits exactly at the measured capsule's own apex.
+  {
+    const tip = push(0, 0, shoulder + r, 0, 0, 1);
+    for (let i = 0; i < nAz; i++) {
+      const j = (i + 1) % nAz;
+      cells.push(3, prev[i], prev[j], tip);
+    }
   }
 
   orientByNormals(verts, norms, cells);
