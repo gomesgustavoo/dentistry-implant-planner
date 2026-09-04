@@ -1262,8 +1262,9 @@ export const viewport3dId = VIEWPORT_3D;
 // schematic, and makes all three implant angles reach the 3-D pane; 8 retires the
 // safety envelope's wireframe branch and draws it as translucent glass at 160x20;
 // 9 replaces the picker's parametric schematic with a real baked segmentation and
-// moves the DSVM parser into its own module.
-export const version = '9';
+// moves the DSVM parser into its own module; 10 frames the 3-D pane on the implant's
+// NEIGHBOURHOOD rather than on the implant.
+export const version = '10';
 
 export const {
   setImplantArch,
