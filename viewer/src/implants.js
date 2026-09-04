@@ -84,21 +84,7 @@ const SCREW_AZIMUTH = 96;
 
 const THREAD_PITCH_MM = 0.80;
 const THREAD_HALF_ANGLE_DEG = 30;        // 60 degrees included, the ISO-metric V
-/* A SHARP V, not a trapezoid.
- *
- * The crest and the root were 0.08 mm and ~0.13 mm of flat band, which at implant zoom
- * is a visible plateau on both -- the profile read as a trapezoid with a soft lip where
- * each flank landed. 0.02 mm is a fraction of a screen pixel at the zoom this is looked
- * at, so the crest is a point in every practical sense; it is not zero because a
- * zero-width band collapses its quad and leaves a degenerate triangle behind.
- *
- * The trailing flank is DERIVED from what is left of the pitch rather than given its own
- * fraction, so the profile fills the pitch exactly at every thread depth and the
- * transitions stay sharp across the whole 3.0-6.0 mm diameter range instead of only at
- * the one it was tuned on.
- */
-const THREAD_CREST_FLAT_MM = 0.02;
-const THREAD_ROOT_FLAT_MM = 0.05;
+const THREAD_CREST_FLAT_MM = 0.08;       // the bright helical highlight; the screw cue
 const THREAD_DEPTH_FRAC = 0.10;          // of the OUTER diameter -> core/outer ~0.80
 const THREAD_DEPTH_MIN_MM = 0.30;
 const THREAD_DEPTH_MAX_MM = 0.45;
@@ -106,22 +92,12 @@ const COLLAR_FRAC = 0.12;                // of the length
 const COLLAR_MIN_MM = 0.90;
 const COLLAR_MAX_MM = 1.60;
 const PLATFORM_CHAMFER_MM = 0.20;
-/* Run-in and run-out are NOT symmetric.
- *
- * The coronal lead-in is a full turn, because there the thread has to meet the
- * microthreaded collar and a hard step between two different thread forms reads as a
- * modelling error. The APICAL run-out is a tenth of that: at 0.80 mm it faded the last
- * turn and a half to nothing and the bottom of the implant looked rounded off, which is
- * exactly what a thread running out into an apex does not do. Short enough that the
- * final turn is essentially full depth, long enough that the strip still meets the dome
- * without a hole.
- */
-const THREAD_LEADIN_MM = 0.80;
-const THREAD_RUNOUT_MM = 0.08;
+const THREAD_LEADIN_MM = 0.80;           // one turn of run-in and run-out
 
 /* The three things that make it a DENTAL implant rather than a machine screw. */
 const TAPER_FRAC = 0.10;                 // of the diameter, in RADIUS, over the body
 const BUTTRESS_STEEP_FRAC = 0.16;        // axial run of the load flank, in depths
+const BUTTRESS_SHALLOW_FRAC = 1.15;      // ...and of the trailing flank
 const MICRO_PITCH_MM = 0.28;             // circumferential grooves at the collar
 const MICRO_DEPTH_MM = 0.07;
 
@@ -435,10 +411,10 @@ function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
   };
   const P = THREAD_PITCH_MM;
   const steep = Math.max(0.04, BUTTRESS_STEEP_FRAC * depth);
+  const shallow = Math.max(0.10, BUTTRESS_SHALLOW_FRAC * depth);
   const crestFlat = THREAD_CREST_FLAT_MM;
-  const rootFlat = THREAD_ROOT_FLAT_MM;
-  const shallow = P - crestFlat - steep - rootFlat;
-  if (shallow <= 0.10) return capsuleLocal(lengthMm, diameterMm, nAz);
+  const rootFlat = P - crestFlat - steep - shallow;
+  if (rootFlat <= 0.04) return capsuleLocal(lengthMm, diameterMm, nAz);
   const STEEP = [steep, depth];        // (r, z) outward normal of the steep flank
   const SHALLOW = [shallow, -depth];
   const FLAT = [1, 0];
@@ -464,12 +440,10 @@ function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
     for (let m = 0; m < stations.length; m++) {
       const [off, drop, face] = stations[m];
       const z = Math.min(zEnd, Math.max(zStart, zBase + off));
-      // Lead-in and run-out, so the strip meets the collar and the dome flush -- and
-      // asymmetric, because only the coronal end has another thread form to meet.
+      // Lead-in and run-out, so the strip meets the collar and the dome flush.
       const lead = Math.min(THREAD_LEADIN_MM, 0.3 * (zEnd - zStart));
-      const out = Math.min(THREAD_RUNOUT_MM, 0.1 * (zEnd - zStart));
       const amp = Math.max(0, Math.min(1, Math.min((z - zStart) / lead,
-                                                   (zEnd - z) / out)));
+                                                   (zEnd - z) / lead)));
       const rho = Math.max(0.02, crestAt(z) - drop * amp);
       let nr = face[0]; let nz = face[1];
       const nt = -(P / (2 * Math.PI * Math.max(rho, 0.05))) * nz;
