@@ -94,6 +94,13 @@ const COLLAR_MAX_MM = 1.60;
 const PLATFORM_CHAMFER_MM = 0.20;
 const THREAD_LEADIN_MM = 0.80;           // one turn of run-in and run-out
 
+/* The three things that make it a DENTAL implant rather than a machine screw. */
+const TAPER_FRAC = 0.10;                 // of the diameter, in RADIUS, over the body
+const BUTTRESS_STEEP_FRAC = 0.16;        // axial run of the load flank, in depths
+const BUTTRESS_SHALLOW_FRAC = 1.15;      // ...and of the trailing flank
+const MICRO_PITCH_MM = 0.28;             // circumferential grooves at the collar
+const MICRO_DEPTH_MM = 0.07;
+
 /** Machined titanium. VERDICT-INDEPENDENT, and that is the point of the change.
  *
  *  The body's hue used to BE the verdict, which cost two things at once: the reader
@@ -297,109 +304,157 @@ function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
   if (!(zEnd - zStart > 2 * THREAD_PITCH_MM)) {
     return capsuleLocal(lengthMm, diameterMm, nAz);
   }
+  const taper = Math.min(TAPER_FRAC * diameterMm, 0.45 * (zEnd - zStart));
 
   const verts = []; const norms = []; const cells = [];
   const push = (x, y, z, nx, ny, nz) => {
     verts.push(x, y, z); norms.push(nx, ny, nz);
     return verts.length / 3 - 1;
   };
+  /** A ring of nAz vertices at one radius and depth, with one (r, z) normal. */
+  const ring = (rho, z, nr, nz) => {
+    const out = [];
+    const L = Math.hypot(nr, nz) || 1;
+    for (let i = 0; i < nAz; i++) {
+      const th = (2 * Math.PI * i) / nAz;
+      const cx = Math.cos(th); const cy = Math.sin(th);
+      out.push(push(rho * cx, rho * cy, z, (nr / L) * cx, (nr / L) * cy, nz / L));
+    }
+    return out;
+  };
+  /** Skin between two rings, outward-facing. */
+  const skin = (a, b) => {
+    for (let i = 0; i < nAz; i++) {
+      const j = (i + 1) % nAz;
+      cells.push(3, a[i], a[j], b[j]);
+      cells.push(3, a[i], b[j], b[i]);
+    }
+  };
 
-  // --- the platform: a flat disc, a chamfer, then the smooth collar ---------------
-  const centre = push(0, 0, 0, 0, 0, -1);
-  const discR = Math.max(0, r - chamfer);
-  const discRim = []; const chamRim = []; const collarEnd = [];
-  for (let i = 0; i < nAz; i++) {
-    const th = (2 * Math.PI * i) / nAz;
-    const cx = Math.cos(th); const cy = Math.sin(th);
-    discRim.push(push(discR * cx, discR * cy, 0, 0, 0, -1));
-    // A real machined bevel. It catches a specular ring at the platform, which is the
-    // strongest "this is metal" cue in the whole mesh, and it stays inside the envelope
-    // because the widest point moves DOWN to z = chamfer.
-    chamRim.push(push(r * cx, r * cy, chamfer, cx * 0.7071, cy * 0.7071, -0.7071));
-    collarEnd.push(push(r * cx, r * cy, zStart, cx, cy, 0));
-  }
-  for (let i = 0; i < nAz; i++) {
-    const j = (i + 1) % nAz;
-    cells.push(3, centre, discRim[j], discRim[i]);
-    cells.push(3, discRim[i], discRim[j], chamRim[j]);
-    cells.push(3, discRim[i], chamRim[j], chamRim[i]);
-    cells.push(3, chamRim[i], chamRim[j], collarEnd[j]);
-    cells.push(3, chamRim[i], collarEnd[j], collarEnd[i]);
+  // --- the platform: an ANNULUS, not a disc -------------------------------------
+  // A dental implant is not a bolt: its coronal face is a ring around an internal
+  // connection, and that recess is the single most recognisable thing about the form.
+  // Drawn as a conical lead-in into a hex socket, which is what a driver engages.
+  const socketR = Math.max(0.20, 0.42 * r);
+  const hexR = socketR * 0.78;
+  const socketZ = Math.min(1.9, 0.55 * collar + 1.0);
+  const rimIn = ring(socketR, 0, 0, -1);
+  const rimOut = ring(Math.max(socketR + 0.05, r - chamfer), 0, 0, -1);
+  skin(rimIn, rimOut);
+  const cham = ring(r, chamfer, 0.7071, -0.7071);
+  skin(rimOut, cham);
+
+  // The connection, pointing INWARD: a cone down to a hexagon, then a floor.
+  {
+    const coneEnd = 0.45 * socketZ;
+    const lead = ring(socketR, 0, -0.55, -0.84);
+    const hexTop = [];
+    const hexBot = [];
+    for (let i = 0; i < nAz; i++) {
+      const th = (2 * Math.PI * i) / nAz;
+      // Six flats. The inscribed radius of a hexagon at angle th is
+      // R / cos(th mod 60deg - 30deg), which is what makes it read as a hex socket and
+      // not as a second cone.
+      const seg = ((th % (Math.PI / 3)) - Math.PI / 6);
+      const rho = hexR / Math.cos(seg);
+      const cx = Math.cos(th); const cy = Math.sin(th);
+      hexTop.push(push(rho * cx, rho * cy, coneEnd, -cx, -cy, 0));
+      hexBot.push(push(rho * cx, rho * cy, socketZ, -cx, -cy, 0));
+    }
+    skin(hexTop, lead);            // reversed, so the cone faces inward
+    skin(hexBot, hexTop);
+    const floor = push(0, 0, socketZ, 0, 0, -1);
+    for (let i = 0; i < nAz; i++) {
+      const j = (i + 1) % nAz;
+      cells.push(3, floor, hexBot[i], hexBot[j]);
+    }
   }
 
-  // --- the threaded barrel --------------------------------------------------------
-  const flankRise = depth * Math.tan(THREAD_HALF_ANGLE_DEG * Math.PI / 180);
-  const half = THREAD_CREST_FLAT_MM / 2;
-  const rootFlat = THREAD_PITCH_MM - 2 * flankRise - THREAD_CREST_FLAT_MM;
-  // Positive by construction across the whole catalogue (0.200 to 0.374 mm). A negative
-  // one would invert the profile silently, so fall back to the envelope instead.
-  if (rootFlat <= 0) return capsuleLocal(lengthMm, diameterMm, nAz);
-  // ONE PITCH of profile, in strictly increasing axial offset, ending exactly where it
-  // began so the last row of a turn IS the first row of the next.
+  // --- the MICROTHREADED collar --------------------------------------------------
+  // Fine circumferential grooves rather than a polished cylinder. Microthreads at the
+  // collar are a standard feature -- they are there to spread occlusal load and spare
+  // the marginal bone -- and they are what stops the coronal third reading as a bolt
+  // shank. Circumferential rather than helical: at implant zoom the two are
+  // indistinguishable, one costs a lathe and the other a second helical strip, and
+  // externally micro-GROOVED collars are themselves a real design.
+  let prev = cham;
+  {
+    const n = Math.max(2, Math.round((zStart - chamfer) / MICRO_PITCH_MM));
+    for (let k = 1; k <= n; k++) {
+      const z0 = chamfer + ((zStart - chamfer) * (k - 1)) / n;
+      const z1 = chamfer + ((zStart - chamfer) * k) / n;
+      const mid = (z0 + z1) / 2;
+      const root = ring(r - MICRO_DEPTH_MM, mid, 0.55, 0.83);
+      const crest = ring(r, z1, 0.55, -0.83);
+      skin(prev, root);
+      skin(root, crest);
+      prev = crest;
+    }
+  }
+
+  // --- the TAPERED, BUTTRESS-THREADED body ---------------------------------------
+  // Two things a symmetric V thread on a parallel shank does not have, and both are
+  // what a reader recognises:
   //
-  // Each entry is [axial offset, radial drop, face]. Stations are DOUBLED at every
-  // crease -- the same point twice with two different normals -- because a shared
-  // vertex at a crest averages two flank normals 60 degrees apart and produces a
-  // radial one, i.e. a smooth barrel where a thread should be.
+  //  - a TAPER. Most modern implants are conical; it is what gives them their primary
+  //    stability, and a parallel-sided body reads as a machine screw. The crest walks
+  //    inward from `r` at the collar to `r - taper` at the shoulder, so the solid stays
+  //    inside the measured cylinder everywhere and touches it only at the top -- an
+  //    error in the safe direction, and the direction the clearance is quoted in.
   //
-  // `face` picks the normal in the (r, z) plane. A cone whose radius falls by `depth`
-  // over an axial run of `flankRise` has outward normal (flankRise, depth); the rising
-  // flank is its mirror. This list previously ended with three consecutive root
-  // stations and no rising flank at all, and then wrapped from the last back to the
-  // first -- a jump of nearly a whole pitch BACKWARDS, which rendered as a stack of
-  // flat plates with no core between them.
-  const FLAT = [1, 0];
-  const FALL = [flankRise, depth];
-  const RISE = [flankRise, -depth];
+  //  - a BUTTRESS profile. One flank near-perpendicular to the axis to resist pull-out,
+  //    the other long and shallow. Symmetric V is the early form; buttress and its
+  //    reverse are what modern implants use, and the asymmetry is visible at a glance.
+  const crestAt = (z) => {
+    const u = Math.max(0, Math.min(1, (z - zStart) / (zEnd - zStart)));
+    return Math.min(envelopeRadius(z, r, shoulder), r - taper * u);
+  };
   const P = THREAD_PITCH_MM;
+  const steep = Math.max(0.04, BUTTRESS_STEEP_FRAC * depth);
+  const shallow = Math.max(0.10, BUTTRESS_SHALLOW_FRAC * depth);
+  const crestFlat = THREAD_CREST_FLAT_MM;
+  const rootFlat = P - crestFlat - steep - shallow;
+  if (rootFlat <= 0.04) return capsuleLocal(lengthMm, diameterMm, nAz);
+  const STEEP = [steep, depth];        // (r, z) outward normal of the steep flank
+  const SHALLOW = [shallow, -depth];
+  const FLAT = [1, 0];
   const stations = [
-    [-half, 0, FLAT],                       // crest, leading edge
-    [half, 0, FLAT],                        // crest, trailing edge
-    [half, 0, FALL],                        // ...crease into the falling flank
-    [half + flankRise, depth, FALL],        // root, leading edge
-    [half + flankRise, depth, FLAT],        // ...crease into the root
-    [P - half - flankRise, depth, FLAT],    // root, trailing edge
-    [P - half - flankRise, depth, RISE],    // ...crease into the rising flank
-    [P - half, 0, RISE],                    // next crest, leading edge
-    [P - half, 0, FLAT],                    // ...crease; identical to station 0 + one pitch
+    [0, 0, FLAT],                                   // crest, leading edge
+    [crestFlat, 0, FLAT],                           // crest, trailing edge
+    [crestFlat, 0, STEEP],                          // crease into the steep flank
+    [crestFlat + steep, depth, STEEP],              // root, leading edge
+    [crestFlat + steep, depth, FLAT],               // crease into the root
+    [crestFlat + steep + rootFlat, depth, FLAT],    // root, trailing edge
+    [crestFlat + steep + rootFlat, depth, SHALLOW], // crease into the shallow flank
+    [P, 0, SHALLOW],                                // next crest, leading edge
+    [P, 0, FLAT],                                   // crease; station 0 one pitch on
   ];
-  const turns = (zEnd - zStart) / THREAD_PITCH_MM;
+  const turns = (zEnd - zStart) / P;
   const cols = Math.max(2, Math.round(turns * nAz));
   const grid = [];
   for (let g = 0; g <= cols; g++) {
     const th = (2 * Math.PI * g) / nAz;
     const cx = Math.cos(th); const cy = Math.sin(th);
-    const zBase = zStart + (THREAD_PITCH_MM * g) / nAz;
-    const rowIdx = [];
+    const zBase = zStart + (P * g) / nAz;
+    const row = [];
     for (let m = 0; m < stations.length; m++) {
       const [off, drop, face] = stations[m];
       const z = Math.min(zEnd, Math.max(zStart, zBase + off));
-      // LEAD-IN and RUN-OUT. The thread's amplitude ramps from zero at both ends, so at
-      // `zStart` and `zEnd` the strip lies exactly ON the envelope cylinder and meets
-      // the collar and the dome flush. Without it the strip had to be sealed with a fan
-      // of 48 triangles to a single vertex, which spanned most of a pitch in z and was
-      // the second source of the flat-plate look.
+      // Lead-in and run-out, so the strip meets the collar and the dome flush.
       const lead = Math.min(THREAD_LEADIN_MM, 0.3 * (zEnd - zStart));
       const amp = Math.max(0, Math.min(1, Math.min((z - zStart) / lead,
                                                    (zEnd - z) / lead)));
-      // The envelope at THIS depth, so the crest tracks the apical dome's taper too.
-      const rho = Math.max(0.02, envelopeRadius(z, r, shoulder) - drop * amp);
-      // Analytic, from the face's own (r, z) direction. The azimuthal term is the helix
-      // tilt: without it the specular forms stacked rings instead of running along the
-      // thread, which is the difference between a screw and a fluted cylinder.
+      const rho = Math.max(0.02, crestAt(z) - drop * amp);
       let nr = face[0]; let nz = face[1];
-      const nt = -(THREAD_PITCH_MM / (2 * Math.PI * Math.max(rho, 0.05))) * nz;
+      const nt = -(P / (2 * Math.PI * Math.max(rho, 0.05))) * nz;
       const len = Math.hypot(nr, nz, nt) || 1;
       nr /= len; nz /= len;
       const ntn = nt / len;
-      rowIdx.push(push(rho * cx, rho * cy, z,
-                       nr * cx - ntn * cy, nr * cy + ntn * cx, nz));
+      row.push(push(rho * cx, rho * cy, z,
+                    nr * cx - ntn * cy, nr * cy + ntn * cx, nz));
     }
-    grid.push(rowIdx);
+    grid.push(row);
   }
-  // NO wrap in m. The profile already spans exactly one pitch and closes on the next
-  // turn through the g axis; wrapping the last station back to the first inside one
-  // column is the backward jump that produced the plates.
   for (let g = 0; g < cols; g++) {
     for (let m = 0; m + 1 < stations.length; m++) {
       const a = grid[g][m]; const b = grid[g][m + 1];
@@ -408,60 +463,94 @@ function screwLocal(lengthMm, diameterMm, nAz = SCREW_AZIMUTH) {
       cells.push(3, a, c, d);
     }
   }
-  // --- the core, under the thread --------------------------------------------------
-  // A plain cylinder at the root radius, from the collar to the shoulder. The helical
-  // strip is a surface, not a solid, and at its lead-in seam there is nothing behind
-  // it; without the core you look straight through the implant into its own inside.
-  // 96 triangles, and it can never poke outside the envelope because the root radius is
-  // `r - depth`.
+
+  // --- the core, under the thread -------------------------------------------------
+  // The helical strip is a surface, not a solid: at its lead-in seam there is nothing
+  // behind it and you look straight into the implant's own inside. Subdivided one
+  // segment per turn rather than skinned top to bottom, so the taper shades and so no
+  // single face spans the whole body -- a face that does would trip the sliver check
+  // that exists to catch a thread wrapped back on itself.
   {
-    const coreR = Math.max(0.05, r - depth);
-    const top = []; const bot = [];
-    for (let i = 0; i < nAz; i++) {
-      const th = (2 * Math.PI * i) / nAz;
-      const cx = Math.cos(th); const cy = Math.sin(th);
-      top.push(push(coreR * cx, coreR * cy, zStart, cx, cy, 0));
-      bot.push(push(coreR * cx, coreR * cy, zEnd, cx, cy, 0));
-    }
-    for (let i = 0; i < nAz; i++) {
-      const j = (i + 1) % nAz;
-      cells.push(3, top[i], top[j], bot[j]);
-      cells.push(3, top[i], bot[j], bot[i]);
+    const segs = Math.max(2, Math.round(turns));
+    let last = null;
+    for (let k = 0; k <= segs; k++) {
+      const z = zStart + ((zEnd - zStart) * k) / segs;
+      const cur = ring(Math.max(0.05, crestAt(z) - depth), z, 1, 0);
+      if (last) skin(last, cur);
+      last = cur;
     }
   }
 
   // --- the apical dome, exactly the envelope's ------------------------------------
-  let prev = [];
-  for (let i = 0; i < nAz; i++) {
-    const th = (2 * Math.PI * i) / nAz;
-    prev.push(push(r * Math.cos(th), r * Math.sin(th), shoulder,
-                   Math.cos(th), Math.sin(th), 0));
-  }
+  // Left ON the envelope rather than tapered with the body: the apex is where the canal
+  // verdict is decided, and it is the one place worth drawing as the thing that was
+  // actually measured.
+  prev = ring(r, shoulder, 1, 0);
   for (let k = 1; k <= DOME_RINGS; k++) {
     const th = (k / DOME_RINGS) * (Math.PI / 2);
-    const ringR = r * Math.cos(th);
-    const ringZ = shoulder + r * Math.sin(th);
-    const ring = [];
+    const cur = [];
     for (let i = 0; i < nAz; i++) {
       const a = (2 * Math.PI * i) / nAz;
       const cx = Math.cos(a); const cy = Math.sin(a);
-      ring.push(push(ringR * cx, ringR * cy, ringZ,
-                     cx * Math.cos(th), cy * Math.cos(th), Math.sin(th)));
+      cur.push(push(r * Math.cos(th) * cx, r * Math.cos(th) * cy,
+                    shoulder + r * Math.sin(th),
+                    cx * Math.cos(th), cy * Math.cos(th), Math.sin(th)));
     }
-    for (let i = 0; i < nAz; i++) {
-      const j = (i + 1) % nAz;
-      cells.push(3, prev[i], prev[j], ring[j]);
-      cells.push(3, prev[i], ring[j], ring[i]);
-    }
-    prev = ring;
+    skin(prev, cur);
+    prev = cur;
   }
 
+  orientByNormals(verts, norms, cells);
   return {
     verts: new Float32Array(verts),
     normals: new Float32Array(norms),
     cells: new Uint32Array(cells),
     nTris: cells.length / 4,
   };
+}
+
+/** Make every triangle's WINDING agree with the analytic normals it already carries.
+ *
+ *  This is not tidiness. vtk.js's WebGL shader does two-sided lighting: for a
+ *  back-facing fragment it NEGATES the supplied normal. So a triangle wound the wrong
+ *  way lights as though its surface faced away from the light -- ambient only, which at
+ *  0.08 is black. Measured on the first tapered build: 5,944 of 13,353 body triangles
+ *  were wound inward and the whole threaded body rendered black between the fins, with
+ *  correct normals the entire time.
+ *
+ *  Winding is easy to get wrong once and impossible to get wrong here: a surface of
+ *  revolution skinned from ring A to ring B is outward when B is above A and inward when
+ *  it is below, an annulus at one z is decided by radius order, and a helical strip
+ *  indexed (axial, azimuth) is the opposite of one indexed (azimuth, axial). Rather than
+ *  reason about six such cases, the normals -- which ARE derived analytically and are the
+ *  thing the shader actually shades with -- decide.
+ *
+ *  Deliberately mutates in place: this runs once per mesh build, not per frame.
+ */
+function orientByNormals(verts, norms, cells) {
+  let flipped = 0;
+  for (let c = 0; c < cells.length; c += 4) {
+    const a = cells[c + 1] * 3; const b = cells[c + 2] * 3; const d = cells[c + 3] * 3;
+    const ux = verts[b] - verts[a];
+    const uy = verts[b + 1] - verts[a + 1];
+    const uz = verts[b + 2] - verts[a + 2];
+    const vx = verts[d] - verts[a];
+    const vy = verts[d + 1] - verts[a + 1];
+    const vz = verts[d + 2] - verts[a + 2];
+    // Face normal from the winding...
+    const fx = uy * vz - uz * vy;
+    const fy = uz * vx - ux * vz;
+    const fz = ux * vy - uy * vx;
+    // ...against the mean of the three analytic vertex normals.
+    const nx = norms[a] + norms[b] + norms[d];
+    const ny = norms[a + 1] + norms[b + 1] + norms[d + 1];
+    const nz = norms[a + 2] + norms[b + 2] + norms[d + 2];
+    if (fx * nx + fy * ny + fz * nz < 0) {
+      const t = cells[c + 2]; cells[c + 2] = cells[c + 3]; cells[c + 3] = t;
+      flipped += 1;
+    }
+  }
+  return flipped;
 }
 
 /* ------------------------------------------------------------------- arch frame */
@@ -596,8 +685,11 @@ function applyMaterial(actor) {
   // shadowed side of every thread flank equally and flattens the whole form -- the
   // first pass ran 0.34 and read as light grey plastic. Metal needs the flanks to go
   // dark so the crests can be bright.
-  p.setAmbient(0.08);
-  p.setDiffuse(0.50);
+  // 0.08 was right in principle and a touch too dark in practice: the shadow side of
+  // the thread crushed to black against bone. 0.13 lifts the floor without filling the
+  // flanks back in -- the crest-to-flank contrast that makes it read as metal survives.
+  p.setAmbient(0.13);
+  p.setDiffuse(0.58);
   // Specular over 1 is deliberate: a metal's highlight is brighter than its diffuse
   // response, which is exactly what separates it from a dielectric of the same colour.
   p.setSpecular(1.15);
@@ -934,6 +1026,10 @@ export function implantGeometryForTest(id) {
     cells: Array.from(entry.local.cells),
     nTris: entry.local.nTris,
     bounds,
+    // The TRANSFORMED normals, to match `points`. The local ones would be in a
+    // different frame from the vertices they belong to and every winding test against
+    // them would be noise.
+    normals: Array.from(entry.normals),
     pose: entry.pose,
     // The measured solid, same frame, same map, Python's exact tessellation.
     envelope: env ? { points: envPts, cells: Array.from(env.cells), nTris: env.nTris }
