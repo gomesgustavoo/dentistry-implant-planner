@@ -9,7 +9,7 @@ The shape of a job:
 
     ingest -> preprocess -> base model -> FOV guard -> component filter
            -> to_canonical -> THE BOARD -> crosswalk -> quality
-           -> meshes, RTSTRUCT, preview tiles, contours, planning views, volume pack
+           -> meshes, RTSTRUCT, planning views, volume pack
            -> bake -> publish
 
 Two orderings in there are load-bearing and both are explained where they happen:
@@ -121,7 +121,7 @@ def _load_labels(model_dir: Path) -> dict:
 
 
 def _run(job: dict) -> None:
-    from worker import bake, contours, meshes, preview, retention, rtstruct, volume_pack
+    from worker import bake, meshes, preview, retention, rtstruct, volume_pack
 
     job_id = job["id"]
     tenant = job.get("tenant_id")
@@ -179,10 +179,11 @@ def _run(job: dict) -> None:
         log.exception("RTSTRUCT export failed")
         reports["rtstruct"] = {"error": f"{type(exc).__name__}: {exc}"}
 
-    rep(0.92, "Rendering previews")
+    # The window and the per-plane geometry. No files: the JPEG tiles and
+    # `preview/contours.<plane>.json` went with the Slices tab -- ~8 MB a case that
+    # nothing reads. `volume_pack` and `rtstruct` still take the window from here.
+    rep(0.92, "Measuring the display window")
     reports["preview"] = preview.render(grey, merged, spacing_zyx, results / "preview")
-    reports["contours"] = contours.export(merged, spacing_zyx, reports["preview"],
-                                          results / "preview")
 
     # The implant-planning surface: the arch curve, a panoramic reconstruction along
     # it and buccolingual cross-sections across it. Rendered here, from the
@@ -238,7 +239,6 @@ def _run(job: dict) -> None:
         "stl": stls,
         "mesh": web_meshes,
         "volume": "volume/meta.json",
-        "contours": "preview/contours.axial.json",
         "rtstruct": (reports.get("rtstruct") or {}).get("file"),
         "planning": (reports.get("planning") or {}).get("file"),
     }

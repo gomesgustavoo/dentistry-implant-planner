@@ -38,7 +38,13 @@ const FIX = path.join(HERE, 'fixtures');
 // tightest two-column state, one pixel band above the stacking breakpoint. Both were
 // added when a re-measurement showed the section is WIDTH-bound (gutter 0) from 1180
 // down and HEIGHT-bound above it -- two different regimes that no single width sees.
-const WIDTHS = [1470, 1440, 1280, 1180, 1100, 1024, 820, 640];
+//
+// 3440 and 2560 are the workstation widths the three-column layout was built for, and
+// they are not a formality: every wide-screen bug this app has had was an upper CLAMP
+// silently winning -- `--page` capping the catalogue at 1400px on a 2560px display, the
+// model picker's 3-D column pinned at 320px. A clamp that has stopped tracking the
+// viewport looks identical to one that never did until something measures above it.
+const WIDTHS = [3440, 2560, 1920, 1470, 1440, 1280, 1180, 1100, 1024, 820, 640];
 
 // Height matters now that the plan stage's vertical budget is the binding constraint
 // on the cross-section. 836 is the user's real inner height on a 900-tall screen.
@@ -307,26 +313,34 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
   await new Promise((r) => setTimeout(r, 200));
 
   const rail = document.querySelector('.rail') || document.body;
+  // The right DOCK: tools, and the structures they write into. Structures moved out of
+  // the rail into it, so every structure-shaped assertion below reads from here. The
+  // two panels are measured separately on purpose -- "the rail overflows" and "the dock
+  // overflows" are different bugs with different fixes, and one combined selector would
+  // report either as both.
+  const dock = document.querySelector('.dock') || document.body;
   const vis = (el) => !!(el && el.offsetParent !== null && !el.hidden);
   // SVG children report scrollWidth/clientWidth against their own viewBox units, so the
   // FDI arch chart reads as "20 > 15" forever and means nothing. HTML elements only.
-  const overflowing = [...rail.querySelectorAll('*')].filter(
+  const overflowing = [...rail.querySelectorAll('*'), ...dock.querySelectorAll('*')].filter(
     (e) => !(e instanceof SVGElement)
         && e.scrollWidth > e.clientWidth + 1
         && getComputedStyle(e).overflowX === 'visible')
     .map((e) => (e.className || e.tagName) + ':' + e.scrollWidth + '>' + e.clientWidth);
-  const text = rail.innerText || '';
+  const text = (rail.innerText || '') + String.fromCharCode(10) + (dock.innerText || '');
   const card = document.getElementById('accuracyCard');
   const planPanel = document.getElementById('planStage');
   const measurementText = [card, planPanel]
     .filter((e) => e && !e.hidden).map((e) => e.innerText || '').join(String.fromCharCode(10));
   // Readouts that live OUTSIDE the rail and were therefore guarded by nothing. On
-  // 2026-09-01 worker/preview.py stopped emitting total_slices and #sliceLabel
-  // rendered "axial 137 / undefined": BAD_TOKENS only ever saw rail text.
+  // 2026-09-01 worker/preview.py stopped emitting total_slices and the Slices tab's
+  // #sliceLabel rendered "axial 137 / undefined": BAD_TOKENS only ever saw rail text.
+  // That tab and that readout are both retired; the lesson and the guard are not, and
+  // the plan tab's own labels are the ones it now protects.
   // textContent, not innerText, so a readout inside a collapsed pane still counts --
   // the question is whether the string is wrong, not whether it is on screen.
   // NOTE: this whole function is the body of a template literal. No backticks.
-  const chromeText = ['sliceLabel', 'xsLabel', 'xsMeta', 'planArcHint', 'planNotice']
+  const chromeText = ['xsLabel', 'xsMeta', 'planArcHint', 'planNotice']
     .map((id) => document.getElementById(id))
     .filter(Boolean).map((e) => e.textContent || '').join(String.fromCharCode(10));
   // How much of the wrap the picture actually PAINTS, and how much of the picture is
@@ -411,11 +425,22 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
     // textContent, not innerText: the disclaimer lives inside the run-details
     // <details>, which starts closed. Whether the user has opened it is not the
     // question -- whether the sentence still exists is.
-    allText: rail.textContent || '',
-    dice: rail.querySelectorAll('.dice').length,
+    allText: (rail.textContent || '') + (dock.textContent || ''),
+    dice: dock.querySelectorAll('.dice').length,
     accuracy: vis(document.getElementById('accuracyCard')) ? 1 : 0,
     plan: vis(document.getElementById('planTab')) ? 1 : 0,
-    rows: rail.querySelectorAll('.srow').length,
+    rows: dock.querySelectorAll('.srow').length,
+    // The dock's own furniture, asserted structurally: a dock that renders but whose
+    // structure list is not inside it would pass the row count from anywhere on the
+    // page. (No backticks in this function: it is stringified into the page.)
+    structuresInDock: !!dock.querySelector('#structuresCard'),
+    editBarInDock: !!dock.querySelector('#editBar'),
+    structFilter: !!document.getElementById('structFilter'),
+    dockVisible: vis(document.querySelector('.dock')) ? 1 : 0,
+    // The retired Slices tab must stay retired: a stray tab button or stage would mean
+    // half a revert shipped.
+    slicesTab: !!document.querySelector('[data-mode="slices"]'),
+    sliceStage: !!document.getElementById('sliceStage'),
     // The hand-correction surface: the editsCard is the case's history in the rail and
     // planPriors is where the widened budget is stated. Both are absent on an
     // uncorrected case and both must appear on a corrected one.
@@ -429,7 +454,7 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
       && document.getElementById('implantPanel').innerHTML.length > 0 ? 1 : 0,
     jawTabs: document.querySelectorAll('#planJawTabs .plane').length,
     jawDisabled: document.querySelectorAll('#planJawTabs .plane[disabled]').length,
-    fov: rail.querySelectorAll('.fovmark').length,
+    fov: dock.querySelectorAll('.fovmark').length,
     overflow: overflowing.slice(0, 4),
     bodyOverflowX: document.body.scrollWidth > window.innerWidth + 1,
     // WHICH element, not just "the page scrolls". The bare boolean cost a debugging
@@ -764,7 +789,15 @@ async function run(breakage) {
           if (want.dice === '>0' && r.dice === 0) fail(`${at}: no dice cells on an accuracy fixture`);
           if (want.plan != null && r.plan !== want.plan) fail(`${at}: ${r.plan} plan tab(s), expected ${want.plan}`);
           if (want.accuracy != null && r.accuracy !== want.accuracy) fail(`${at}: accuracy card ${r.accuracy}, expected ${want.accuracy}`);
-          if (r.rows === 0) fail(`${at}: the structure rail rendered no rows at all`);
+          if (r.rows === 0) fail(`${at}: the structure list rendered no rows at all`);
+          // The dock, asserted structurally rather than by "something rendered".
+          if (!r.structuresInDock) fail(`${at}: #structuresCard is not inside the dock`);
+          if (!r.editBarInDock) fail(`${at}: #editBar is not inside the dock`);
+          if (!r.structFilter) fail(`${at}: the structure filter is missing`);
+          // The Slices tab is retired. Half a revert -- a stray tab button, or a stage
+          // left in the markup -- would otherwise ship silently.
+          if (r.slicesTab) fail(`${at}: the retired Slices tab button is back in the DOM`);
+          if (r.sliceStage) fail(`${at}: the retired #sliceStage is back in the DOM`);
           if (want.plan === 1) {
             if (!r.implantPanel) fail(`${at}: the plan tab opened but the implant panel is empty`);
             if (r.jawDisabled !== 1) fail(`${at}: ${r.jawDisabled} disabled jaw tab(s), expected 1 (the refused maxilla)`);
@@ -906,7 +939,7 @@ if (mode === '--selftest') {
     // Bug 2's exact class, in a readout that lives OUTSIDE the rail: drop a field the
     // manifest is supposed to publish and #xsLabel renders "cross-section 1 of
     // undefined". Nothing caught this until chromeText existed -- worker/preview.py
-    // shipped without total_slices and #sliceLabel read "/ undefined" for days.
+    // shipped without total_slices and the old #sliceLabel read "/ undefined" for days.
     'a manifest field a viewer readout depends on': (n, f, arch) => {
       for (const j of Object.values(arch.jaws || {})) {
         if (j && j.cross_sections) delete j.cross_sections.count;

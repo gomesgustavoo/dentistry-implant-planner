@@ -46,7 +46,6 @@
     <div class="stage-bar">
       <div class="modes" role="tablist">
         <button role="tab" class="mode on" data-mode="volume">MPR &amp; 3D</button>
-        <button role="tab" class="mode" data-mode="slices">Slices</button>
       <!-- Hidden until a job carries `planning`. Every archived job predates it,
              and a tab that opens onto nothing is worse than no tab. -->
         <button role="tab" class="mode" data-mode="plan" id="planTab" hidden>Implant plan</button>
@@ -98,6 +97,9 @@
     <button class="iconbtn" id="railToggle" type="button" hidden
             title="Collapse the side panel  ( [ )" aria-expanded="true"
             aria-label="Toggle the side panel">&#9776;</button>
+    <button class="iconbtn" id="dockToggle" type="button" hidden
+            title="Collapse the tools and structures panel  ( ] )" aria-expanded="true"
+            aria-label="Toggle the tools and structures panel">&#9707;</button>
 
     <!-- Queue depth. Collapses to just the dot below 900px. -->
     <div class="sysstrip" id="sysstrip" title="Queue depth and worker state">
@@ -445,17 +447,7 @@
         <div id="priorsBody"></div>
       </details>
 
-      <div class="card" id="structuresCard">
-        <div class="card-head">
-          <h3>Structures</h3>
-          <div class="card-actions">
-            <button class="link" id="isolateClear" type="button" hidden>clear isolate</button>
-            <button class="link" id="toggleAll" type="button">hide all</button>
-          </div>
-        </div>
-        <p class="hint card-hint">name to isolate &middot; swatch to show or hide</p>
-        <div id="structures"></div>
-      </div>
+      <!-- Structures moved to the right dock, beside the tools that write into them. -->
 
       <details class="card fold" id="seriesCard" open>
         <summary><h3>Series</h3><span class="fold-mark" aria-hidden="true"></span></summary>
@@ -493,53 +485,24 @@
           <span id="mprMeta">loading volume&hellip;</span>
         </div>
 
-        <!-- The editing toolbar. OVER the panes rather than a row above them: it is a
-             mode, and a mode should not cost the pictures 44 px whenever it is off.
-             Built by `renderEditBar`, which is also what keeps the counters honest --
-             every number in it is read back from the labelmap, not accumulated. -->
-        <div class="editbar" id="editBar" hidden>
-          <div class="editbar-row">
-            <label class="editpick">
-              <span>paint</span>
-              <select id="editSegment" aria-label="Which structure the tools write"></select>
-            </label>
-            <div class="seg" id="editTools" role="group" aria-label="Editing tool"></div>
-            <label class="editsize">
-              <span id="editSizeLabel">2.0 mm</span>
-              <input type="range" id="editSize" min="0.3" max="8" step="0.1" value="2"
-                     aria-label="Brush radius in millimetres">
-            </label>
-            <button class="iconbtn" id="editUndo" type="button"
-                    title="Undo the last stroke  ( &#8984;Z )">&#8630;</button>
-            <button class="iconbtn" id="editRedo" type="button"
-                    title="Redo  ( &#8984;&#8679;Z )">&#8631;</button>
-          </div>
-          <div class="editbar-row editbar-foot">
-            <span class="editcount" id="editCount"></span>
-            <button class="link" id="editDiscard" type="button">discard</button>
-            <button class="btn btn--primary btn--sm" id="editApply" type="button">
-              Apply &amp; recompute</button>
-          </div>
-          <p class="editnote" id="editNote"></p>
-        </div>
+        <!-- The editing toolbar moved OUT of here, into the right dock. It used to float
+             over the bottom of the panes on the reasoning that a mode should not cost the
+             pictures 44 px while it is off. True, but it cost them 44 px of the most
+             useful part of the picture while it was ON -- and the thing you are painting
+             into was in the opposite corner of the screen from the thing you paint with.
+             The dock costs the panes nothing when collapsed and puts the two together. -->
       </div>
 
-      <!-- The pre-rendered tiles: instant, and the fastest way to scrub. -->
-      <div class="tileview" id="sliceStage" hidden>
-        <div class="planes" role="tablist" id="planeTabs">
-          <button role="tab" class="plane on" data-plane="axial" type="button">Axial</button>
-          <button role="tab" class="plane" data-plane="coronal" type="button">Coronal</button>
-          <button role="tab" class="plane" data-plane="sagittal" type="button">Sagittal</button>
-        </div>
-        <div class="canvas-wrap">
-          <canvas id="canvas" width="512" height="512"></canvas>
-          <div class="stage-empty" id="stageEmpty">loading&hellip;</div>
-        </div>
-        <label class="slider">
-          <span id="sliceLabel">slice</span>
-          <input type="range" id="slice" min="0" max="0" value="0">
-        </label>
-      </div>
+      <!-- The Slices tab used to live here: three plane tabs over a canvas showing
+           server-rendered JPEG tiles with the vector outlines drawn on top. It is gone.
+           The MPR panes show the same three planes from the same volume, scrub with the
+           same wheel, carry the same outlines and additionally cross-reference each
+           other, so the tab was a second, worse way to do what the tab beside it already
+           did. Its cost was not only screen furniture: ~8 MB per case of tiles that the
+           worker no longer renders.
+
+           `drawContourSlice` and `overlayStyle` SURVIVED the removal -- the plan tab's
+           cross-section draws through both. -->
 
       <!-- The implant-planning views: a panoramic reconstruction swept along the
            fitted arch, and the buccolingual cross-section perpendicular to it. Both
@@ -676,6 +639,76 @@
         <div class="printsheet" id="planPrintSheet" aria-hidden="true"></div>
       </div>
     </section>
+
+    <!-- ============================================== the right dock
+         Tools, and the structures they write into. Third column of `.workspace`,
+         beside the stage rather than floating over it.
+
+         It survives into the Implant plan tab where the rail is pruned: isolating a
+         structure is as much a planning action as a reading one, and the tools section
+         hides itself there because there is no labelmap to paint on a server-rendered
+         cross-section. -->
+    <aside class="dock" id="dock">
+      <!-- The mask-editing tools. `#editBar` keeps its id: `check-rail.mjs` asserts on
+           it, `renderEditBar` fills it, and the ids inside are the whole wiring
+           contract. Built by `renderEditBar`, which is also what keeps the counters
+           honest -- every number in it is read back from the labelmap, not accumulated. -->
+      <section class="dock-sec editbar" id="editBar" hidden>
+        <div class="dock-head">
+          <h3>Correct the mask</h3>
+          <button class="link" id="editClose" type="button">done</button>
+        </div>
+        <div class="editbar-row">
+          <label class="editpick">
+            <span>paint</span>
+            <select id="editSegment" aria-label="Which structure the tools write"></select>
+          </label>
+        </div>
+        <div class="editbar-row">
+          <div class="seg" id="editTools" role="group" aria-label="Editing tool"></div>
+        </div>
+        <div class="editbar-row">
+          <label class="editsize">
+            <span id="editSizeLabel">2.0 mm</span>
+            <input type="range" id="editSize" min="0.3" max="8" step="0.1" value="2"
+                   aria-label="Brush radius in millimetres">
+          </label>
+          <button class="iconbtn" id="editUndo" type="button"
+                  title="Undo the last stroke  ( &#8984;Z )">&#8630;</button>
+          <button class="iconbtn" id="editRedo" type="button"
+                  title="Redo  ( &#8984;&#8679;Z )">&#8631;</button>
+        </div>
+        <!-- THE BUDGET, BEFORE THE STROKE. The error budget of the structure the brush
+             is about to write into, widened by half a display voxel because the mask a
+             browser can edit is the downsampled copy. It used to appear only in the
+             applied result; a correction is a decision, and the arithmetic belongs in
+             front of the person making it. Filled by `renderEditBudget`. -->
+        <p class="editbudget" id="editBudget"></p>
+        <div class="editbar-row editbar-foot">
+          <span class="editcount" id="editCount"></span>
+          <button class="link" id="editDiscard" type="button">discard</button>
+          <button class="btn btn--primary btn--sm" id="editApply" type="button">
+            Apply &amp; recompute</button>
+        </div>
+        <p class="editnote" id="editNote"></p>
+      </section>
+
+      <section class="dock-sec" id="structuresCard">
+        <div class="dock-head">
+          <h3>Structures</h3>
+          <div class="card-actions">
+            <button class="link" id="isolateClear" type="button" hidden>clear isolate</button>
+            <button class="link" id="toggleAll" type="button">hide all</button>
+          </div>
+        </div>
+        <label class="strfilter">
+          <input type="search" id="structFilter" placeholder="filter by name, FDI or group"
+                 aria-label="Filter structures" autocomplete="off">
+        </label>
+        <p class="hint card-hint">name to isolate &middot; swatch to show or hide</p>
+        <div id="structures"></div>
+      </section>
+    </aside>
   </div>
 
 <!-- Repeated at the foot of every printed page. Hidden on screen. -->

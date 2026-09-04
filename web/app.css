@@ -39,7 +39,11 @@
   /* Scales with the window instead of pinning 330px, which left a 4K monitor with the
      same cramped panel as a laptop. Clamped at both ends: below 300px the dental
      chart's tooth labels collide, above 420px the rail is just whitespace. */
-  --rail: clamp(300px, 21vw, 420px);
+  --rail: clamp(300px, 18vw, 480px);
+  /* The right dock: tools, and the structures they write into. Narrower ceiling than
+     the rail because its widest row is a structure name plus a volume, where the rail
+     has to hold the 32-position dental chart. */
+  --dock: clamp(300px, 20vw, 460px);
   --shadow: 0 10px 30px -12px rgba(0, 0, 0, .65);
   /* 54 -> 46. The header now carries the view tabs as well, so it is doing the work of
      two rows and can afford to be shorter than either. Every pixel here goes to a
@@ -48,7 +52,7 @@
   /* The reading measure for text-shaped views. The workspace deliberately ignores
      it -- an image viewport should use the whole monitor -- but a settings form at
      2000px wide is a form nobody can read. */
-  --page: min(1400px, 92vw);
+  --page: min(1720px, 94vw);
   --page-narrow: 820px;
 }
 
@@ -428,16 +432,21 @@ main#settings { max-width: var(--page-narrow); }
 
 /* ------------------------------------------------------------- workspace */
 .workspace {
-  display: grid; grid-template-columns: var(--rail) 1fr;
+  display: grid; grid-template-columns: var(--rail) minmax(0, 1fr) var(--dock);
   gap: .8rem; padding: .6rem .9rem .7rem;
   min-height: 0; min-width: 0; height: 100%;
 }
-/* ONE column, not `0 1fr`. With the rail display:none'd it is out of the flow, so the
-   stage becomes the first grid item and lands in column one -- which under `0 1fr` is
-   zero wide, and the stage then overflowed it at its old size while two thirds of the
-   window sat empty. */
-.workspace.rail-collapsed { grid-template-columns: 1fr; gap: 0; }
+/* EVERY collapsed state RESTATES the whole template, and none of them uses a `0` track.
+   With a panel display:none'd it is out of the flow, so the remaining items shift left
+   one column -- under `0 1fr` the stage landed in the zero-wide track and overflowed it
+   at its old size while two thirds of the window sat empty. The same trap catches the
+   dock from the other side, so the four combinations are spelled out rather than
+   composed. */
+.workspace.rail-collapsed { grid-template-columns: minmax(0, 1fr) var(--dock); }
 .workspace.rail-collapsed > .rail { display: none; }
+.workspace.dock-collapsed { grid-template-columns: var(--rail) minmax(0, 1fr); }
+.workspace.dock-collapsed > .dock { display: none; }
+.workspace.rail-collapsed.dock-collapsed { grid-template-columns: minmax(0, 1fr); gap: 0; }
 
 /* The rail in the IMPLANT tab. Measured on the live site: 4910 characters, 82% of it
    scrolled out of reach, and none of it about implant planning -- the findings card,
@@ -448,8 +457,12 @@ main#settings { max-width: var(--page-narrow); }
    a clearance graded against a contour a person moved is provenance for the numbers in
    this very tab, which is the one place it cannot be a footnote.
    They come back on the other two tabs, and (see the print block) on paper. */
-.workspace.mode-plan > .rail > .card:not(.chart-card):not(#structuresCard):not(#editsCard),
+.workspace.mode-plan > .rail > .card:not(.chart-card):not(#editsCard),
 .workspace.mode-plan > .rail > details.card { display: none; }
+/* The DOCK survives into the plan tab -- isolating a structure is as much a planning
+   action as a reading one -- but the tools do not: there is no labelmap to paint on a
+   server-rendered cross-section, and `setMode` drops edit mode on the way in anyway. */
+.workspace.mode-plan > .dock > #editBar { display: none; }
 /* `grid-template-columns` is stated, and `minmax(0, 1fr)` rather than the implicit
    `auto`. An `auto` track's minimum is the largest min-content contribution of its
    items and is allowed to exceed the container -- and grid items stretch -- so ONE
@@ -468,6 +481,52 @@ main#settings { max-width: var(--page-narrow); }
 }
 .rail::-webkit-scrollbar { width: 8px; }
 .rail::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+
+/* ------------------------------------------------------------------ the right dock
+   Same `minmax(0, 1fr)` discipline as the rail, and for the same measured reason: an
+   `auto` track floors at its widest min-content contribution and grid items stretch, so
+   one unwrappable structure name would widen the whole dock. */
+.dock {
+  min-height: 0; min-width: 0;
+  display: grid; grid-template-columns: minmax(0, 1fr);
+  grid-auto-rows: min-content;
+  gap: .8rem; align-content: start;
+  overflow-y: auto; padding-left: .2rem;
+}
+.dock::-webkit-scrollbar { width: 8px; }
+.dock::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+/* The dock's sections carry the card's surface but not its rhythm -- they are panels in
+   a column, not cards in a feed, so they sit tighter. */
+.dock-sec {
+  min-width: 0;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: .6rem .7rem;
+}
+.dock-head { display: flex; align-items: center; justify-content: space-between;
+  gap: .5rem; margin-bottom: .5rem; }
+.dock-head h3 { margin: 0; font-size: 11px; font-weight: 600; color: var(--muted);
+  text-transform: uppercase; letter-spacing: .07em; }
+/* STRUCTURES fills the dock's remaining height and scrolls INSIDE itself, so the tools
+   above it never scroll out of reach on a 47-structure case. */
+.dock-sec#structuresCard { display: grid; grid-template-rows: auto auto auto minmax(0, 1fr);
+  min-height: 0; }
+.workspace:not(.dock-collapsed) .dock { grid-template-rows: auto minmax(0, 1fr); }
+#structures { overflow-y: auto; min-height: 0; }
+#structures::-webkit-scrollbar { width: 8px; }
+#structures::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+/* The filter. Narrowing 47 structures to the handful a planner is looking at is the
+   single biggest thing that makes this list usable -- 32 of the 47 are teeth. */
+.strfilter { display: block; margin-bottom: .4rem; }
+.strfilter input {
+  width: 100%; padding: .32rem .5rem; font-size: 12.5px;
+  color: var(--ink); background: var(--surface-2);
+  border: 1px solid var(--border); border-radius: var(--radius-sm);
+}
+.strfilter input::placeholder { color: var(--muted); }
+.strfilter input:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+/* Said out loud when a filter is hiding rows, because a list that silently omits a
+   structure the reader is looking for reads as a missing structure. */
+.strempty { padding: .5rem 0; font-size: 12px; color: var(--muted); }
 .card {
   background: var(--surface); border: 1px solid var(--border);
   border-radius: var(--radius); padding: .9rem;
@@ -520,7 +579,12 @@ main#settings { max-width: var(--page-narrow); }
 .sgroup h4 {
   margin: .3rem 0 .25rem; font-size: .68rem; text-transform: uppercase;
   letter-spacing: .06em; color: var(--muted);
+  display: flex; align-items: baseline; justify-content: space-between; gap: .5rem;
 }
+/* How many structures the group has. Present count, not filtered -- see renderStructures
+   for why a heading that read "Upper teeth 2" under a filter would be a lie. */
+.gcount { font: 500 .66rem var(--mono); color: var(--muted); opacity: .75;
+  letter-spacing: 0; text-transform: none; }
 .slist { display: grid; gap: 1px; }
 .srow {
   display: grid; grid-template-columns: 12px minmax(0, 1fr) auto auto; align-items: center; gap: .5rem;
@@ -595,7 +659,7 @@ main#settings { max-width: var(--page-narrow); }
 .popwrap { position: relative; }
 .pop {
   position: absolute; top: calc(100% + .5rem); right: 0; z-index: 50;
-  width: 274px; padding: .7rem;
+  min-width: 274px; max-width: min(22rem, 90vw); padding: .7rem;
   background: var(--surface); border: 1px solid var(--border-2);
   border-radius: var(--radius); box-shadow: var(--shadow);
   display: grid; gap: .6rem;
@@ -661,18 +725,13 @@ main#settings { max-width: var(--page-narrow); }
 }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-.tileview { display: grid; grid-template-rows: auto 1fr auto; gap: .6rem; min-height: 0; }
-.canvas-wrap {
-  position: relative; background: #000; border: 1px solid var(--border);
-  border-radius: var(--radius-sm); display: grid; place-items: center; overflow: hidden; min-height: 0;
-}
-.canvas-wrap canvas { max-width: 100%; max-height: 100%; object-fit: contain; }
+/* `.stage-empty` outlived the Slices tab it was written for: the plan tab's
+   `#planEmpty` and `#xsEmpty` carry the same class. */
 .stage-empty { position: absolute; color: var(--muted); font-size: .8rem;
   text-align: center; padding: 0 .8rem; }
 /* In the plan tab every FDI position is an implant site, so every one is a target. */
 .tooth.site { cursor: crosshair; }
 .tooth.site:hover rect { stroke: var(--accent); stroke-width: 1.4; }
-.tileview .slider input { width: 100%; }
 
 /* The implant-planning stage.
    Two columns: pictures, and a sidebar that scrolls. The previous shape gave the
@@ -692,7 +751,7 @@ main#settings { max-width: var(--page-narrow); }
      panes overflowed the page -- measured at 1100 px: body scrollWidth 1136 and the Save
      button 16 px off the right edge. The clamp still expresses the PREFERRED width; the
      minmax lets it yield rather than push the page sideways. */
-  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(20rem, 24vw, 27rem));
+  grid-template-columns: minmax(0, 1fr) minmax(0, clamp(20rem, 22vw, 34rem));
   grid-template-rows: auto minmax(0, 1fr);
 }
 .planview .planes { grid-column: 1 / -1; }
@@ -990,10 +1049,32 @@ ul.rulers .hint { color: var(--muted); }
    large screen was the fixed rail (now fluid) and a chart that stayed postage-stamp
    sized no matter how much room it had. The topbar and the usage chip deliberately
    do NOT scale here -- that was the bug. */
+/* ------------------------------------------------------------- large screens
+   This app is read on radiology workstations, and until now every one of them got the
+   laptop layout with the surplus spent on empty margins: `--page` capped the catalogue
+   at 1400px, so a 2560px display rendered it in a 1400px column with ~580px of ground
+   either side of it.
+
+   The type scale steps rather than tracking the viewport. A dental CBCT pane is
+   physically small on screen even at 2560 -- the picture wants the pixels, and body text
+   that grew with the window would take them back. Half a pixel per step is enough to
+   keep a 32-row structure list readable at arm's length on a 27-inch panel and nothing
+   like enough to reflow anything. */
 @media (min-width: 1900px) {
   .workspace { padding: 1.25rem 2rem 1.5rem; gap: 1.25rem; }
   .arch text { font-size: 4px; }
   .kv, .srow { font-size: .8rem; }
+}
+@media (min-width: 2200px) {
+  body { font-size: 15.5px; }
+  .workspace { padding: 1.4rem 2.4rem 1.6rem; gap: 1.4rem; }
+}
+@media (min-width: 2560px) {
+  body { font-size: 16px; }
+  .workspace { padding: 1.5rem 3rem 1.8rem; gap: 1.6rem; }
+  /* The 2x2 grid gets a little air between the panes at this size; at 1440 the same
+     gap eats into the pictures. */
+  .grid4 { gap: .8rem; }
 }
 
 /* --------------------------------------------------------------- buttons */
@@ -1282,8 +1363,8 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
   @page { size: A4 portrait; margin: 14mm; }
   /* `.railtoggle` and `.stagewrap` matched nothing -- the real element is
      `#railToggle.iconbtn` -- so the rail toggle printed on every sheet. */
-  #nav, #casebar, #railToggle, #popHelp, .planactions, .modes, .planes,
-  #sliceStage, #mprStage, .stage-empty, .pane-tag, #xsSlider, .slider,
+  #nav, #casebar, #railToggle, #dockToggle, #popHelp, .planactions, .modes, .planes,
+  #mprStage, #editBar, .strfilter, .stage-empty, .pane-tag, #xsSlider, .slider,
   ul.rulers button, .imp-head button, .imp select { display: none !important; }
   /* The size selects are hidden, so the chosen size has to be printed some other way.
      `renderImplantPanel` writes it into a data attribute for exactly this. */
@@ -1310,6 +1391,14 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
      checked and the rail that was not. */
   .workspace.mode-plan > .rail > .card,
   .workspace.mode-plan > .rail > details.card { display: block !important; }
+  /* ...and so does the DOCK. The structure list is the inventory of what was drawn on
+     this scan, with the volume of each -- exactly the kind of thing a printed record is
+     for, and it moved out of the rail, so the rule above no longer reaches it. The
+     TOOLS are hidden a few lines up: a brush is not a document. */
+  .workspace { grid-template-columns: minmax(0, 1fr) !important; }
+  .dock, .dock-sec { display: block !important; overflow: visible !important;
+    height: auto !important; max-height: none !important; }
+  #structures { overflow: visible !important; max-height: none !important; }
   .planview.side-collapsed { display: block !important; }
   .pan-wrap { height: auto !important; }
   .pane3d-wrap, .pane-3d.in-plan { display: none !important; }
@@ -1366,7 +1455,7 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 .uploadplan b { color: var(--ink); }
 .models {
   display: grid; gap: 1rem;
-  grid-template-columns: minmax(0, 320px) minmax(0, 1fr);
+  grid-template-columns: minmax(0, clamp(320px, 26vw, 560px)) minmax(0, 1fr);
   align-items: start;
 }
 .models-3d { display: grid; gap: .4rem; }
@@ -1445,34 +1534,39 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 }
 
 /* ================================================= correcting the segmentation mask
-   The bar floats OVER the panes. Editing is a mode, and a mode must not cost the
-   pictures a 44 px row whenever it is off -- the same argument that folded the view
-   tabs into the case header. `#mprStage` is already a positioning context (the loading
-   overlay is absolute inside it), so this needs no change there. */
-.editbar {
-  /* At the BOTTOM, not the top. Measured on the live app: at the top it covered about
-     100 px of the axial pane and the same of the coronal one -- and the axial pane is
-     where the correction is actually drawn. The bottom edge of a CBCT slice is
-     background on almost every case, so that is the edge the controls can have. */
-  position: absolute; left: 50%; transform: translateX(-50%);
-  bottom: .4rem; z-index: 6; max-width: min(96%, 900px);
-  display: grid; gap: .35rem;
-  background: rgba(10, 14, 19, .93); backdrop-filter: blur(6px);
-  border: 1px solid var(--border-2); border-radius: var(--radius);
-  padding: .45rem .6rem; box-shadow: var(--shadow);
-}
+   IN THE DOCK, not floating over the panes. The float was justified by "a mode must not
+   cost the pictures a 44 px row whenever it is off" -- correct, and it solved the wrong
+   half: while the mode was ON it covered ~100 px of the axial pane, which is the pane
+   the correction is actually drawn in, and the structure being painted was in the
+   opposite corner of the screen from the tool painting it. In the dock it costs the
+   panes nothing in either state, and the tool sits directly above the structure list. */
+.editbar { display: grid; gap: .45rem; }
 .editbar-row { display: flex; align-items: center; gap: .5rem; flex-wrap: wrap; }
-.editbar-foot { border-top: 1px solid var(--border); padding-top: .35rem; }
+.editbar-foot { border-top: 1px solid var(--border); padding-top: .45rem; }
 .editpick { display: flex; align-items: center; gap: .35rem; font-size: 12px;
-  color: var(--muted); }
-.editpick select { max-width: 13rem; }
+  color: var(--muted); width: 100%; }
+.editpick select { flex: 1; min-width: 0; }
 .editsize { display: flex; align-items: center; gap: .4rem; font-size: 12px;
-  color: var(--muted); }
-.editsize input[type=range] { width: 7rem; }
+  color: var(--muted); flex: 1; min-width: 0; }
+.editsize input[type=range] { flex: 1; min-width: 4rem; }
 .editsize span { font: 600 11px var(--mono); min-width: 3.6rem; }
 .editcount { font: 500 12px var(--mono); color: var(--muted); }
 .editbar-foot .btn { margin-left: auto; }
 .btn--sm { padding: .3rem .7rem; font-size: 12.5px; }
+/* The dock's tools stack vertically, so the tool group wraps into a grid rather than a
+   single scrolling row. Eight tools at three per row reads as a palette. */
+#editTools { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: .25rem; width: 100%; }
+#editTools button { width: 100%; }
+/* THE ERROR BUDGET, BEFORE THE STROKE. This is the one thing in the dock that is not a
+   control, and it is here because the product's whole claim is that it tells you how
+   wrong it might be -- so the arithmetic belongs in front of the person about to hand-
+   draw over the model, not only in the result afterwards. */
+.editbudget { margin: 0; padding: .4rem .5rem; border-radius: var(--radius-sm);
+  background: var(--surface-2); border: 1px solid var(--border);
+  font: 500 11px/1.5 var(--mono); color: var(--muted); }
+.editbudget b { color: var(--ink); font-weight: 600; }
+.editbudget:empty { display: none; }
 /* THE STANDING STATEMENT, and it is the most important text in this bar: everything
    except the slice views is still describing the pre-edit segmentation. */
 .editnote { margin: 0; font-size: 11.5px; line-height: 1.45; color: var(--muted);

@@ -10,7 +10,6 @@ numbers beside it are about a mask that no longer exists.
 Recomputed, because it is label-derived and the labels changed:
   * `segmentation.nii.gz` -- the download, back in the orientation the upload arrived in;
   * `volume/labels.raw` -- so a reload shows the edit rather than the model's version;
-  * `preview/contours.axial.json` -- the slice-view overlay;
   * `mesh/` and `stl/` -- the 3-D surfaces and the downloads;
   * `planning/xs/<jaw>/contours.json` -- the section outlines;
   * `planning/pack/<jaw>.{canal,accessory_canal,tooth}.raw` -- every distance field the
@@ -334,7 +333,7 @@ def run(job_row: dict, edit_row: dict, diff: dict, *, rep=None) -> dict:
     """
     from dentistry import ridge, storage
     from dentistry.quality import assess
-    from worker import bake, contours, meshes, orient, panoramic, planning_pack
+    from worker import bake, meshes, orient, panoramic, planning_pack
 
     say = rep or (lambda *_a: None)
     results = storage.resolve(job_row["tenant_id"], "results", job_row["id"])
@@ -399,11 +398,6 @@ def run(job_row: dict, edit_row: dict, diff: dict, *, rep=None) -> dict:
         merged, image, spacing_zyx, results / "stl", results / "mesh")
     reports["meshes"] = mesh_report
     reports.setdefault("outputs", {}).update({"stl": stls, "mesh": web_meshes})
-
-    say(0.55, "Rebuilding the slice outlines")
-    if reports.get("preview"):
-        reports["contours"] = contours.export(merged, spacing_zyx, reports["preview"],
-                                              results / "preview")
 
     rebuilt_pack = {}
     if manifest:
