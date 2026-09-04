@@ -459,10 +459,17 @@ main#settings { max-width: var(--page-narrow); }
    They come back on the other two tabs, and (see the print block) on paper. */
 .workspace.mode-plan > .rail > .card:not(.chart-card):not(#editsCard),
 .workspace.mode-plan > .rail > details.card { display: none; }
-/* The DOCK survives into the plan tab -- isolating a structure is as much a planning
-   action as a reading one -- but the tools do not: there is no labelmap to paint on a
-   server-rendered cross-section, and `setMode` drops edit mode on the way in anyway. */
-.workspace.mode-plan > .dock > #editBar { display: none; }
+/* THE DOCK IS GONE IN THE PLAN TAB, both halves of it.
+   The tools obviously: there is no labelmap to paint on a server-rendered cross-section,
+   and the brush would be holding the primary mouse button on a tab that cannot use it.
+   And the structure list too -- the plan tab has its own idea of what the 3-D pane
+   should show (`refreshPlanFocus` narrows to the implant's neighbourhood), so a second
+   control over the same pane sat there contradicting it, while the panel that carries
+   every measurement was squeezed into the space left over. The planner needs the width
+   more than it needs a structure list. */
+.workspace.mode-plan > .dock { display: none; }
+.workspace.mode-plan { grid-template-columns: var(--rail) minmax(0, 1fr); }
+.workspace.mode-plan.rail-collapsed { grid-template-columns: minmax(0, 1fr); }
 /* `grid-template-columns` is stated, and `minmax(0, 1fr)` rather than the implicit
    `auto`. An `auto` track's minimum is the largest min-content contribution of its
    items and is allowed to exceed the container -- and grid items stretch -- so ONE
@@ -1003,9 +1010,16 @@ ul.rulers .hint { color: var(--muted); }
   body.in-case { height: auto; overflow: visible; }
   body.in-case #views { height: auto; overflow: visible; }
   .workspace { grid-template-columns: 1fr; height: auto; }
-  /* Restated because the collapse rule above would otherwise be overridden here and
-     the rail would come back the moment the window narrowed. */
-  .workspace.rail-collapsed { grid-template-columns: 1fr; }
+  /* Restated because the collapse rules above would otherwise be overridden here and
+     the panel would come back the moment the window narrowed. EVERY combination that
+     sets a template up there has to be restated down here: they are all more specific
+     than a bare `.workspace`, so a media query cannot undo them by being later. That is
+     how a 640 px plan tab ended up two columns wide and overflowed its implant card. */
+  .workspace.rail-collapsed,
+  .workspace.dock-collapsed,
+  .workspace.rail-collapsed.dock-collapsed,
+  .workspace.mode-plan,
+  .workspace.mode-plan.rail-collapsed { grid-template-columns: 1fr; }
   .grid4, .grid4.focus, .grid4.solo {
     grid-template-columns: 1fr; grid-template-rows: repeat(4, 42vh);
   }
