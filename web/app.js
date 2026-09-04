@@ -2215,6 +2215,8 @@ function setMode(mode) {
   // the tile view or the implant tab.
   ['layoutPicker', 'modePicker3d', 'mprReset', 'editBtn']
     .forEach((id) => { const el = $(id); if (el) el.hidden = !volume; });
+  // ...and the dock's own toggle, because in the plan tab there is no dock to toggle.
+  { const el = $('dockToggle'); if (el) el.hidden = !volume; }
   // CORRECTING THE MASK IS AN MPR-ONLY MODE, and leaving it armed anywhere else is a
   // bug rather than an untidiness. The brush binds Cornerstone's PRIMARY MOUSE BUTTON on
   // the MPR tool group; the plan tab draws on its own canvases, so a tool left active
@@ -2255,6 +2257,11 @@ function setMode(mode) {
   // wiring and the hint from whichever tab happened to be open when the case loaded.
   if (state.viewer) renderArch(state.viewer.report);
   if (plan) {
+    // The dock has just left the grid, so the stage is wider than it was. Cornerstone
+    // sizes its canvases at enable time and never again, and the plan tab's own
+    // canvases are drawn to a measured box -- without this the 3-D pane keeps the
+    // narrower width and every click lands at the wrong point.
+    afterLayoutChange();
     // Awaited by the caller where it matters. `renderArch` needs `mode` (set above) to
     // turn the chart into a site picker, and the chart is redrawn when the arch lands.
     loadArch();
