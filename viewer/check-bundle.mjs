@@ -307,6 +307,9 @@ if (shipApi && candApi) {
   //           not drawn behind two tooth roots and a jaw
   //   0.16.0  the labelmap editing surface (editing.js) and the model-picker
   //           schematic (preview.js). Added as ONE union, per the rule above.
+  //   0.19.0  the picker draws a REAL baked segmentation instead of a schematic, so it
+  //           gains `previewSource` (the caption names the case from the manifest) and
+  //           `missingGroups` (a group the source case does not contain).
   check('the added names are exactly the implant API, the surface controls, the '
         + 'editing surface and the model-picker schematic',
         added.slice().sort().join(',') === [
@@ -315,7 +318,8 @@ if (shipApi && candApi) {
           'editDebug', 'editDiff', 'editHistory', 'editRedo', 'editSegment',
           'editStats', 'editTool', 'editUndo', 'editWriteForTest',
           'focusImplant', 'highlightGroups', 'implantGeometryForTest',
-          'mountModelPreview', 'previewDebug', 'removeImplant', 'resetEdits',
+          'missingGroups', 'mountModelPreview', 'previewDebug', 'previewSource',
+          'removeImplant', 'resetEdits',
           'resizeModelPreview', 'setBrushMm', 'setEditSegment', 'setEditTool',
           'setImplantArch', 'setImplantVerdict', 'setImplants',
           'setSurfaceFocus', 'setSurfaceOpacity', 'spinModelPreview',

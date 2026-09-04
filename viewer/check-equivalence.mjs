@@ -528,14 +528,27 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
     edit.afterReset = DentistryViewer.editStats().voxels;
   }
 
-  // --- the model-picker schematic ----------------------------------------------
+  // --- the model picker's baked dentition ---------------------------------------
+  // AWAITED now: it fetches a manifest and one mesh per group instead of building
+  // geometry from a curve. The harness serves web/ at the root, so assets/preview/
+  // resolves off document.baseURI exactly as it does in the app -- which is the point:
+  // a fixture path here would not exercise the real one.
+  // (No backticks in this function: it is stringified into the page.)
   const host = document.createElement('div');
   host.style.cssText = 'width:240px;height:240px;position:relative';
   document.body.appendChild(host);
-  const previewGroups = DentistryViewer.mountModelPreview(host);
+  let previewGroups = null;
+  let previewError = null;
+  try {
+    previewGroups = await DentistryViewer.mountModelPreview(host);
+  } catch (e) {
+    previewError = String(e && e.message || e);
+  }
   const previewBefore = DentistryViewer.previewDebug();
+  const previewSource = DentistryViewer.previewSource();
   DentistryViewer.highlightGroups(['canals']);
   const previewFocused = DentistryViewer.previewDebug();
+  const previewMissing = DentistryViewer.missingGroups(['canals', 'restorations']);
   DentistryViewer.disposeModelPreview();
   const previewAfter = DentistryViewer.previewDebug();
 
@@ -545,6 +558,7 @@ const IMPLANT_PROBE = (job, vec) => `(async () => {
            originalTriangles, resizedTriangles, originalSpan, resizedSpan,
            yawRefused, yawZeroOk, edit,
            previewGroups, previewBefore, previewFocused, previewAfter,
+           previewSource, previewMissing, previewError,
            afterUnmount: st && st.implants ? st.implants : null };
 })()`;
 
@@ -897,12 +911,28 @@ if (!existsSync(VECTORS)) {
     {
       const before = res.previewBefore || { groups: {} };
       const focused = res.previewFocused || { groups: {} };
-      check('the schematic mounts with a surface per structure group',
-            (res.previewGroups || []).length === 6, (res.previewGroups || []).join(', '));
-      // 60, not 100: the pharynx is a four-point tube at 16 azimuth, which is 66
-      // vertices and is the right amount of geometry for a diagram of an airway. What
-      // the check is against is an EMPTY group -- what a builder that silently produced
-      // nothing would leave behind -- and the teeth carry 6 144.
+      if (res.previewError) fail('the model preview threw -> ' + res.previewError);
+      // FIVE, not six. The source dentition has no bridge, crown or implant, so
+      // `restorations` ships declared-absent rather than borrowed from another patient.
+      // Asserted as an exact number so a group silently vanishing from the bake is a
+      // failure rather than a smaller picture nobody notices.
+      check('the picker mounts one surface per structure group the case contains',
+            (res.previewGroups || []).length === 5,
+            (res.previewGroups || []).join(', '));
+      check('  ... and it is a REAL segmentation, named by its own manifest',
+            !!res.previewSource && !!res.previewSource.job
+            && /CC BY/.test(res.previewSource.attribution || ''),
+            JSON.stringify(res.previewSource));
+      // The absent group is DECLARED, not hidden. Without this, a bake that silently
+      // dropped a group would look identical to a case that genuinely lacks one.
+      check('  ... and a group the case does not contain is declared, not hidden',
+            (res.previewSource.absent || []).join(',') === 'restorations'
+            && (res.previewMissing || []).join(',') === 'restorations',
+            'absent ' + JSON.stringify(res.previewSource.absent)
+            + ', missingGroups(canals,restorations) -> ' + JSON.stringify(res.previewMissing));
+      // What this is against is an EMPTY group -- what a bake that wrote a header and
+      // no triangles would leave behind. The real meshes carry thousands of points per
+      // group; 60 is a floor, not a target.
       check('every group carries geometry',
             Object.values(before.groups).every((g) => g.points > 60),
             Object.entries(before.groups).map(([k, g]) => `${k}:${g.points}`).join(' '));
@@ -912,7 +942,7 @@ if (!existsSync(VECTORS)) {
               .filter(([k]) => k !== 'canals')
               .every(([, g]) => g.opacity > 0 && g.opacity < 0.5),
             Object.entries(focused.groups).map(([k, g]) => `${k}:${g.opacity}`).join(' '));
-      check('disposing releases the schematic', res.previewAfter === null);
+      check('disposing releases the picker scene', res.previewAfter === null);
     }
   }
 }

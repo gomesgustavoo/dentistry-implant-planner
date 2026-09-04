@@ -1,0 +1,77 @@
+{
+ "source_job": "e9d0c06b-0e97-4c00-a43c-d9ea0ba8200e",
+ "title": "Full dentition, both jaws",
+ "attribution": "ToothFairy3 (CC BY-NC-SA 4.0), held out of training",
+ "groups": {
+  "jaws": {
+   "file": "jaws.msh",
+   "color": "#d9c9a3",
+   "structures": 2,
+   "points": 9967,
+   "triangles": 20000,
+   "triangles_before": 1010550,
+   "bytes": 359620,
+   "present": true
+  },
+  "canals": {
+   "file": "canals.msh",
+   "color": "#ff3b30",
+   "structures": 4,
+   "points": 3013,
+   "triangles": 5998,
+   "triangles_before": 35240,
+   "bytes": 108148,
+   "present": true
+  },
+  "teeth": {
+   "file": "teeth.msh",
+   "color": "#186ebf",
+   "structures": 33,
+   "points": 21189,
+   "triangles": 41998,
+   "triangles_before": 567368,
+   "bytes": 758260,
+   "present": true
+  },
+  "sinuses": {
+   "file": "sinuses.msh",
+   "color": "#4fb3bf",
+   "structures": 2,
+   "points": 3067,
+   "triangles": 5998,
+   "triangles_before": 75420,
+   "bytes": 108796,
+   "present": true
+  },
+  "airway": {
+   "file": "airway.msh",
+   "color": "#b07fd6",
+   "structures": 1,
+   "points": 1527,
+   "triangles": 3000,
+   "triangles_before": 261018,
+   "bytes": 54340,
+   "present": true
+  },
+  "restorations": {
+   "present": false,
+   "structures": 0
+  }
+ },
+ "absent_groups": [
+  "restorations"
+ ],
+ "bounds": {
+  "min": [
+   4.471,
+   3.45,
+   -0.007
+  ],
+  "max": [
+   111.762,
+   94.729,
+   80.846
+  ]
+ },
+ "bytes": 1389164
+}

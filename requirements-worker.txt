@@ -15,3 +15,10 @@ scipy
 numpy
 blosc2
 scikit-image
+
+# Quadric decimation for the surfaces. `worker/meshes.py` imports it inside a try and
+# falls back to shipping the mesh undecimated -- which is what it had been doing on this
+# deployment, silently, while `report.meshes.web_triangle_budget` published 60 000/90 000
+# as though they were being applied. A budget an artifact advertises and does not enforce
+# is worse than no budget, so it is a declared dependency now.
+fast_simplification==0.2.0

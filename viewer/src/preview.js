@@ -1,23 +1,44 @@
-/* A schematic dentition in 3-D, for the model picker.
+/* A real segmented dentition in 3-D, for the model picker.
  *
- * WHY IT IS SCHEMATIC, and why that is the honest choice. The picker is on the upload
- * page: there is no scan, no segmentation and no case, so there is nothing real to draw.
- * The alternative -- rendering a published example case's meshes -- would put a picture
- * of somebody's actual anatomy behind a question about YOUR upload, and a reader would
- * reasonably take the shapes for what this model will draw on their scan. So every
- * surface here is generated from a parametric curve, it says so on the pane, and no
- * number is printed on it. What it communicates is exactly one thing: WHICH STRUCTURES
- * a model is authoritative for.
+ * ## What this used to be, and why it changed
+ *
+ * It used to be a SCHEMATIC: an arch swept from a parametric curve with ellipsoid teeth
+ * on it, and a caption that had to admit it was "not a segmentation, and not your scan".
+ * The argument for that was honest and worth restating, because it has not gone away:
+ * the picker sits on the upload page, where there is no scan and no case, so drawing
+ * somebody else's anatomy risks a reader taking those shapes for what the model will
+ * draw on theirs.
+ *
+ * What changed is the answer to it, not the argument. This product's whole claim is the
+ * segmentation; illustrating that claim with a drawing is arguing it with a prop. The
+ * honest version shows a REAL segmentation and names it -- and the case it shows is one
+ * already published in the app as an example, from a public research dataset, held out
+ * of training. A reader can go and open it. That is a stronger guarantee than a
+ * disclaimer under a diagram, and the caption in `web/index.html` carries the naming.
+ *
+ * Baked by `scripts/export_case_meshes.py` into `assets/preview/`: one merged DSVM mesh
+ * per picker GROUP -- six, not forty-seven -- because the picker's question is which
+ * structures a model is authoritative for, and its answer is per group. ~725 KB gzipped
+ * for the set, which every visitor to the upload page pays before sign-in; the ceiling
+ * is asserted in the baker rather than hoped for here.
+ *
+ * A group the source case does not contain ships as `present: false` with no file
+ * (`restorations`, on the current dentition -- it has no bridge, crown or implant).
+ * Declared rather than hidden, so hovering a model that owns it can SAY so instead of
+ * ghosting the whole scene and highlighting nothing, which reads as a broken hover.
+ * Borrowing that group from a second patient was the alternative, and it would put two
+ * people's anatomy in one picture -- exactly the thing the caption could then not
+ * honestly say.
  *
  * Standalone, not the case viewer. `mount()` needs a volume, a labelmap and a
  * Cornerstone rendering engine; this needs none of those and must work before sign-in.
- * So it drives a `vtkGenericRenderWindow` directly, with one actor per structure GROUP
- * -- six actors, not forty-seven -- because the question is about groups.
+ * So it drives a `vtkGenericRenderWindow` directly.
  *
- * The palette is its own. `web/app.js` and `implants.js` share a verdict palette and a
- * check asserts they agree; this one is deliberately not in that relationship, because
- * these are family colours for a diagram rather than the catalogue's per-structure
- * colours, and pretending otherwise would make a drawing look like data.
+ * The palette is its own, and stays its own. `web/app.js` and `implants.js` share a
+ * verdict palette and a check asserts they agree; this one is deliberately not in that
+ * relationship. These are FAMILY colours for a diagram about groups -- the catalogue's
+ * per-structure colours would paint the dentition in quadrant hues, which is data the
+ * picker is not showing and a question it is not asking.
  */
 import vtkActor from '@kitware/vtk.js/Rendering/Core/Actor';
 import vtkCellArray from '@kitware/vtk.js/Common/Core/CellArray';
@@ -25,21 +46,11 @@ import vtkGenericRenderWindow from '@kitware/vtk.js/Rendering/Misc/GenericRender
 import vtkMapper from '@kitware/vtk.js/Rendering/Core/Mapper';
 import vtkPolyData from '@kitware/vtk.js/Common/DataModel/PolyData';
 
-/** Arch half-width and depth, in millimetres. A real adult mandibular arch is about
- *  52 mm across the second molars and 32 mm deep, which is what these are. */
-const ARCH_A = 26;
-const ARCH_B = 32;
-/** Where each jaw's occlusal plane sits, and which way its crowns point. */
-/* The two occlusal planes, half a millimetre apart. They used to be 6 mm apart, which
- * drew a dentition with its mouth open -- and read, at the pane's size, as a grin
- * rather than as an arch. Real teeth occlude: with both biting surfaces at the same
- * height the crowns meet exactly, because each one is built from its own surface toward
- * its own root. The 0.5 mm is there only so two coplanar surfaces do not z-fight. */
-const JAWS = {
-  mandible: { z: 0, down: -1 },
-  maxilla: { z: 0.5, down: 1 },
-};
-const N_AZ = 24;
+import { parseWebMesh } from './mesh.js';
+
+/** Where the baked bundle lives, relative to the page. Resolved against the document so
+ *  the same build serves `dentistry.dicomsegvr.com/app/` and the `/dentistry/` path. */
+const ASSET_DIR = 'assets/preview/';
 
 const GROUP_RGB = {
   jaws: [214, 205, 186],
@@ -57,252 +68,86 @@ const GROUP_RGB = {
  * mistake the case viewer made until the jaws were given `.22`/`.34`. The bone is
  * see-through, the sinuses and the airway are cavities and read as such, and the teeth,
  * the canals and the restorations are solid because they are the things being pointed
- * at. `highlightGroups` ghosts to 0.14 and restores to THESE rather than to 1, so a
- * highlight cannot make the diagram less readable than it was. */
+ * at. `highlightGroups` ghosts to GHOST_OPACITY and restores to THESE rather than to 1,
+ * so a highlight cannot make the diagram less readable than it was.
+ *
+ * The jaw number is lower than the schematic's 0.72 and that is a consequence of the
+ * change, not a preference: a real mandible and maxilla are a closed shell around the
+ * whole dentition, where the drawn arch was an open band. At 0.72 a real jaw hides
+ * everything inside it and the picker becomes a picture of bone. */
 const GROUP_OPACITY = {
-  // 0.72, not 0.42. At 0.42 every tooth ROOT showed through the bone and the diagram
-  // read as a ring of fangs rather than as a dentition -- 32 long cones seen through a
-  // translucent wall. At 0.72 the bone hides the roots and the crowns read as an arch,
-  // and the canals inside it come back the moment a canal model is hovered, which is
-  // what the highlight is for and what the caption tells the reader to do.
-  jaws: 0.72,
+  jaws: 0.30,
   teeth: 1,
   canals: 1,
-  sinuses: 0.5,
-  airway: 0.35,
+  sinuses: 0.45,
+  airway: 0.32,
   restorations: 1,
 };
 const GHOST_OPACITY = 0.14;
 
-/* ---------------------------------------------------------------- mesh primitives
- * A tiny builder: `push` a vertex, `ring` a circle in a frame, `skin` two rings into a
- * band. The same three operations `implants.js` uses, kept separate rather than shared
- * because that file's rings live in an implant's own frame and carry an analytic normal
- * per vertex for a specular highlight, and none of that applies to a diagram.
- */
-function builder() {
-  const verts = [];
-  const cells = [];
-  const push = (x, y, z) => { verts.push(x, y, z); return verts.length / 3 - 1; };
-  const tri = (a, b, c) => { cells.push(3, a, b, c); };
-  const skin = (lo, hi) => {
-    for (let i = 0; i < lo.length; i += 1) {
-      const j = (i + 1) % lo.length;
-      tri(lo[i], lo[j], hi[j]);
-      tri(lo[i], hi[j], hi[i]);
-    }
-  };
-  return { verts, cells, push, tri, skin };
-}
-
-/** A closed tube of elliptical cross-section along a polyline, capped at both ends. */
-function tube(b, path, rx, ry, nAz = N_AZ) {
-  if (path.length < 2) return;
-  const rings = [];
-  for (let k = 0; k < path.length; k += 1) {
-    const p = path[k];
-    const q = path[Math.min(path.length - 1, k + 1)];
-    const o = path[Math.max(0, k - 1)];
-    // The frame: tangent from a central difference, `up` fixed, side from their cross
-    // product. A fixed `up` is enough here because no path in this diagram is vertical.
-    const t = norm([q[0] - o[0], q[1] - o[1], q[2] - o[2]]);
-    const s = norm(cross(t, [0, 0, 1]));
-    const u = norm(cross(s, t));
-    const ring = [];
-    for (let i = 0; i < nAz; i += 1) {
-      const th = (2 * Math.PI * i) / nAz;
-      const a = Math.cos(th) * (typeof rx === 'function' ? rx(k / (path.length - 1)) : rx);
-      const c = Math.sin(th) * (typeof ry === 'function' ? ry(k / (path.length - 1)) : ry);
-      ring.push(b.push(p[0] + s[0] * a + u[0] * c,
-                       p[1] + s[1] * a + u[1] * c,
-                       p[2] + s[2] * a + u[2] * c));
-    }
-    rings.push(ring);
-  }
-  for (let k = 1; k < rings.length; k += 1) b.skin(rings[k - 1], rings[k]);
-  [[rings[0], path[0]], [rings[rings.length - 1], path[path.length - 1]]]
-    .forEach(([ring, p], end) => {
-      const c = b.push(p[0], p[1], p[2]);
-      for (let i = 0; i < ring.length; i += 1) {
-        const j = (i + 1) % ring.length;
-        if (end) b.tri(ring[i], ring[j], c); else b.tri(ring[j], ring[i], c);
-      }
-    });
-}
-
-/** A lathe: revolve a `[radius, z]` profile about the local z axis at `(x, y)`. */
-function lathe(b, x, y, z0, profile, nAz = N_AZ) {
-  const rings = profile.map(([r, dz]) => {
-    const ring = [];
-    for (let i = 0; i < nAz; i += 1) {
-      const th = (2 * Math.PI * i) / nAz;
-      ring.push(b.push(x + r * Math.cos(th), y + r * Math.sin(th), z0 + dz));
-    }
-    return ring;
-  });
-  for (let k = 1; k < rings.length; k += 1) b.skin(rings[k - 1], rings[k]);
-}
-
-function ellipsoid(b, c, r, nAz = N_AZ) {
-  const rings = [];
-  const nEl = Math.max(6, nAz / 2);
-  for (let k = 0; k <= nEl; k += 1) {
-    const ph = -Math.PI / 2 + (Math.PI * k) / nEl;
-    const ring = [];
-    for (let i = 0; i < nAz; i += 1) {
-      const th = (2 * Math.PI * i) / nAz;
-      ring.push(b.push(c[0] + r[0] * Math.cos(ph) * Math.cos(th),
-                       c[1] + r[1] * Math.cos(ph) * Math.sin(th),
-                       c[2] + r[2] * Math.sin(ph)));
-    }
-    rings.push(ring);
-  }
-  for (let k = 1; k < rings.length; k += 1) b.skin(rings[k - 1], rings[k]);
-}
-
-const norm = (v) => {
-  const n = Math.hypot(v[0], v[1], v[2]) || 1;
-  return [v[0] / n, v[1] / n, v[2] / n];
-};
-const cross = (u, v) => [u[1] * v[2] - u[2] * v[1], u[2] * v[0] - u[0] * v[2],
-                         u[0] * v[1] - u[1] * v[0]];
-
-/** The arch curve: `u` in [-1, 1] runs right to left. */
-function archPoint(u, jaw, inset = 0) {
-  const a = ARCH_A - inset;
-  const bb = ARCH_B - inset;
-  const th = u * 1.16;
-  return [a * Math.sin(th), -bb * Math.cos(th) + bb * 0.42, JAWS[jaw].z];
-}
-
-/* -------------------------------------------------------------------- the scene
- * One axial coordinate for everything: `w` is millimetres from the BITING SURFACE
- * toward the root, and physical z is `occlusal + down * w`. The mandible's crowns point
- * up and the maxilla's point down, so writing every profile in `w` is what keeps the
- * two jaws from being mirror images by accident -- the same reason `plan_metrics` states
- * its poses in `(s, t, z)` with a `down` factor rather than in signed z.
- *
- * Rough anatomy, and it only has to be rough: crown about 8 mm, root about 13, the bone
- * crest at the neck, the inferior alveolar canal below the molar apices and ending at
- * the mental foramen, the incisive canals carrying on to the midline from there.
- */
-const CREST_W = 8;          // the bone crest, at the tooth's neck
-const CANAL_W = 24;         // the inferior alveolar canal, below the molar apices
-
-function buildGroups() {
-  const g = {};
-
-  // --- jaws: an extruded ellipse along each arch, starting at the crest ----------
-  g.jaws = builder();
-  ['mandible', 'maxilla'].forEach((jaw) => {
-    const d = JAWS[jaw].down;
-    const path = [];
-    for (let k = 0; k <= 40; k += 1) {
-      const p = archPoint(-1 + (2 * k) / 40, jaw, 0);
-      path.push([p[0], p[1], p[2] + d * (CREST_W + 11)]);
-    }
-    // 4.6 across, not 5.5: a narrower ridge leaves the arch's curve visible from above
-    // instead of closing it into a wall.
-    tube(g.jaws, path, 4.6, 11.0);
-  });
-
-  // --- teeth: sixteen lathes per jaw, molars wider and shorter-crowned ----------
-  g.teeth = builder();
-  ['mandible', 'maxilla'].forEach((jaw) => {
-    const d = JAWS[jaw].down;
-    for (let i = 0; i < 16; i += 1) {
-      const u = -1 + (2 * i) / 15;
-      const p = archPoint(u, jaw, 0);
-      const molar = Math.abs(u) > 0.62;
-      const w = molar ? 4.4 : Math.abs(u) > 0.3 ? 3.4 : 2.7;
-      const crown = molar ? 7 : 9;
-      const root = molar ? 11 : 13;
-      // A BLUNT occlusal surface. The first version went from `0.62 w` straight into a
-      // taper, which makes a cone -- and a cone is a fang. A real crown is flat on top
-      // with a rounded margin, so the profile holds `0.86 w` for the first fifth of a
-      // millimetre and only then widens to full and narrows to the neck.
-      const profile = [
-        [0.05, -0.5],                       // capped, or the lathe is an open tube
-        [w * 0.86, -0.2],
-        [w, 0.5],
-        [w * 0.99, crown * 0.45],
-        [w * 0.78, crown * 0.85],
-        [w * 0.66, crown],                  // the neck, at the bone crest
-        [w * 0.58, crown + root * 0.25],
-        [w * 0.40, crown + root * 0.7],
-        [0.35, crown + root],               // the apex
-      ];
-      lathe(g.teeth, p[0], p[1], p[2], profile.map(([r, ww]) => [r, d * ww]));
-    }
-  });
-
-  // --- canals -------------------------------------------------------------------
-  g.canals = builder();
-  // The two inferior alveolar canals. They STOP at the mental foramen, which is the
-  // anatomy that made the anterior verdict impossible to grade until the accessory
-  // canals were measured: there is no IAC in front of it to be near.
-  [[-1, -0.34], [0.34, 1]].forEach(([u0, u1]) => {
-    const path = [];
-    for (let k = 0; k <= 24; k += 1) {
-      const u = u0 + ((u1 - u0) * k) / 24;
-      const p = archPoint(u, 'mandible', 3.2);
-      const d = JAWS.mandible.down;
-      path.push([p[0], p[1], p[2] + d * (CANAL_W - 2 * Math.cos(u * 1.6))]);
-    }
-    tube(g.canals, path, 1.5, 1.5, 14);
-  });
-  // ...and the incisive canals, which are what an ANTERIOR implant has to clear.
-  [[-0.34, -0.02], [0.34, 0.02]].forEach(([u0, u1]) => {
-    const path = [];
-    for (let k = 0; k <= 12; k += 1) {
-      const u = u0 + ((u1 - u0) * k) / 12;
-      const p = archPoint(u, 'mandible', 4.2);
-      const d = JAWS.mandible.down;
-      path.push([p[0], p[1], p[2] + d * (CANAL_W - 4 - 3 * Math.abs(u))]);
-    }
-    tube(g.canals, path, 0.8, 0.8, 10);
-  });
-
-  // --- sinuses, above the maxillary posteriors ---------------------------------
-  g.sinuses = builder();
-  [-1, 1].forEach((side) => {
-    const p = archPoint(side * 0.72, 'maxilla', 2);
-    ellipsoid(g.sinuses, [p[0] + side * 2, p[1] + 5, p[2] + CREST_W + 14], [9, 12, 9]);
-  });
-
-  // --- airway: the pharynx, behind the arch ------------------------------------
-  g.airway = builder();
-  tube(g.airway, [[0, 17, -30], [0, 18, -5], [0, 18, 20], [0, 16, 38]], 7.5, 9.5, 16);
-
-  // --- restorations: one crown and one implant, so the class has a shape --------
-  g.restorations = builder();
-  {
-    const d = JAWS.mandible.down;
-    const p = archPoint(-0.48, 'mandible', 0);
-    lathe(g.restorations, p[0], p[1], p[2],
-          [[0.2, -0.6], [3.4, 0.5], [3.5, 4.5], [2.9, 6.4], [0.2, 6.8]]
-            .map(([r, ww]) => [r, d * ww]));
-    const q = archPoint(0.48, 'mandible', 0);
-    lathe(g.restorations, q[0], q[1], q[2],
-          [[0.2, CREST_W - 0.4], [2.05, CREST_W], [2.05, CREST_W + 10],
-           [1.4, CREST_W + 11.6], [0.2, CREST_W + 12]]
-            .map(([r, ww]) => [r, d * ww]));
-  }
-  return g;
-}
+/* Groups excluded from the CAMERA FRAMING, not from the picture. The pharynx is a
+ * column that runs from the nasal cavity to below the larynx -- on the source case it is
+ * two and a half times the height of the dentition -- so a camera framed to include it
+ * makes the thing this picture is about small and off-centre. It is still drawn, still
+ * highlightable, and still ghosted like everything else. */
+const FRAME_EXCLUDE = ['airway'];
 
 /* --------------------------------------------------------------------- public API */
 let scene = null;
+/** The baked manifest, once fetched. Cached across mounts: the SPA shows and hides this
+ *  page rather than reloading it, and re-fetching six meshes on every visit would make a
+ *  tab switch cost what a cold load costs. */
+let bundle = null;
 
-/** Mount the schematic into `el`. Returns the group keys it drew, or null.
+async function loadBundle(base) {
+  if (bundle) return bundle;
+  const root = new URL(ASSET_DIR, base).href;
+  const manifest = await fetch(new URL('manifest.json', root).href).then((r) => {
+    if (!r.ok) throw new Error(`manifest ${r.status}`);
+    return r.json();
+  });
+  const groups = {};
+  await Promise.all(Object.entries(manifest.groups || {})
+    .filter(([, g]) => g.present && g.file)
+    .map(async ([key, g]) => {
+      const buf = await fetch(new URL(g.file, root).href).then((r) => {
+        if (!r.ok) throw new Error(`${g.file} ${r.status}`);
+        return r.arrayBuffer();
+      });
+      groups[key] = parseWebMesh(buf);
+    }));
+  bundle = { manifest, groups };
+  return bundle;
+}
+
+/** Mount the dentition into `el`. Resolves to the group keys it drew, or null.
  *
- *  Idempotent by teardown: mounting twice disposes the first, because the picker is on
- *  a page the SPA shows and hides rather than reloads, and a leaked WebGL context per
+ *  ASYNC, where the schematic was synchronous -- it builds nothing now and fetches six
+ *  meshes instead. Callers await it; `web/app.js::mountModelSchematic` is the only one.
+ *
+ *  Idempotent by teardown: mounting twice disposes the first, because the picker is on a
+ *  page the SPA shows and hides rather than reloads, and a leaked WebGL context per
  *  visit is the kind of thing that works for a week and then stops.
  */
-export function mountModelPreview(el) {
+export async function mountModelPreview(el, baseUrl) {
   if (!el) return null;
   disposeModelPreview();
+
+  let loaded;
+  try {
+    loaded = await loadBundle(baseUrl || document.baseURI);
+  } catch (e) {
+    // A missing bundle costs the reader a picture and nothing else. Named, because a
+    // silently empty pane is indistinguishable from a WebGL failure and they need
+    // different fixes.
+    console.warn('dentistry: the model preview bundle did not load: ' + e.message);
+    return null;
+  }
+  if (!Object.keys(loaded.groups).length) {
+    console.warn('dentistry: the model preview bundle declares no present groups');
+    return null;
+  }
+
   let grw;
   try {
     grw = vtkGenericRenderWindow.newInstance({ background: [0.05, 0.07, 0.1] });
@@ -312,13 +157,11 @@ export function mountModelPreview(el) {
     return null;
   }
   const renderer = grw.getRenderer();
-  const groups = buildGroups();
   const actors = {};
-  Object.keys(groups).forEach((key) => {
-    const b = groups[key];
+  Object.entries(loaded.groups).forEach(([key, mesh]) => {
     const poly = vtkPolyData.newInstance();
-    poly.getPoints().setData(Float32Array.from(b.verts), 3);
-    poly.setPolys(vtkCellArray.newInstance({ values: Uint32Array.from(b.cells) }));
+    poly.getPoints().setData(mesh.points, 3);
+    poly.setPolys(vtkCellArray.newInstance({ values: mesh.cells }));
     const mapper = vtkMapper.newInstance();
     mapper.setInputData(poly);
     const actor = vtkActor.newInstance();
@@ -332,35 +175,56 @@ export function mountModelPreview(el) {
     renderer.addActor(actor);
     actors[key] = actor;
   });
+
   // Frame the scene FIRST, then turn the camera without moving it closer or further.
   //
   // `resetCamera` picks both the focal point (the bounds centre) and the distance that
-  // frames them; overriding the position with a literal threw the second away, and on a
+  // frames them; overriding the position with a literal throws the second away, and on a
   // perspective camera that is the framing. So the direction is replaced and the
-  // distance `resetCamera` chose is kept -- three-quarter, from the patient's front
-  // right and above, which is the angle every dental diagram is drawn from.
+  // distance `resetCamera` chose is kept.
+  //
+  // The vertices are patient LPS millimetres, so `viewUp` is +z = superior and the
+  // direction below is from the patient's front right and above -- the angle every
+  // dental diagram is drawn from. Elevation matters more than azimuth: too flat and the
+  // two arches stack into a barrel and the horseshoe disappears, which is the one thing
+  // this picture has to show.
+  //
+  // FRAMED ON THE DENTITION, not on everything. This was the schematic's one free lunch:
+  // its bounds WERE the arch. A real case's bounds are dominated by the pharynx, which
+  // runs far down the neck, so `resetCamera` over all of it put the arch in the middle
+  // third of the pane and a constant zoom then cropped the mandible off the side rather
+  // than centring it. Hiding the tall actors for the reset and restoring them after
+  // frames the thing the picture is of, at whatever aspect the pane happens to have.
+  const tall = FRAME_EXCLUDE.map((k) => actors[k]).filter(Boolean);
+  tall.forEach((a) => a.setVisibility(false));
   renderer.resetCamera();
+  tall.forEach((a) => a.setVisibility(true));
   const cam = renderer.getActiveCamera();
   const f = cam.getFocalPoint();
   const d = cam.getDistance();
-  // Elevation matters more than azimuth here. At 25 degrees above the occlusal plane
-  // the two arches stack into a barrel and the horseshoe is invisible; at 45 the arch
-  // reads as an arch, which is the one thing this diagram has to communicate.
   const dir = norm([-0.42, -0.60, 0.68]);
   cam.setPosition(f[0] + dir[0] * d, f[1] + dir[1] * d, f[2] + dir[2] * d);
   cam.setViewUp(0, 0, 1);
+  // A little air, so the arch does not touch the pane's edges as it turns.
+  cam.zoom(0.92);
+  // AFTER the actors are visible again, or the airway clips out of the far plane the
+  // moment the turntable brings it round.
   renderer.resetCameraClippingRange();
   grw.resize();
-  scene = { grw, renderer, actors, el, spin: 0, raf: 0 };
+  scene = { grw, renderer, actors, el, raf: 0, manifest: loaded.manifest };
   highlightGroups(null);
   return Object.keys(actors);
 }
 
 /** Bring one model's groups forward and ghost the rest. `null` shows everything.
  *
- *  The ghost is 0.16 opacity rather than hidden: which structures a model does NOT own
+ *  The ghost is GHOST_OPACITY rather than hidden: which structures a model does NOT own
  *  is half of the answer, and a scene that empties out when you hover a canal model
- *  tells you nothing about where those canals are. */
+ *  tells you nothing about where those canals are.
+ *
+ *  Keys naming a group this case does not contain are ignored rather than treated as a
+ *  miss -- see the header. `missing` in the return value is what lets the caller say so.
+ */
 export function highlightGroups(keys) {
   if (!scene) return false;
   const want = keys && keys.length ? new Set(keys) : null;
@@ -373,6 +237,20 @@ export function highlightGroups(keys) {
   });
   scene.grw.getRenderWindow().render();
   return true;
+}
+
+/** Which of `keys` the mounted case does not contain. Empty when it contains them all. */
+export function missingGroups(keys) {
+  if (!scene || !keys) return [];
+  return keys.filter((k) => !scene.actors[k]);
+}
+
+/** How the caption should name what is on screen. Null before the bundle lands. */
+export function previewSource() {
+  if (!scene || !scene.manifest) return null;
+  const m = scene.manifest;
+  return { title: m.title || '', attribution: m.attribution || '',
+           job: m.source_job || '', absent: m.absent_groups || [] };
 }
 
 /** Resize to the container. The SPA changes this pane's width on every breakpoint. */
@@ -422,5 +300,12 @@ export function previewDebug() {
     out[k] = { points: m.getPoints().getNumberOfPoints(),
                opacity: Number(scene.actors[k].getProperty().getOpacity().toFixed(3)) };
   });
-  return { groups: out, spinning: !!scene.raf };
+  return { groups: out, spinning: !!scene.raf,
+           source: scene.manifest ? (scene.manifest.source_job || '') : '',
+           absent: (scene.manifest && scene.manifest.absent_groups) || [] };
+}
+
+function norm(v) {
+  const n = Math.hypot(v[0], v[1], v[2]) || 1;
+  return [v[0] / n, v[1] / n, v[2] / n];
 }
