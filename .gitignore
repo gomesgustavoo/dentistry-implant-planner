@@ -38,4 +38,5 @@ web-auth/fixtures/assets/
 # `scripts/record_tour.sh` + `scripts/caption_tour.sh` in two commands, and neither
 # belongs in history until there is a cut worth versioning.
 docs/tour-raw.mp4
+docs/tour-body.mp4
 docs/tour.mp4
