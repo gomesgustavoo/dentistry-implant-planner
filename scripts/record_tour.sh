@@ -65,7 +65,7 @@ google-chrome \
   --user-data-dir="$WORK/profile" \
   --no-first-run --no-default-browser-check --no-sandbox --disable-dev-shm-usage \
   --remote-debugging-port="$DEBUG_PORT" \
-  --window-size=2560,1440 \
+  --window-size=1920,1080 \
   --hide-scrollbars --force-device-scale-factor=1 \
   about:blank >"$WORK/chrome.log" 2>&1 &
 PIDS+=($!)

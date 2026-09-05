@@ -1,16 +1,24 @@
-/* Why are the MPR panes black in the recording? Ask the viewer, do not guess.
+/* Can the PLAN TAB be captured headless? Ask it, do not guess.
  *
- * Mounts the tour's own case through the tour's own server, in the tour's own Chrome
- * configuration, and reads back `DentistryViewer.debugState()` plus every failed network
- * request. `viewer/check-equivalence.mjs` mounts the same case headless successfully but
- * serves artifacts straight off disk; this serves them through the API, and the whole
- * question is whether that difference is what breaks the volume.
+ * The first tour recording found the Cornerstone MPR panes black in headless capture --
+ * `volumeRendered: true`, `lut.ok: true`, canvases present, and `mprMounted` false with
+ * `No imageId found within the specified criteria` on the console. That killed a tour
+ * built around the MPR view.
  *
- *   node scripts/tour_probe.mjs            # expects record_tour.sh's servers to be up
+ * The plan tab is a different stack: the panoramic and the cross-section are SERVER-
+ * rendered images drawn to plain 2-D canvases, and the 3-D pane is vtk.js actors, which
+ * did render in that same capture. So a tour built around the implant may capture
+ * perfectly where one built around MPR could not. This settles it by placing a real
+ * implant and writing the frame to disk.
+ *
+ *   node scripts/tour_probe.mjs                 # expects tour_stack.sh's servers up
  */
+import { writeFileSync } from 'node:fs';
+
 const PORT = Number(process.env.TOUR_PORT || 8807);
 const DEBUG_PORT = Number(process.env.TOUR_DEBUG_PORT || 9333);
-const CASE = process.env.TOUR_CASE || 'e9d0c06b-0e97-4c00-a43c-d9ea0ba8200e';
+const CASE = process.env.TOUR_CASE || '4aaa5797-69a3-4a3d-b8d2-bb8192a9b0fd';
+const OUT = process.env.TOUR_PROBE_OUT || '/tmp/dentistry-tour/probe.png';
 
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 
@@ -61,20 +69,11 @@ await ev('Page.addScriptToEvaluateOnNewDocument', { source: AUTH_STUB });
 await ev('Emulation.setDeviceMetricsOverride',
          { width: 2560, height: 1440, deviceScaleFactor: 1, mobile: false });
 
-const bad = [];
-const consoleErrs = [];
+const bad = []; const errs = [];
 on('Network.responseReceived', (p) => {
-  if (p.response.status >= 400) bad.push(`${p.response.status} ${p.response.url}`);
+  if (p.response.status >= 400) bad.push(`${p.response.status} ${p.response.url.slice(-70)}`);
 });
-on('Network.loadingFailed', (p) => bad.push(`FAILED ${p.errorText} ${p.requestId}`));
-on('Log.entryAdded', (p) => {
-  if (p.entry.level === 'error') consoleErrs.push(p.entry.text.slice(0, 200));
-});
-on('Runtime.consoleAPICalled', (p) => {
-  if (p.type === 'error' || p.type === 'warning') {
-    consoleErrs.push((p.args || []).map((a) => a.value || a.description || '').join(' ').slice(0, 200));
-  }
-});
+on('Log.entryAdded', (p) => { if (p.entry.level === 'error') errs.push(p.entry.text.slice(0, 160)); });
 
 const js = async (expression) => {
   const r = await ev('Runtime.evaluate', { expression, awaitPromise: true, returnByValue: true });
@@ -87,45 +86,57 @@ const js = async (expression) => {
 
 await ev('Page.navigate', { url: `http://127.0.0.1:${PORT}/index.html?probe=1#/case/${CASE}` });
 console.log('mounting…');
-await sleep(30000);
+await sleep(26000);
 
-console.log('\n--- viewer state -------------------------------------------------');
-console.log(JSON.stringify(await js(`(() => {
-  if (!window.DentistryViewer || !DentistryViewer.debugState) return 'no viewer';
-  const s = DentistryViewer.debugState();
-  if (!s) return 'debugState() is null — nothing mounted';
-  return {
-    volumeRendered: s.volumeRendered, surfaces: s.surfaces && s.surfaces.length,
-    lutOk: s.lut && s.lut.ok, mprCameras: s.mpr && s.mpr.map(v => v.slice),
-    actorsPerMpr: s.actorsPerViewport, mounted: s.mounts,
-  };
-})()`), null, 1));
+console.log('\n--- into the plan tab, and place a real implant --------------------');
+console.log(await js(`(async () => {
+  const tab = document.querySelector('[data-mode="plan"]');
+  if (!tab || tab.hidden) return 'no plan tab';
+  tab.click();
+  await new Promise(r => setTimeout(r, 11000));
+  const site = document.querySelector('#archChart .tooth[data-fdi="46"]');
+  if (!site) return 'no site 46 on the chart';
+  site.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  await new Promise(r => setTimeout(r, 16000));
+  const p = implantState();
+  const i = p.implants[0];
+  if (!i) return 'no implant placed';
+  const m = p.measured[i.id] || {};
+  return JSON.stringify({
+    fdi: i.site_fdi, dia: i.diameter_mm, len: i.length_mm,
+    canal: (m.verdict || {}).level,
+    shell: DentistryViewer.debugState().implants.verdicts[i.id],
+  });
+})()`));
 
-console.log('\n--- app state ----------------------------------------------------');
-console.log(JSON.stringify(await js(`(() => ({
-  gated: !!(document.getElementById('signinGate') && !document.getElementById('signinGate').hidden),
-  mode: (document.querySelector('.mode.on')||{}).dataset ? document.querySelector('.mode.on').dataset.mode : null,
-  planTabHidden: (document.getElementById('planTab')||{}).hidden,
-  mprMounted: !!(window.state && state.viewer && state.viewer.mprMounted),
-  volumeMeta: !!(window.state && state.viewer && state.viewer.volumeMeta),
-  mprLoadingText: (document.getElementById('mprMeta')||{}).textContent,
-  rows: document.querySelectorAll('#structures .srow').length,
-}))()`), null, 1));
-
-console.log('\n--- canvas pixels (chromatic count per MPR pane) ------------------');
+console.log('\n--- do the plan tab canvases actually have PIXELS? -----------------');
+// Chromatic-pixel counting, the method this repo already relies on: it separates "a
+// canvas exists" from "something was drawn on it", which a screenshot cannot.
 console.log(JSON.stringify(await js(`(() => {
   const out = {};
-  ['csAxial','csCoronal','csSagittal','cs3d'].forEach((id) => {
-    const host = document.getElementById(id);
-    const c = host && host.querySelector('canvas');
-    if (!c) { out[id] = 'no canvas'; return; }
-    out[id] = { w: c.width, h: c.height };
-  });
+  const count = (c) => {
+    if (!c || !c.width) return 'no canvas';
+    try {
+      const g = c.getContext('2d');
+      if (!g) return 'webgl (no 2d readback)';
+      const d = g.getImageData(0, 0, c.width, c.height).data;
+      let lit = 0;
+      for (let k = 0; k < d.length; k += 4) if (d[k] + d[k+1] + d[k+2] > 40) lit++;
+      return { px: c.width + 'x' + c.height, lit };
+    } catch (e) { return 'err: ' + e.message; }
+  };
+  out.panoramic = count(document.getElementById('panCanvas'));
+  out.section = count(document.getElementById('xsCanvas'));
+  const g3 = document.querySelector('#cs3d canvas');
+  out.pane3d = g3 ? { px: g3.width + 'x' + g3.height, webgl: true } : 'no canvas';
   return out;
 })()`), null, 1));
 
-console.log('\n--- failed requests ----------------------------------------------');
-console.log(bad.length ? bad.slice(0, 15).join('\n') : '(none)');
-console.log('\n--- console errors -----------------------------------------------');
-console.log(consoleErrs.length ? [...new Set(consoleErrs)].slice(0, 12).join('\n') : '(none)');
+console.log('\n--- writing a frame to disk ---------------------------------------');
+const shot = await ev('Page.captureScreenshot', { format: 'png' });
+writeFileSync(OUT, Buffer.from(shot.data, 'base64'));
+console.log(OUT);
+
+console.log('\n--- failed requests ---'); console.log(bad.length ? [...new Set(bad)].slice(0, 8).join('\n') : '(none)');
+console.log('\n--- console errors ---'); console.log(errs.length ? [...new Set(errs)].slice(0, 6).join('\n') : '(none)');
 process.exit(0);
