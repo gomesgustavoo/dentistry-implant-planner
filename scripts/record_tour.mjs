@@ -171,14 +171,18 @@ async function main() {
 
   // 2560x1440 regardless of any window the platform did or did not give us. Headless
   // Chrome's default viewport is 800x600 and would record a phone-shaped app.
+  // 1920x1080, not 2560x1440. `Page.captureScreenshot` at 2560 measured about 3-4 frames
+  // a second on this box, which reads as a slideshow however honest the timing is; 1920
+  // roughly doubles the rate and is still a crisp target for a product tour. The pixels
+  // this gives up are the ones nobody was going to look at.
   await ev('Emulation.setDeviceMetricsOverride', {
-    width: 2560, height: 1440, deviceScaleFactor: 1, mobile: false,
+    width: 1920, height: 1080, deviceScaleFactor: 1, mobile: false,
   });
 
   // Confirm the GPU before recording anything. A tour on SwiftShader is a video of a
   // software rasteriser and is not worth the disk.
   await go('#/cases');
-  await sleep(2500);
+  await sleep(3000);
   const renderer = await js(`(() => {
     const c = document.createElement('canvas');
     const gl = c.getContext('webgl2') || c.getContext('webgl');
@@ -202,14 +206,32 @@ async function main() {
   })()`);
   if (gated) throw new Error('the app is showing the sign-in gate: the auth stub did not take');
 
+  // The case with MISSING TEETH, deliberately. A full dentition has no edentulous site,
+  // so every adjacent-tooth clearance comes back "not graded" and the tour would be a
+  // tour of a caveat. This one is 30 of 32 with real gaps and 24 mm of bone at one molar
+  // site and 14 at another, which is what makes the grading beat possible at all.
   const caseId = CASE || await js(`(async () => {
     const r = await fetch('/v1/examples').then((x) => x.json());
-    const ex = (r.examples || []).find((e) => e.state === 'done' && /Full dentition/i.test(e.title || ''))
+    const ex = (r.examples || []).find((e) => e.state === 'done' && /F_041/i.test(e.title || ''))
       || (r.examples || []).find((e) => e.state === 'done');
     return ex ? ex.id : '';
   })()`);
   if (!caseId) throw new Error('no finished example case to record');
   console.log(`case: ${caseId}`);
+
+  // Open the case and let it mount BEFORE the capture loop starts, so the recording does
+  // not open on twenty seconds of a loading spinner. The rail is forced open because its
+  // collapsed state persists in localStorage and the dental chart lives in it.
+  await go(`#/case/${caseId}`);
+  await sleep(24000);
+  await js(`(() => { try { toggleRail(false); } catch (e) {} })()`);
+  await sleep(2500);
+  const ready = await js(`(() => ({
+    mounted: !!(window.state && state.viewer && state.viewer.mprMounted),
+    planTab: !(document.getElementById('planTab') || {}).hidden,
+  }))()`);
+  console.log('ready:', JSON.stringify(ready));
+  if (!ready.planTab) throw new Error('this case has no plan tab; nothing to record');
 
   // ------------------------------------------------------- the capture loop
   // A timed loop rather than the compositor's own stream: see the module docstring.
@@ -241,113 +263,110 @@ async function main() {
 
   console.log('\nrecording\n');
 
-  // ---------------------------------------------------------------- 1. the picker
-  beat('Every tooth gets one number', 'the catalogue page, real segmented dentition spinning');
-  await go('#/cases');
-  await sleep(9000);
+  /* ------------------------------------------------------------- the storyboard
+   * IMPLANT-FIRST, and everything else cut.
+   *
+   * The first tour opened on the catalogue and the model picker and reached an implant
+   * at 76 seconds. That is a tour of a settings page. What this product does that
+   * nothing else does is grade a clearance with the segmentation's own measured error
+   * subtracted -- so the tour is the implant, and the beat it is built around is a plan
+   * going CLEAR -> TIGHT -> BREACH as it is pushed toward the canal.
+   *
+   * It also never touches the MPR panes, and that is not only editorial: those are the
+   * one thing that does not render in a headless capture (`mprMounted` false,
+   * "No imageId found within the specified criteria"). The plan tab is server-rendered
+   * canvases plus vtk.js actors and captures perfectly, which `tour_probe.mjs` proved
+   * before this was written.
+   */
 
-  beat('47 structures from one model on one GPU');
-  await js(`window.scrollTo({top: 260, behavior: 'smooth'})`);
-  await sleep(4500);
-
-  beat('The picker shows what each model owns, and what is measured about it');
-  await js(`(() => {
-    const c = [...document.querySelectorAll('.modelcard')][1];
-    if (c) { c.scrollIntoView({block:'center', behavior:'smooth'}); c.dispatchEvent(new Event('mouseenter')); }
-  })()`);
-  await sleep(5000);
-  await js(`document.querySelectorAll('.modelcard').forEach(c => c.dispatchEvent(new Event('mouseleave')))`);
-  await js(`window.scrollTo({top: 0, behavior: 'smooth'})`);
-  await sleep(2000);
-
-  // ---------------------------------------------------------------- 2. the case
-  beat('A finished case: both jaws, 32 teeth, the canal');
-  await go(`#/case/${caseId}`);
-  await sleep(16000);
-
-  beat('MPR on the raw voxels, and 42 smoothed surfaces in 3-D');
-  await sleep(6000);
-
-  // ---------------------------------------------------------------- 3. the dock
-  beat('Filter 47 structures down to the ones you are reading');
-  await js(`(() => {
-    const f = document.getElementById('structFilter');
-    if (!f) return;
-    f.value = 'canal'; f.dispatchEvent(new Event('input'));
-  })()`);
-  await sleep(4500);
-
-  beat('Isolate the mandibular canal — every pane follows');
-  await js(`(() => {
-    const row = [...document.querySelectorAll('#structures .srow')]
-      .find(r => /Mandibular canal/.test(r.textContent));
-    if (row) row.querySelector('.name').click();
-  })()`);
-  await sleep(7000);
-
-  await js(`(() => {
-    const b = document.getElementById('isolateClear'); if (b && !b.hidden) b.click();
-    const f = document.getElementById('structFilter');
-    if (f) { f.value = ''; f.dispatchEvent(new Event('input')); }
-  })()`);
-  await sleep(3500);
-
-  // ---------------------------------------------------------------- 4. correcting
-  beat('Correct the mask — and see the cost before the stroke');
-  await js(`document.getElementById('editBtn').click()`);
-  await sleep(2500);
-  await js(`(() => {
-    const sel = document.getElementById('editSegment');
-    const opt = [...sel.options].find(o => /Mandibular canal/.test(o.textContent));
-    if (opt) { sel.value = opt.value; sel.dispatchEvent(new Event('change')); }
-  })()`);
-  await sleep(6500);
-
-  beat('0.46 mm model + 0.30 mm grid = 0.76 mm off every clearance');
-  await sleep(5000);
-  await js(`document.getElementById('editBtn').click()`);
-  await sleep(2000);
-
-  // ---------------------------------------------------------------- 5. the plan
-  beat('Place an implant');
-  await js(`document.querySelector('[data-mode="plan"]').click()`);
-  await sleep(9000);
-  await js(`(() => {
-    const b = [...document.querySelectorAll('button')].find(x => /add implant/i.test(x.textContent));
-    if (b) b.click();
-  })()`);
+  // ---------------------------------------------------------------- 1. the site
+  beat('Both jaws, every tooth numbered, the nerve canal found',
+       'plan tab open on a finished case');
+  await js(`(() => { const t = document.querySelector('[data-mode="plan"]'); if (t) t.click(); })()`);
   await sleep(11000);
 
-  beat('Graded against the canal, the incisive canals and the neighbouring teeth');
+  beat('Click a tooth position to plan an implant there');
+  await sleep(3500);
+  await js(`(() => {
+    const el = document.querySelector('#archChart .tooth[data-fdi="46"]');
+    if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  })()`);
+  await sleep(15000);
+
+  // ---------------------------------------------------------------- 2. the plan
+  beat('A first molar seeds a 4.8 x 10 mm implant — the platform that tooth needs');
   await sleep(6000);
 
-  beat('The safety envelope carries the worst grade, at the surface it is graded on');
-  await js(`(() => {
-    if (window.DentistryViewer && DentistryViewer.focusImplant) DentistryViewer.focusImplant('i1');
-  })()`);
-  await sleep(8000);
+  beat('12.45 mm to the inferior alveolar canal. CLEAR.');
+  await sleep(6000);
 
-  beat('Angulate it — the section draws the true angle, the panoramic the other one');
+  beat('Every clearance graded with the model\u2019s own measured error subtracted');
+  await sleep(6000);
+
+  // ---------------------------------------------------------------- 3. in context
+  beat('The implant in its neighbourhood — roots either side, canal below');
+  await js(`(() => { if (window.selectImplant) selectImplant(implantState().implants[0].id); })()`);
+  await sleep(9000);
+
+  // ---------------------------------------------------------------- 4. angulation
+  beat('Angulate it — the cross-section draws the true buccolingual angle');
   for (const _ of [1, 2, 3, 4]) {
     await js(`(() => {
       const inp = document.querySelector('#implantPanel input[data-f="tilt_deg"]');
       if (!inp) return;
-      inp.value = String(Number(inp.value || 0) + 4);
+      inp.value = String(Number(inp.value || 0) + 3);
       inp.dispatchEvent(new Event('change', { bubbles: true }));
     })()`);
-    await sleep(2200);
+    await sleep(2400);
   }
   await sleep(5000);
 
-  beat('Every clearance, with that structure’s own measured error subtracted');
+  // ---------------------------------------------------------------- 5. a tight site
+  beat('A site where the canal is close: 14 mm of bone, not 24');
   await js(`(() => {
-    if (window.DentistryViewer && DentistryViewer.resetCameras) DentistryViewer.resetCameras();
-    if (window.DentistryViewer && DentistryViewer.surfacesReady) DentistryViewer.surfacesReady();
+    const inp = document.querySelector('#implantPanel input[data-f="tilt_deg"]');
+    if (inp) { inp.value = '0'; inp.dispatchEvent(new Event('change', { bubbles: true })); }
   })()`);
+  await sleep(3000);
+  await js(`(() => {
+    const p = implantState();
+    while (p.implants.length) {
+      const id = p.implants[0].id; p.implants.shift();
+      try { DentistryViewer.removeImplant(id); } catch (e) {}
+    }
+    p.measured = {}; renderImplantPanel();
+    const el = document.querySelector('#archChart .tooth[data-fdi="38"]');
+    if (el) el.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+  })()`);
+  await sleep(17000);
+
+  beat('It seeds SHORTER on its own — the longest length that measures clear here');
   await sleep(7000);
 
+  // ---------------------------------------------------------------- 6. the grading
+  beat('Push it deeper and the plan is graded, not just drawn');
+  await js(`(() => { const i = implantState().implants[0]; i.length_mm = 10;
+                     requestMeasure(0); renderImplantPanel(); })()`);
+  await sleep(9000);
+
+  beat('10 mm — TIGHT. 2.95 mm of clearance.');
+  await sleep(6000);
+
+  await js(`(() => { const i = implantState().implants[0]; i.length_mm = 11.5;
+                     requestMeasure(0); renderImplantPanel(); })()`);
+  await sleep(9000);
+
+  beat('11.5 mm — BREACH. 1.85 mm, inside the margin.');
+  await sleep(6500);
+
+  // ---------------------------------------------------------------- 7. and back
+  beat('Back to a plan that clears — and it says so in millimetres');
+  await js(`(() => { const i = implantState().implants[0]; i.length_mm = 8;
+                     requestMeasure(0); renderImplantPanel(); })()`);
+  await sleep(10000);
+
   beat('dentistry.dicomsegvr.com — research preview, not a medical device');
-  await sleep(4500);
+  await sleep(5500);
 
   capturing = false;
   await capture;
