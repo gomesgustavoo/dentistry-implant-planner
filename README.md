@@ -40,6 +40,20 @@ the **worst grade established over every structure**, not the canal's alone. Whe
 could be graded it is a neutral shell, dimmer than any verdict: "we could not grade this"
 must never be able to read as "clear".
 
+**A new implant is seeded as a restoration, then fitted to the measurement.** The
+diameter comes from the tooth the site is meant to replace — 3.3 mm at a lateral
+incisor, 4.8 mm at a first molar — narrowed if the measured ridge cannot take it; the
+length starts at the 10 mm a planner reaches for and is capped at 13 mm however much
+bone there is. It is deliberately not "the largest fixture that fits", which is what the
+seeding used to compute and no clinician would plan.
+
+Then the seed is closed against the server's own answer rather than a proxy for it: the
+implant is measured, and if the canal clearance does not come back clear it steps down
+one catalogue length and measures again, up to three times. The card says which happened
+— *shortened 2 sizes — the longest length that measures clear of the canal here*, or the
+refusal that no catalogue length did. Any deliberate edit ends the loop, so it can never
+fight the person using it.
+
 **Correct the mask, and every number is recomputed from the correction.** Cornerstone's
 labelmap tools in the right dock; on apply, the worker rebuilds the distance fields, the
 meshes, the outlines, the structure set and the per-site bone heights. What it does not
@@ -109,6 +123,19 @@ slice tab — the MPR panes show the same three planes from the same volume and
 cross-reference each other, so it was a second and worse way to do what the tab beside it
 already did.
 
+The dock belongs to the MPR tab alone. Switching to implant planning takes it away
+entirely, along with the button that opens it: there is no mask editing on that tab, and a
+toolbar that cannot write is worse than no toolbar. The plan tab narrows the 3-D pane to
+the anatomy the implant is graded against — the canals, the sinuses, the working jaw, the
+teeth within 24 mm of the site and any restorations among them — and shows the whole case
+when no implant is selected.
+
+In the structure list a click isolates one structure and takes every pane to it;
+⌘/Ctrl-click adds to the isolate rather than replacing it, so a canal and the two teeth
+either side of a site can be up together. The 3-D camera then frames the union of what is
+selected, and a selection spanning both arches is viewed straight from the buccal side
+rather than tilted through one arch at the other.
+
 ## Gates
 
 Nothing here is asserted by comment if it can be asserted by a check.
@@ -125,7 +152,15 @@ node viewer/check-equivalence.mjs                      # browser vs Python geome
 
 `--prove` is the one worth knowing about: an assertion that cannot be shown to fail is
 treated as a bug, because this repo has shipped vacuous ones before. It currently proves
-11 of 11.
+12 of 12 — and not all twelve breaks are fixture edits: the multi-structure isolate is
+guarded by a break that reverts the app to single-select at runtime, because no amount of
+mutated JSON can exercise a defect that lives in a click handler.
+
+Some things only fail while a volume is mounted, which the fixture harness never does.
+`scripts/isolate_probe.mjs` is the pattern for those: it drives the real case in headless
+Chrome on the real GPU and reads the answer back out of the viewer rather than off the
+screen — for the isolate, that the camera's `parallelScale` actually grew to fit the
+selection, which no screenshot comparison would catch.
 
 ## What is not in this repository
 
@@ -141,6 +176,12 @@ treated as a bug, because this repo has shipped vacuous ones before. It currentl
   render a section.
 - **Secrets.** `.worker.env` is git-ignored; the k8s manifests reference a cluster Secret
   by name and carry no values.
+- **The tour recording.** `scripts/record_tour.sh` drives the real app in headless Chrome
+  and stamps a caption timestamp at each step, `caption_tour.sh` burns them in from a
+  subtitle file and `finish_tour.sh` adds the cards — three commands from a clean tree.
+  The cut itself is not committed for the same reason the fixtures are not: it is a
+  recording of a held-out ToothFairy3 case, and redistributing that imagery is a
+  licensing decision this repository should not make on its own.
 
 ## Contact
 
