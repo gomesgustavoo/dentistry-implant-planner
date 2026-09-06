@@ -4860,6 +4860,12 @@ function planKeySet(opts) {
   // It is still drawn on the SECTION, where it is behind the outline rather than in
   // front of it and is the thing the -2.05 mm is measured to.
   const sel = (p.implants || []).find((i) => i.id === p.selected);
+  // NOTHING SELECTED, NOTHING TO NARROW FOR. The 3-D narrowing exists for one reason:
+  // at implant zoom every neighbour sits between the implant and the camera. With no
+  // implant on screen there is nothing being hidden, and narrowing anyway left the plan
+  // tab opening on a partial case -- one jaw, no restorations -- which reads as a worse
+  // segmentation rather than as a focused view. `null` means "no focus" to the viewer.
+  if (forThree && !sel) return null;
   const siteFdi = sel && sel.site_fdi != null ? String(sel.site_fdi) : null;
   const sites = (((p.arch || {}).jaws || {})[p.jaw] || {}).sites || {};
   const here = sel ? sel.s_mm : null;
@@ -4867,11 +4873,38 @@ function planKeySet(opts) {
   (allStructures() || []).forEach((st) => {
     const id = String(st.id || '');
     const fdi = st.fdi != null ? String(st.fdi) : null;
-    if (/canal/.test(id) || /sinus/.test(id) || id === p.jaw) { out.add(st.index); return; }
+    // AN ALLOWLIST, not "everything that is not a tooth".
+    //
+    // The denylist version was written first and it pulled in the PHARYNX -- a purple
+    // column running the height of the scan, which at implant zoom is a translucent wall
+    // straight through the middle of the pane, burying the neighbouring roots this change
+    // exists to reveal. It was the same mistake as adding the opposing jaw, which was
+    // tried in the same pass and reverted for the same reason. A denylist admits whatever
+    // is added to the taxonomy next, and the taxonomy has 89 entries now.
+    //
+    // What is context for placing a screw, and nothing else:
+    //   * every nerve canal -- the thing the whole product measures to;
+    //   * the maxillary sinuses -- the upper jaw's equivalent constraint;
+    //   * bridges, crowns and existing implants -- what the docstring above calls
+    //     "things the reader is deciding against", and what the old code silently
+    //     dropped despite saying so;
+    //   * the WORKING jaw, ghosted, because it encloses the implant;
+    //   * the neighbouring teeth, below.
+    if (/canal/.test(id) || /^sinus_max/.test(id)
+        || id === 'bridge' || id === 'crown' || id === 'implant') {
+      out.add(st.index); return;
+    }
+    if (id === 'maxilla' || id === 'mandible') {
+      // The opposing jaw is a wall between the camera and a site in this one.
+      if (id === p.jaw) out.add(st.index);
+      return;
+    }
     if (!/^tooth_/.test(id)) return;
     if (forThree && fdi && fdi === siteFdi) return;          // the tooth being replaced
-    // In 3-D, only the neighbours: 14 mm along the arch reaches two teeth anteriorly
-    // and one posteriorly, which is the span the adjacent-tooth clearance is about.
+    // In 3-D, the neighbours. 14 mm reached ONE tooth each way on a molar site -- a
+    // lower molar is 10-11 mm across, so the second neighbour fell outside by a
+    // millimetre and vanished. 24 mm reaches two each way, which is the span a reader
+    // checks an emergence profile and a mesiodistal gap against.
     if (forThree && here != null && fdi && sites[fdi] && sites[fdi].s_mm != null
         && Math.abs(sites[fdi].s_mm - here) > NEIGHBOUR_SPAN_MM) return;
     out.add(st.index);
@@ -4879,8 +4912,13 @@ function planKeySet(opts) {
   return out;
 }
 
-/** How far along the arch a tooth still counts as a neighbour of this site. */
-const NEIGHBOUR_SPAN_MM = 14;
+/** How far along the arch a tooth still counts as a neighbour of this site.
+ *
+ *  24, not 14. A lower first molar is 10-11 mm mesiodistally, so at 14 the SECOND
+ *  neighbour each way missed the cut by about a millimetre and simply was not drawn --
+ *  which looks like the model failed to segment it, on a pane whose whole job is showing
+ *  the implant among the teeth it has to sit between. */
+const NEIGHBOUR_SPAN_MM = 24;
 
 /* How see-through the anatomy is while planning.
  *
@@ -4906,14 +4944,21 @@ function refreshPlanFocus() {
   const v = state.viewer;
   if (!v || !window.DentistryViewer || !DentistryViewer.setSurfaceFocus) return;
   const plan = v.mode === 'plan';
-  DentistryViewer.setSurfaceFocus(plan ? planKeySet({ three: true }) : null);
+  const focus = plan ? planKeySet({ three: true }) : null;
+  DentistryViewer.setSurfaceFocus(focus);
   if (!DentistryViewer.setSurfaceOpacity) return;
+  // GHOSTING IS FOR SEEING PAST SOMETHING. It exists because at implant zoom the jaw
+  // encloses the implant and the neighbours cross it, so both have to go translucent for
+  // the metal to be visible at all. With no implant selected there is nothing to see past
+  // -- `focus` is null for exactly that reason -- and ghosting anyway just handed the
+  // reader a washed-out case and called it a plan view.
+  const ghosting = plan && focus != null;
   (allStructures() || []).forEach((st) => {
     const id = String(st.id || '');
     const ghost = /jaw|maxilla|mandible/.test(id) ? PLAN_JAW_OPACITY
       : /^tooth_/.test(id) ? PLAN_TOOTH_OPACITY : null;
     if (ghost == null) return;
-    DentistryViewer.setSurfaceOpacity(st.index, plan ? ghost : null);
+    DentistryViewer.setSurfaceOpacity(st.index, ghosting ? ghost : null);
   });
 }
 
