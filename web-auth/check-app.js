@@ -42,7 +42,9 @@ const REQUIRED = [
   'renderStructures', 'renderFindings', 'renderDownloads', 'renderSeries',
   'renderRunDetails', 'renderArch', 'renderAccuracy',
   'accuracyById', 'accuracyCanal', 'diceCell',
-  'toggleIsolate',
+  // The isolate is a SET of structures, so it has three parts, not one: the toggle, the
+  // clear that must put every structure back, and the button that carries the count.
+  'toggleIsolate', 'clearIsolate', 'renderIsolateClear', 'focusIsolated',
   // --- stages --------------------------------------------------------------
   // `selectPlane` went with the Slices tab. So did `draw`, `jumpTiles`, `loadContours`,
   // `tileUrl`, `loadImage` and `planeInfo` -- the MPR panes show the same three planes

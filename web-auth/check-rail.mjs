@@ -312,6 +312,43 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
   }
   await new Promise((r) => setTimeout(r, 200));
 
+  // MULTI-SELECT ISOLATE, driven rather than assumed. Until 0.27.0 the isolate was a
+  // single index, and a harness that only asserted "a row is marked sel" would have
+  // passed against it unchanged -- so this exercises the ADDITIVE click specifically,
+  // and the arithmetic (hidden === present - selected) is what separates a real isolate
+  // from a class name applied to a row. (No backticks in this function: it is
+  // stringified into the page.)
+  const isolate = (() => {
+    if (typeof toggleIsolate !== 'function' || !state.viewer) return null;
+    const rows = [...document.querySelectorAll('#structures .srow')];
+    if (rows.length < 2) return null;
+    // Pre-0.27 behaviour, on demand: drop the additive argument on the floor. This is
+    // what --prove breaks, because none of the assertions below can be shown to fail
+    // by mutating a fixture -- the defect they guard is behavioural.
+    if (REPORT.__breakMultiIsolate) {
+      const single = toggleIsolate;
+      window.toggleIsolate = (i) => single(i);
+    }
+    const a = Number(rows[0].dataset.index);
+    const b = Number(rows[1].dataset.index);
+    const present = presentIndices().size;
+    const btn = () => document.getElementById('isolateClear') || {};
+    toggleIsolate(a);
+    const one = [state.viewer.isolated.size, state.viewer.hidden.size];
+    toggleIsolate(b, true);
+    const two = [state.viewer.isolated.size, state.viewer.hidden.size];
+    const selTwo = document.querySelectorAll('#structures .srow.sel').length;
+    const label = String(btn().textContent || '');
+    const shown = btn().hidden === false;
+    toggleIsolate(b, true);                       // ...and drop it again
+    const back = state.viewer.isolated.size;
+    clearIsolate();
+    return { present, one, two, selTwo, label, shown, back,
+             cleared: [state.viewer.isolated.size, state.viewer.hidden.size],
+             clearedBtn: btn().hidden === true,
+             clearedSel: document.querySelectorAll('#structures .srow.sel').length };
+  })();
+
   const rail = document.querySelector('.rail') || document.body;
   // The right DOCK: tools, and the structures they write into. Structures moved out of
   // the rail into it, so every structure-shaped assertion below reads from here. The
@@ -430,6 +467,7 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
     accuracy: vis(document.getElementById('accuracyCard')) ? 1 : 0,
     plan: vis(document.getElementById('planTab')) ? 1 : 0,
     rows: dock.querySelectorAll('.srow').length,
+    isolate,
     // The dock's own furniture, asserted structurally: a dock that renders but whose
     // structure list is not inside it would pass the row count from anywhere on the
     // page. (No backticks in this function: it is stringified into the page.)
@@ -794,6 +832,23 @@ async function run(breakage) {
           if (!r.structuresInDock) fail(`${at}: #structuresCard is not inside the dock`);
           if (!r.editBarInDock) fail(`${at}: #editBar is not inside the dock`);
           if (!r.structFilter) fail(`${at}: the structure filter is missing`);
+          // Multi-select isolate. Asserted as arithmetic against the PRESENT count,
+          // because "a row is marked sel" was true of the single-index version too.
+          if (r.rows >= 2 && !r.isolate) fail(`${at}: the isolate could not be driven at all`);
+          if (r.isolate) {
+            const i = r.isolate;
+            if (i.one[0] !== 1) fail(`${at}: a plain click isolated ${i.one[0]} structure(s), expected 1`);
+            if (i.one[1] !== i.present - 1) fail(`${at}: isolating one hid ${i.one[1]} of ${i.present}, expected ${i.present - 1}`);
+            if (i.two[0] !== 2) fail(`${at}: a modifier-click left ${i.two[0]} isolated, expected 2 -- the additive click is doing nothing`);
+            if (i.two[1] !== i.present - 2) fail(`${at}: two isolated hid ${i.two[1]} of ${i.present}, expected ${i.present - 2}`);
+            if (i.selTwo !== 2) fail(`${at}: ${i.selTwo} row(s) marked as isolated, expected 2`);
+            if (!i.shown) fail(`${at}: the clear-isolate button is hidden while 2 are isolated`);
+            if (!/\(2\)/.test(i.label)) fail(`${at}: the clear button does not carry the count -> "${i.label}"`);
+            if (i.back !== 1) fail(`${at}: dropping one of two left ${i.back} isolated, expected 1`);
+            if (i.cleared[0] !== 0 || i.cleared[1] !== 0) fail(`${at}: after clearing, ${i.cleared[0]} isolated and ${i.cleared[1]} still hidden -- a cleared isolate must restore every structure`);
+            if (!i.clearedBtn) fail(`${at}: the clear-isolate button is still shown after clearing`);
+            if (i.clearedSel !== 0) fail(`${at}: ${i.clearedSel} row(s) still marked as isolated after clearing`);
+          }
           // The Slices tab is retired. Half a revert -- a stray tab button, or a stage
           // left in the markup -- would otherwise ship silently.
           if (r.slicesTab) fail(`${at}: the retired Slices tab button is back in the DOM`);
@@ -974,6 +1029,13 @@ if (mode === '--selftest') {
     // made of, and until the fixture had real images nothing could see it.
     'the cross-section failing to paint': (n, f, arch) => {
       arch.__breakImages = true;
+      return f;
+    },
+    // The isolate assertions guard BEHAVIOUR, so no fixture mutation can exercise them.
+    // This reverts the app to the pre-0.27 single-index isolate at runtime -- the exact
+    // regression a careless revert would ship -- and every additive assertion must fail.
+    'the additive click falling back to single-select': (n, f) => {
+      f.__breakMultiIsolate = true;
       return f;
     },
     // --- the hand-corrected path. Only reachable in `editedPlanCheck`, so both of
