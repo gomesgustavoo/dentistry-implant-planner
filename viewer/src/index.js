@@ -919,12 +919,16 @@ export function set3dMode(mode) {
   engine.renderViewports(state.allIds || state.viewportIds);
 }
 
-/** Aim the 3D camera at one structure, from outside the arch.
+/** Aim the 3D camera at one structure -- or at a whole isolate -- from outside the arch.
  *
  *  The VOLUME_3D camera is PARALLEL projection, so moving it closer changes nothing --
  *  `parallelScale` is the only knob that zooms, and that cost a build cycle to learn.
  *  The radial direction comes from the arch centre so the view is always from the
  *  buccal side rather than through the opposing arch.
+ *
+ *  `opts.indices` frames several structures at once (union of their mesh bounds);
+ *  `opts.index` is the one-structure form and is unchanged. `opts.upper` is a tri-state:
+ *  true tilts up at the maxilla, false down at the mandible, null does not tilt.
  */
 export function focusStructure(centroid, opts) {
   if (!state || !engine || !centroid) return false;
@@ -934,21 +938,45 @@ export function focusStructure(centroid, opts) {
   if (target.some((v) => !Number.isFinite(v))) return false;
 
   const archCentre = (opts && opts.archCentre) || state.archCentre;
-  const upper = !!(opts && opts.upper);
+  // Tri-state. `upper: null` means "do not tilt at all", which is what a selection
+  // spanning both arches needs: either tilt would look through one arch at the other.
+  // Absent still means lower, as it always did.
+  const upper = opts && opts.upper === null ? null : !!(opts && opts.upper);
   let distance = (opts && opts.distance) || 95;
   let parallelScale = null;
 
-  const surface = state.surfaces.get(Number((opts && opts.index) ?? -1));
-  if (surface) {
+  // One index or many. A multi-structure isolate is framed on the UNION of its meshes,
+  // because a canal plus the two teeth over it does not fit in any one of their boxes.
+  const indices = (opts && Array.isArray(opts.indices) && opts.indices.length)
+    ? opts.indices.map(Number)
+    : [Number((opts && opts.index) ?? -1)];
+  let box = null;
+  indices.forEach((i) => {
+    const surface = state.surfaces.get(i);
+    if (!surface) return;
     try {
-      // The mesh's OWN bounds, because resetCamera would frame the volume instead.
+      // The meshes' OWN bounds, because resetCamera would frame the volume instead.
       const b = surface.mapper.getInputData().getBounds();
-      const radius = 0.5 * Math.hypot(b[1] - b[0], b[3] - b[2], b[5] - b[4]);
-      if (radius > 0.5) {
-        parallelScale = radius / 0.62;
-        distance = Math.max(18, radius / (Math.tan(Math.PI / 12) * 0.62));
-      }
+      if (!b || b.some((x) => !Number.isFinite(x))) return;
+      box = box ? [Math.min(box[0], b[0]), Math.max(box[1], b[1]),
+                   Math.min(box[2], b[2]), Math.max(box[3], b[3]),
+                   Math.min(box[4], b[4]), Math.max(box[5], b[5])] : b.slice();
     } catch { /* no input data yet */ }
+  });
+  if (box) {
+    const radius = 0.5 * Math.hypot(box[1] - box[0], box[3] - box[2], box[5] - box[4]);
+    if (radius > 0.5) {
+      parallelScale = radius / 0.62;
+      distance = Math.max(18, radius / (Math.tan(Math.PI / 12) * 0.62));
+    }
+    // With several structures the focal point is the centre of the BOX, not the mean of
+    // their centroids: two molars and the canal between them have a mean that sits in
+    // the middle of one of them, which frames that one and clips the rest.
+    if (indices.length > 1) {
+      target[0] = (box[0] + box[1]) / 2;
+      target[1] = (box[2] + box[3]) / 2;
+      target[2] = (box[4] + box[5]) / 2;
+    }
   }
 
   let radial = archCentre
@@ -961,7 +989,7 @@ export function focusStructure(centroid, opts) {
   }
   radial = [radial[0] / len, radial[1] / len, 0];
 
-  const z = upper ? 0.36 : -0.36;
+  const z = upper === null ? 0 : upper ? 0.36 : -0.36;
   const dir = [radial[0], radial[1], z];
   const norm = Math.hypot(dir[0], dir[1], dir[2]);
   try {
@@ -1264,7 +1292,7 @@ export const viewport3dId = VIEWPORT_3D;
 // 9 replaces the picker's parametric schematic with a real baked segmentation and
 // moves the DSVM parser into its own module; 10 frames the 3-D pane on the implant's
 // NEIGHBOURHOOD rather than on the implant.
-export const version = '10';
+export const version = '11';
 
 export const {
   setImplantArch,

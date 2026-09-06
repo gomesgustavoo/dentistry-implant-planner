@@ -2143,7 +2143,11 @@ async function openCase(jobId, opts) {
   const r = job.reports || {};
   state.viewer = {
     jobId, job, report: r,
-    hidden: new Set(), isolated: null, centroids: null, structQuery: '',
+    // `isolated` is a SET, not one index: a planner comparing a canal against the two
+    // teeth either side of a site needs all three up at once, and the single-index
+    // version made that three clicks that each undid the last.
+    hidden: new Set(), isolated: new Set(), isolateLast: null,
+    centroids: null, structQuery: '',
     mode: 'volume', mprMounted: false, volumeMeta: null,
   };
   if (window.DentistryViewer) await DentistryViewer.unmount().catch(() => {});
@@ -2468,7 +2472,7 @@ function renderArch(r) {
     if (!has) cls.push('absent');
     else {
       if (v && v.hidden.has(s.index)) cls.push('off');
-      if (v && v.isolated === s.index) cls.push('sel');
+      if (v && v.isolated.has(s.index)) cls.push('sel');
     }
     // In plan mode every position is a site, so every position is a target. Marking
     // them lets the CSS say "clickable here" without re-deriving the rule.
@@ -2497,18 +2501,25 @@ function renderArch(r) {
       return;
     }
     if (g.classList.contains('absent')) return;
-    g.onclick = () => toggleIsolate(Number(g.dataset.index));
+    g.onclick = (e) => toggleIsolate(Number(g.dataset.index), addKey(e));
   });
   const n = present.size;
   // The hint read the same in both views, which made it useless in one of them: what
   // a click does depends on which stage is open, and "isolate" is only half of it.
   $('chartHint').textContent =
     planning ? 'click a position — places an implant there'
-    : v && v.isolated != null ? 'click again to clear'
+    : v && v.isolated.size > 1 ? `${v.isolated.size} isolated — ${ADD_KEY}-click to add or drop one`
+    : v && v.isolated.size ? `click again to clear — ${ADD_KEY}-click to add another`
     : !(v && v.centroids) ? `${n} structures`
     : v.mode === 'volume' ? 'click a tooth — panes and 3D follow'
     : 'click a tooth — jumps to its slice';
 }
+
+/* Add-to-selection is the platform's own modifier, named the way the reader's own
+ * keyboard names it. A hint that says "Ctrl-click" to a Mac user is a hint that does
+ * not work, and this is the only affordance the multi-structure isolate has. */
+const ADD_KEY = /Mac|iPhone|iPad/.test(navigator.platform || navigator.userAgent) ? '⌘' : 'Ctrl';
+const addKey = (e) => !!(e && (e.ctrlKey || e.metaKey || e.shiftKey));
 
 /** The chart tooltip in plan mode: what this site is, and how much bone it has.
  *
@@ -2545,32 +2556,64 @@ function siteTitle(fdi, label, has) {
  * 29** showing no overlay at all, because the tooth simply was not on whatever slice
  * happened to be open. The lesson outlived that tab -- every view this isolates in has
  * to be navigated to the structure, or the isolate reads as a failure. */
-async function toggleIsolate(index) {
+async function toggleIsolate(index, additive) {
   const v = state.viewer;
   if (!v) return;
   const all = [...presentIndices()];
-  if (v.isolated === index) {
-    v.isolated = null;
-    v.hidden.clear();
+  const sel = v.isolated;
+  if (additive) {
+    // Additive click never clears the whole selection by accident: dropping the last
+    // member does end the isolate, but only because the set became empty, and the
+    // branch below restores everything rather than leaving a case with nothing shown.
+    if (sel.has(index)) sel.delete(index);
+    else sel.add(index);
+  } else if (sel.size === 1 && sel.has(index)) {
+    sel.clear();
   } else {
-    v.isolated = index;
-    v.hidden = new Set(all.filter((i) => i !== index));
-    const c = v.centroids && v.centroids[index];
-    if (c && window.DentistryViewer) DentistryViewer.jumpTo(c);
-    // The 3D camera is aimed further down, AFTER pushVisibility: it frames whatever is
-    // visible, so aiming it while the rest of the arch is still shown would frame the
-    // arch and leave the tooth a speck.
+    sel.clear();
+    sel.add(index);
   }
-  $('isolateClear').hidden = v.isolated == null;
+  v.isolateLast = sel.has(index) ? index : ([...sel][sel.size - 1] ?? null);
+  v.hidden = sel.size ? new Set(all.filter((i) => !sel.has(i))) : new Set();
+  renderIsolateClear();
   pushVisibility(all);
-  if (v.isolated != null) {
-    const c = v.centroids && v.centroids[v.isolated];
-    if (c) focus3d(v.isolated, c);
+  if (sel.size) {
+    // The 3D camera is aimed AFTER pushVisibility: it frames whatever is visible, so
+    // aiming it while the rest of the arch is still shown would frame the arch and
+    // leave the selection a speck.
+    const c = v.centroids && v.isolateLast != null && v.centroids[v.isolateLast];
+    if (c && window.DentistryViewer) DentistryViewer.jumpTo(c);
+    focusIsolated();
   } else if (window.DentistryViewer && v.mprMounted) {
     DentistryViewer.surfacesReady();      // clearing isolate re-frames the whole arch
   }
   renderStructures(v.report);
   renderArch(v.report);
+}
+
+/** End the isolate and put every structure back. */
+function clearIsolate() {
+  const v = state.viewer;
+  if (!v || !v.isolated.size) return;
+  v.isolated.clear();
+  v.isolateLast = null;
+  v.hidden.clear();
+  renderIsolateClear();
+  pushVisibility([...presentIndices()]);
+  if (window.DentistryViewer && v.mprMounted) DentistryViewer.surfacesReady();
+  renderStructures(v.report);
+  renderArch(v.report);
+}
+
+/** The clear button carries the count, because with a multi-structure isolate the
+ *  reader cannot otherwise tell "two selected" from "one selected and one hidden". */
+function renderIsolateClear() {
+  const v = state.viewer;
+  const b = $('isolateClear');
+  if (!b || !v) return;
+  const n = v.isolated.size;
+  b.hidden = n === 0;
+  b.textContent = n > 1 ? `clear isolate (${n})` : 'clear isolate';
 }
 
 /** Point the MPR cameras at whatever is currently isolated, if anything.
@@ -2582,11 +2625,50 @@ async function toggleIsolate(index) {
  * replayed it afterwards. */
 function syncMprToIsolate() {
   const v = state.viewer;
-  if (!v || v.isolated == null || !v.mprMounted || !window.DentistryViewer) return false;
-  const c = v.centroids && v.centroids[v.isolated];
+  if (!v || !v.isolated.size || !v.mprMounted || !window.DentistryViewer) return false;
+  // The crosshair goes to ONE point, so it goes to the structure that was clicked last
+  // rather than to the mean of the selection -- with a canal and two teeth up, the mean
+  // is a point in bone that belongs to none of them.
+  const last = v.isolateLast != null && v.isolated.has(v.isolateLast)
+    ? v.isolateLast : [...v.isolated][0];
+  const c = v.centroids && v.centroids[last];
   if (!c) return false;
-  focus3d(v.isolated, c);
+  focusIsolated();
   return DentistryViewer.jumpTo(c);
+}
+
+/** Frame the 3D pane on the isolate, however many structures are in it.
+ *
+ *  One structure keeps the old single-structure path exactly. Two or more are framed
+ *  from the UNION of their mesh bounds, which is the only thing that fits a canal and
+ *  the teeth over it in one view -- aiming at the mean centroid with a single
+ *  structure's zoom put the selection half off-screen. */
+function focusIsolated() {
+  const v = state.viewer;
+  if (!v || !v.mprMounted || !window.DentistryViewer) return false;
+  const sel = [...v.isolated];
+  if (!sel.length) return false;
+  if (sel.length === 1) {
+    const c = v.centroids && v.centroids[sel[0]];
+    return c ? focus3d(sel[0], c) : false;
+  }
+  const pts = sel.map((i) => v.centroids && v.centroids[i]).filter(Boolean);
+  if (!pts.length) return false;
+  const mean = [0, 1, 2].map((k) => pts.reduce((a, p) => a + Number(p[k]), 0) / pts.length);
+  const all = allStructures();
+  const fdis = sel.map((i) => (all.find((s) => s.index === i) || {}).fdi);
+  // Tilt up at the upper arch and down at the lower one, as the single-structure path
+  // does -- but only when the whole selection is in one arch. A selection spanning both,
+  // or containing a structure that belongs to neither, is viewed straight from the
+  // buccal side, because either tilt would look through one arch at the other.
+  const upper = fdis.every((f) => f != null && f < 30) ? true
+    : fdis.every((f) => f != null && f >= 30) ? false
+    : null;
+  return DentistryViewer.focusStructure(mean, {
+    indices: sel,
+    archCentre: v.archCentre,
+    upper,
+  });
 }
 
 /** Point the 3D camera at the isolated structure, from the buccal side.
@@ -3377,7 +3459,7 @@ function renderStructures(r) {
       shown += 1;
       const cls = ['srow'];
       if (v && v.hidden.has(s.index)) cls.push('off');
-      if (v && v.isolated === s.index) cls.push('sel');
+      if (v && v.isolated.has(s.index)) cls.push('sel');
       const fov = fovLimited(s);
       if (fov) anyFovLimited = true;
       const mark = fov
@@ -3396,7 +3478,8 @@ function renderStructures(r) {
         <span class="swatch" style="background:${s.color}" data-act="toggle"
               title="Show or hide ${esc(s.name)}"></span>
         <span class="name" data-act="isolate"
-              title="Isolate ${esc(s.name)} and go to it">${esc(s.name)}${mark}${pmark}</span>
+              title="Isolate ${esc(s.name)} and go to it — ${ADD_KEY}-click to add it to the isolate"
+              >${esc(s.name)}${mark}${pmark}</span>
         <span class="vol">${vols[s.id].toFixed(2)} cm³</span>
         ${dice}
         ${stl}
@@ -3451,12 +3534,18 @@ function renderStructures(r) {
     row.onclick = (e) => {
       if (e.target.classList.contains('stl')) return;   // let the download through
       const idx = Number(row.dataset.index);
-      if (e.target.dataset.act === 'isolate') { toggleIsolate(idx); return; }
+      if (e.target.dataset.act === 'isolate') { toggleIsolate(idx, addKey(e)); return; }
       const h = state.viewer.hidden;
       if (h.has(idx)) { h.delete(idx); row.classList.remove('off'); }
       else { h.add(idx); row.classList.add('off'); }
-      state.viewer.isolated = null;
-      $('isolateClear').hidden = true;
+      // Hiding something by hand is not an isolate any more: the hidden set no longer
+      // matches the selection, and leaving the rows marked `sel` would claim it does.
+      state.viewer.isolated.clear();
+      state.viewer.isolateLast = null;
+      renderIsolateClear();
+      // In place rather than a re-render: this list is scrolled and filtered while it
+      // is being used, and rebuilding it under the pointer loses both.
+      el.querySelectorAll('.srow.sel').forEach((n) => n.classList.remove('sel'));
       pushVisibility([idx]);
       renderArch(state.viewer.report);
     };
@@ -3465,16 +3554,18 @@ function renderStructures(r) {
     const all = [...presentIndices()];
     const hideAll = state.viewer.hidden.size === 0;
     state.viewer.hidden = hideAll ? new Set(all) : new Set();
-    state.viewer.isolated = null;
+    state.viewer.isolated.clear();
+    state.viewer.isolateLast = null;
     $('toggleAll').textContent = hideAll ? 'show all' : 'hide all';
-    $('isolateClear').hidden = true;
+    renderIsolateClear();
     pushVisibility(all);
     renderStructures(r);
     renderArch(r);
   };
-  $('isolateClear').onclick = () => {
-    if (state.viewer.isolated != null) toggleIsolate(state.viewer.isolated);
-  };
+  $('isolateClear').onclick = () => clearIsolate();
+  // Re-render, not just toggle: the button carries the selection COUNT, so a render
+  // triggered by anything else (the filter, a reopened case) has to restate it.
+  renderIsolateClear();
 }
 
 /** One structure's Dice cell.
