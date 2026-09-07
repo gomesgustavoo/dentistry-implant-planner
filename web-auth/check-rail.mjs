@@ -403,10 +403,18 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
         && getComputedStyle(e).overflowX === 'visible')
     .map((e) => {
       const p = e.parentElement;
+      // Double-escaped on purpose. This function is stringified into a template literal,
+      // where backslash-s is not a recognised escape and collapses to a bare s -- so the
+      // whitespace class reached the page as a regex matching the LETTER s, and class
+      // names were split on it. It announced itself the first time this break fired:
+      // "div#implantPanel.implant. in aside#planSide.plan-.ide". Harmless in a string,
+      // but the same slip in a probe that MEASURES something would have produced a
+      // silently wrong number instead of a visibly wrong name.
+      // (No backticks in this function, for the same reason.)
       const nm = (el) => !el ? '?' : el.tagName.toLowerCase()
         + (el.id ? '#' + el.id : '')
         + (typeof el.className === 'string' && el.className
-            ? '.' + el.className.trim().split(/\s+/).join('.') : '');
+            ? '.' + el.className.trim().split(/\\s+/).join('.') : '');
       return nm(e) + ' in ' + nm(p) + ' ' + e.scrollWidth + '>' + e.clientWidth
         + ' "' + (e.textContent || '').trim().slice(0, 24) + '"';
     });
@@ -1161,13 +1169,22 @@ if (mode === '--selftest') {
     },
     // THE CORNER BOX, at its cause. A `<select>` takes its width from its widest option,
     // and these options are saved-plan names with a timestamp; without the cap the plan
-    // bar is wider than the panel that holds it, the panel raises a horizontal scrollbar,
-    // and where that bar meets the vertical one the UA paints a light square. Breaking
-    // the two declarations that cap it must fire BOTH the plan-stage overflow alarm and
-    // the scrollbar assertion -- if it fires neither, the corner box can come back.
-    'the saved-plan select sizing to its widest option again': (n, f) => {
-      f.__breakCss = '.planbar select { max-width: none !important; }'
-        + ' .planbar-row > label.hint { min-width: auto !important; flex: 0 0 auto !important; }';
+    // bar was wider than the panel holding it, the panel raised a horizontal scrollbar,
+    // and where that bar met the vertical one the UA painted a light square.
+    //
+    // The break is NOT the uncapped select. That was tried, and --prove reported it
+    // vacuous -- correctly, and for two reasons worth keeping written down: the plan bar
+    // no longer lives in `.plan-side` at all (it moved to the site bar, where the third
+    // track is `minmax(0, 1fr)` and the panel clips), and the fixture has no saved plans,
+    // so there is no long option to size to. Restoring that exact cause can no longer
+    // produce that exact symptom.
+    //
+    // So the break is the SYMPTOM's own precondition: make any child of the measurements
+    // panel wider than the panel. That is the assertion actually worth having -- "this
+    // panel never grows a horizontal scrollbar" -- and it holds whichever child is one
+    // day too wide, which is the part the select taught us.
+    'a child too wide for the measurements panel': (n, f) => {
+      f.__breakCss = '#implantPanel .imp { min-width: 420px !important; }';
       return f;
     },
     // ...and at its appearance. A scroll container whose bar is left at the UA's own
@@ -1217,13 +1234,31 @@ if (mode === '--selftest') {
       return f;
     },
   };
+  // Iterating on ONE break. The full sweep is 16 breaks x 156 states and takes about two
+  // hours, which is the wrong feedback loop for "is this new break wired up at all" --
+  // and a slow loop is how a vacuous break gets written and not noticed. `PROVE_ONLY` is
+  // a case-insensitive substring of the label. It prints what it skipped and refuses to
+  // report a tally, so a filtered run can never be mistaken for the gate.
+  const only = (process.env.PROVE_ONLY || '').toLowerCase();
+  const entries = Object.entries(BREAKS)
+    .filter(([label]) => !only || label.toLowerCase().includes(only));
+  if (only) {
+    console.log(`PROVE_ONLY=${process.env.PROVE_ONLY} -> ${entries.length}`
+              + ` of ${Object.keys(BREAKS).length} break(s); this is NOT the gate.`);
+    if (!entries.length) { console.log('no break matched'); process.exit(1); }
+  }
   let proven = 0;
-  for (const [label, fn] of Object.entries(BREAKS)) {
+  for (const [label, fn] of entries) {
     failures = 0; states = 0;
     console.log(`\n### breaking: ${label}`);
     await run(fn);
     if (failures > 0) { console.log(`  -> CAUGHT (${failures} failure(s) over ${states} states)`); proven += 1; }
     else console.log('  -> *** NOT CAUGHT: this assertion is vacuous ***');
+  }
+  if (only) {
+    console.log(`\n${proven}/${entries.length} filtered break(s) caught`
+              + ' -- run without PROVE_ONLY for the gate');
+    process.exit(proven === entries.length ? 0 : 1);
   }
   console.log(`\n${proven}/${Object.keys(BREAKS).length} assertions proven non-vacuous`);
   process.exit(proven === Object.keys(BREAKS).length ? 0 : 1);
