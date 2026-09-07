@@ -128,7 +128,15 @@ const fmtAgo = (iso) => {
   if (secs < 7 * 86400) return `${Math.floor(secs / 86400)} d ago`;
   return fmtDate(iso);
 };
-const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+/* `null` and `undefined` escape to NOTHING, not to their own names.
+   `String(undefined)` is the four-letter word "undefined", and this function is the last
+   thing every readout in the app passes through -- so one absent field anywhere renders
+   the word into the page as though it were a value. Found exactly that way: the model
+   priors card printed "How accurate is the model? undefined" above the Dice table,
+   because the accuracy payload carried no `source`. `BAD_TOKENS` in check-rail.mjs exists
+   to catch this class; it was invisible only because the card is `display: none` in the
+   plan tab and `innerText` skips what is not rendered. */
+const esc = (s) => (s == null ? '' : String(s)).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 /* ---------------------------------------------------------- cached fetch */
 // The viewer payload is the same bytes every time a case is opened, and the API
@@ -2093,6 +2101,10 @@ function teardownCase() {
   // nested in a hidden container -- and `setMode('volume')` short-circuits when the
   // pane is already in the host it names, so it would never come back.
   move3dPane('mpr');
+  // Same discipline for the chart: it may be parked in the plan tab's site bar, and the
+  // next case's `renderArch` writes into the element wherever it happens to be. Left
+  // there it would render inside a hidden stage on a case opened straight into MPR.
+  moveChartCard('mpr');
   if (window.DentistryViewer) DentistryViewer.unmount().catch(() => {});
   // Every planning picture and every slice tile is a blob URL now, and an un-revoked
   // one pins its bytes until the document goes away. The tile cache alone holds 400.
@@ -2250,6 +2262,20 @@ function setMode(mode) {
   $('workspace').classList.toggle('mode-plan', plan);
   // The 3-D pane follows the mode instead of being duplicated. See `move3dPane`.
   move3dPane(plan ? 'plan' : 'mpr');
+  // ...and so does the dental chart. See `moveChartCard`.
+  moveChartCard(plan ? 'plan' : 'mpr');
+  // With the chart gone, the plan rail holds only the corrections history, which is
+  // `[hidden]` on every case whose mask was never touched. Rather than leave a 300 px
+  // column holding nothing, the track is removed and the toggle with it -- and both come
+  // back the moment there IS a correction to show. Read from the element rather than
+  // from a flag, so it cannot drift from what is actually rendered.
+  {
+    const edits = $('editsCard');
+    const empty = plan && !!(edits && edits.hidden);
+    $('workspace').classList.toggle('rail-empty', empty);
+    const rt = $('railToggle');
+    if (rt) rt.hidden = empty;
+  }
   // ...and in the plan tab it draws the local neighbourhood only. Measured: all 42
   // surfaces and 1.95 M triangles were drawn, so a molar implant sat behind two tooth
   // roots and the mandible and could not be seen at all. `setSurfaceFocus` NARROWS --
@@ -2792,7 +2818,7 @@ async function renderModelPriors() {
        <td class="mono">${v.dice_gt != null ? v.dice_gt.toFixed(3) : ''}</td></tr>`).join('');
   const worst = m.worst_tooth_classes || {};
   box.innerHTML = `
-    <p class="finding-why"><b>${esc(m.source)}</b></p>
+    ${m.source ? `<p class="finding-why"><b>${esc(m.source)}</b></p>` : ''}
     ${kvList([
       ['Mean Dice', st.mean_dice != null ? st.mean_dice.toFixed(4) : '', ''],
       ['Mean HD95', st.mean_hd95_mm != null ? `${st.mean_hd95_mm.toFixed(3)} mm` : '', ''],
@@ -3950,8 +3976,11 @@ function selectJaw(jaw) {
   p.indexJaw = p.jaw;
   p.index = Math.max(0, Math.min(p.index, n - 1));
   sl.value = p.index;
-  $('planArcHint').textContent =
-    `${info.arc_length_mm.toFixed(0)} mm of arch · ${n} cross-sections`;
+  // The count came off. `#xsLabel`, two centimetres to the left in the same row, already
+  // reads "cross-section 196 of 248" -- so this said "248 cross-sections" beside a
+  // control that says "of 248", and the arc length was the only thing here that was not
+  // already on screen.
+  $('planArcHint').textContent = `${info.arc_length_mm.toFixed(0)} mm of arch`;
   drawPanoramic();
   loadXsContours();
   selectXs(p.index);
@@ -4015,9 +4044,14 @@ function renderXsMeta(info) {
   const side = s < 0 ? 'right' : 'left';
   // Four decimals, not two: the pitch is 0.1506 mm, and rounding it to 0.15 in the copy
   // beside a ruler that uses the real value invites somebody to "correct" the ruler.
+  // "plane perpendicular to the arch" came off. It is a CONSTANT -- true of every one of
+  // the 248 sections, on every case -- and it was the clause that pushed this caption onto
+  // a second line, where it ran straight through the 10 mm scale bar drawn in the same
+  // corner of the picture. A fact that never changes belongs in the documentation, not in
+  // a per-section readout that is competing for the same 12 px as a ruler. It is on the
+  // pane's own tooltip instead.
   $('xsMeta').textContent =
     `${Math.abs(s).toFixed(1)} mm ${side} of the midline · ${px.toFixed(4)} mm per pixel`
-    + ' · plane perpendicular to the arch'
     // The slab thickness, and whether the picture is cropped. At 10-14 px/mm a reader
     // starts treating the greyscale as fine detail when it is still a 1 mm AVERAGE, and
     // a cropped picture that does not say so is a picture of somewhere smaller.
@@ -4715,9 +4749,11 @@ function renderRulerList() {
         <button class="link" data-key="${esc(key)}" data-i="${i}" type="button">remove</button></li>`);
     });
   });
-  box.innerHTML = items.length
-    ? `<ul class="rulers">${items.join('')}</ul>`
-    : '<p class="hint">Drag on the section to measure &middot; Shift constrains &middot; Esc clears</p>';
+  // Empty means EMPTY. The standing hint said "Drag on the section to measure · Shift
+  // constrains · Esc clears", which is word for word the first line of the `tools`
+  // legend two rows above -- so it was two lines of the measurements panel, on every
+  // case, for a sentence already on screen and one click from the button that names it.
+  box.innerHTML = items.length ? `<ul class="rulers">${items.join('')}</ul>` : '';
   box.querySelectorAll('button[data-key]').forEach((b) => {
     b.onclick = () => {
       const list = p.rulers[b.dataset.key] || [];
@@ -5298,6 +5334,19 @@ function syncImplants3d() {
     // clearance rows, not by draining the colour out of the envelope.
     verdict: p.measuring ? null : worstVerdict(imp, p, { gradedOnly: true }),
   })));
+  // FRAME THE NEW ONE, once, here -- because here is the first moment it can be framed.
+  // `addImplant` sets `p.selected` directly rather than going through `selectImplant`, so
+  // nothing ever called `focusImplant` for a freshly placed implant; and calling it there
+  // would not have worked anyway, since `focusImplant` looks the id up in the viewer's
+  // actor registry and returns false when it is absent -- which it is until this function
+  // has run. Measured before this: place an implant and the 3-D pane stayed framed on the
+  // whole mandible, so a 552 x 594 px pane showed the screw as a speck, and the framing
+  // only arrived if the reader happened to resize something (`afterLayoutChange` re-fits
+  // on the way past). One flag, cleared as it is consumed, so a later re-sync never
+  // yanks the camera back from wherever the reader has since moved it.
+  if (p.focusPending && p.focusPending === p.selected && DentistryViewer.focusImplant) {
+    if (DentistryViewer.focusImplant(p.focusPending)) p.focusPending = null;
+  }
 }
 
 /** Seed an implant at an arc position, sized from the catalogue's middle. */
@@ -5328,6 +5377,8 @@ function addImplant(s_mm, fdi) {
   imp.autofit = true;
   p.implants.push(imp);
   p.selected = id;
+  // Claimed here, consumed by `syncImplants3d` as soon as the actor exists.
+  p.focusPending = id;
   const i = nearestXsIndex(info, s_mm);
   if (i !== p.index) selectXs(i); else { drawRulers('xs'); }
   // The seeding measure is the auto-fit's FIRST pass, not a user edit, so it must not
@@ -6326,9 +6377,10 @@ function renderPlanBar() {
     ? JSON.stringify(cur.implants || []) !== JSON.stringify(p.implants || [])
     : (p.implants || []).length > 0;
   box.innerHTML = `
+    <div class="card-head"><h3>Plan</h3></div>
     <div class="planbar-row">
-      <label class="hint">Plan
-        <select id="planPick">
+      <label class="hint">
+        <select id="planPick" aria-label="Saved plans on this case">
           <option value="">${rows.length ? 'unsaved\u2026' : 'no saved plan'}</option>
           ${rows.map((r) => `<option value="${esc(r.id)}" ${cur && cur.id === r.id ? 'selected' : ''}
              >${esc(r.name)} &middot; ${esc((r.updated_at || r.created_at || '').slice(0, 16).replace('T', ' '))}</option>`).join('')}
@@ -6343,8 +6395,9 @@ function renderPlanBar() {
     </div>
     ${cur ? `<div class="planbar-row">
       <button id="planExpJson" class="link" type="button">export measurements (JSON)</button>
-      <button id="planExpStl" class="link" type="button">implant solids (STL)</button>
-      <span class="hint">Patient LPS millimetres, the same frame as the anatomy STLs.</span>
+      <button id="planExpStl" class="link"
+        title="Patient LPS millimetres, the same frame as the anatomy STLs."
+        type="button">implant solids (STL)</button>
     </div>` : ''}
     ${ps.error ? `<p class="hint bad">${esc(ps.error)}</p>` : ''}`;
 
@@ -6467,6 +6520,7 @@ function renderImplantPanel() {
           data-lo="-360" data-hi="360" min="-360" max="360" step="${ROLL_STEP_DEG}"
           value="${Number(imp.roll_deg || 0).toFixed(0)}"
           aria-label="Rotation about the implant axis in degrees; changes no measurement">
+        <span class="sep">&deg;</span>
         ${Number(imp.yaw_deg) ? `<span class="oop" title="Angulated ${Math.abs(Number(imp.yaw_deg)).toFixed(0)}\u00b0 out of the cross-section plane, so the section draws it at ${(Math.abs(Math.cos(Number(imp.yaw_deg) * Math.PI / 180)) * 100).toFixed(0)}% of its length. Every number below is measured in three dimensions.">&#8599;</span>` : ''}
       </div>
       ${off ? `<p class="imp-off">Not on this section &mdash;
@@ -7669,6 +7723,41 @@ function move3dPane(where) {
       ? '' : 'the 3-D view needs the volume, which is still loading';
   }
   afterLayoutChange();
+}
+
+/* The dental chart is BORROWED by the plan tab, not copied.
+   It is one element with one set of click handlers wired by `renderArch`, and a second
+   copy would need a second id -- which `check-app.js` forbids outright -- and a second
+   set of listeners to keep in step. So it moves, exactly as `.pane-3d` does, and by the
+   same rules: a class rather than inline styles, and `teardownCase` puts it home before
+   the viewer unmounts.
+   Why it moves at all: in the rail it was a 205 px card holding a 2.63:1 picture inside a
+   300 px column, and on an uncorrected case it was the ONLY thing in that column -- 300 x
+   769 px of window spent on it. In the site bar it is the same width it always was, the
+   rail goes away, and the section and the 3-D pane take the 300 px. */
+function moveChartCard(where) {
+  const card = document.querySelector('.chart-card');
+  if (!card) return;
+  const bar = $('siteBar');
+  const rail = document.querySelector('.rail');
+  const host = where === 'plan' ? bar : rail;
+  if (!host) return;
+  if (card.parentElement !== host) {
+    card.classList.toggle('in-plan', where === 'plan');
+    // BEFORE the plan bar, so the bar reads panoramic - chart - plan left to right
+    // whichever order the two arrivals happen in. `insertBefore(x, null)` appends, so
+    // the rail branch needs no special case.
+    host.insertBefore(card, where === 'plan' ? $('planBar') : rail.firstChild);
+  }
+  // The hint is a sentence a first-time reader needs once and every later session pays
+  // for in vertical space. In the bar it becomes the chart's tooltip; in the rail, where
+  // there is room, it goes back to being visible prose.
+  const hint = $('chartHint');
+  if (hint) {
+    const text = hint.textContent || '';
+    if (where === 'plan') card.title = text;
+    else card.removeAttribute('title');
+  }
 }
 
 function afterLayoutChange() {

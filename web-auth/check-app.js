@@ -89,7 +89,7 @@ const REQUIRED = [
   // plan view options: the crop zoom, the picture filter, the mesiodistal pane
   'wireXsZoom', 'setXsPic', 'wireXsPic', 'picFilter', 'setPanPane', 'wirePanPane',
   // the 3-D pane is reparented between stages rather than duplicated
-  'move3dPane',
+  'move3dPane', 'moveChartCard',
   'structureName',
   // --- correcting the segmentation mask ------------------------------------
   'editState', 'viewerEdits', 'editToolList', 'setEditMode', 'renderEditBar',

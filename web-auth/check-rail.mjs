@@ -293,6 +293,26 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
   const planTab = document.getElementById('planTab');
   const planned = planTab && !planTab.hidden;
   if (planned) { setMode('plan'); await new Promise((r) => setTimeout(r, 320)); }
+  // --prove hooks for the LAYOUT assertions. A stylesheet rule cannot be broken by
+  // editing a fixture, so the break is the rule's own removal, injected here with the
+  // authority of !important -- which is exactly the state the file would be in if the
+  // declaration were deleted. Injected AFTER the plan tab is open so it applies to the
+  // stage being measured. (No backticks in this function: it is stringified.)
+  if (REPORT.__breakCss) {
+    const st = document.createElement('style');
+    st.textContent = REPORT.__breakCss;
+    document.head.appendChild(st);
+    await new Promise((r) => setTimeout(r, 120));
+  }
+  // ...and for the borrowed chart. Neutering moveChartCard alone is too late by the time
+  // this probe runs -- setMode has already called it -- so this reproduces the DOM state
+  // a broken one leaves behind: the chart still sitting in the rail on the plan tab.
+  if (REPORT.__breakChartMove) {
+    window.moveChartCard = () => {};
+    const rl = document.querySelector('.rail');
+    const cc = document.querySelector('.chart-card');
+    if (rl && cc) rl.insertBefore(cc, rl.firstChild);
+  }
   // ACTUALLY PLACE IMPLANTS. Until this existed the harness had never drawn one, so
   // every assertion about the implant panel, the verdict chips, the headroom bars, the
   // section overlay and the coordinate map was vacuous by construction -- the panel was
@@ -364,6 +384,40 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
         && e.scrollWidth > e.clientWidth + 1
         && getComputedStyle(e).overflowX === 'visible')
     .map((e) => (e.className || e.tagName) + ':' + e.scrollWidth + '>' + e.clientWidth);
+  // THE PLAN STAGE, measured on its own and reported on its own -- the third panel, and
+  // the one that was guarded by nothing. The plan sidebar is in neither the rail nor the
+  // dock, so when a saved-plan select sized itself to its widest option and pushed the
+  // sidebar 13 px wide, no assertion here saw it: the panel raised a horizontal
+  // scrollbar, that bar met the vertical one, and the UA painted the corner square
+  // between them in its light default. A light box in the bottom-right of a near-black
+  // clinical app, shipped, because the alarm was wired to only two of three panels.
+  // (No backticks in this function: it is stringified into the page.)
+  const planWrap = document.getElementById('planStage');
+  // NAMED, not just counted. The rail's own reporter prints a class and two numbers, and
+  // the comment beside it records that the bare boolean cost a debugging round because a
+  // failure named nothing at all. A class alone is barely better inside a stage where
+  // "mono" appears in six different rows, so this one carries the parent and the text.
+  const planOverflow = !planWrap ? [] : [...planWrap.querySelectorAll('*')].filter(
+    (e) => !(e instanceof SVGElement)
+        && e.scrollWidth > e.clientWidth + 1
+        && getComputedStyle(e).overflowX === 'visible')
+    .map((e) => {
+      const p = e.parentElement;
+      const nm = (el) => !el ? '?' : el.tagName.toLowerCase()
+        + (el.id ? '#' + el.id : '')
+        + (typeof el.className === 'string' && el.className
+            ? '.' + el.className.trim().split(/\s+/).join('.') : '');
+      return nm(e) + ' in ' + nm(p) + ' ' + e.scrollWidth + '>' + e.clientWidth
+        + ' "' + (e.textContent || '').trim().slice(0, 24) + '"';
+    });
+  // ...and the scroll region itself. The element above is the CAUSE; this is the SYMPTOM,
+  // read the only way that cannot be argued with -- a horizontal bar occupies height, so
+  // offsetHeight minus clientHeight is non-zero exactly when one is showing. Reported as
+  // both axes because the panel scrolls vertically by design and must keep doing so.
+  const planAside = document.getElementById('planSide');
+  const planSideBars = !planAside ? null
+    : { h: planAside.offsetHeight - planAside.clientHeight,
+        w: planAside.offsetWidth - planAside.clientWidth };
   const text = (rail.innerText || '') + String.fromCharCode(10) + (dock.innerText || '');
   const card = document.getElementById('accuracyCard');
   const planPanel = document.getElementById('planStage');
@@ -494,6 +548,42 @@ const PROBE = (fixture, fold, arch, measure) => `(async () => {
     jawDisabled: document.querySelectorAll('#planJawTabs .plane[disabled]').length,
     fov: dock.querySelectorAll('.fovmark').length,
     overflow: overflowing.slice(0, 4),
+    planOverflow: planOverflow.slice(0, 4),
+    planSideBars,
+    // WHERE the borrowed dental chart currently lives. moveChartCard lends it to the
+    // plan tab's site bar and takes it home; a chart left in the wrong host is the exact
+    // shape of bug the 3-D pane's own reparenting has already cost this repo once.
+    chartIn: (() => {
+      const c = document.querySelector('.chart-card');
+      if (!c) return 'absent';
+      if (c.closest('#siteBar')) return 'siteBar';
+      if (c.closest('.rail')) return 'rail';
+      return 'lost';
+    })(),
+    // PRESENT is not the same as VISIBLE. The 3-D pane's caption was in the DOM for the
+    // whole life of the plan tab and never once painted: the reparented pane is inset 0
+    // with z-index 1, so it covered its own sibling, and the left pane was captioned
+    // while the right was not.
+    // Compared by STACKING rather than by hit test: a pane tag is pointer-events none on
+    // purpose (app.css records that it was swallowing the click on the only control that
+    // could add an implant), so elementFromPoint returns whatever is underneath it in
+    // both the broken and the fixed state and cannot tell them apart. Both elements are
+    // positioned children of the same stacking context, so their z-indices are directly
+    // comparable, and the later sibling wins a tie -- which is the whole defect, because
+    // the injected pane IS the later sibling.
+    tag3d: (() => {
+      const t = document.querySelector('#plan3d > .pane-tag');
+      if (!t) return 'absent';
+      const r = t.getBoundingClientRect();
+      if (!r.width || !r.height) return 'unpainted';
+      const pane = document.querySelector('#plan3d > .pane-3d.in-plan');
+      if (!pane) return 'nopane';
+      const z = (el) => {
+        const v = parseInt(getComputedStyle(el).zIndex, 10);
+        return Number.isNaN(v) ? 0 : v;
+      };
+      return z(t) > z(pane) ? 'above' : 'covered';
+    })(),
     bodyOverflowX: document.body.scrollWidth > window.innerWidth + 1,
     // WHICH element, not just "the page scrolls". The bare boolean cost a debugging
     // round the first time it fired: the overflowing list above is scoped to the rail
@@ -886,13 +976,40 @@ async function run(breakage) {
             for (const q of r.paint || []) {
               if (q.paintedW < 8 || q.paintedH < 8) fail(`${at}: ${q.id} painted ${q.paintedW}x${q.paintedH} -- the picture did not render`);
             }
+            // THE CORNER BOX. A horizontal scrollbar occupies height, so this is
+            // non-zero exactly when one is showing -- and two bars showing is what
+            // produces the UA-painted corner square that shipped in the bottom-right of
+            // this panel. Vertical scrolling is legitimate and is allowed its 8 px; the
+            // ceiling catches the unstyled ~16 px bar as well as an unstyled scrollbar.
+            if (r.planSideBars) {
+              if (r.planSideBars.h > 0) {
+                fail(`${at}: the measurements panel has a HORIZONTAL scrollbar (${r.planSideBars.h} px)`
+                   + ' -- two bars meet in a corner square the UA paints light');
+              }
+              if (r.planSideBars.w > 8) {
+                fail(`${at}: the measurements panel's scrollbar is ${r.planSideBars.w} px, over the 8 px this app styles`);
+              }
+            }
+            // The borrowed chart is in the tab that borrowed it.
+            if (r.chartIn !== 'siteBar') fail(`${at}: the dental chart is in "${r.chartIn}", expected the plan tab's site bar`);
+            // Both panes captioned, or neither. See the probe.
+            if (r.tag3d === 'covered') fail(`${at}: the 3-D pane's caption is painted over by the pane itself`);
+            else if (r.tag3d === 'unpainted' || r.tag3d === 'absent') fail(`${at}: the 3-D pane has no caption (${r.tag3d})`);
           }
           if (want.plan === 0 && r.implantPanel) fail(`${at}: an implant panel on a job with no planning pack`);
           // openCase must fail ONLY for the known reason. See the probe.
           if (r.openCaseError && !EXPECTED_MOUNT_FAILURE.test(r.openCaseError)) {
             fail(`${at}: openCase failed for an unexpected reason -> ${r.openCaseError}`);
           }
-          if (BAD_TOKENS.test(r.text)) fail(`${at}: bad token in rail text -> ${(r.text.match(BAD_TOKENS) || [])[0]}`);
+          // With the SURROUNDING TEXT. "bad token -> undefined" names the token and not
+          // the readout, and there are 40-odd readouts in these two panels; the 60
+          // characters either side of it say which one in a single line.
+          if (BAD_TOKENS.test(r.text)) {
+            const m = r.text.match(BAD_TOKENS);
+            const i = r.text.indexOf(m[0]);
+            fail(`${at}: bad token in rail text -> ${m[0]}`
+               + ` in "...${r.text.slice(Math.max(0, i - 60), i + 60).replace(/\s+/g, ' ')}..."`);
+          }
           // The measurement surface carries every millimetre a clinician acts on, and
           // was previously checked only for absolute HU. A clearance that renders
           // "undefined mm" is worse than one that renders a forbidden unit.
@@ -906,6 +1023,10 @@ async function run(breakage) {
           if (FORBIDDEN_IN_MEASUREMENT.test(r.measurementText)) fail(`${at}: absolute HU in the measurement surface -> ${(r.measurementText.match(FORBIDDEN_IN_MEASUREMENT) || [])[0]}`);
           if (!REQUIRED_DISCLAIMER.test(r.allText)) fail(`${at}: the "not calibrated" grey-value disclaimer is missing from the rail`);
           if (r.overflow.length) fail(`${at}: horizontal overflow -> ${r.overflow.join(' ')}`);
+          // Named as the PLAN STAGE, not folded into the line above: "the rail overflows"
+          // and "the plan stage overflows" are different bugs with different fixes, and
+          // this is the panel that had no alarm at all until the corner box shipped.
+          if ((r.planOverflow || []).length) fail(`${at}: horizontal overflow in the plan stage -> ${r.planOverflow.join(' ')}`);
           if (r.bodyOverflowX) {
             const w = r.widest;
             fail(`${at}: the page itself scrolls horizontally`
@@ -1036,6 +1157,35 @@ if (mode === '--selftest') {
     // regression a careless revert would ship -- and every additive assertion must fail.
     'the additive click falling back to single-select': (n, f) => {
       f.__breakMultiIsolate = true;
+      return f;
+    },
+    // THE CORNER BOX, at its cause. A `<select>` takes its width from its widest option,
+    // and these options are saved-plan names with a timestamp; without the cap the plan
+    // bar is wider than the panel that holds it, the panel raises a horizontal scrollbar,
+    // and where that bar meets the vertical one the UA paints a light square. Breaking
+    // the two declarations that cap it must fire BOTH the plan-stage overflow alarm and
+    // the scrollbar assertion -- if it fires neither, the corner box can come back.
+    'the saved-plan select sizing to its widest option again': (n, f) => {
+      f.__breakCss = '.planbar select { max-width: none !important; }'
+        + ' .planbar-row > label.hint { min-width: auto !important; flex: 0 0 auto !important; }';
+      return f;
+    },
+    // ...and at its appearance. A scroll container whose bar is left at the UA's own
+    // dimensions is 15-17 px of foreign chrome in a panel that styles everything else.
+    'a scrollbar left at the browser default size': (n, f) => {
+      f.__breakCss = '.plan-side::-webkit-scrollbar { width: 15px !important; }';
+      return f;
+    },
+    // The 3-D pane's caption, which was present and invisible for the whole life of the
+    // tab because the reparented pane paints over it. Dropping the z-index that fixed it
+    // must be caught, or "the caption exists" is all the harness is really asserting.
+    'the 3-D caption painted over by its own pane': (n, f) => {
+      f.__breakCss = '.pane3d-wrap > .pane-tag { z-index: 0 !important; }';
+      return f;
+    },
+    // The borrowed dental chart, left where a broken `moveChartCard` would leave it.
+    'the dental chart never reaching the site bar': (n, f) => {
+      f.__breakChartMove = true;
       return f;
     },
     // --- the hand-corrected path. Only reachable in `editedPlanCheck`, so both of

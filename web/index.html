@@ -593,16 +593,32 @@
         </div>
 
         <div class="plan-views">
-          <!-- A locator, not a measuring surface: the horizontal axis is arc length
-               through a curved trough, which the server already publishes as
-               `metric_axes: "vertical_only"`. So it gets a strip, and the space goes to
-               the two views you actually plan against. -->
-          <div class="pan-wrap">
-            <canvas id="panCanvas" width="900" height="300"></canvas>
-            <div class="stage-empty" id="planEmpty">loading&hellip;</div>
+          <!-- THE SITE BAR. One row that answers "which plan, where in the arch, which
+               tooth", so that nothing below it is navigation. `moveChartCard` lends it
+               the dental chart and the plan bar while this tab is open and takes them
+               home on the way out -- the same borrow-and-return the 3-D pane already
+               does, and for the same reason: one chart, wired once, never a copy. -->
+          <div class="site-bar" id="siteBar">
+            <!-- A locator, not a measuring surface: the horizontal axis is arc length
+                 through a curved trough, which the server already publishes as
+                 `metric_axes: "vertical_only"`. So it gets a strip, and the space goes to
+                 the two views you actually plan against. -->
+            <div class="pan-wrap">
+              <canvas id="panCanvas" width="900" height="300"></canvas>
+              <div class="stage-empty" id="planEmpty">loading&hellip;</div>
+            </div>
+            <!-- Saving, reopening and exporting a plan. It lived at the top of the
+                 measurements sidebar, where its saved-plan `<select>` was wider than the
+                 column and pushed a scrollbar under the panel. It is plan-level, not
+                 implant-level, so the site bar is where it belonged anyway. -->
+            <div class="planbar" id="planBar"></div>
           </div>
           <div class="plan-panes">
-            <div class="xs-wrap">
+            <!-- The plane's definition lives here rather than in `#xsMeta`. It is the
+                 same sentence for all 248 sections on every case, and in the caption it
+                 was the clause that wrapped the line through the 10 mm scale bar drawn in
+                 the same corner. One line, or the tooltip renders its own indentation. -->
+            <div class="xs-wrap" title="A plane perpendicular to the fitted arch at this position. Drag the body to move the implant, the apex to angulate it buccolingually, Shift and the apex to lengthen it.">
               <canvas id="xsCanvas" width="480" height="480"></canvas>
               <div class="xs-meta" id="xsMeta"></div>
               <div class="stage-empty" id="xsEmpty" hidden></div>
@@ -622,8 +638,6 @@
         </div>
 
         <aside class="plan-side" id="planSide">
-          <!-- Saving, reopening and exporting a plan. -->
-          <div class="planbar" id="planBar"></div>
           <!-- Implant placement and its measurements. Empty for every job without a
                measurement pack, which is every job processed before this existed. -->
           <div class="implants" id="implantPanel"></div>
