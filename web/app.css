@@ -1048,10 +1048,17 @@ main#settings { max-width: var(--page-narrow); }
    positioned and late in the DOM, so it paints over whatever shares its corner and --
    measured with `elementFromPoint` on the live site -- it was swallowing the click on
    the ONLY control that could add an implant. A caption must never be a click target. */
+/* BOTTOM-RIGHT, because the bottom-LEFT belongs to the picture's own 10 mm scale bar.
+   That bar is drawn into the canvas at `cv.height - 14` and this is a CSS overlay pinned
+   to the wrap, so whether they collided depended on how much the canvas letterboxed --
+   they cleared each other at 836 px of window and ran straight through each other at
+   780 px. A caption written over a ruler is worse than either alone.
+   Right-aligned and capped at 62%, so the two occupy opposite ends of the same edge and
+   the caption wraps upward into the picture's air rather than sideways into the bar. */
 .xs-meta {
-  position: absolute; left: 6px; bottom: 4px; font-size: .68rem; color: var(--muted);
+  position: absolute; right: 6px; bottom: 4px; font-size: .68rem; color: var(--muted);
   font-variant-numeric: tabular-nums; text-shadow: 0 1px 2px #000;
-  pointer-events: none; max-width: calc(100% - 12px);
+  pointer-events: none; max-width: 62%; text-align: right;
 }
 .pane-tag {
   position: absolute; left: 6px; top: 4px; font-size: .62rem; letter-spacing: .08em;
