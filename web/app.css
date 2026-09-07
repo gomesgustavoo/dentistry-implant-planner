@@ -8,6 +8,14 @@
    colour variables silently stripped 22 of 23 of them in a sibling app. There is
    no build step here, and still nothing for one to prune. */
 :root {
+  /* Declared, and load-bearing. Without it the UA renders every widget it owns in LIGHT
+     mode inside a near-black app: scrollbar tracks, the square where a horizontal and a
+     vertical bar meet, `<select>` popups, the unfilled half of an `input[type=range]`.
+     The measured casualty was the plan sidebar -- a 16x8 px corner square painted in the
+     UA's light default, in the bottom-right of the viewport, which read as a rendering
+     failure. `::-webkit-scrollbar` rules only reach the parts they name; this reaches
+     the ones no rule does. */
+  color-scheme: dark;
   --ground: #0a0e13;
   --surface: #131a25;
   --surface-2: #1b2230;
@@ -451,13 +459,12 @@ main#settings { max-width: var(--page-narrow); }
 /* The rail in the IMPLANT tab. Measured on the live site: 4910 characters, 82% of it
    scrolled out of reach, and none of it about implant planning -- the findings card,
    "About this scan", the accuracy and priors cards, the downloads and the run details.
-   The dental chart is the one thing in the rail that belongs here, because in plan mode
-   every FDI position is a placement target; the Structures card stays because it is the
-   only control over what the 3-D pane draws; and the CORRECTION history stays because
-   a clearance graded against a contour a person moved is provenance for the numbers in
-   this very tab, which is the one place it cannot be a footnote.
+   The CORRECTION history stays, because a clearance graded against a contour a person
+   moved is provenance for the numbers in this very tab, which is the one place it cannot
+   be a footnote. The dental chart belongs here too -- in plan mode every FDI position is
+   a placement target -- but it no longer belongs in the RAIL: see `.site-bar`.
    They come back on the other two tabs, and (see the print block) on paper. */
-.workspace.mode-plan > .rail > .card:not(.chart-card):not(#editsCard),
+.workspace.mode-plan > .rail > .card:not(#editsCard),
 .workspace.mode-plan > .rail > details.card { display: none; }
 /* THE DOCK IS GONE IN THE PLAN TAB, both halves of it.
    The tools obviously: there is no labelmap to paint on a server-rendered cross-section,
@@ -470,6 +477,16 @@ main#settings { max-width: var(--page-narrow); }
 .workspace.mode-plan > .dock { display: none; }
 .workspace.mode-plan { grid-template-columns: var(--rail) minmax(0, 1fr); }
 .workspace.mode-plan.rail-collapsed { grid-template-columns: minmax(0, 1fr); }
+/* ...and once the chart moved to the site bar, on most cases the rail has NOTHING left:
+   `#editsCard` is `[hidden]` unless the mask was corrected by hand. Measured before this:
+   a 300 x 769 px column holding one 205 px card, and after the chart left it would have
+   been a 300 px column holding nothing at all. `setMode` sets `rail-empty` when the
+   corrections card is hidden, and the track is REMOVED rather than zeroed -- a zero-width
+   track still takes its gap and still lets an overflowing child floor it, which is the
+   same reason `.rail-collapsed` is written this way.
+   The rail comes back, with its toggle, the moment a case has corrections to show. */
+.workspace.mode-plan.rail-empty { grid-template-columns: minmax(0, 1fr); }
+.workspace.mode-plan.rail-empty > .rail { display: none; }
 /* `grid-template-columns` is stated, and `minmax(0, 1fr)` rather than the implicit
    `auto`. An `auto` track's minimum is the largest min-content contribution of its
    items and is allowed to exceed the container -- and grid items stretch -- so ONE
@@ -486,8 +503,16 @@ main#settings { max-width: var(--page-narrow); }
   overflow-y: auto;
   padding-right: .2rem;
 }
-.rail::-webkit-scrollbar { width: 8px; }
+/* `width` alone reaches only the VERTICAL bar. A horizontal one -- which every rule in
+   this file is written to prevent, but which is deliberately left reachable as an alarm
+   -- falls back to the UA's ~16px, so the alarm arrived twice the size of the scrollbar
+   beside it and in the wrong palette. `height` sizes it; the `-corner` is the square
+   where the two meet, which no `-track` or `-thumb` rule ever reaches. Both stated on
+   every scroll container in the app, so a bar that fires reads as this app's bar. */
+.rail::-webkit-scrollbar { width: 8px; height: 8px; }
 .rail::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+.rail::-webkit-scrollbar-track,
+.rail::-webkit-scrollbar-corner { background: transparent; }
 
 /* ------------------------------------------------------------------ the right dock
    Same `minmax(0, 1fr)` discipline as the rail, and for the same measured reason: an
@@ -500,8 +525,10 @@ main#settings { max-width: var(--page-narrow); }
   gap: .8rem; align-content: start;
   overflow-y: auto; padding-left: .2rem;
 }
-.dock::-webkit-scrollbar { width: 8px; }
+.dock::-webkit-scrollbar { width: 8px; height: 8px; }
 .dock::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+.dock::-webkit-scrollbar-track,
+.dock::-webkit-scrollbar-corner { background: transparent; }
 /* The dock's sections carry the card's surface but not its rhythm -- they are panels in
    a column, not cards in a feed, so they sit tighter. */
 .dock-sec {
@@ -519,8 +546,10 @@ main#settings { max-width: var(--page-narrow); }
   min-height: 0; }
 .workspace:not(.dock-collapsed) .dock { grid-template-rows: auto minmax(0, 1fr); }
 #structures { overflow-y: auto; min-height: 0; }
-#structures::-webkit-scrollbar { width: 8px; }
+#structures::-webkit-scrollbar { width: 8px; height: 8px; }
 #structures::-webkit-scrollbar-thumb { background: var(--surface-3); border-radius: 999px; }
+#structures::-webkit-scrollbar-track,
+#structures::-webkit-scrollbar-corner { background: transparent; }
 /* The filter. Narrowing 47 structures to the handful a planner is looking at is the
    single biggest thing that makes this list usable -- 32 of the 47 are teeth. */
 .strfilter { display: block; margin-bottom: .4rem; }
@@ -767,6 +796,91 @@ main#settings { max-width: var(--page-narrow); }
    so every one of those pixels goes straight into the picture. */
 .plan-views { display: grid; grid-template-rows: auto minmax(0, 1fr); gap: .35rem;
   min-height: 0; min-width: 0; }
+
+/* ------------------------------------------------------------------ the site bar
+   The top row of the plan tab, and the reason the rail could go away. It holds the three
+   controls that are about the CASE rather than about one implant -- where you are in the
+   arch, which tooth you are planning, and which saved plan you are in -- so that
+   everything below it is work rather than navigation.
+
+   Why a row and not a column: the panoramic is 1.82:1 and the dental chart is 2.63:1
+   (`viewBox="0 0 200 76"`). Both are short and wide; neither fits a 300 px rail without
+   being shrunk, and neither can fill a 1110 px band alone. Measured at 1470x836 with a
+   132 px band they come out 228 and 276 px, and the plan controls take the remaining
+   ~589 px -- which is the first time the four export and delete actions have had room to
+   sit on two lines instead of wrapping into four.
+
+   What it bought: the rail's 300 px went into the two panes that carry the measurements.
+   Measured on the same window, the section and the 3-D pane go 395 -> 552 px wide.
+
+   `auto auto minmax(0, 1fr)` and `min-width: 0` on every child, because a definite-width
+   child floors its track and propagates all the way up to the workspace -- that is how
+   the page came to be 36 px wider than the window at 1100 px once before. */
+.site-bar {
+  display: grid; grid-template-columns: auto auto minmax(0, 1fr);
+  gap: .5rem; align-items: stretch; min-width: 0;
+  /* The band's height is the chart's constraint, not the strip's: at 2.63:1 the chart
+     needs ~112 px of card to stay as legible as it was in the rail. The strip is taller
+     than the 9vh it had, which is a gain -- it is the only plane mesiodistal angulation
+     is visible in. The cost is ~44 px off the panes' HEIGHT, paid back many times over by
+     the 157 px each of them gained in WIDTH. */
+  height: clamp(112px, 15vh, 150px);
+}
+.site-bar > * { min-width: 0; }
+/* In the bar the strip is height-filling rather than height-clamped: the row already
+   states the height, and `aspect-ratio` derives the width from it as before. */
+.site-bar > .pan-wrap { height: 100%; }
+/* The chart, on loan from the rail. `.card` gives it a title, a hint and a legend sized
+   for a column; in the bar it is a picture with a label.
+   `#chartHint` comes off and becomes the card's `title` (see `moveChartCard`): "click a
+   position — places an implant there" is the sentence a first-time reader needs once,
+   and every tooth in the chart already carries its own tooltip saying the same thing at
+   the point of the click.
+   `.chart-legend` STAYS. It names patient's right and patient's left, and this is the
+   control a planner picks a site with -- getting a side wrong is the one error this
+   whole app is arranged to prevent, and an FDI number is only a side cue to someone who
+   already reads FDI. It costs one 9 px line. */
+.site-bar > .chart-card {
+  margin: 0; padding: .3rem .55rem; gap: .05rem;
+  display: grid; grid-template-rows: auto minmax(0, 1fr) auto;
+}
+.site-bar > .chart-card > .card-head { margin: 0; }
+.site-bar > .chart-card h3 { margin: 0; font-size: 10px; letter-spacing: .09em; }
+.site-bar > .chart-card #chartHint { display: none; }
+.site-bar > .chart-card .chart-legend { margin: 0; font-size: 9px; }
+.site-bar > .chart-card .arch { height: 100%; display: grid; place-items: center; }
+.site-bar > .chart-card .arch svg { height: 100%; width: auto; max-width: 100%; }
+/* The plan controls, headed like the chart beside them. Three cells in a row read as one
+   row only if their headers sit on one line: the chart card had "DENTAL CHART" at the top
+   and this had a control block floating in the vertical middle, so the two panels were
+   visibly not the same kind of thing. The word "Plan" moved from being the select's
+   inline label to being the panel's heading -- the same word, once, in the position that
+   makes the row line up. The select keeps it as an `aria-label`. */
+.site-bar > .planbar {
+  margin: 0; padding: .3rem .55rem; gap: .3rem; align-content: start;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius-sm); overflow: hidden;
+}
+.site-bar > .planbar > .card-head { margin: 0; }
+.site-bar > .planbar h3 { margin: 0; font-size: 10px; letter-spacing: .09em; }
+/* Three panels in a row need the width for three panels. Measured: at 1024 px the stage
+   is ~660 px wide and the two pictures alone want ~540 of it, which left the plan
+   controls an 85 px track and a row that overflowed it. Above this breakpoint the bar is
+   a row; below it the pictures keep the row and the controls take their own line, which
+   is the one of the three that is happy to be wide and short.
+   1200 rather than the stacking breakpoint at 1000, because the failure is about how much
+   room three cells need, not about whether the page has stacked. */
+@media (max-width: 1200px) {
+  /* The first row keeps a DEFINITE height -- the strip's `aspect-ratio` and the chart's
+     `height: 100%` both need one to size against, and `height: auto` on the bar alone
+     would collapse them to nothing. The controls get an `auto` row beneath. */
+  .site-bar {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-rows: clamp(96px, 13vh, 132px) auto;
+    height: auto;
+  }
+  .site-bar > .planbar { grid-column: 1 / -1; }
+}
 /* Co-equal in standing, not in width. You re-angulate on the section and confirm on the
    3-D, so both must be big enough to read -- but a buccolingual cross-section is a TALL
    NARROW picture (36 mm wide by 68 mm tall on a real case, aspect 0.53) and fits by
@@ -824,7 +938,11 @@ main#settings { max-width: var(--page-narrow); }
    of the cross-section: 38vh is about 318 px on an 836 px window, so the section loses
    roughly what it gained when the locator was cut to 15vh. A mode, chosen, and named in
    the button -- never a silent tax on the view that carries the measurements. */
-#planStage.pan-tall .pan-wrap { height: clamp(180px, 38vh, 460px); }
+/* The whole BAR grows, not the strip alone: the strip is a grid item stretched to the
+   row's height, so raising only its own `height` would overflow the row it sits in and
+   paint over the section beneath. The chart and the plan controls stretch with it, which
+   is harmless -- they are already sized by their own content. */
+#planStage.pan-tall .site-bar { height: clamp(180px, 38vh, 460px); }
 
 /* ABSOLUTE, not a centred grid item with `max-height: 100%`.
    That is what it was, and the percentage resolved against the canvas's own GRID AREA
@@ -850,7 +968,18 @@ main#settings { max-width: var(--page-narrow); }
   border: 0; border-radius: 0; z-index: 1;
 }
 .pane-3d.in-plan > .cs { width: 100%; height: 100%; }
-.pane-3d.in-plan > .pane-tag, .pane-3d.in-plan > .pane-label { display: none; }
+/* `.pane-note` joins the list. It carries "42 smoothed surfaces · 1950k triangles" --
+   a BUILD STATISTIC about the mesh -- and it was riding along into the planning tab and
+   printing across the bottom of the pane a clinician verifies an implant in. It belongs
+   on the MPR tab, where the question is what was drawn; here the question is where the
+   screw is. */
+.pane-3d.in-plan > .pane-tag, .pane-3d.in-plan > .pane-label,
+.pane-3d.in-plan > .pane-note { display: none; }
+/* `#plan3d`'s own caption has never once been visible: the reparented pane is
+   `z-index: 1` and `inset: 0`, so it painted straight over its sibling. The left pane was
+   captioned "SECTION — place & angle" and the right pane was captioned nothing, which is
+   not a missing label so much as a broken pair. */
+.pane3d-wrap > .pane-tag { z-index: 2; }
 .planhint { margin-left: auto; font-size: .72rem; color: var(--muted); align-self: center; }
 
 /* The tools row: jaw tabs, the section slider, the arc hint, the verdict strip and the
@@ -896,6 +1025,14 @@ main#settings { max-width: var(--page-narrow); }
 .verdstrip { display: flex; gap: .3rem; align-items: center; min-width: 0;
   overflow-x: auto; margin-left: auto; }
 .verdstrip:empty { display: none; }
+/* This one scrolls by design -- a six-implant plan has six chips and they must not push
+   the tools row into a second line -- so its bar is not an alarm and is styled to be
+   unobtrusive rather than absent. It had no scrollbar rule at all, which in a dark app
+   means the UA's light one. */
+.verdstrip::-webkit-scrollbar { height: 4px; }
+.verdstrip::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 999px; }
+.verdstrip::-webkit-scrollbar-track,
+.verdstrip::-webkit-scrollbar-corner { background: transparent; }
 .vchip { display: inline-flex; align-items: center; gap: .3rem; white-space: nowrap;
   font-size: .66rem; letter-spacing: .04em; text-transform: uppercase;
   padding: .12rem .4rem; border-radius: 999px; font-weight: 650; }
@@ -959,36 +1096,56 @@ main#settings { max-width: var(--page-narrow); }
 .crow-site > summary { grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: "label mm"; }
 
-.subnote { margin: .2rem 0 0; }
+/* The marker sits in a GUTTER, not in the text.
+   `content: '\25B8 '` is inline text, so every disclosure summary started one triangle
+   plus one space further right than the card above it, and the open state (a wider glyph)
+   shifted it again. Read down the sidebar it was four different left edges.
+   A fixed-width `inline-block` on the pseudo-element, NOT `display: grid` on the summary.
+   Grid was the first attempt and it is wrong here: these summaries carry mixed inline
+   content -- text plus a `<span class="mono">` holding the budget figures -- and a grid
+   container turns every element child into a grid ITEM, so the figures were placed in the
+   1rem marker column and rendered 35 px of text in 16 px of box. Caught by the plan
+   stage's own overflow alarm, which is the whole reason it was added. */
+.subnote { margin: 0; }
 .subnote > summary { cursor: pointer; color: var(--muted); font-size: .68rem;
   list-style: none; }
 .subnote > summary::-webkit-details-marker { display: none; }
-.subnote > summary::before { content: '\25B8 '; }
-.subnote[open] > summary::before { content: '\25BE '; }
+.subnote > summary::before { content: '\25B8'; display: inline-block; width: 1rem; }
+.subnote[open] > summary::before { content: '\25BE'; }
 
 /* The standing notices and the error budget: present, one line, one click away. */
-.sidenote { margin-top: .4rem; font-size: .72rem; }
+.sidenote { margin: 0; font-size: .72rem; }
 .sidenote > summary { cursor: pointer; color: var(--muted); padding: .25rem 0;
   list-style: none; }
 .sidenote > summary::-webkit-details-marker { display: none; }
-.sidenote > summary::before { content: '\25B8 '; }
-.sidenote[open] > summary::before { content: '\25BE '; }
+.sidenote > summary::before { content: '\25B8'; display: inline-block; width: 1rem; }
+.sidenote[open] > summary::before { content: '\25BE'; }
+/* The body lines up with the summary's text, not with its marker. */
+.sidenote > *:not(summary), .subnote > *:not(summary) { padding-left: 1rem; }
 
 /* The sidebar. Its own scroll region, so the measurement list can be as long as the
-   plan needs without shrinking the pictures or being silently clipped. */
+   plan needs without shrinking the pictures or being silently clipped.
+   ONE gap, and every child's own `margin-top` removed. The column was a flex stack with
+   `gap: .1rem` plus five different ad-hoc margins -- `.planbar .35/.2`, `.ruler-list .35`,
+   `.plan-priors .2`, `.sidenote .4`, `.planactions .4` -- so the vertical rhythm was
+   whatever the last author reached for, and it read as ragged because it was. */
 .plan-side {
   min-height: 0; overflow-y: auto; overscroll-behavior: contain;
-  display: flex; flex-direction: column; gap: .1rem;
+  display: flex; flex-direction: column; gap: .5rem;
   padding: .1rem .55rem .6rem .1rem;
 }
-.plan-side::-webkit-scrollbar { width: 8px; }
+.plan-side::-webkit-scrollbar { width: 8px; height: 8px; }
 .plan-side::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 4px; }
-.plan-side::-webkit-scrollbar-track { background: transparent; }
+.plan-side::-webkit-scrollbar-track,
+.plan-side::-webkit-scrollbar-corner { background: transparent; }
 
 /* ------------------------------------------------------- ruler (plan tab) */
 .pan-wrap canvas, .xs-wrap canvas { touch-action: none; }
 .xs-wrap canvas { cursor: crosshair; }
-.ruler-list { margin-top: .35rem; font-size: .72rem; }
+.ruler-list { font-size: .72rem; }
+/* An empty box still takes the column's `gap`, so a panel with no rulers and no priors
+   showed two blank rows of whitespace that read as something failing to load. */
+.plan-side > :empty { display: none; }
 .ruler-list .hint { display: block; line-height: 1.45; }
 ul.rulers { list-style: none; margin: 0; padding: 0; display: grid; gap: .15rem; }
 ul.rulers li {
@@ -1005,6 +1162,14 @@ ul.rulers .hint { color: var(--muted); }
   .planview .planes { grid-column: auto; }
   .plan-panes { grid-template-columns: minmax(0, 1fr); }
   .plan-views { grid-template-rows: auto auto auto; }
+  /* The site bar stacks too. Three cells side by side need ~640 px before the chart
+     stops being a smear; below the breakpoint they get the full width one at a time, and
+     the bar's height goes back to being whatever its contents need. */
+  .site-bar { grid-template-columns: minmax(0, 1fr);
+    grid-template-rows: auto; height: auto; }
+  .site-bar > .pan-wrap { height: clamp(64px, 9vh, 120px); }
+  .site-bar > .chart-card #chartHint { display: inline; }
+  .site-bar > .chart-card .arch svg { height: auto; width: 100%; }
   .xs-wrap, .pane3d-wrap { aspect-ratio: 1 / 1; }
   .plan-side { overflow-y: visible; padding-right: .1rem; }
   /* Below the stacking breakpoint there is only one column, so there is nothing to
@@ -1269,7 +1434,7 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 @media print { .cbar-fill, .cbar-hatch, .cbar-rule { print-color-adjust: exact;
   -webkit-print-color-adjust: exact; } }
 
-.planactions { display: flex; gap: .6rem; align-items: baseline; margin-top: .4rem; }
+.planactions { display: flex; gap: .6rem; align-items: baseline; }
 
 /* The plan bar: save, reopen, export.
    The controls carried NO class, so `#planSave` rendered as native browser chrome --
@@ -1280,13 +1445,23 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
    the markup stays declarative and there is one place to look. */
 .planbar { margin: .35rem 0 .2rem; display: flex; flex-direction: column; gap: .4rem; }
 .planbar-row { display: flex; gap: .45rem; align-items: center; flex-wrap: wrap; }
-.planbar-row > label.hint { display: inline-flex; align-items: center; gap: .3rem; }
+/* `min-width: 0` on the label is load-bearing, and `min-width: 0` on the select alone was
+   not enough. A `<select>` takes its intrinsic width from its WIDEST OPTION, and the
+   options here are saved-plan names with a timestamp: "46 and 44 posterior right ·
+   2026-09-03 03:17" measured 296 px, so this label was 326 px inside a 313 px sidebar.
+   That 13 px was the whole cause of the light corner square in the bottom-right of the
+   viewport -- `.plan-side` raised a horizontal bar, met the vertical one, and the corner
+   between them is UA-painted. `max-width: 100%` is what actually caps the select; the
+   label's `min-width: 0` is what lets the flex item yield so the cap can bind. */
+.planbar-row > label.hint { display: inline-flex; align-items: center; gap: .3rem;
+  min-width: 0; flex: 1 1 12rem; }
 .planbar input[type=text],
 .planbar select {
   font: inherit; font-size: .76rem; color: var(--ink); background: var(--surface-2);
   border: 1px solid var(--border-2); border-radius: 6px; padding: .28rem .4rem;
-  min-width: 0;
+  min-width: 0; max-width: 100%;
 }
+.planbar-row > label.hint > select { flex: 1 1 auto; }
 .planbar input[type=text] { flex: 1 1 9rem; min-width: 7rem; }
 .planbar input[type=text]::placeholder { color: var(--muted); }
 .planbar input[type=text]:focus-visible,
@@ -1366,7 +1541,6 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 .ptable-dark th, .ptable-dark td { border-color: var(--border); }
 .ptable-dark th { color: var(--muted); font-weight: 600; }
 
-.plan-priors { margin-top: .2rem; }
 .plan-priors .notelist { font-size: .72rem; }
 .ptable th, .ptable td { border: 1px solid #999; padding: 3px 5px; text-align: left;
   vertical-align: top; }
@@ -1401,7 +1575,14 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
      column of blocks. Also un-scroll the sidebar, or the printed page carries only the
      first 518 px of it -- which is the same clipping bug this refactor removed from the
      screen, reappearing on the printout. */
-  .plan-views, .plan-panes { display: block !important; }
+  .plan-views, .plan-panes, .site-bar { display: block !important; height: auto !important; }
+  /* On screen the chart's SVG takes its height from a definite grid row and derives its
+     width. On paper there is no such row, so `height: 100%` resolves against `auto` and
+     the chart prints as a zero-height nothing. Width-driven instead, like every other
+     picture in this block. */
+  .site-bar > .chart-card { display: block !important; }
+  .site-bar > .chart-card .arch svg { height: auto !important; width: 100% !important; }
+  .site-bar > .chart-card #chartHint { display: inline !important; }
   /* HIDDEN on paper, and that is the point. Everything the panel showed is on the
      print sheet, in a form built for paper -- so leaving the panel visible printed each
      headline, each bar and the whole error budget TWICE, once inline and once on the
@@ -1415,6 +1596,12 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
      checked and the rail that was not. */
   .workspace.mode-plan > .rail > .card,
   .workspace.mode-plan > .rail > details.card { display: block !important; }
+  /* ...including when the screen dropped the rail entirely because the chart had moved
+     to the site bar and nothing was left in it. On paper the findings, the priors, the
+     downloads and the run details are the record; `rail-empty` is a statement about a
+     1470 px window, not about an A4 sheet. The chart itself prints from the site bar,
+     wherever `moveChartCard` last put it. */
+  .workspace.mode-plan.rail-empty > .rail { display: grid !important; }
   /* ...and so does the DOCK. The structure list is the inventory of what was drawn on
      this scan, with the volume of each -- exactly the kind of thing a printed record is
      for, and it moved out of the rail, so the rule above no longer reaches it. The
