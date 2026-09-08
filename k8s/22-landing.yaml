@@ -21,7 +21,7 @@ spec:
         app: dentistry-landing
     spec:
       containers:
-      - image: dentistry/landing:0.10.0
+      - image: dentistry/landing:0.11.0
         imagePullPolicy: IfNotPresent
         livenessProbe:
           failureThreshold: 3
