@@ -218,7 +218,12 @@ def build(merged: np.ndarray, image, slice_uids: list, frame_uid: str, study_uid
     ds.PatientID = patient.get("id") or "ANONYMOUS"
     ds.StudyInstanceUID = study_uid
     ds.SeriesInstanceUID = _uid()
-    ds.StructureSetLabel = "Dentistry"
+    # The one place the product name is stamped into an export, and it is what a TPS
+    # shows for the structure set. DICOM SH caps this at 16 characters; "ImplantPlan" is
+    # 11. Files exported before this change keep the old label and will disagree with new
+    # ones -- nothing downstream in this stack keys on the value, but anything outside it
+    # that does would need telling.
+    ds.StructureSetLabel = "ImplantPlan"
     ds.StructureSetName = "Automatic segmentation"
     ds.StructureSetDate = now.strftime("%Y%m%d")
     ds.StructureSetTime = now.strftime("%H%M%S")

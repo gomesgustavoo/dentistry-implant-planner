@@ -53,7 +53,7 @@ def title_card(w: int, h: int, out: Path) -> Path:
     small = _font("DejaVuSans.ttf", int(h * 0.020))
 
     y = int(h * 0.34)
-    y += _centre(d, y, "Dentistry CBCT", big, INK, w) + int(h * 0.055)
+    y += _centre(d, y, "ImplantPlan", big, INK, w) + int(h * 0.055)
     y += _centre(d, y, "Segment a cone-beam CT. Plan an implant against it.",
                  mid, MUTED, w) + int(h * 0.030)
     _centre(d, y, "Every clearance graded with the model’s own measured error subtracted",

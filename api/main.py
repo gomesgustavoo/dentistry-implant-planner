@@ -92,7 +92,7 @@ async def lifespan(app: FastAPI):
 # Baked from the image tag at build time (build-images.sh -> Dockerfile.api ARG), so
 # /v1/health cannot drift from what is actually deployed the way a literal did.
 app = FastAPI(
-    title="DicomSegVR Dentistry",
+    title="ImplantPlan",
     version=os.getenv("DENT_VERSION", "dev"),
     docs_url="/v1/docs",
     openapi_url="/v1/openapi.json",
