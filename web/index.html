@@ -3,8 +3,16 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dentistry CBCT — DicomSegVR</title>
-<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='7' fill='%238b5cf6'/%3E%3Cpath d='M16 6c-3.6 0-6.4 1.9-6.4 5.2 0 2.4.9 3.6 1.4 6.1.4 2 .4 4.3 1 6.4.3 1 .8 2.3 1.7 2.3 1.1 0 1.3-1.6 1.5-3.1.2-1.6.4-3.1 .8-3.1s.6 1.5.8 3.1c.2 1.5.4 3.1 1.5 3.1.9 0 1.4-1.3 1.7-2.3.6-2.1.6-4.4 1-6.4.5-2.5 1.4-3.7 1.4-6.1C22.4 7.9 19.6 6 16 6z' fill='%23fff'/%3E%3C/svg%3E">
+<title>ImplantPlan — DicomSegVR</title>
+<!-- PHOTOGRAPHIC, not a vector tooth. The identity has no drawn mark anywhere: every
+     object it shows is a render of measured anatomy, so the icon is the implant lockup
+     cropped to a tile rather than a glyph. It reads as a fixture at 32px and softens to a
+     metallic sliver at 16 -- the stated price of that rule, not a defect in it.
+     16 and 32 are both declared so the browser picks rather than downsampling 512. -->
+<link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png?v=dev">
+<link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png?v=dev">
+<link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=dev">
+<meta name="theme-color" content="#0a0e13">
 <!-- `?v=` is stamped with the image tag at build time (see Dockerfile.web).
      nginx.conf asks for `no-cache` on css/js and Cloudflare overrides it with its
      own 4-hour Browser Cache TTL, so a redeploy served new HTML against old CSS --
@@ -20,9 +28,18 @@
      between the view tabs and the open case's title, so the bar never grows a
      second line and the case title never competes with navigation. -->
 <header class="topbar">
-  <a class="brand" href="#/cases" id="brand">
-    <span class="mark" aria-hidden="true"></span>
-    <span class="brand-name">Dentistry CBCT</span>
+  <!-- ONE image, not a mark beside a name. The identity's rule is "the name is the logo",
+       and its Never list names the exact thing this used to be: an icon beside a wordmark.
+       The 22px gradient tile that sat here carried no glyph at all.
+       TWO files, because `.brand-name` used to be hidden below 900px and the tile was
+       therefore the entire brand on a phone -- delete the tile naively and mobile goes
+       unbranded. The wordmark is 5.9:1 wide and stops fitting; the icon takes over. An
+       icon ALONE is not an icon BESIDE a wordmark, so the rule still holds. -->
+  <a class="brand" href="#/cases" id="brand" aria-label="ImplantPlan">
+    <img class="brand-word" src="assets/brand/wordmark.png?v=dev" alt="ImplantPlan"
+         width="669" height="114" decoding="async">
+    <img class="brand-icon" src="assets/brand/icon-64.png?v=dev" alt="ImplantPlan"
+         width="64" height="64" decoding="async">
   </a>
 
   <nav class="nav" id="nav" aria-label="Views">

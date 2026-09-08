@@ -16,5 +16,10 @@ COPY docker/web-default.conf /etc/nginx/conf.d/default.conf
 # index.html references its assets as `app.css?v=dev`; the tag is rewritten at build
 # time so a redeploy cannot leave a browser holding last version's JS. The grep is
 # the point: a silent no-op sed would ship a cache-busting scheme that busts nothing.
+# The wordmark is checked as well as the stylesheet. The grep only ever asserted
+# `app.css`, so a brand asset added without the `?v=dev` suffix would have been stamped
+# by nothing and served stale from a warm cache for as long as Cloudflare held it --
+# silently, because the build would still pass.
 RUN sed -i "s/?v=dev/?v=${VERSION}/g" /usr/share/nginx/html/index.html \
-    && grep -q "app.css?v=${VERSION}" /usr/share/nginx/html/index.html
+    && grep -q "app.css?v=${VERSION}" /usr/share/nginx/html/index.html \
+    && grep -q "wordmark.png?v=${VERSION}" /usr/share/nginx/html/index.html
