@@ -535,9 +535,21 @@ async function main() {
     await sleep(3200);
   };
 
-  await push(0.5, 'Seat it deeper');
-  await push(1.0, 'Closer still');
+  // Verified against the real pack at this site before shooting: 1.0 mm deeper reads
+  // TIGHT at 2.55 and 1.5 mm reads BREACH at 2.07. They are INPUTS, not claims -- every
+  // caption still comes from whatever the server answers -- but the assertion below
+  // refuses a take where they stop producing the three grades this film is about.
+  await push(1.0, 'Seat it deeper');
+  await push(1.5, 'Closer still');
   await push(0, 'Back to the crest');
+
+  const got = grades.map((g) => g.level);
+  if (got.join() !== 'tight,breach,clear') {
+    throw new Error(
+      `the depth sweep produced ${JSON.stringify(got)} rather than tight,breach,clear. `
+      + 'The whole piece is the three verdicts; a take that only shows two is not this '
+      + 'film. Re-derive the depths against the pack for this site.');
+  }
 
   beat('Verified in three dimensions',
        'The safety envelope is drawn at the surface<br>the verdict is computed against.');

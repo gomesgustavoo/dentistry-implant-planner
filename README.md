@@ -6,16 +6,16 @@
 
 [**dentistry.dicomsegvr.com**](https://dentistry.dicomsegvr.com) · research preview · **not a medical device, and not for diagnostic use**
 
-<img src="marketing/preview/verdict-sequence.gif" alt="One implant site at three seating depths: TIGHT at 2.71 mm, BREACH at 2.23 mm, CLEAR at 3.18 mm" width="880">
+<img src="marketing/preview/verdict-sequence.gif" alt="One implant site at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, CLEAR at 3.51 mm" width="880">
 
 </div>
 
-**One site, three depths.** The site is a real gap — a missing lower-left first molar, with
-11.9 mm of bone measured above the canal. An 8 mm fixture seated on the crest sits
-3.18 mm off the inferior alveolar canal: `CLEAR`. Half a millimetre deeper it is `TIGHT`
-at 2.71. A millimetre deeper it `BREACH`es at 2.23. Back to the crest and it is clear
-again. Every one of those millimetres has the canal's own boundary error taken out of it
-first.
+**One site, three depths.** The site is a real gap — a missing lower-left first molar,
+with 11.9 mm of bone measured above the canal and 6.7 mm of crestal width. An 8 mm fixture
+seated on the crest sits 3.51 mm off the inferior alveolar canal: `CLEAR`. A millimetre
+deeper it is `TIGHT` at 2.55. Half a millimetre deeper again it `BREACH`es at 2.07. Back
+to the crest and it is clear. Every one of those millimetres has the canal's own boundary
+error taken out of it first.
 
 That is the whole product. Every planner draws the nerve. None of them tells you how
 wrong the nerve is.
@@ -106,9 +106,14 @@ buccolingual angle at true angle and the mesiodistal one foreshortened by exactl
 capsule is a capsule. The panoramic is the other way round. Clocking is carried, drawn,
 and stated to change no measurement, because the measured solid is a body of revolution.
 
-**Seed as a restoration, then fit to the measurement.** The diameter comes from the tooth
-the site replaces — 3.3 mm at a lateral incisor, 4.8 mm at a first molar — narrowed if the
-measured ridge cannot take it. The length starts at the 10 mm a planner reaches for and
+**Seed as a restoration, then fit to the measurement.** It is seated **between the
+cortical plates**, not on the arch curve. The curve is fitted to crowns and interpolated
+across gaps, so at exactly the edentulous sites an implant goes it can sit to one side of
+the ridge underneath — and seating on it put a fixture's buccal wall against the outer
+cortex. `ridge.py` reports where the plates are and the platform is centred between them.
+
+The diameter comes from the tooth the site replaces — 3.3 mm at a lateral incisor, 4.8 mm
+at a first molar — narrowed if the measured ridge cannot take it. The length starts at the 10 mm a planner reaches for and
 caps at 13 mm however much bone there is. Deliberately not "the largest fixture that
 fits", which is what the seeding used to compute and no clinician would plan.
 
