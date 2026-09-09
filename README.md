@@ -23,13 +23,13 @@ wrong the nerve is.
 **Implant planning** · 1:51 — click a tooth position, seed a fixture, watch it fit itself
 to the measurement, and see a plan refused when it should be.
 
-<video src="https://github.com/user-attachments/assets/bbe04886-6f4b-4dca-b988-7674f9e9b1ad" controls muted playsinline width="100%"></video>
+<video src="https://github.com/user-attachments/assets/bbe04886-6f4b-4dca-b988-7674f9e9b1ad" controls muted></video>
 
 **Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a
 byte is sent, about 98 seconds of GPU for the two models that run, and a report that
 publishes its own error.
 
-<video src="https://github.com/user-attachments/assets/2b29ad19-3fae-4059-8a5c-7dcf145d2fd8" controls muted playsinline width="100%"></video>
+<video src="https://github.com/user-attachments/assets/2b29ad19-3fae-4059-8a5c-7dcf145d2fd8" controls muted></video>
 
 Vertical cuts, for phones and for social:
 plan [9:16](marketing/video/implantplan-plan-9x16.mp4) ·
