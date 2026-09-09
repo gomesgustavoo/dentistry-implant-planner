@@ -20,36 +20,24 @@ wrong the nerve is.
 
 ## Watch
 
-<table>
-<tr>
-<td width="50%"><a href="marketing/video/implantplan-plan.mp4"><img src="marketing/stills/plan/verdict-breach.jpg" alt="A breached plan, refused rather than softened"></a></td>
-<td width="50%"><a href="marketing/video/implantplan-pipeline.mp4"><img src="marketing/stills/pipeline/segmentation.jpg" alt="37 structures segmented from one cone-beam CT"></a></td>
-</tr>
-<tr valign="top">
-<td>
+**Implant planning** · 1:51 — click a tooth position, seed a fixture, watch it fit itself
+to the measurement, and see a plan refused when it should be.
 
-**Implant planning** · 1:51
-[16:9](marketing/video/implantplan-plan.mp4) ·
-[9:16](marketing/video/implantplan-plan-9x16.mp4) ·
-[4:5](marketing/video/implantplan-plan-4x5.mp4)
+<video src="https://github.com/user-attachments/assets/bbe04886-6f4b-4dca-b988-7674f9e9b1ad" controls muted playsinline width="100%"></video>
 
-Click a tooth position, seed a fixture, watch it fit itself to the measurement, and see
-a plan refused when it should be.
+**Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a
+byte is sent, about 98 seconds of GPU for the two models that run, and a report that
+publishes its own error.
 
-</td>
-<td>
+<video src="https://github.com/user-attachments/assets/2b29ad19-3fae-4059-8a5c-7dcf145d2fd8" controls muted playsinline width="100%"></video>
 
-**Scan to structures** · 1:34
-[16:9](marketing/video/implantplan-pipeline.mp4) ·
+Vertical cuts, for phones and for social:
+plan [9:16](marketing/video/implantplan-plan-9x16.mp4) ·
+[4:5](marketing/video/implantplan-plan-4x5.mp4) — pipeline
 [9:16](marketing/video/implantplan-pipeline-9x16.mp4) ·
-[4:5](marketing/video/implantplan-pipeline-4x5.mp4)
-
-One upload, a model catalogue you choose from before a byte is sent, about 98 seconds of
-GPU for the two models that run, and a report that publishes its own error.
-
-</td>
-</tr>
-</table>
+[4:5](marketing/video/implantplan-pipeline-4x5.mp4).
+Both masters are committed under [`marketing/video/`](marketing/video/) as well, so the
+page still works if the players ever stop resolving.
 
 Both films are recorded from the running app on a real GPU. The verdicts, the clearances
 and the scores in them are read back out of the page rather than typed into a script —

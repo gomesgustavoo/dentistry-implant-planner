@@ -14,9 +14,12 @@
 # produced two, already rewritten to the signed host.
 #
 # Attachment URLs only come from GitHub's own uploader (drag a file into an issue or
-# comment box), so they cannot be produced by a build step or a commit. A file committed
-# to the repository can therefore never autoplay in a README. The GIF can, so the GIF is
-# what moves on the page, and the master is one click behind it.
+# comment box), so they cannot be produced by a build step or a commit. The README does
+# carry two real players off such URLs -- see `marketing/README.md` for the recipe -- but
+# they live OUTSIDE the repository and a re-cut film does not update them.
+#
+# This GIF is the part that cannot rot: it is committed, it moves on the page without a
+# player, and it survives the attachment URLs going away.
 #
 # WHY THESE THREE WINDOWS. The film's state changes a beat BEFORE the caption plate that
 # names it -- the recorder drives the app, then the plate for that beat fades up. A window

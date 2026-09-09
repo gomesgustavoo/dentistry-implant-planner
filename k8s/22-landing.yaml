@@ -23,6 +23,12 @@ spec:
       containers:
       - image: dentistry/landing:0.11.0
         imagePullPolicy: IfNotPresent
+        # 3s, not 1s. At 1s this probe killed a healthy container: the pod exited 0
+        # ("Completed", not OOMKilled) after 19h up, while the host was saturated by
+        # video encodes, and three consecutive 1-second misses is all it takes. nginx
+        # serving four static files on a 200m CPU quota is not dead because it answered
+        # in 1.2s under load -- and the restart it causes is a real outage for whichever
+        # requests were in flight.
         livenessProbe:
           failureThreshold: 3
           httpGet:
@@ -32,7 +38,7 @@ spec:
           initialDelaySeconds: 5
           periodSeconds: 15
           successThreshold: 1
-          timeoutSeconds: 1
+          timeoutSeconds: 3
         name: landing
         ports:
         - containerPort: 8080

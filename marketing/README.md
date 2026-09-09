@@ -52,6 +52,38 @@ scripts/make_preview_gif.sh
 `build_trailer.sh` writes straight into `video/`. Point `TRAILER_OUT` somewhere else to
 try a cut without overwriting a published one.
 
+## Getting a GitHub video player
+
+The README's two players are **not** served from this folder, and cannot be. Measured
+rather than assumed:
+
+* `<video>` survives GitHub's sanitizer for any `src` — the `/markdown` API returns the
+  tag intact for a relative path, `/raw/`, `raw.githubusercontent.com`, `?raw=1` and a
+  release download alike.
+* The **site's** render pipeline is stricter. On a real repo page all four repo-hosted
+  candidates produced **zero** `<video>` elements in the DOM. Only an attachment URL
+  survives, and GitHub rewrites it at render time into a signed
+  `private-user-images.githubusercontent.com` URL — which is the whole mechanism.
+
+Attachment URLs are minted only by GitHub's own uploader, so no commit, build step or
+release upload can produce one. The recipe, when a film is re-cut and the players need
+replacing:
+
+1. Open `https://github.com/<owner>/<repo>/issues/new`.
+2. Drag the mp4 into the comment box and wait for
+   `<!-- Uploading "…" -->` to become a `https://github.com/user-attachments/assets/<uuid>`
+   URL.
+3. Copy the URL into the README's `<video src=…>`.
+4. **Close the tab without submitting.** The issue is only a vehicle for the uploader;
+   nothing needs to be posted.
+
+Current URLs — `implantplan-plan.mp4` is `bbe04886-6f4b-4dca-b988-7674f9e9b1ad`,
+`implantplan-pipeline.mp4` is `2b29ad19-3fae-4059-8a5c-7dcf145d2fd8`.
+
+Because those live outside the repository, the committed masters stay committed and the
+in-repo GIF stays the hero. If an attachment URL ever stops resolving, the README loses
+two players and keeps everything else.
+
 ## Rules these assets are held to
 
 **Numbers come out of the app, never off a keyboard.** Captions quote what the page
