@@ -16,7 +16,7 @@ marketing/
 
 | file | what it shows | length |
 |---|---|--:|
-| `video/implantplan-plan.mp4` | Implant planning end to end: seeding, the fit loop, CLEAR → TIGHT → BREACH, the safety envelope, export. | 1:51 |
+| `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, the safety envelope. | 1:39 |
 | `video/implantplan-pipeline.mp4` | The other half: upload, the model catalogue, segmentation, the findings report, the error budget, the structure list. | 1:34 |
 
 `-9x16` and `-4x5` are the same master **placed** in a branded frame, never cropped or
@@ -92,6 +92,16 @@ in-repo GIF stays the hero. If an attachment URL ever stops resolving, the READM
 two players and keeps everything else.
 
 ## Rules these assets are held to
+
+**The site is a real gap, and it is chosen by the case rather than by the script.** The
+first cut named FDI 46 and 38 in `record_trailer.mjs` and was shot on a full-dentition
+scan, so both "implant sites" still had a tooth standing in them — the app said so on
+screen: *"tooth 38 is still present in this scan, so this may be the distance to the tooth
+being replaced rather than to a neighbour"*. That is an extraction site, not an implant
+site. The recorder now reads the chart's own `.absent` positions, keeps the posterior
+mandibular ones, and requires `ridge.py` to have measured both a crest and a bone height
+there — without a crest the implant falls back to the occlusal plane, which is a guess.
+`scripts/find_edentulous_case.py` ranks candidate scans the same way.
 
 **Numbers come out of the app, never off a keyboard.** Captions quote what the page
 rendered — the fit line, the verdict level, the clearance in millimetres — and the
