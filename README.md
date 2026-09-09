@@ -22,25 +22,36 @@ wrong the nerve is.
 
 ## Watch
 
-**Implant planning** · 1:39 — click the gap where a tooth is missing, seed a fixture,
-watch it size itself to the bone that is actually there, and see a plan refused when it
-should be.
+<table>
+<tr>
+<td width="50%"><a href="marketing/video/implantplan-plan.mp4"><img src="marketing/stills/plan/verdict-breach.jpg" alt="A breached plan, refused rather than softened"></a></td>
+<td width="50%"><a href="marketing/video/implantplan-pipeline.mp4"><img src="marketing/stills/pipeline/segmentation.jpg" alt="37 structures segmented from one cone-beam CT"></a></td>
+</tr>
+<tr valign="top">
+<td>
 
-<video src="https://github.com/user-attachments/assets/7f902ea8-0e9c-46a3-82a9-29b65d5f9ce5" controls muted></video>
+**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:39 — click the gap where
+a tooth is missing, seed a fixture, watch it size itself to the bone that is actually
+there, and see a plan refused when it should be.
 
-**Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a
-byte is sent, about 98 seconds of GPU for the two models that run, and a report that
-publishes its own error.
+</td>
+<td>
 
-<video src="https://github.com/user-attachments/assets/2b29ad19-3fae-4059-8a5c-7dcf145d2fd8" controls muted></video>
+**[Scan to structures](marketing/video/implantplan-pipeline.mp4)** · 1:34 — one upload, a
+model catalogue you choose from before a byte is sent, about 98 seconds of GPU for the two
+models that run, and a report that publishes its own error.
+
+</td>
+</tr>
+</table>
 
 Vertical cuts, for phones and for social:
 plan [9:16](marketing/video/implantplan-plan-9x16.mp4) ·
 [4:5](marketing/video/implantplan-plan-4x5.mp4) — pipeline
 [9:16](marketing/video/implantplan-pipeline-9x16.mp4) ·
 [4:5](marketing/video/implantplan-pipeline-4x5.mp4).
-Both masters are committed under [`marketing/video/`](marketing/video/) as well, so the
-page still works if the players ever stop resolving.
+Every cut is committed under [`marketing/video/`](marketing/video/); clicking a poster
+opens GitHub's own player on the file.
 
 Both films are recorded from the running app on a real GPU. The verdicts, the clearances
 and the scores in them are read back out of the page rather than typed into a script —

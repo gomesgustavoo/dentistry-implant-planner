@@ -66,30 +66,38 @@ rather than assumed:
   `private-user-images.githubusercontent.com` URL — which is the whole mechanism.
 
 Attachment URLs are minted only by GitHub's own uploader, so no commit, build step or
-release upload can produce one. The recipe, when a film is re-cut and the players need
-replacing:
+release upload can produce one.
 
-1. Open `https://github.com/<owner>/<repo>/issues/new`.
-2. Drag the mp4 into the comment box and wait for
-   `<!-- Uploading "…" -->` to become a `https://github.com/user-attachments/assets/<uuid>`
-   URL.
-3. Copy the URL into the README's `<video src=…>`.
-4. **Close the tab without submitting.** The issue is only a vehicle for the uploader;
-   nothing needs to be posted.
+**And the upload alone is not enough — the asset has to be POSTED.** This was got wrong
+here once and it is worth writing down properly. Uploading through an issue composer and
+then closing the tab without submitting yields a URL that works *for the account that
+uploaded it* and 404s for everyone else, because GitHub only signs a URL for an asset
+bound to something in the repository. An orphaned upload is bound to nothing.
 
-Current URLs — `implantplan-plan.mp4` is `7f902ea8-0e9c-46a3-82a9-29b65d5f9ce5`,
-`implantplan-pipeline.mp4` is `2b29ad19-3fae-4059-8a5c-7dcf145d2fd8`.
+The failure is invisible to the person who made it: check the page while signed in as the
+uploader and the video plays, which is exactly how a broken README got verified as
+working. What separates the two, on the rendered HTML:
 
-**Write only `src`, `controls` and `muted`.** Everything else is dropped: `poster`,
-`playsinline` and `width` were all sanitized away, checked on the rendered element, and
-GitHub sizes the player to the column itself (836 px) and sets its own `preload`. A
-`poster` would have fixed the black opening frame — the title card fades up from black —
-but the attribute does not survive, so the only way to change that thumbnail is to change
-the first frame of the film.
+```
+# posted, and public -- GitHub rewrites to a signed URL
+<video src="https://private-user-images.githubusercontent.com/.../....mp4?jwt=eyJ...">
+# orphaned -- left as-is, and 404 to anyone but the uploader
+<video src="https://github.com/user-attachments/assets/<uuid>">
+```
 
-Because those live outside the repository, the committed masters stay committed and the
-in-repo GIF stays the hero. If an attachment URL ever stops resolving, the README loses
-two players and keeps everything else.
+So: `curl -sI https://github.com/user-attachments/assets/<uuid>` from a shell with no
+session, or diff `curl -s <repo url> | grep -o '<video[^>]*'` against a repo whose videos
+are known to work. Signed-in eyes cannot see this bug.
+
+Until the assets are posted somewhere in the repo, the README uses poster stills linking
+to the committed masters — GitHub renders its own player on an `.mp4` blob page, which
+needs no attachment and works signed out.
+
+**If you do post them, write only `src`, `controls` and `muted`.** Everything else is
+dropped: `poster`, `playsinline` and `width` were all sanitized away, checked on the
+rendered element, and GitHub sizes the player to the column itself (836 px) and sets its
+own `preload`. A `poster` would have fixed the black opening frame — the title card fades
+up from black — but the attribute does not survive.
 
 ## Rules these assets are held to
 
