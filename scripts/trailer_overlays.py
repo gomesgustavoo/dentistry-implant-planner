@@ -37,6 +37,7 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import pathlib
 from pathlib import Path
 
 BRAND = Path.home() / "brand"
@@ -44,6 +45,10 @@ TOKENS = BRAND / "tokens"
 FONTS = BRAND / "fonts"
 LOGO = BRAND / "raster" / "implantplan" / "logo.png"
 WORDMARK = BRAND / "raster" / "implantplan" / "wordmark.png"
+# The 1200x630 card the README opens with. It IS the opening frame, so the film and
+# the page lead on the same image and the video's thumbnail is that image rather than
+# whatever the first frame happened to be.
+BANNER = pathlib.Path(__file__).resolve().parent.parent / "marketing" / "brand" / "banner.png"
 
 # The mandatory footer line, verbatim from the identity's own guide. It ships wherever
 # anything ImplantPlan-branded ships, and a video is the one artifact that travels away
@@ -159,6 +164,9 @@ body{background:var(--ds-ground);display:flex;align-items:center;
    4.9:1 this lockup measures, which is the weakest of the three and not to be
    re-typeset. */
 .logo{width:440px;height:440px;object-fit:contain;margin-bottom:-26px}
+.banner-wrap{position:absolute;inset:0;display:flex;align-items:center;
+  justify-content:center;background:var(--ds-ground)}
+.banner{width:100%;height:auto;display:block}
 .word{height:74px;width:auto}
 .tag{font-family:'Archivo',sans-serif;font-weight:700;font-size:40px;
   font-stretch:var(--ds-wide,116%);letter-spacing:-.02em;color:var(--ds-ink)}
@@ -187,13 +195,22 @@ TITLES = {
 
 
 def title_html(variant: str = "trailer") -> str:
-    tag, sub = TITLES.get(variant, TITLES["trailer"])
-    return (head(CARD_CSS) + '<body><div class="mesh"></div><div class="dots"></div>'
-            '<div class="stack">'
-            f'<img class="logo" src="file://{LOGO}">'
-            f'<div class="tag">{tag}</div>'
-            f'<div class="sub">{sub}</div>'
-            "</div></body>")
+    """The opening card IS the README's banner, full bleed.
+
+    It used to be the logo lockup over a tag line, which meant the film opened on one
+    image and the page it links from opened on another. One image doing both jobs is
+    also the video's thumbnail, and a thumbnail is the only frame most people ever see.
+
+    The banner is 1200x630 (1.90:1) against a 16:9 frame, so it is CONTAINed rather than
+    cropped -- its corner brackets sit close to the edge and covering would cut them off.
+    The letterbox is the brand ground the banner's own corners fade to, so the seam does
+    not read as a seam.
+    """
+    return (head(CARD_CSS)
+            + '<body style="background:var(--ds-ground)">'
+              '<div class="banner-wrap">'
+              f'<img class="banner" src="file://{BANNER}">'
+              "</div></body>")
 
 
 def end_html(host: str) -> str:

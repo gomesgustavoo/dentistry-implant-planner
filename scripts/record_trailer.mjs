@@ -142,12 +142,55 @@ const beats = [];
 // The storyboard's own length, asserted at the end. Update this when a beat is added or
 // cut -- that is the point: a change to the cut should be a deliberate edit here, not
 // something a crashed browser can do silently.
-const EXPECTED_BEATS = 13;
+const EXPECTED_BEATS = 14;
 let t0 = 0;
 function beat(eyebrow, headline, numeral = '') {
   const at = (Date.now() - t0) / 1000;
   beats.push({ at: Number(at.toFixed(2)), eyebrow, headline, numeral });
   console.log(`  ${at.toFixed(1).padStart(6)}s  ${headline}`);
+}
+
+/* Orbit the 3-D pane with a REAL mouse drag.
+ *
+ * There is no camera API on `DentistryViewer` -- `focusStructure` and `focusImplant`
+ * frame things, they do not turn them -- and adding one for a film would be the wrong
+ * order of business. The pane is a vtk.js trackball, so `Input.dispatchMouseEvent` down
+ * the middle of it turns the camera exactly the way a person's mouse does. The film then
+ * shows the interaction rather than an animation of one.
+ *
+ * The drag is emitted in steps because a single jump from press to release rotates once,
+ * at the frame rate of one event; the capture loop would see two frames of it. Fourteen
+ * small moves at ~40 ms is a turn the camera renders through and the recorder catches.
+ *
+ * AND IT IS SHORT ON PURPOSE. 330 px of drag was tried and the camera ended up inside the
+ * roots with the implant off the edge of the pane -- and every beat after it inherited
+ * that view, so the closing fifteen seconds were unreadable. ~100 px turns enough to show
+ * it is a solid in space, and the caller re-frames afterwards.
+ */
+async function orbit3d(ev, { steps = 14, dx = 7, dy = -2 } = {}) {
+  const box = await ev('Runtime.evaluate', {
+    expression: `(() => {
+      const el = document.getElementById('plan3d');
+      if (!el) return null;
+      const r = el.getBoundingClientRect();
+      return { x: Math.round(r.left + r.width / 2), y: Math.round(r.top + r.height / 2) };
+    })()`,
+    returnByValue: true,
+  });
+  const at = box.result && box.result.value;
+  if (!at) { console.log('  orbit: no #plan3d pane, skipping'); return false; }
+  let { x, y } = at;
+  const mouse = (type, button = 'left', clickCount = 0) =>
+    ev('Input.dispatchMouseEvent', { type, x, y, button, clickCount, buttons: 1 });
+  await mouse('mousePressed', 'left', 1);
+  for (let i = 0; i < steps; i += 1) {
+    x += dx; y += dy;
+    await mouse('mouseMoved');
+    await sleep(40);
+  }
+  await mouse('mouseReleased', 'left', 1);
+  console.log(`  orbit: dragged ${steps * dx}px across #plan3d`);
+  return true;
 }
 
 async function main() {
@@ -322,7 +365,10 @@ async function main() {
     const teeth = document.querySelectorAll('#archChart .tooth').length;
     return { ok: !!(p && p.arch && teeth > 0), teeth };
   })()`);
-  await sleep(4500);
+  // SHORT. Everything before the first click is the 3-D case overview, and on a scan
+  // whose maxilla is out of frame that view has little to show -- a mandible on its own,
+  // no opposing dentition. The film's subject is the implant, so it gets to the implant.
+  await sleep(2200);
 
   // ------------------------------------------------------------- choosing the sites
   // NOT hardcoded FDI codes, and not hardcoded counts. The first cut named 46 and 38 in
@@ -403,10 +449,10 @@ async function main() {
 
   beat(`${counts.structures} structures · ${counts.teeth} teeth in FDI`,
        'Both jaws, every tooth numbered,<br>and the nerve the implant has to miss.');
-  await sleep(5500);
+  await sleep(3200);
 
   beat('The site picker', 'A missing tooth is a site.<br>Click the gap to plan into it.');
-  await sleep(2600);
+  await sleep(1800);
   await js(`(() => {
     const t = document.querySelector('#archChart .tooth[data-fdi="${site.fdi}"]');
     if (!t) throw new Error('no FDI ${site.fdi} on the chart');
@@ -551,9 +597,41 @@ async function main() {
       + 'film. Re-derive the depths against the pack for this site.');
   }
 
+  // ANGULATION, and a real orbit of the 3-D. The implant is not a fixed post: it carries
+  // buccolingual tilt, mesiodistal yaw and clocking, and the section draws the first at
+  // true angle while the panoramic draws the second. Measured at this site the canal
+  // clearance barely moves across the whole range -- 3.51 to 3.34 mm over 20 degrees --
+  // so this beat is about the angles being CARRIED and DRAWN, not about a number
+  // swinging. Claiming otherwise would be the same lie in a different place.
+  await js(`(() => {
+    const p = implantState();
+    const i = (p.implants || [])[0];
+    if (!i) return;
+    i.tilt_deg = 12; i.yaw_deg = 8;
+    requestMeasure(0);
+    renderImplantPanel();
+  })()`);
+  await sleep(4000);
+  const angled = await readCanal();
+  console.log('  angled:', JSON.stringify(angled));
+  beat('Tilt · angulation · clocking',
+       'Angulation is carried in three axes.<br>The section draws it, and the number follows.',
+       angled.mm ? `${angled.mm} mm` : '');
+  // OUT AND BACK. The turn is the point of the beat, but the camera must not be left
+  // wherever the drag stopped: the last two beats -- the envelope and the refusal --
+  // inherit that view, and a trackball rotation swings the near teeth into the fore-
+  // ground, so they were reading as an unexplained zoom. Re-framing through
+  // `focusPending` was tried and did not take (`focusImplant` returns false when the
+  // actor is already framed). Driving the drag back is the same mechanism in reverse and
+  // needs nothing to cooperate.
+  await orbit3d(ev, { steps: 14, dx: 7, dy: -2 });
+  await sleep(1200);
+  await orbit3d(ev, { steps: 14, dx: -7, dy: 2 });
+  await sleep(1400);
+
   beat('Verified in three dimensions',
        'The safety envelope is drawn at the surface<br>the verdict is computed against.');
-  await sleep(5500);
+  await sleep(5000);
 
   beat('And where it cannot grade, it refuses',
        'A measurement with a caveat is shown<br>as <em>not graded</em>, never as clear.');

@@ -126,6 +126,10 @@ ffmpeg -y -loglevel error -i "$BODY" "${IN_ARGS[@]}" \
 echo "   -> body-plated.mp4 ($(du -h "$WORK/body-plated.mp4" | cut -f1))"
 
 # ------------------------------------------------------- 2. cards, one graph, one encode
+# NO FADE-IN ON THE TITLE. Frame 0 is the poster frame every player and every embed shows
+# before anyone presses play, and a half-second fade from black makes that frame black.
+# The card is the README's banner, so the film's thumbnail is now the same image the page
+# leads with. The fade OUT stays; it is the cut into the body.
 OUT_ST=$(./venv/bin/python -c "print(max(0.0, $BODY_S - $FADE))")
 ffmpeg -y -loglevel error \
   -loop 1 -t "$TITLE_S" -i "$WORK/title.png" \
@@ -133,7 +137,7 @@ ffmpeg -y -loglevel error \
   -loop 1 -t "$END_S"   -i "$WORK/end.png" \
   -filter_complex "
     [0:v]scale=${W}:${H},fps=${FPS},format=yuv420p,
-         fade=t=in:st=0:d=${FADE},fade=t=out:st=$(./venv/bin/python -c "print($TITLE_S-$FADE)"):d=${FADE}[t];
+         fade=t=out:st=$(./venv/bin/python -c "print($TITLE_S-$FADE)"):d=${FADE}[t];
     [1:v]scale=${W}:${H},fps=${FPS},format=yuv420p,
          fade=t=in:st=0:d=${FADE},fade=t=out:st=${OUT_ST}:d=${FADE}[b];
     [2:v]scale=${W}:${H},fps=${FPS},format=yuv420p,

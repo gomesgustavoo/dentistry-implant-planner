@@ -45,10 +45,10 @@ FPS="${PREVIEW_FPS:-12}"
 mkdir -p "$(dirname "$OUT")"
 
 # start;duration  -- inside one plate each, on the state that plate names.
-# Derived from `trailer-beats.json` plus TRAILER_TITLE_S: the verdict plates sit at
-# 56.13 / 65.84 / 75.55 in body time, so 59.6 / 69.3 / 79.1 in the master, and each runs
-# until the next. These start a beat after each plate fades up and end before it fades.
-WINDOWS=("60.2;3.6" "70.0;3.6" "79.6;2.4")
+# Derived from `trailer-beats.json` plus TRAILER_TITLE_S. In master time the verdict
+# plates run 54.25-63.95 (TIGHT), 63.95-73.66 (BREACH) and 73.66-80.86 (CLEAR); these
+# windows start after each plate has faded up and end before it fades out.
+WINDOWS=("55.0;3.6" "64.6;3.6" "74.3;2.6")
 
 IN_ARGS=(); PRE=""; CAT=""
 for i in "${!WINDOWS[@]}"; do
