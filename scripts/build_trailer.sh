@@ -27,7 +27,9 @@ BEATS="${TRAILER_BEATS:-$WORK/trailer-beats.json}"
 STEM="${TRAILER_STEM:-implantplan-plan}"
 
 TITLE_S="${TRAILER_TITLE_S:-3.5}"
-END_S="${TRAILER_END_S:-5.5}"
+# 7s, not 5.5: the card now carries two asks, an address and an email, and 5.5 was
+# already tight for a wordmark and a host.
+END_S="${TRAILER_END_S:-7.0}"
 FADE="${TRAILER_FADE:-0.5}"
 PLATE_FADE="${TRAILER_PLATE_FADE:-0.35}"
 FPS="${TOUR_OUT_FPS:-30}"

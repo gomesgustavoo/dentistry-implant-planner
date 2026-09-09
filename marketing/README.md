@@ -16,7 +16,7 @@ marketing/
 
 | file | what it shows | length |
 |---|---|--:|
-| `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, angulation with the 3-D turned by hand, the safety envelope. | 1:41 |
+| `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, angulation with the 3-D turned by hand, the safety envelope. | 1:42 |
 | `video/implantplan-pipeline.mp4` | The other half: upload, the model catalogue, segmentation, the findings report, the error budget, the structure list. | 1:34 |
 
 `-9x16` and `-4x5` are the same master **placed** in a branded frame, never cropped or
@@ -133,6 +133,23 @@ then CLEAR, and the script reads the three verdicts back out of the rendered fil
 hue of the verdict chip — 42° amber, 342° red, 159° green, which are far enough apart to
 tell apart by median. Slide a window one beat and it exits 1. That check exists because
 the first cut put BREACH under a caption reading *"Inside the comfortable band."*
+
+## The end card
+
+It is the only frame that asks for anything, so it asks twice: the free trial with the
+terms the signup page actually honours — 30 segmentations over 14 days, no card, quoted
+from `landing/index.html` rather than rounded up for a video — and then the custom-model
+ask with an address, which is the app's own contact section (*"a model trained on your
+data rather than a relabelling of this one"*).
+
+It used to be a wordmark, a host and a five-line grey block of disclaimers and credits.
+Nothing on that was actionable and the largest thing on it was legal text.
+
+**One line of that block survives, and deliberately.** "Not a medical device" is a safety
+claim on software that draws a nerve, and CC BY-NC-SA is BY as well as NC — the
+attribution is a licence term, and that licence is why this footage can be published at
+all. The Apache-2.0 third-party credits were the part that genuinely was decoration; those
+licences carry no notice-on-every-copy term, so they live in the repository README now.
 
 ## Stills
 
