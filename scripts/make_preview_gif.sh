@@ -1,10 +1,22 @@
 #!/usr/bin/env bash
 # The README hero: TIGHT -> BREACH -> CLEAR, as an animated GIF.
 #
-# WHY A GIF, when there is a 1080p master sitting next to it. GitHub's README renderer
-# strips `<video>`, and it will not serve an mp4 out of the repository into a player;
-# the only moving image that renders inline on a README is a GIF. So the master is
-# linked, and this is what actually moves on the page.
+# WHY A GIF, when there is a 1080p master sitting next to it, and when GitHub does have a
+# video player. Because the player is not reachable from a file in the repository.
+#
+# `<video>` survives GitHub's sanitizer -- that was measured, not assumed, via the
+# `/markdown` API, which returns the tag intact for ANY src. But the site's own render
+# pipeline then drops the element unless the src is an attachment URL
+# (`github.com/user-attachments/assets/<uuid>`), which it REWRITES into a signed
+# `private-user-images.githubusercontent.com/...` URL. Measured on a repo page: four
+# candidate sources -- relative path, `/raw/`, `raw.githubusercontent.com`, `?raw=1` --
+# produced zero <video> elements in the DOM; NVlabs/Eagle's attachment-backed page
+# produced two, already rewritten to the signed host.
+#
+# Attachment URLs only come from GitHub's own uploader (drag a file into an issue or
+# comment box), so they cannot be produced by a build step or a commit. A file committed
+# to the repository can therefore never autoplay in a README. The GIF can, so the GIF is
+# what moves on the page, and the master is one click behind it.
 #
 # WHY THESE THREE WINDOWS. The film's state changes a beat BEFORE the caption plate that
 # names it -- the recorder drives the app, then the plate for that beat fades up. A window
