@@ -4,7 +4,9 @@
 
 ### Place an implant on a cone-beam CT and get the clearance as a number — with the model's own measured error already subtracted from it.
 
-[**dentistry.dicomsegvr.com**](https://dentistry.dicomsegvr.com) · research preview · **not a medical device, and not for diagnostic use**
+[**Try it on your own scan**](https://dentistry.dicomsegvr.com) — 30 segmentations · 14 days · no card
+
+[dentistry.dicomsegvr.com](https://dentistry.dicomsegvr.com) · research preview · **not a medical device, and not for diagnostic use**
 
 <img src="marketing/preview/verdict-sequence.gif" alt="One implant site at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, CLEAR at 3.51 mm" width="880">
 
@@ -53,9 +55,12 @@ plan [9:16](marketing/video/implantplan-plan-9x16.mp4) ·
 Every cut is committed under [`marketing/video/`](marketing/video/); clicking a poster
 opens GitHub's own player on the file.
 
-Both films are recorded from the running app on a real GPU. The verdicts, the clearances
-and the scores in them are read back out of the page rather than typed into a script —
-see [`marketing/`](marketing/) for how they are made and what they are held to.
+Both films are recorded from the running app on a real GPU, and the case they use is a
+held-out scan the model never trained on. The verdicts, the clearances and the scores in
+them are read back out of the page rather than typed into a script; the implant film's
+opening frame is the banner at the top of this page, and both end on the same two asks the
+[Contact](#contact) section makes. See [`marketing/`](marketing/) for how they are made and
+what they are held to.
 
 ## The models are ours
 
@@ -105,6 +110,12 @@ buccolingual angle at true angle and the mesiodistal one foreshortened by exactl
 `cos(yaw)`, which is exact rather than approximate because the orthogonal projection of a
 capsule is a capsule. The panoramic is the other way round. Clocking is carried, drawn,
 and stated to change no measurement, because the measured solid is a body of revolution.
+
+<img src="marketing/stills/plan/angulation.jpg" alt="An implant at 12° buccolingual tilt and 8° mesiodistal yaw, the section drawing the tilt at true angle and the clearance still graded" width="880">
+
+Seated on the ridge and angled 12° buccolingually and 8° mesiodistally, still `CLEAR` at
+3.33 mm — the angles move that number by less than 0.2 mm across their whole range here,
+which is a fact about this site rather than a property of angulation.
 
 **Seed as a restoration, then fit to the measurement.** It is seated **between the
 cortical plates**, not on the arch curve. The curve is fitted to crowns and interpolated
@@ -242,6 +253,16 @@ screen.
   The cut is not committed for the same reason the fixtures are not.
 
 ## Contact
+
+**Try it on your own scan** at [dentistry.dicomsegvr.com](https://dentistry.dicomsegvr.com)
+— 30 segmentations over 14 days, whichever runs out first, and no card. Uploads are
+deleted as soon as the job completes.
+
+**Need a model trained on your own data?** The taxonomy here is 47 structures and it is
+somebody else's — if the class you need is not in it, or your annotation protocol differs,
+the answer is a model trained on your cases rather than a relabelling of this one. That
+takes annotated cases, one written protocol, and a held-out split you keep, because
+without a holdout no accuracy claim about the result is measurable.
 
 **Gustavo Formento** — the author of this service.
 
