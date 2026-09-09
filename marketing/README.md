@@ -16,7 +16,7 @@ marketing/
 
 | file | what it shows | length |
 |---|---|--:|
-| `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, the safety envelope. | 1:39 |
+| `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, angulation with the 3-D turned by hand, the safety envelope. | 1:41 |
 | `video/implantplan-pipeline.mp4` | The other half: upload, the model catalogue, segmentation, the findings report, the error budget, the structure list. | 1:34 |
 
 `-9x16` and `-4x5` are the same master **placed** in a branded frame, never cropped or
@@ -96,8 +96,8 @@ needs no attachment and works signed out.
 **If you do post them, write only `src`, `controls` and `muted`.** Everything else is
 dropped: `poster`, `playsinline` and `width` were all sanitized away, checked on the
 rendered element, and GitHub sizes the player to the column itself (836 px) and sets its
-own `preload`. A `poster` would have fixed the black opening frame — the title card fades
-up from black — but the attribute does not survive.
+own `preload`. `poster` not surviving is why the film's own first frame has to be the
+poster — see below.
 
 ## Rules these assets are held to
 
@@ -142,6 +142,12 @@ scrub fix is deliberately not here.
 
 ## Reuse
 
-`brand/banner.png` is the 1200×630 card — README header, OG image, link preview. Its
-anatomy is a render of real segmentation data, stylised; that sentence is set into the
+`brand/banner.png` is the 1200×630 card, and it does four jobs with one image: README
+header, OG image, link preview, and **the opening frame of the implant film**. That last
+one is why `build_trailer.sh` gives the title card no fade-in: frame 0 is the poster every
+player shows before anyone presses play, and a half-second fade from black makes that
+frame black. `poster` is stripped by GitHub's sanitizer, so the only lever on a video's
+thumbnail is the first frame itself.
+
+Its anatomy is a render of real segmentation data, stylised; that sentence is set into the
 image itself because the brand kit requires it to travel with the asset.

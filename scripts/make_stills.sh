@@ -31,15 +31,16 @@ grab() {  # grab <master> <seconds> <path>
     -vf "scale=${WIDTH}:-2:flags=lanczos" -q:v 3 -y "$3"
 }
 
-# name;seconds;expected verdict (or -- for no chip to check)
-# name;seconds;expected verdict. Master time = body beat + TRAILER_TITLE_S.
+# name;seconds;expected verdict (or `--` for a shot with no chip to check).
+# Master time = the recorder's beat + TRAILER_TITLE_S.
 PLAN_SHOTS=(
-  "seeded-clear;39.0;CLEAR"     # the clearance, first stated
-  "error-budget;45.5;CLEAR"     # the model's own error subtracted
-  "verdict-tight;61.5;TIGHT"    # seated 0.5 mm deeper
-  "verdict-breach;71.0;BREACH"  # 1.0 mm deeper, refused
-  "verdict-clear;80.5;CLEAR"    # back to the crest
-  "safety-envelope;84.5;--"     # the envelope in the verdict's colour
+  "seeded-clear;34.5;CLEAR"     # the clearance, first stated
+  "error-budget;40.5;CLEAR"     # the model's own error subtracted
+  "verdict-tight;56.5;TIGHT"    # seated 1.0 mm deeper
+  "verdict-breach;66.0;BREACH"  # 1.5 mm deeper, refused
+  "verdict-clear;76.0;CLEAR"    # back to the crest
+  "angulation;82.5;CLEAR"       # tilt and yaw carried, the 3-D mid-turn
+  "safety-envelope;86.5;--"     # the envelope in the verdict's colour
 )
 for s in "${PLAN_SHOTS[@]}"; do
   IFS=';' read -r name at _ <<<"$s"

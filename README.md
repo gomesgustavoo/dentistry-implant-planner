@@ -30,9 +30,9 @@ wrong the nerve is.
 <tr valign="top">
 <td>
 
-**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:39 — click the gap where
+**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:41 — click the gap where
 a tooth is missing, seed a fixture, watch it size itself to the bone that is actually
-there, and see a plan refused when it should be.
+there, angle it in three axes, and see a plan refused when it should be.
 
 </td>
 <td>
@@ -113,9 +113,10 @@ the ridge underneath — and seating on it put a fixture's buccal wall against t
 cortex. `ridge.py` reports where the plates are and the platform is centred between them.
 
 The diameter comes from the tooth the site replaces — 3.3 mm at a lateral incisor, 4.8 mm
-at a first molar — narrowed if the measured ridge cannot take it. The length starts at the 10 mm a planner reaches for and
-caps at 13 mm however much bone there is. Deliberately not "the largest fixture that
-fits", which is what the seeding used to compute and no clinician would plan.
+at a first molar — narrowed if the measured ridge cannot take it. The length starts at the
+10 mm a planner reaches for and caps at 13 mm however much bone there is. Deliberately not
+"the largest fixture that fits", which is what the seeding used to compute and no clinician
+would plan.
 
 Then the seed closes against the server's own answer: measure, and if the canal clearance
 is not clear, step down one catalogue length and measure again, up to three times. The
