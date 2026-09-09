@@ -30,7 +30,7 @@ wrong the nerve is.
 <tr valign="top">
 <td>
 
-**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:41 — click the gap where
+**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:42 — click the gap where
 a tooth is missing, seed a fixture, watch it size itself to the bone that is actually
 there, angle it in three axes, and see a plan refused when it should be.
 

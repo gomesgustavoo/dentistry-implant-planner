@@ -43,7 +43,6 @@ from pathlib import Path
 BRAND = Path.home() / "brand"
 TOKENS = BRAND / "tokens"
 FONTS = BRAND / "fonts"
-LOGO = BRAND / "raster" / "implantplan" / "logo.png"
 WORDMARK = BRAND / "raster" / "implantplan" / "wordmark.png"
 # The 1200x630 card the README opens with. It IS the opening frame, so the film and
 # the page lead on the same image and the video's thumbnail is that image rather than
@@ -53,19 +52,40 @@ BANNER = pathlib.Path(__file__).resolve().parent.parent / "marketing" / "brand" 
 # The mandatory footer line, verbatim from the identity's own guide. It ships wherever
 # anything ImplantPlan-branded ships, and a video is the one artifact that travels away
 # from the site it was recorded on.
-PERSONAL = "Personal projects. Not affiliated with any employer, and not a medical device."
-RESEARCH = "Research preview — not for diagnostic or treatment use."
+# The end card's two asks, both of them things the product actually offers.
+#
+# The trial terms are the landing page's own words (`landing/index.html`, and again in
+# `terms.html`) rather than a rounder number invented for a video: 30 segmentations over
+# 14 days, whichever runs out first, no card. A trailer that advertises a better offer
+# than the signup page honours is the one kind of marketing copy that costs money.
+#
+# The second ask is the app's own contact section, "A model for your structures" -- "the
+# answer is a model trained on your data rather than a relabelling of this one".
+TRIAL_HEAD = "Try it on your own scan."
+TRIAL_TERMS = "30 segmentations · 14 days · no card"
+CUSTOM_ASK = "Need a model trained on your own data?"
+CONTACT = "gustavo.formento@rtmedical.com.br"
+
+# ONE line, not six. The card used to end on a five-line grey block -- the personal
+# disclaimer, the research notice and three credits -- which read as legal furniture and
+# buried the two things anyone watching might act on.
+#
+# It is one line rather than none because both halves are obligations, not decoration.
+# "Not a medical device" is a safety claim on a piece of software that draws a nerve, and
+# CC BY-NC-SA is BY as well as NC: the attribution is a licence term, and the licence is
+# the reason this footage can be published at all. The Apache-2.0 third-party credits are
+# the part that genuinely was decoration here, and they are in the repository's README
+# where a reader can follow them.
+LEGAL = ("Research preview — not a medical device. Model weights derive from a "
+         "CC BY-NC-SA 4.0 research dataset.")
 # Attribution is not optional and does not depend on the film. The base weights carry a
 # CC BY-NC-SA term whose BY half survives however the catalogue is labelled on screen, and
 # the third-party models this app RUNS are Apache-2.0 and credited by name here even
 # though the frames call them Model C and Model D.
-CREDITS = [
-    "Base and canal specialist trained here; weights derived from a "
-    "CC BY-NC-SA 4.0 research dataset, held out of training.",
-    "Third-party models run by this app: ToothSeg (MIC-DKFZ) and "
-    "TotalSegmentator (Wasserthal et al.), both Apache-2.0.",
-    "Mark stylised from a render of real segmentation data.",
-]
+# The Apache-2.0 third-party credits that used to sit on the end card live in the
+# repository's README now. They are permissive licences with no notice-on-every-copy
+# term, so a video is not where they have to appear -- unlike the CC BY-NC-SA
+# attribution, which is in LEGAL above and stays on screen.
 
 
 def font_face(family: str, filename: str, weights: str) -> str:
@@ -157,13 +177,6 @@ body{background:var(--ds-ground);display:flex;align-items:center;
   background-size:28px 28px}
 .stack{position:relative;display:flex;flex-direction:column;align-items:center;
   text-align:center;gap:18px;padding:0 120px}
-/* The lockup already contains the wordmark, so the card does not repeat it -- one name,
-   once. 440px of a 1080-tall frame gives the object presence without crowding the line
-   under it; at 340 the card read as a small picture floating in a lot of ground.
-   Scaled as a UNIT: the scrim behind the glyphs is baked into the PNG and carries the
-   4.9:1 this lockup measures, which is the weakest of the three and not to be
-   re-typeset. */
-.logo{width:440px;height:440px;object-fit:contain;margin-bottom:-26px}
 .banner-wrap{position:absolute;inset:0;display:flex;align-items:center;
   justify-content:center;background:var(--ds-ground)}
 .banner{width:100%;height:auto;display:block}
@@ -177,6 +190,31 @@ body{background:var(--ds-ground);display:flex;align-items:center;
 .fine{position:absolute;left:0;right:0;bottom:52px;text-align:center;
   font-size:17px;line-height:1.65;color:var(--ds-faint)}
 .fine b{color:var(--ds-muted);font-weight:500}
+"""
+
+END_CSS = CARD_CSS + """
+/* Tighter than the shared stack: seven items, and the default 18px gap let them drift
+   apart into a list instead of reading as two asks. */
+.stack.end{gap:14px}
+.stack.end .word{height:92px;margin-bottom:18px}
+.stack.end .host{font-size:34px}
+.cta{font-family:'Archivo',sans-serif;font-weight:700;font-size:64px;line-height:1.08;
+  font-stretch:var(--ds-wide,116%);letter-spacing:-.02em;color:var(--ds-ink)}
+/* The offer, in the instrument voice the numerals use everywhere else in this film --
+   it is terms, and terms are figures. */
+.terms{font-family:'Geist Mono',ui-monospace,monospace;font-size:27px;font-weight:500;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--ds-muted);
+  font-stretch:var(--ds-narrow,78%)}
+/* The gradient rule the caption plates use, not a hairline border. A 1px --ds-border
+   line rendered as almost nothing against the ground and read as a gap rather than a
+   divider; this is the same mark the eye has been following for ninety seconds. */
+.split{width:120px;height:3px;border-radius:2px;background:var(--ds-grad-cta);
+  margin:26px 0 12px;opacity:.9}
+.ask{font-size:33px;color:var(--ds-muted);line-height:1.35}
+.mail{font-family:'Geist Mono',ui-monospace,monospace;font-size:30px;font-weight:600;
+  color:var(--ds-ink);letter-spacing:.01em}
+.legal{position:absolute;left:0;right:0;bottom:46px;text-align:center;
+  font-size:15px;line-height:1.6;color:var(--ds-faint)}
 """
 
 
@@ -214,13 +252,27 @@ def title_html(variant: str = "trailer") -> str:
 
 
 def end_html(host: str) -> str:
-    fine = f"<b>{PERSONAL}</b><br>{RESEARCH}<br>" + "<br>".join(CREDITS)
-    return (head(CARD_CSS) + '<body><div class="mesh"></div><div class="dots"></div>'
-            '<div class="stack">'
+    """The last frame is the only one that asks for anything, so it asks twice.
+
+    Was: wordmark, host, and a five-line grey block of disclaimers and credits. That is
+    an end slate, not an ending -- nothing on it was actionable and the largest thing on
+    it was the legal text.
+
+    Now: the free trial with its real terms and the address to take it, then the custom
+    model ask and an email. The wordmark and the host stay; the grey block is one line at
+    the bottom carrying only what is actually obligatory.
+    """
+    return (head(END_CSS) + '<body><div class="mesh"></div><div class="dots"></div>'
+            '<div class="stack end">'
             f'<img class="word" src="file://{WORDMARK}">'
+            f'<div class="cta">{TRIAL_HEAD}</div>'
+            f'<div class="terms">{TRIAL_TERMS}</div>'
             f'<div class="host">{host}</div>'
+            '<div class="split"></div>'
+            f'<div class="ask">{CUSTOM_ASK}</div>'
+            f'<div class="mail">{CONTACT}</div>'
             "</div>"
-            f'<div class="fine">{fine}</div></body>')
+            f'<div class="legal">{LEGAL}</div></body>')
 
 
 # --------------------------------------------------------------- the corner bug
@@ -309,7 +361,7 @@ def main() -> int:
 
     out = Path(a.out)
     out.mkdir(parents=True, exist_ok=True)
-    for f in (LOGO, WORDMARK, TOKENS / "platform.css", TOKENS / "band-implantplan.css"):
+    for f in (BANNER, WORDMARK, TOKENS / "platform.css", TOKENS / "band-implantplan.css"):
         if not f.exists():
             raise SystemExit(f"missing brand asset: {f}")
 
