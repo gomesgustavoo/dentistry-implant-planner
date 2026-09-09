@@ -46,6 +46,27 @@ def _window(vol: np.ndarray) -> tuple[float, float]:
     return DEFAULT_WINDOW
 
 
+def _to_u8(sl: np.ndarray, width: float, level: float) -> np.ndarray:
+    """Window a slice to 8-bit for saving as an image.
+
+    THIS IS NOT DEAD CODE, although it looks like it from inside this module: nothing
+    here calls it. `worker/panoramic.py` imports it, and that is what builds the
+    panoramic and the cross-sections -- the planning pack, which is the entire plan tab.
+
+    It was deleted in 8c3066f along with the slice JPEGs the retired Slices tab used.
+    That commit kept "what other things depend on" and checked `volume_pack` and
+    `rtstruct`; `panoramic` imports it inside a function body, so no import error fired
+    at start-up and nothing failed until a case was processed. Then it failed the way
+    that costs the most: caught, written to `report.planning.error`, and otherwise
+    silent. Every case uploaded between 2026-09-04 and the fix got a segmentation, a
+    structure set and no plan tab, and the three seeded examples predate it and kept
+    working, so the demo looked fine throughout.
+    """
+    lo = level - width / 2
+    out = (sl.astype(np.float32) - lo) / max(width, 1e-6)
+    return (np.clip(out, 0.0, 1.0) * 255).astype(np.uint8)
+
+
 def _indices(n: int) -> list[int]:
     if n <= MAX_SLICES_PER_PLANE:
         return list(range(n))
