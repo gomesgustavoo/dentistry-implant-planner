@@ -258,11 +258,14 @@ async function main() {
   // about implant planning, and the licence's attribution requirement is met on the end
   // card instead. This writes to the DOM of a throwaway headless profile; nothing here
   // reaches the app.
+  // The subtitle goes now; the TITLE waits until the site is known, a few beats below.
+  // It used to be the literal 'Lower right posterior', written for a case this script no
+  // longer films -- and on a lower-LEFT site that is the wrong side of the mouth, on
+  // screen, for the whole ninety seconds. Third literal of the same kind in this rig,
+  // after 0.8887 and "14 mm of bone here, not 24".
   await js(`(() => {
     const sub = document.getElementById('caseSub');
     if (sub) sub.textContent = '';
-    const t = document.getElementById('caseTitle');
-    if (t) t.textContent = 'Lower right posterior';
   })()`);
 
   // ------------------------------------------------------- the capture loop
@@ -321,21 +324,108 @@ async function main() {
   })()`);
   await sleep(4500);
 
-  beat('37 structures · 32 teeth in FDI',
+  // ------------------------------------------------------------- choosing the sites
+  // NOT hardcoded FDI codes, and not hardcoded counts. The first cut named 46 and 38 in
+  // this file and was shot on a full-dentition case, so both "implant sites" still had a
+  // tooth standing in them -- and the app said so on screen, in the card: "tooth 38 is
+  // still present in this scan, so this may be the distance to the tooth being replaced
+  // rather than to a neighbour". That is an extraction site. A film about implant
+  // planning has to plan where a tooth is actually missing, or the footage argues with
+  // the words over it.
+  //
+  // The case already knows both things. `renderArch` puts `.absent` on every chart
+  // position with no tooth drawn, and `ridge.py` publishes bone height per site into
+  // `report.arch.jaws[jaw].sites[fdi]`. So the sites are READ OUT OF THE CASE:
+  //   * the ROOMY one seeds and measures clear -- the "here is a number" half;
+  //   * the TIGHT one drives CLEAR -> TIGHT -> BREACH, which needs a site where pushing
+  //     the length actually crosses the margin.
+  // Posterior mandible only: that is where the inferior alveolar canal runs, and a
+  // clearance verdict anywhere else is not the point this film is making.
+  const sites = await js(`(() => {
+    const POSTERIOR = [34, 35, 36, 37, 44, 45, 46, 47];
+    const v = state.viewer;
+    const jaws = ((v && v.report && v.report.arch) || {}).jaws || {};
+    const fit = jaws.mandible;
+    const measured = (fit && fit.ok && fit.sites) || {};
+    const out = [];
+    document.querySelectorAll('#archChart .tooth.absent[data-fdi]').forEach((g) => {
+      const fdi = Number(g.dataset.fdi);
+      if (POSTERIOR.indexOf(fdi) < 0) return;
+      const s = measured[String(fdi)] || {};
+      // No arc position or no measurable ridge means there is nothing to plan against,
+      // and the app would refuse the site too.
+      if (s.s_mm == null || s.height_mm == null) return;
+      out.push({ fdi, height: s.height_mm, width: s.width_mm == null ? null : s.width_mm });
+    });
+    out.sort((a, b) => b.height - a.height);
+    return out;
+  })()`);
+  console.log('  edentulous posterior sites:', JSON.stringify(sites));
+  if (!sites.length) {
+    throw new Error(
+      'no edentulous posterior site on this case has a measured ridge. Find one with '
+      + 'scripts/find_edentulous_case.py rather than filming an occupied socket. Note '
+      + 'that a site needs BOTH `crest_z_mm` and `height_mm`: without the crest the '
+      + 'implant falls back to the occlusal plane instead of sitting on the bone, which '
+      + 'is a guess, and a film about measurement should not open on one.');
+  }
+  // The SHALLOWEST measurable gap, and shallow is the point. The grading sequence needs
+  // a site where seating the implant deeper actually crosses the margin; at a roomy site
+  // nothing a planner would do produces a breach, which is why the first cut needed two
+  // sites and a second click to get there. One site tells it in one shot.
+  const site = sites[sites.length - 1];
+  console.log(`  filming FDI ${site.fdi}: ${site.height.toFixed(1)} mm of bone,`
+              + ` ${site.width == null ? 'width unmeasured' : site.width.toFixed(1) + ' mm wide'}`);
+
+  // The case label names WHERE THE FILM IS LOOKING, so it is derived from the site rather
+  // than typed. FDI's first digit is the quadrant, and the quadrant is the side.
+  const QUADRANT = { 1: 'Upper right', 2: 'Upper left', 3: 'Lower left', 4: 'Lower right' };
+  const region = `${QUADRANT[Math.floor(site.fdi / 10)]} posterior`;
+  await js(`(() => {
+    const t = document.getElementById('caseTitle');
+    if (t) t.textContent = '${region}';
+  })()`);
+  console.log(`  case label: ${region}`);
+
+  // The counts are this case's, not the last case's. "37 structures" was true of the
+  // scan the first cut was shot on and would be a lie on any other.
+  const counts = await js(`(() => {
+    const vols = (((state.viewer || {}).report || {}).quality || {}).volumes_cm3 || {};
+    let structures = 0, teeth = 0;
+    Object.keys(vols).forEach((k) => {
+      if (!vols[k]) return;
+      structures += 1;
+      if (/^tooth_\\d+$/.test(k)) teeth += 1;
+    });
+    return { structures, teeth };
+  })()`);
+  console.log('  counts:', JSON.stringify(counts));
+
+  beat(`${counts.structures} structures · ${counts.teeth} teeth in FDI`,
        'Both jaws, every tooth numbered,<br>and the nerve the implant has to miss.');
   await sleep(5500);
 
-  beat('The site picker', 'Click a tooth position<br>to plan an implant there.');
+  beat('The site picker', 'A missing tooth is a site.<br>Click the gap to plan into it.');
   await sleep(2600);
   await js(`(() => {
-    const t = document.querySelector('#archChart .tooth[data-fdi="46"]');
-    if (!t) throw new Error('no FDI 46 on the chart');
+    const t = document.querySelector('#archChart .tooth[data-fdi="${site.fdi}"]');
+    if (!t) throw new Error('no FDI ${site.fdi} on the chart');
     t.dispatchEvent(new MouseEvent('click', { bubbles: true }));
   })()`);
   await sleep(10500);
 
-  beat('Seeded from the restoration',
-       'A first molar seeds 4.8 × 10 mm —<br>the platform that tooth needs.');
+  // What the seed actually came out as, read back rather than described. The old caption
+  // asserted "4.8 x 10 mm" from the storyboard; `addImplant` seeds 4.1 x 10 and
+  // `alignToSite` moves it, so the sentence and the panel could disagree by construction.
+  const seed = await js(`(() => {
+    const p = implantState(); const i = (p.implants || [])[0];
+    return i ? { dia: i.diameter_mm, len: i.length_mm } : null;
+  })()`);
+  console.log('  seed:', JSON.stringify(seed));
+  const seedLine = seed
+    ? `The gap seeds ${seed.dia} × ${seed.len} mm —<br>the platform this site has to carry.`
+    : 'Seeded from the tooth the site is meant to replace.';
+  beat('Seeded from the restoration', seedLine);
   await sleep(5000);
 
   // THE CAPTION IS READ FROM THE APP, not asserted over it.
@@ -383,20 +473,16 @@ async function main() {
        'Graded with the model’s own<br>measured error <em>subtracted</em>.');
   await sleep(5000);
 
-  // The second site: 14 mm of bone rather than 24. This is what makes the grading
-  // sequence possible at all -- at the first site nothing the catalogue offers breaches.
-  await js(`(() => {
-    const p = implantState();
-    (p.implants || []).slice().forEach((i) => {
-      try { DentistryViewer.removeImplant(i.id); } catch (e) {}
-    });
-    p.implants = []; p.measured = {}; p.selected = null;
-    const t = document.querySelector('#archChart .tooth[data-fdi="38"]');
-    if (t) t.dispatchEvent(new MouseEvent('click', { bubbles: true }));
-  })()`);
-  await sleep(12000);
+  // No second click. The first cut moved to another site here because its roomy site
+  // could not be made to breach; this one is already at the shallow site, so the sequence
+  // happens where the viewer is already looking.
+  //
+  // The number is `ridge.py`'s, read from the case. "14 mm of bone here, not 24" was
+  // typed into this file: true of one site on one case and a fabrication on every other,
+  // the same defect as the hand-typed 0.8887 in the pipeline film.
   beat('A site where the canal is close',
-       '14 mm of bone here, not 24.<br>It seeds shorter on its own.');
+       `${site.height.toFixed(0)} mm of bone above the canal.<br>`
+       + 'Enough for a plan, not enough to guess with.');
   await sleep(4500);
 
   // The spine: one plan, three lengths, and the verdict WORD is whatever the server
@@ -410,20 +496,38 @@ async function main() {
     breach: 'Past the margin.<br>The plan is refused, not softened.',
     no_verdict: 'It will not grade this,<br>and it will not pretend otherwise.',
   };
+  // DEPTH, not length -- and that is a finding, not a preference. Measured against the
+  // real pack at this site: the catalogue's lengths step 6, 8, 10, 11.5, 13, and 8 mm
+  // measures 3.20 mm clear while 10 mm measures 1.26 mm and breaches. The tight band is
+  // `head < 0.5` after the margin and the budget come off, which is a clearance of about
+  // 2.5-3.0 mm, and NO catalogue length lands in it here. Diameter does not help either:
+  // 3.3 to 4.8 moves the clearance by 0.2 mm.
+  //
+  // Seating depth is continuous, it is a control a planner actually uses, and it is the
+  // most direct expression of the risk -- how far down the drill goes is the question the
+  // canal cares about. The old eyebrows were already written for it: "push it deeper",
+  // "closer still".
+  const seat = await js(`(() => {
+    const p = implantState(); const i = (p.implants || [])[0];
+    return i ? i.z_mm : null;
+  })()`);
+  if (seat == null) throw new Error('no implant to push -- the seed did not take');
+  console.log(`  seated at z=${seat}`);
+
   const grades = [];
-  const push = async (mm, eyebrow) => {
+  const push = async (deeper, eyebrow) => {
     await js(`(() => {
       const p = implantState();
       const i = (p.implants || [])[0];
       if (!i) return;
-      i.length_mm = ${mm};
+      i.z_mm = ${seat} - ${deeper};
       requestMeasure(0);
       renderImplantPanel();
     })()`);
     await sleep(6500);
     const v = await readCanal();
-    console.log(`  ${mm} mm ->`, JSON.stringify(v));
-    grades.push({ mm, ...v });
+    console.log(`  ${deeper} mm deeper ->`, JSON.stringify(v));
+    grades.push({ deeper, ...v });
     const word = String(v.level || 'no_verdict').toUpperCase().replace('_', ' ');
     beat(`${eyebrow} · ${word}`,
          VERDICT_LINE[v.level] || VERDICT_LINE.no_verdict,
@@ -431,9 +535,9 @@ async function main() {
     await sleep(3200);
   };
 
-  await push(10, 'Push it deeper');
-  await push(11.5, 'Closer still');
-  await push(8, 'Back off one size');
+  await push(0.5, 'Seat it deeper');
+  await push(1.0, 'Closer still');
+  await push(0, 'Back to the crest');
 
   beat('Verified in three dimensions',
        'The safety envelope is drawn at the surface<br>the verdict is computed against.');

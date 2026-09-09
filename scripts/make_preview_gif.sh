@@ -44,8 +44,11 @@ FPS="${PREVIEW_FPS:-12}"
 [ -f "$SRC" ] || { echo "no master at $SRC -- run scripts/build_trailer.sh first"; exit 1; }
 mkdir -p "$(dirname "$OUT")"
 
-# start;duration  -- inside one plate each, on the state that plate names
-WINDOWS=("71.9;3.6" "81.5;3.6" "91.3;2.7")
+# start;duration  -- inside one plate each, on the state that plate names.
+# Derived from `trailer-beats.json` plus TRAILER_TITLE_S: the verdict plates sit at
+# 56.13 / 65.84 / 75.55 in body time, so 59.6 / 69.3 / 79.1 in the master, and each runs
+# until the next. These start a beat after each plate fades up and end before it fades.
+WINDOWS=("60.2;3.6" "70.0;3.6" "79.6;2.4")
 
 IN_ARGS=(); PRE=""; CAT=""
 for i in "${!WINDOWS[@]}"; do

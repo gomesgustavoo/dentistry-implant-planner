@@ -6,22 +6,25 @@
 
 [**dentistry.dicomsegvr.com**](https://dentistry.dicomsegvr.com) · research preview · **not a medical device, and not for diagnostic use**
 
-<img src="marketing/preview/verdict-sequence.gif" alt="The same implant site at three lengths: TIGHT at 2.95 mm, BREACH at 1.85 mm, CLEAR at 4.43 mm" width="880">
+<img src="marketing/preview/verdict-sequence.gif" alt="One implant site at three seating depths: TIGHT at 2.71 mm, BREACH at 2.23 mm, CLEAR at 3.18 mm" width="880">
 
 </div>
 
-**One site, three lengths.** At 10 mm the fixture sits 2.95 mm off the inferior alveolar
-canal — `TIGHT`. Push it to 11.5 mm and it `BREACH`es at 1.85. Step back one catalogue
-size to 8 mm and it is `CLEAR` at 4.43. Every one of those millimetres has the canal's own
-boundary error taken out of it first.
+**One site, three depths.** The site is a real gap — a missing lower-left first molar, with
+11.9 mm of bone measured above the canal. An 8 mm fixture seated on the crest sits
+3.18 mm off the inferior alveolar canal: `CLEAR`. Half a millimetre deeper it is `TIGHT`
+at 2.71. A millimetre deeper it `BREACH`es at 2.23. Back to the crest and it is clear
+again. Every one of those millimetres has the canal's own boundary error taken out of it
+first.
 
 That is the whole product. Every planner draws the nerve. None of them tells you how
 wrong the nerve is.
 
 ## Watch
 
-**Implant planning** · 1:51 — click a tooth position, seed a fixture, watch it fit itself
-to the measurement, and see a plan refused when it should be.
+**Implant planning** · 1:39 — click the gap where a tooth is missing, seed a fixture,
+watch it size itself to the bone that is actually there, and see a plan refused when it
+should be.
 
 <video src="https://github.com/user-attachments/assets/bbe04886-6f4b-4dca-b988-7674f9e9b1ad" controls muted></video>
 
