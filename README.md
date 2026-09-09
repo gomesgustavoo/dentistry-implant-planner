@@ -26,7 +26,7 @@ wrong the nerve is.
 watch it size itself to the bone that is actually there, and see a plan refused when it
 should be.
 
-<video src="https://github.com/user-attachments/assets/bbe04886-6f4b-4dca-b988-7674f9e9b1ad" controls muted></video>
+<video src="https://github.com/user-attachments/assets/7f902ea8-0e9c-46a3-82a9-29b65d5f9ce5" controls muted></video>
 
 **Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a
 byte is sent, about 98 seconds of GPU for the two models that run, and a report that
