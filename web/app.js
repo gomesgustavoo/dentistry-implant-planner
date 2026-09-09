@@ -5771,7 +5771,14 @@ function alignToSite(info, imp) {
   // No crest: fall back to the occlusal plane, and say so rather than pretending.
   imp.z_mm = crest != null ? crest + down * SUBCRESTAL_MM
     : info.occlusal_z_mm + down * 1.0;
-  imp.t_mm = 0;                 // the crest midline, which is where `ridge.py` measures
+  // ON THE RIDGE, not on the arch curve. This was `0` with the comment "the crest
+  // midline, which is where ridge.py measures" -- and that was true of the measurement
+  // and false of the anatomy: `_crest_z` sampled only the `t = 0` column, so the curve
+  // WAS the midline by assumption rather than by finding the bone. On a sloped or
+  // atrophic ridge the curve falls on the flank, and a fixture seated there has its
+  // buccal wall against the outer cortex. `ridge.py` now sweeps for the top of the
+  // ridge and publishes where it found it; seat on that.
+  imp.t_mm = site && site.crest_t_mm != null ? site.crest_t_mm : 0;
   imp.tilt_deg = 0;
   // ALL THREE angles, not just the one. `C` is "re-seat on the ridge", and a re-seat
   // that left a 20-degree mesiodistal angulation in place would put the platform on

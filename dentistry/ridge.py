@@ -66,6 +66,29 @@ WIDTH_SEARCH_MM = 10.0
 CANAL_OFFSET_SEARCH_MM = 3.0
 CANAL_OFFSET_STEP_MM = 0.5
 
+# How far either side of the arch curve to look for the crest when the curve itself
+# misses the bone.
+#
+# The same lesson as the block above, learned twice. `_canal_roof_z` sweeps `t` because a
+# single ray at `t = 0` refused every molar on a real case; `_crest_z` did not, and took
+# the first cortical crossing on the `t = 0` column as "the crest" whatever it was
+# standing on. Where the arch curve is INTERPOLATED -- which is every edentulous site,
+# because there is no tooth to anchor the arc position -- that column can miss the ridge
+# altogether. Measured: on a real case both gap sites reported "no cortical crest was
+# found" while the ridge sat a couple of millimetres to one side, so the only two sites a
+# planner would actually have used were the only two that could not be measured.
+#
+# `t = 0` is still tried first and still wins when it finds bone, so no site that had a
+# measurement changes. The sweep only fills in sites that previously had none.
+#
+# WHERE TO SEAT is deliberately NOT this offset. Taking the most coronal crossing across
+# the sweep was tried and is worse: on a sloped ridge the highest point is the knife edge,
+# and it moved FDI 36 on a real case from 6.69 mm of crestal width to 2.5 mm, a crest no
+# fixture in the catalogue fits on. The seat is the midpoint between the two cortical
+# plates, computed with the width further down.
+CREST_OFFSET_SEARCH_MM = 3.0
+CREST_OFFSET_STEP_MM = 0.25
+
 
 def _ratio_profile(sampler, s_mm, t_mm, z_from, z_to, refs):
     """`(zs, ratios)` sampled vertically, or `(None, None)` with no usable reference."""
@@ -117,18 +140,39 @@ def _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom):
     up = jaw == "maxilla"
     z_from = z_bottom if up else z_top
     z_to = (z_bottom + CREST_SEARCH_MM) if up else (z_top - CREST_SEARCH_MM)
-    zs, ratios = _ratio_profile(sampler, s_mm, 0.0, z_from, z_to, refs)
-    if zs is None:
-        return None, "this scan has no usable cancellous reference population"
-    for i, r in enumerate(ratios):
-        if r >= CORTICAL_RATIO:
-            return zs[i], None
-    return None, (f"no cortical crest was found within {CREST_SEARCH_MM:.0f} mm of the "
-                  f"{'bottom' if up else 'top'} of the measured band, where a "
-                  f"{jaw} crest would be")
+
+    # `t = 0` FIRST, and if it finds a crest that is the answer -- every site that could
+    # be measured before is measured identically now. The sweep below only ever fills in
+    # a site that previously reported nothing at all.
+    #
+    # NOT the most coronal crossing across the sweep, which was tried and was worse: on a
+    # sloped ridge the highest point is the knife edge, and taking it moved FDI 36 on a
+    # real case from 6.69 mm of crestal width to 2.5 mm -- a crest no fixture in the
+    # catalogue fits on. The nearest column that finds bone keeps the reference where the
+    # arch put it; WHERE TO SEAT is a separate question, answered from the cortical plates
+    # in `measure_sites` rather than from the height of the crossing.
+    steps = int(round(CREST_OFFSET_SEARCH_MM / CREST_OFFSET_STEP_MM))
+    offsets = [0.0] + [sign * k * CREST_OFFSET_STEP_MM
+                       for k in range(1, steps + 1) for sign in (1.0, -1.0)]
+    no_refs = False
+    for t in offsets:
+        zs, ratios = _ratio_profile(sampler, s_mm, t, z_from, z_to, refs)
+        if zs is None:
+            no_refs = True
+            continue
+        for i, r in enumerate(ratios):
+            if r >= CORTICAL_RATIO:
+                return zs[i], t, None
+    if no_refs:
+        return None, None, "this scan has no usable cancellous reference population"
+    return None, None, (
+        f"no cortical crest was found within {CREST_SEARCH_MM:.0f} mm of the "
+        f"{'bottom' if up else 'top'} of the measured band, at the arch curve or "
+        f"anywhere within {CREST_OFFSET_SEARCH_MM:.0f} mm either side of it, where a "
+        f"{jaw} crest would be")
 
 
-def _canal_roof_z(sampler, s_mm, crest_z):
+def _canal_roof_z(sampler, s_mm, crest_z, seat_t=0.0):
     """`(z, t)` of the shallowest drawn canal below this site, or `(None, None)`.
 
     A distance field, sampled down a vertical column and asked where it reaches zero.
@@ -146,8 +190,13 @@ def _canal_roof_z(sampler, s_mm, crest_z):
     zs = [crest_z - i * (45.0 / (n - 1)) for i in range(n)]
     steps = int(round(CANAL_OFFSET_SEARCH_MM / CANAL_OFFSET_STEP_MM))
     # `t = 0` first, so a canal genuinely under the midline reports no offset at all.
-    offsets = [0.0] + [sign * k * CANAL_OFFSET_STEP_MM
-                       for k in range(1, steps + 1) for sign in (1.0, -1.0)]
+    # CENTRED ON THE SEAT. The window is the footprint of the implant, and the implant
+    # sits at `seat_t` -- the midpoint of the cortical plates -- not on the arch curve.
+    # Sweeping from the curve asks "is the canal under the curve", which is not a
+    # question anyone has: measured on a real case, both edentulous sites reported no
+    # canal beneath them while their ridges sat 1.5-2.0 mm to one side of the curve.
+    offsets = [seat_t] + [seat_t + sign * k * CANAL_OFFSET_STEP_MM
+                          for k in range(1, steps + 1) for sign in (1.0, -1.0)]
     best_z, best_t = None, None
     for t in offsets:
         ds = sampler.sample("canal", [(s_mm, t, z) for z in zs])
@@ -155,6 +204,30 @@ def _canal_roof_z(sampler, s_mm, crest_z):
         if hit is not None and (best_z is None or hit > best_z):
             best_z, best_t = hit, t
     return best_z, best_t
+
+
+def _plate_edges(sampler, s_mm, crest, jaw, refs):
+    """Distance from the arch curve out to each cortical plate, `{buccal, lingual}`.
+
+    Hoisted out of `measure_sites` so the SEAT it implies -- the midpoint of the two
+    plates -- exists before the height is measured, because the height's canal sweep is
+    centred on the seat rather than on the curve.
+    """
+    z_w = crest - WIDTH_BELOW_CREST_MM if jaw != "maxilla" \
+        else crest + WIDTH_BELOW_CREST_MM
+    edges = {}
+    for side, sign in (("buccal", 1.0), ("lingual", -1.0)):
+        n = max(2, int(round(WIDTH_SEARCH_MM / PROFILE_STEP_MM)) + 1)
+        ts = [sign * i * (WIDTH_SEARCH_MM / (n - 1)) for i in range(n)]
+        vals = sampler.sample("grey", [(s_mm, t, z_w) for t in ts])
+        air, ref = refs.get("air"), refs.get("cancellous")
+        if air is None or ref is None or abs(ref - air) < 1e-6:
+            break
+        ratios = [(v - air) / (ref - air) for v in vals]
+        peak = next((i for i, r in enumerate(ratios) if r >= CORTICAL_RATIO), None)
+        edges[side] = (None if peak is None
+                       else _falling_half_max([abs(t) for t in ts], ratios, peak))
+    return edges
 
 
 def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
@@ -187,6 +260,7 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
         # carries a height still displayed "no cortical crest was found", because the
         # earlier refusal's `reason` was never cleared. A complete record cannot do that.
         entry = {"height_mm": None, "width_mm": None, "crest_z_mm": None,
+                 "crest_t_mm": None,
                  "reason": None, "height_reason": None, "width_reason": None,
                  "basis_height": None, "basis_width": None,
                  "position_interpolated": bool(site.get("interpolated"))}
@@ -200,12 +274,21 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
             out[str(fdi)] = entry
             continue
 
-        crest, why = _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom)
+        crest, crest_t, why = _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom)
         if crest is None:
             entry["reason"] = why
             out[str(fdi)] = entry
             continue
         entry["crest_z_mm"] = round(crest, 2)
+        # WHERE TO SEAT, decided before anything is measured under it. The cortical plates
+        # give the middle of the ridge; `crest_t` -- the column the crest was found on --
+        # is only the fallback for a curve that missed the bone entirely.
+        edges = _plate_edges(sampler, s_mm, crest, jaw, refs)
+        if edges.get("buccal") is not None and edges.get("lingual") is not None:
+            seat_t = (edges["buccal"] - edges["lingual"]) / 2.0
+        else:
+            seat_t = crest_t
+        entry["crest_t_mm"] = round(seat_t, 2)
 
         # ---- height ---------------------------------------------------------
         if jaw == "mandible":
@@ -225,7 +308,7 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
                            f"{pres['nearest_present_mm']:.0f} mm away along the arch"
                            if pres.get("nearest_present_mm") is not None else ""))
                 else:
-                    roof, t_at = _canal_roof_z(sampler, s_mm, crest)
+                    roof, t_at = _canal_roof_z(sampler, s_mm, crest, seat_t)
                     if roof is None:
                         entry["height_reason"] = (
                             "no drawn canal within 45 mm below the crest at this site, "
@@ -264,20 +347,6 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
                     "ratio units, never from the FOV-limited sinus label")
 
         # ---- width ----------------------------------------------------------
-        z_w = crest - WIDTH_BELOW_CREST_MM if jaw != "maxilla" \
-            else crest + WIDTH_BELOW_CREST_MM
-        edges = {}
-        for side, sign in (("buccal", 1.0), ("lingual", -1.0)):
-            n = max(2, int(round(WIDTH_SEARCH_MM / PROFILE_STEP_MM)) + 1)
-            ts = [sign * i * (WIDTH_SEARCH_MM / (n - 1)) for i in range(n)]
-            vals = sampler.sample("grey", [(s_mm, t, z_w) for t in ts])
-            air, ref = refs.get("air"), refs.get("cancellous")
-            if air is None or ref is None or abs(ref - air) < 1e-6:
-                break
-            ratios = [(v - air) / (ref - air) for v in vals]
-            peak = next((i for i, r in enumerate(ratios) if r >= CORTICAL_RATIO), None)
-            edges[side] = (None if peak is None
-                           else _falling_half_max([abs(t) for t in ts], ratios, peak))
         if edges.get("buccal") is not None and edges.get("lingual") is not None:
             entry["width_mm"] = round(edges["buccal"] + edges["lingual"], 2)
             entry["basis_width"] = (
