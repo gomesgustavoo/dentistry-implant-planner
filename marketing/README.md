@@ -80,6 +80,13 @@ replacing:
 Current URLs — `implantplan-plan.mp4` is `bbe04886-6f4b-4dca-b988-7674f9e9b1ad`,
 `implantplan-pipeline.mp4` is `2b29ad19-3fae-4059-8a5c-7dcf145d2fd8`.
 
+**Write only `src`, `controls` and `muted`.** Everything else is dropped: `poster`,
+`playsinline` and `width` were all sanitized away, checked on the rendered element, and
+GitHub sizes the player to the column itself (836 px) and sets its own `preload`. A
+`poster` would have fixed the black opening frame — the title card fades up from black —
+but the attribute does not survive, so the only way to change that thumbnail is to change
+the first frame of the film.
+
 Because those live outside the repository, the committed masters stay committed and the
 in-repo GIF stays the hero. If an attachment URL ever stops resolving, the README loses
 two players and keeps everything else.
