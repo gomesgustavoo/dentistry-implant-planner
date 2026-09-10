@@ -1,5 +1,28 @@
 /* ============================================================
-   Dentistry CBCT — landing styles
+   ImplantPlan — landing styles
+
+   THE PAGE IS LIGHT AND THE PRODUCT IS DARK, and that is the composition rather
+   than an accident: the app screenshots and the film are the only dark rectangles
+   on the page, so the eye lands on the product for free. A dark page around a dark
+   app camouflages it.
+
+   The brand kit has NO light ground (~/brand/tokens/platform.css defines exactly
+   one, #0a0e13), so this palette is new surface and every pair in it is measured
+   rather than assumed. Two consequences that are not obvious:
+
+     * --accent #8b5cf6 measures 4.10:1 on this ground and FAILS AA for text, in
+       both directions. It is a GRAPHICS colour here -- rules, ticks, fills, the
+       3-D fill light -- and --accent-ink #7c3aed (5.51:1) carries every violet
+       that is text or a solid button. This is the same trap band-implantplan.css
+       already documents for the dark ground; it just bites harder on paper.
+     * The verdict and status colours keep their exact hues and change ROLE. On
+       white they measure 1.6-3.4:1 and cannot be type, so they became filled
+       chips with #0a0e13 ink -- 10.1:1 on clear, 11.6:1 on tight, 7.0:1 on
+       breach, 5.5:1 on canal. Same hues as viewer/src/implants.js; only the
+       ground inverted.
+
+   `landing/check-contrast.py` gates all of it and exits 1 on a failing pair.
+   ------------------------------------------------------------------------------
 
    House grammar inherited from dicomsegvr.com ("Technical Instrument"): hairlines,
    eyebrow ticks, viewfinder corner brackets, mono readouts, calibrated prices.
@@ -43,32 +66,65 @@
 }
 
 :root {
-  /* ground — matches the WebGL render background exactly, so the transparent
-     canvas leaves no seam where the glow fades out */
-  --bg: #0a0e13;
-  --bg-elev: #0e141b;
-  --surface: #131a25;
-  --surface-2: #1b2230;
-  --text: #f4f7fa;
-  --text-muted: #93a1b8;
+  color-scheme: light;
 
-  /* brand voice */
+  /* ground — paper. The WebGL canvas is transparent and the stage gradient below
+     shows through it, so these are also the colours the hero is graded against. */
+  --bg: #fbfbfd;
+  --bg-elev: #f4f6f9;
+  --surface: #ffffff;
+  --surface-2: #eef1f6;
+  --text: #0f1520;            /* 18.7:1 on --bg */
+  --text-muted: #5b6577;      /* 5.69:1 */
+  --text-faint: #6b7a90;      /* 4.22:1 — large text only, never body copy */
+
+  /* brand voice. --accent is a GRAPHICS colour; --accent-ink is the text one. */
   --accent: #8b5cf6;
-  --accent-2: #6366f1;
-  --accent-soft: #c4b5fd;
+  --accent-ink: #7c3aed;      /* 5.51:1 */
+  --accent-deep: #6d28d9;     /* 7.0:1 — small mono labels */
+  --accent-2: #6a6df2;        /* the indigo half of the decorative ramp. Never a label:
+                                 #6366f1 as shipped measured 4.33:1 and failed AA, which
+                                 is why band-implantplan.css lifted it to this value. */
+  --accent-wash: #f4f0ff;
+  --glass-solid: #ffffff;
+  --accent-line: rgba(139, 92, 246, .28);
 
-  /* data voice — the product's own structure LUT */
-  --bone: #d9c9a3;
-  --bone-deep: #c2a878;
+  /* data voice — the product's own structure LUT. Swatches and 3-D only; none of
+     these clears AA as type on paper. */
+  --bone: #c2a878;
+  --bone-deep: #a8895a;
+  --bone-line: #8a6d3f;       /* 4.68:1 — the outline a bone swatch needs on paper */
   --canal: #ff3b30;
-  --q1: #6ca4d8;   /* upper right */
-  --q2: #4fc0a5;   /* upper left  */
-  --q3: #d9a13f;   /* lower left  */
-  --q4: #e0568f;   /* lower right */
+  --q1: #3d7fb8;   /* upper right */
+  --q2: #1f8f74;   /* upper left  */
+  --q3: #9a6b12;   /* lower left  */
+  --q4: #b83668;   /* lower right */
 
-  --ok: #34d399;
-  --warn: #fbbf24;
-  --border: #232d3d;
+  /* verdicts — the app's exact hues (viewer/src/implants.js). Chip fills, with
+     --chip-ink on top. */
+  --clear: #34d399;
+  --tight: #fbbf24;
+  --breach: #f87171;
+  --neutral: #94a3b8;
+  --chip-ink: #0a0e13;
+  /* Each chip's own hue, darkened until it clears 3:1 on paper. A fill alone does
+     not: #34d399 measures 1.86:1 against this ground and a chip with no border
+     floats. The border is what identifies the component; the fill is decoration
+     and the WORD inside is the actual verdict. */
+  --clear-line: #0b7a53;      /* 5.18:1 */
+  --tight-line: #a16207;      /* 4.76:1 */
+  --breach-line: #dc2626;     /* 4.67:1 */
+  --neutral-line: #64748b;    /* 4.60:1 */
+
+  --ok: #0f9d6b;              /* 3.47:1 — icons and rules, not body text */
+  --warn: #a16207;            /* 4.92:1 — this one IS text-safe */
+
+  --border: #e3e7ee;
+  --hairline: rgba(15, 21, 32, .09);
+  --hairline-strong: rgba(15, 21, 32, .18);
+  --tick: rgba(124, 58, 237, .55);
+  --glass: rgba(251, 251, 253, .78);
+  --glass-border: rgba(15, 21, 32, .10);
 
   --display: "Archivo", "Geist", system-ui, sans-serif;
   --font: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
@@ -79,14 +135,10 @@
   --radius-lg: 16px;
   --radius-sm: 5px;
   --card-pad: 1.6rem;
-  --shadow: 0 10px 34px rgba(0, 0, 0, .45);
-
-  --hairline: rgba(255, 255, 255, .07);
-  --hairline-strong: rgba(255, 255, 255, .16);
-  --tick: rgba(139, 92, 246, .62);
-  --glass: rgba(10, 14, 19, .40);
-  --glass-solid: rgba(19, 26, 37, .62);
-  --glass-border: rgba(255, 255, 255, .10);
+  /* Two layers, both cool and both shallow. One big black bloom is a dark-page
+     shadow; on paper it reads as dirt. */
+  --shadow: 0 1px 2px rgba(16, 24, 40, .05), 0 10px 34px -12px rgba(16, 24, 40, .18);
+  --shadow-lift: 0 2px 4px rgba(16, 24, 40, .06), 0 18px 44px -16px rgba(16, 24, 40, .26);
 
   /* Display type: expanded and tight. The width axis is the whole idea, so it is
      a token rather than a one-off. */
@@ -123,7 +175,7 @@ body {
 
 img, svg, canvas { max-width: 100%; display: block; }
 a { color: inherit; }
-::selection { background: rgba(139, 92, 246, .32); }
+::selection { background: rgba(139, 92, 246, .22); }
 
 :focus-visible {
   outline: 2px solid var(--accent);
@@ -136,7 +188,7 @@ a { color: inherit; }
 
 .skip-link {
   position: absolute; left: -999px; top: .5rem; z-index: 100;
-  padding: .55rem .9rem; background: var(--accent); color: #0b0713;
+  padding: .55rem .9rem; background: var(--accent-ink); color: #fff;
   font: 600 .8rem var(--mono); border-radius: var(--radius-sm);
 }
 .skip-link:focus { left: .5rem; }
@@ -183,19 +235,27 @@ a { color: inherit; }
   text-decoration: none; border: 1px solid transparent; cursor: pointer;
   transition: transform .18s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
 }
+/* SOLID, not the brand gradient, and white ink rather than near-black.
+   band-implantplan.css says --ds-grad-brand is decorative and never carries a
+   label; on paper that is not a style note but a measurement — white on #8b5cf6
+   is 4.23:1 and fails AA, while white on #7c3aed is 5.70:1 and passes. The old
+   rule put #0b0713 on the brand ramp, which failed at the dark stop. */
 .btn--primary {
-  background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: #0b0713; font-weight: 700;
-  box-shadow: 0 0 0 1px rgba(139, 92, 246, .3), 0 10px 30px -10px rgba(139, 92, 246, .6);
+  background: var(--accent-ink);
+  color: #fff; font-weight: 650;
+  box-shadow: 0 1px 2px rgba(76, 29, 149, .18), 0 10px 26px -10px rgba(124, 58, 237, .55);
 }
-.btn--primary:hover { transform: translateY(-2px); }
+.btn--primary:hover {
+  transform: translateY(-2px); background: var(--accent-deep);
+  box-shadow: 0 2px 4px rgba(76, 29, 149, .2), 0 16px 34px -12px rgba(124, 58, 237, .6);
+}
 .btn--ghost {
-  border-color: var(--hairline-strong); color: var(--text);
+  border-color: var(--border); color: var(--text);
   font-family: var(--mono); font-size: .78rem; font-weight: 500;
   text-transform: uppercase; letter-spacing: .1em;
-  background: rgba(255, 255, 255, .02);
+  background: var(--surface);
 }
-.btn--ghost:hover { border-color: var(--accent); background: rgba(139, 92, 246, .1); }
+.btn--ghost:hover { border-color: var(--accent-ink); background: var(--accent-wash); color: var(--accent-deep); }
 .btn--block { width: 100%; }
 .btn--lg { padding: .95rem 1.7rem; font-size: 1rem; }
 
@@ -212,7 +272,9 @@ a { color: inherit; }
    drags it off-screen. Learned on dicomsegvr.com. */
 .nav::before {
   content: ""; position: absolute; inset: 0; z-index: -1;
-  background: rgba(10, 14, 19, .72);
+  /* The one blur kept on the whole page. Content genuinely scrolls under this bar;
+     everywhere else a backdrop-filter over paper costs GPU and buys nothing. */
+  background: var(--glass);
   -webkit-backdrop-filter: blur(14px) saturate(1.2);
   backdrop-filter: blur(14px) saturate(1.2);
 }
@@ -302,10 +364,12 @@ html.nav-open .nav__scrim { display: block; }
   /* Glow blooms from the EDGES, leaving a calm dark middle for the arch to sit in.
      No solid base: the canvas is transparent so this reads through the render. */
   background:
-    radial-gradient(44% 58% at -6% 40%, rgba(139, 92, 246, .20), transparent 62%),
-    radial-gradient(44% 58% at 106% 44%, rgba(99, 102, 241, .18), transparent 62%),
-    radial-gradient(70% 42% at 50% 112%, rgba(139, 92, 246, .18), transparent 66%),
-    radial-gradient(66% 34% at 50% -12%, rgba(196, 181, 253, .09), transparent 66%);
+    /* PAPER, not a glow. The hero is an object photographed on a sheet: a soft
+       top-lit sweep, a cool shelf at the bottom for the object to sit on, and two
+       violet washes far enough out that they never touch the bone's hue. */
+    radial-gradient(120% 78% at 50% -8%, #ffffff 0%, #fafbfd 46%, #f1f4f8 100%),
+    radial-gradient(46% 60% at -8% 38%, rgba(139, 92, 246, .07), transparent 64%),
+    radial-gradient(46% 60% at 108% 44%, rgba(99, 102, 241, .06), transparent 64%);
 }
 .filmstage__canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
 .filmstage__poster {
@@ -314,7 +378,9 @@ html.nav-open .nav__scrim { display: block; }
 }
 .filmstage__scrim {
   position: absolute; inset: 0;
-  background: radial-gradient(58% 58% at 50% 46%, transparent 40%, rgba(10, 14, 19, .5) 100%);
+  /* A white vignette, so the copy panel has something to sit on and the stage
+     falls away at the edges instead of ending. */
+  background: radial-gradient(62% 62% at 50% 44%, transparent 38%, rgba(251, 251, 253, .72) 100%);
   opacity: .85; transition: opacity .5s ease;
 }
 .filmstage.is-climax .filmstage__scrim { opacity: .5; }
@@ -330,8 +396,8 @@ html.nav-open .nav__scrim { display: block; }
   background: var(--glass);
   border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  -webkit-backdrop-filter: blur(26px) saturate(1.25);
-  backdrop-filter: blur(26px) saturate(1.25);
+  /* Was a 26 px backdrop blur. Over paper a frosted panel is indistinguishable
+     from a flat white one and costs a full-screen filter pass on every scroll. */
   box-shadow: var(--shadow);
 }
 /* Step cards carry the most copy over the busiest part of the render, so they get
@@ -392,7 +458,11 @@ html.nav-open .nav__scrim { display: block; }
   opacity: .7;
 }
 .hero__inner::after {
-  content: "CBCT · 37 STRUCTURES · FDI";
+  /* 47, not 37. The seven dental groups in labels.GROUP_ORDER sum to 47 (jaws 2,
+     nerve canal 4, upper teeth 17, lower teeth 17, airway & sinuses 3, dental work
+     3, pulp 1). labels.N_STRUCTURES is 89 and includes the 42 extended head/neck
+     classes, which all ship off — never quote that one as dental. */
+  content: "CBCT · 47 STRUCTURES · FDI";
   position: absolute; right: 18px; bottom: 12px;
   font-family: var(--mono); font-size: .58rem; letter-spacing: .2em;
   color: var(--text-muted); opacity: .55; pointer-events: none;
@@ -581,7 +651,7 @@ html.nav-open .nav__scrim { display: block; }
   width: 100%; height: calc(var(--tooth) * 1.28);
   border-radius: 42% 42% 30% 30% / 34% 34% 58% 58%;
   background: var(--c, var(--surface-2));
-  border: 1px solid rgba(255, 255, 255, .13);
+  border: 1px solid var(--border);
   transition: transform .18s ease, box-shadow .18s ease, filter .18s ease;
 }
 .arch__row--lower .tooth__glyph {
@@ -591,7 +661,7 @@ html.nav-open .nav__scrim { display: block; }
 .tooth--absent .tooth__glyph {
   background: none;
   border-style: dashed;
-  border-color: rgba(255, 255, 255, .18);
+  border-color: var(--hairline-strong);
 }
 .tooth__fdi {
   font-family: var(--mono); font-size: .62rem; letter-spacing: .06em;
@@ -606,7 +676,7 @@ html.nav-open .nav__scrim { display: block; }
 .tooth:focus-visible .tooth__glyph,
 .tooth.is-active .tooth__glyph {
   transform: translateY(-3px) scale(1.06);
-  box-shadow: 0 0 0 1px rgba(255, 255, 255, .3), 0 8px 22px -6px rgba(0, 0, 0, .8);
+  box-shadow: 0 0 0 1px var(--accent-line), var(--shadow-lift);
   filter: brightness(1.14);
 }
 .tooth--absent:hover .tooth__glyph,
@@ -685,7 +755,7 @@ html.nav-open .nav__scrim { display: block; }
   padding: .22rem .7rem; border-radius: 999px; white-space: nowrap;
   font-family: var(--mono); font-size: .6rem; letter-spacing: .13em; text-transform: uppercase;
 }
-.plan__pill { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #0b0713; font-weight: 600; }
+.plan__pill { background: var(--accent-ink); color: #fff; font-weight: 600; }
 .plan__trial { background: var(--surface-2); border: 1px solid var(--hairline-strong); color: var(--text-muted); }
 
 .plan__name {
@@ -770,20 +840,20 @@ html.nav-open .nav__scrim { display: block; }
 .final-cta::before {
   content: ""; position: absolute; inset: 0; pointer-events: none;
   background:
-    radial-gradient(50% 60% at 12% 10%, rgba(139, 92, 246, .16), transparent 62%),
-    radial-gradient(50% 60% at 88% 84%, rgba(99, 102, 241, .14), transparent 62%);
+    radial-gradient(50% 60% at 12% 10%, rgba(139, 92, 246, .09), transparent 62%),
+    radial-gradient(50% 60% at 88% 84%, rgba(99, 102, 241, .07), transparent 62%);
 }
 .final-cta__panel {
   position: relative; text-align: center;
   padding: clamp(2rem, 5vw, 3.2rem);
   background: var(--glass-solid); border: 1px solid var(--glass-border);
   border-radius: var(--radius-lg);
-  -webkit-backdrop-filter: blur(18px) saturate(1.2); backdrop-filter: blur(18px) saturate(1.2);
+  background: var(--surface);
 }
 .final-cta__panel h2 { font-size: var(--step-3); }
 .final-cta__sub { margin: 1rem auto 1.7rem; max-width: 52ch; color: var(--text-muted); }
 .final-cta__contact { margin: 1.4rem 0 0; font-size: .84rem; color: var(--text-muted); }
-.final-cta__contact a { color: var(--accent-soft); }
+.final-cta__contact a { color: var(--accent-ink); }
 
 .footer { padding: 3.2rem 0 2.4rem; background: var(--bg-elev); border-top: 1px solid var(--border); }
 .footer__grid { display: grid; gap: 2rem; }
@@ -840,5 +910,318 @@ html.nav-open .nav__scrim { display: block; }
 .legal__back {
   display: inline-block; margin-top: 2.6rem;
   font-family: var(--mono); font-size: .74rem; letter-spacing: .1em;
-  text-transform: uppercase; color: var(--accent-soft); text-decoration: none;
+  text-transform: uppercase; color: var(--accent-deep); text-decoration: none;
 }
+
+/* ============================================================
+   ImplantPlan components — the light page's own furniture
+
+   Everything below arrived with the clearance-first rewrite. The rule that
+   shapes all of it: a verdict is a WORD first, a fill second. On paper the
+   app's verdict hues measure 1.6-2.7:1 and cannot be type, so each chip is a
+   tinted fill, a darker outline of its own hue at 3:1+, and #0a0e13 ink on top.
+   That is `check-contrast.py`'s job and it exits 1 if any of it drifts.
+   ============================================================ */
+
+.visually-hidden {
+  position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0;
+  overflow: hidden; clip-path: inset(50%); white-space: nowrap; border: 0;
+}
+
+/* ---------- brand: the name IS the logo ----------
+   There is no vector mark anywhere in this identity, so the wordmark is a
+   raster and the ICON takes over below 900px rather than sitting beside it.
+   The wordmark is 5.9:1 and simply stops fitting; an icon ALONE is not an icon
+   BESIDE a wordmark, so the rule still holds. */
+.brand__wordmark { height: 22px; width: auto; }
+.brand__icon { display: none; width: 26px; height: 26px; border-radius: 6px; }
+.brand--footer .brand__wordmark { height: 26px; }
+@media (max-width: 900px) {
+  .nav .brand__wordmark { display: none; }
+  .nav .brand__icon { display: block; }
+}
+
+/* ---------- hero ---------- */
+.hero__thesis {
+  margin: 1.4rem 0 0; padding-left: 1rem;
+  border-left: 2px solid var(--accent);
+  font-size: var(--step-1); line-height: 1.45; color: var(--text-muted);
+}
+.hero__thesis b { color: var(--text); font-weight: 600; }
+
+/* The live readout only exists when the scene does; the fallback is its mirror
+   image. `.filmstage--live` is added by hero3d.js once the model is on screen,
+   so the DEFAULT is the static one — a page that fails to boot shows the app's
+   own attributed numbers rather than a blank where a millimetre was. */
+.hero__live { display: none; }
+.hero__fallback { display: block; }
+.filmstage--live .hero__live { display: block; }
+.filmstage--live .hero__fallback { display: none; }
+
+.readout {
+  margin: 1.6rem 0 0; padding: 1rem 1.15rem 1.05rem;
+  background: var(--surface); border: 1px solid var(--border);
+  border-radius: var(--radius); box-shadow: var(--shadow);
+  /* The digits change sixty times a second while scrubbing. Tabular figures stop
+     the whole block reflowing on every frame. */
+  font-variant-numeric: tabular-nums;
+}
+.readout__row { display: flex; align-items: center; gap: .6rem; }
+.readout__label {
+  font-family: var(--display); font-stretch: var(--narrow);
+  font-size: .7rem; font-weight: 600; letter-spacing: var(--tracking-eyebrow);
+  text-transform: uppercase; color: var(--text-muted);
+}
+.readout__value {
+  margin: .35rem 0 0; font-family: var(--mono); font-weight: 600;
+  font-size: clamp(2rem, 5vw, 2.9rem); line-height: 1; color: var(--text);
+  letter-spacing: -.02em;
+}
+.readout__unit {
+  margin-left: .3rem; font-size: .38em; font-weight: 500; color: var(--text-muted);
+  letter-spacing: .04em;
+}
+.readout__sub {
+  margin: .55rem 0 0; font-family: var(--mono); font-size: .74rem;
+  line-height: 1.5; color: var(--text-muted);
+}
+.readout__depth {
+  margin: .5rem 0 0; padding-top: .5rem; border-top: 1px solid var(--hairline);
+  font-family: var(--mono); font-size: .72rem; color: var(--text-faint);
+}
+.readout__hint { color: var(--accent-deep); }
+.readout--static .readout__sub { color: var(--text-muted); }
+
+/* ---------- the verdict chip ----------
+   One rule, four states, used by the hero, the budget sheet and the depth cards.
+   The parent carries `data-level`, so a chip never has to be told twice. */
+.readout__chip {
+  display: inline-flex; align-items: center;
+  padding: .2rem .5rem; border-radius: var(--radius-sm);
+  font-family: var(--mono); font-size: .68rem; font-weight: 600;
+  letter-spacing: .12em; text-transform: uppercase;
+  background: var(--neutral); border: 1px solid var(--neutral-line); color: var(--chip-ink);
+}
+[data-level="clear"]  .readout__chip { background: var(--clear);  border-color: var(--clear-line); }
+[data-level="tight"]  .readout__chip { background: var(--tight);  border-color: var(--tight-line); }
+[data-level="breach"] .readout__chip { background: var(--breach); border-color: var(--breach-line); }
+[data-level="no_verdict"] .readout__chip { background: var(--neutral); border-color: var(--neutral-line); }
+
+/* ---------- the credibility strip ----------
+   Dots get an outline for the same reason the chips do: #34d399 on paper is
+   1.86:1 and a bare fill is not a graphical object anyone can see. */
+.cred__dot { border: 1px solid transparent; }
+
+/* ---------- the error-budget sheet ---------- */
+.budget { align-items: start; }
+.budget__sheet { padding: 1.5rem clamp(1.1rem, 3vw, 1.8rem); }
+.budget__list { list-style: none; margin: 0; padding: 0; }
+.budget__list li {
+  display: grid; grid-template-columns: 1fr auto; gap: .1rem .9rem;
+  padding: .7rem 0; border-bottom: 1px solid var(--hairline);
+}
+.budget__list li:last-child { border-bottom: 0; padding-bottom: 0; }
+.budget__term { font-weight: 550; color: var(--text); }
+.budget__val {
+  font-family: var(--mono); font-variant-numeric: tabular-nums;
+  font-weight: 600; color: var(--text); text-align: right; white-space: nowrap;
+}
+.budget__note {
+  grid-column: 1 / -1; margin: 0; font-size: var(--step--1);
+  line-height: 1.45; color: var(--text-muted);
+}
+.budget__minus .budget__val { color: var(--accent-deep); }
+/* The subtraction line. A double rule, because this is the one place the page
+   does arithmetic in front of the reader and the result has to look like a
+   result. */
+.budget__rule { border-top: 2px solid var(--text); }
+.budget__rule .budget__term,
+.budget__rule .budget__val { font-weight: 650; }
+.budget__total { padding-top: .9rem; }
+.budget__foot {
+  margin: 1.1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--hairline);
+  font-size: var(--step--1); color: var(--text-muted);
+}
+
+/* ---------- app screenshots, inset ----------
+   The product is dark and stays dark. Framed rather than bled, so the dark
+   rectangle reads as a figure on the page instead of a hole in it. */
+.shot { margin: 0; }
+.shot img {
+  width: 100%; height: auto; border-radius: var(--radius);
+  border: 1px solid var(--border); box-shadow: var(--shadow);
+  background: #0a0e13;
+}
+.shot figcaption {
+  margin-top: .7rem; font-size: var(--step--1); line-height: 1.5;
+  color: var(--text-muted);
+}
+
+/* ---------- the verdict loop ---------- */
+.film { margin: 0 0 2rem; }
+.film__video {
+  width: 100%; height: auto; display: block; border-radius: var(--radius-lg);
+  border: 1px solid var(--border); box-shadow: var(--shadow-lift);
+  background: #0a0e13;
+}
+.film figcaption {
+  margin-top: .8rem; font-size: var(--step--1); line-height: 1.5;
+  color: var(--text-muted); max-width: 62ch;
+}
+
+/* ---------- one site, three depths ---------- */
+.depths {
+  list-style: none; margin: 0; padding: 0;
+  display: grid; gap: 1rem; grid-template-columns: repeat(3, 1fr);
+}
+.depths li {
+  padding: 1.1rem 1.2rem; background: var(--surface);
+  border: 1px solid var(--border); border-radius: var(--radius);
+  box-shadow: var(--shadow);
+}
+/* A 3px stripe of the verdict's own outline colour. The card is not tinted:
+   a page of pastel blocks reads as decoration, and these are measurements. */
+.depths li { border-top-width: 3px; }
+.depths li[data-level="clear"]  { border-top-color: var(--clear-line); }
+.depths li[data-level="tight"]  { border-top-color: var(--tight-line); }
+.depths li[data-level="breach"] { border-top-color: var(--breach-line); }
+.depths__val {
+  margin: .6rem 0 .4rem; font-family: var(--mono); font-weight: 600;
+  font-size: 1.9rem; line-height: 1; color: var(--text);
+  font-variant-numeric: tabular-nums;
+}
+.depths__note { margin: 0; font-size: var(--step--1); line-height: 1.5; color: var(--text-muted); }
+
+/* ---------- alternating feature rows ---------- */
+.feature {
+  display: grid; gap: clamp(1.4rem, 4vw, 3rem);
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1.15fr);
+  align-items: center;
+  padding: 2.2rem 0; border-top: 1px solid var(--hairline);
+}
+.feature:first-of-type { border-top: 0; padding-top: .6rem; }
+.feature--flip .feature__text { order: 2; }
+.feature__text h3 {
+  margin: 0 0 .7rem; font-family: var(--display); font-stretch: var(--wide);
+  font-size: var(--step-2); font-weight: 650; letter-spacing: var(--tracking-display);
+}
+.feature__text p { margin: 0 0 .8rem; color: var(--text-muted); line-height: 1.6; }
+.feature__text p:last-child { margin-bottom: 0; }
+.feature__text b { color: var(--text); font-weight: 600; }
+
+.density { margin-top: 2rem; padding: 1.4rem clamp(1.1rem, 3vw, 1.8rem); }
+.density h3 {
+  margin: 0 0 .6rem; font-family: var(--display); font-stretch: var(--wide);
+  font-size: var(--step-1); font-weight: 650;
+}
+.density p { margin: 0; color: var(--text-muted); line-height: 1.6; }
+.density b { color: var(--text); }
+
+/* ---------- the metrics table ---------- */
+.metrics { list-style: none; margin: 0; padding: 0; }
+.metrics li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .62rem 0; border-bottom: 1px solid var(--hairline);
+}
+.metrics li:last-child { border-bottom: 0; }
+.metrics__k { color: var(--text-muted); font-size: var(--step--1); }
+.metrics__v {
+  font-family: var(--mono); font-weight: 600; font-variant-numeric: tabular-nums;
+  color: var(--text);
+}
+.metrics__foot {
+  margin: 1rem 0 0; padding-top: .9rem; border-top: 1px solid var(--hairline);
+  font-size: var(--step--1); line-height: 1.55; color: var(--text-muted);
+}
+
+/* ---------- responsive ---------- */
+@media (max-width: 900px) {
+  .depths { grid-template-columns: 1fr; }
+  .feature { grid-template-columns: 1fr; padding: 1.6rem 0; }
+  /* The flip is a desktop device. On one column it would put every image above
+     its own text, which reads as a gallery rather than as an argument. */
+  .feature--flip .feature__text { order: 0; }
+}
+@media (max-width: 700px) {
+  .budget__list li { grid-template-columns: 1fr; }
+  .budget__val { text-align: left; }
+}
+
+/* The ghost "Sign in" is the lowest-value thing in the bar and the first to crowd
+   the primary CTA. It goes at the tablet breakpoint; /app is still one tap away
+   through the drawer. */
+.nav__signin { display: none; }
+@media (min-width: 1000px) { .nav__signin { display: inline-flex; } }
+
+/* ============================================================
+   Hero, split layout
+
+   The first cut put the copy in a centred card ON TOP of the render, which is
+   the composition the dark page used: there, the arch was a texture behind the
+   words. Here the fixture is the SUBJECT, and a panel over the middle of it hid
+   the one thing the page is about. So on wide screens the stage moves to the
+   right and the argument runs down the left — the ordinary product-hero split,
+   and the reason it is ordinary is that it works.
+
+   Below 1000px there is no room for two columns, so the render goes back behind
+   the copy and the copy goes back into a card. Both are needed: on paper, type
+   over a light render is unreadable without one.
+   ============================================================ */
+@media (min-width: 1000px) {
+  .filmstage__canvas,
+  .filmstage__poster { left: 42%; width: 58%; }
+  /* The vignette follows the render rather than the viewport, or it darkens the
+     empty half and the page looks lopsided. */
+  .filmstage__scrim {
+    background: radial-gradient(46% 62% at 71% 46%, transparent 42%, rgba(251, 251, 253, .55) 100%);
+  }
+
+  .hero { place-items: center start; }
+  .hero__inner {
+    width: min(560px, 46vw);
+    margin-left: max(4vw, calc((100vw - var(--maxw)) / 2));
+    padding: 0;
+    text-align: left;
+    background: none;
+    border: 0;
+    box-shadow: none;
+  }
+  /* The viewfinder brackets and the stencil belong to a PANEL. With no panel they
+     would box empty paper, so they go — the eyebrow tick and the hairlines carry
+     the same grammar down the column. */
+  .hero__inner::before,
+  .hero__inner::after { display: none; }
+
+  .hero h1,
+  .hero__sub { margin-inline: 0; max-width: none; }
+  .hero h1 { max-width: 14ch; }
+  .hero__sub { max-width: 46ch; }
+  .hero__cta { justify-content: flex-start; }
+  .hero__cue { left: 71%; }
+}
+
+/* `.lit` was --bone: 2.22:1 on paper, which is not a colour anyone can read. The
+   accent word takes the text violet, and the display size clears AA comfortably. */
+.hero h1 .lit { color: var(--accent-ink); }
+
+/* `.filmstage__content .panel` is two classes deep and was still winning over the
+   split-layout override, so the hero copy kept a card edge running down the middle
+   of the stage. Matched at the same depth rather than reached for !important. */
+@media (min-width: 1000px) {
+  .filmstage__content .hero__inner.panel {
+    background: none; border: 0; box-shadow: none; border-radius: 0;
+  }
+  /* Feather the render's inboard edge. A hard vertical seam where the canvas starts
+     is the one thing that gives away that this is two layers rather than one page. */
+  .filmstage__canvas,
+  .filmstage__poster {
+    -webkit-mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 100%);
+    mask-image: linear-gradient(90deg, transparent 0, #000 22%, #000 100%);
+  }
+}
+
+/* The scrub runway. Tall enough that bone-to-glass, the seating and all three verdicts
+   each get room, short enough that a reader is not scrolling past an empty stage. The
+   progress function is -rect.top / (offsetHeight - innerHeight), so this number IS the
+   pacing — there is nothing else to tune. */
+.climax { min-height: 125svh; }

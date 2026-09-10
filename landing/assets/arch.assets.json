@@ -1,6 +1,35 @@
 {
- "desktop": "arch.4ff0e900.glb",
- "mobile": "arch-mobile.b296f9b3.glb",
- "manifest": "arch.manifest.json",
- "poster": "hero-poster.png"
+  "desktop": "arch.4ff0e900.glb",
+  "mobile": "arch-mobile.b296f9b3.glb",
+  "manifest": "arch.manifest.json",
+  "poster": "hero-poster.png",
+  "screw": "screw-geometry.55f1e96a.js",
+  "safety": "safety-constants.7f1cc921.js",
+  "site": {
+    "fdi": 46,
+    "rule": "axis = mean long axis of tooth_45 and tooth_47; seat = the mandible vertex furthest along it within 3.5 mm of the site line",
+    "source_mesh": "arch.4ff0e900.glb",
+    "origin": [
+      -26.0677,
+      -12.0154,
+      1.0707
+    ],
+    "axis": [
+      0.257908,
+      0.686864,
+      0.679486
+    ],
+    "fixture": {
+      "diameter_mm": 4.8,
+      "length_mm": 16
+    },
+    "bone_above_canal_mm": 16.58,
+    "crossings": {
+      "tight_mm": 0.5354,
+      "breach_mm": 1.0713
+    },
+    "clearance_at_crest_mm": 3.429,
+    "canal_samples": 53316,
+    "lod_agreement_mm": 0.0164
+  }
 }

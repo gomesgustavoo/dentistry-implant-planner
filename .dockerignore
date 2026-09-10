@@ -25,3 +25,11 @@ viewer/reference/
 .git/
 .github/
 web-auth/
+
+# Dockerfile.landing does `COPY landing/ /usr/share/nginx/html/`, so ANY file left in that
+# tree is served publicly. The landing's own tooling lives in scripts/ (already excluded
+# above) precisely for that reason; these two patterns are the guard for the next person
+# who reaches for the obvious place to put a build script.
+landing/*.mjs
+landing/*.py
+landing/*.sh

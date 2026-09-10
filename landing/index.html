@@ -3,34 +3,37 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Dentistry CBCT — every tooth numbered, the canal found</title>
-<meta name="description" content="Upload a dental CBCT and get both jaws, the mandibular canal and every tooth in FDI notation — as RTSTRUCT, STL, NIfTI and a browser viewer. One model on one GPU, and every quality check in the report.">
+<title>ImplantPlan — the clearance to the nerve, as a number</title>
+<meta name="description" content="Place an implant on a cone-beam CT and get the clearance to the inferior alveolar canal as a number — with the model's own measured error already subtracted from it. Research preview; not a medical device.">
 <link rel="canonical" href="https://dentistry.dicomsegvr.com/">
-<meta name="theme-color" content="#0a0e13">
-
-<link rel="icon" href="/assets/favicon.svg" type="image/svg+xml">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+<meta name="theme-color" content="#fbfbfd">
 
 <meta property="og:type" content="website">
-<meta property="og:site_name" content="Dentistry CBCT">
-<meta property="og:title" content="Dentistry CBCT — every tooth numbered, the canal found">
-<meta property="og:description" content="47 structures from one cone-beam CT: both jaws, the mandibular canal and every tooth in FDI notation. RTSTRUCT, STL and NIfTI out.">
+<meta property="og:site_name" content="ImplantPlan">
+<meta property="og:title" content="ImplantPlan — every implant, clear of the canal">
+<meta property="og:description" content="Every planner draws the nerve. None of them tells you how wrong the nerve is. ImplantPlan grades each clearance against the model's own measured error.">
 <meta property="og:url" content="https://dentistry.dicomsegvr.com/">
 <meta property="og:image" content="https://dentistry.dicomsegvr.com/assets/og-image.png">
 <meta property="og:image:width" content="1200">
 <meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A segmented dental CBCT: translucent jaws with every tooth in its own colour and the mandibular canal in red.">
+<meta property="og:image:alt" content="A titanium implant seated in a translucent mandible above the highlighted inferior alveolar canal, beside the ImplantPlan wordmark.">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="Dentistry CBCT — every tooth numbered, the canal found">
-<meta name="twitter:description" content="47 structures from one cone-beam CT, with every quality check in the report whether it passes or not.">
+<meta name="twitter:title" content="ImplantPlan — every implant, clear of the canal">
+<meta name="twitter:description" content="The clearance to the inferior alveolar canal as a number, with the model's own measured error subtracted.">
 <meta name="twitter:image" content="https://dentistry.dicomsegvr.com/assets/og-image.png">
 
-<link rel="preload" href="/assets/fonts/Archivo-latin.woff2" as="font" type="font/woff2" crossorigin>
-<link rel="preload" href="/assets/fonts/Geist-latin.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
+<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">
+
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/Archivo-latin.woff2" crossorigin>
+<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/Geist-latin.woff2" crossorigin>
 <link rel="stylesheet" href="/styles.css">
 
-<!-- Real-time WebGL dental hero (assets/hero3d.js). Three.js r169 is vendored
-     locally (no runtime CDN, offline-safe) and resolved via this import map. -->
+<!-- three.js only. The implant geometry and the grading thresholds are content-hashed and
+     reached through /assets/arch.assets.json at runtime, because /assets/ is served
+     immutable for a year and a STATIC import specifier does not inherit a ?v= query — a
+     returning visitor would keep last month's geometry. See scripts/bake_landing_geometry.mjs. -->
 <link rel="modulepreload" href="/assets/vendor/three/three.module.js">
 <script type="importmap">
 {
@@ -40,61 +43,58 @@
   }
 }
 </script>
-<noscript><style>
-  .filmstage__bg { position: relative !important; height: 54svh !important; }
-  .filmstage__canvas { display: none !important; }
-  .filmstage__poster { opacity: 1 !important; }
-  .filmstage__content { margin-top: 0 !important; }
-  .filmstage__content .hero { min-height: auto !important; padding-top: 3rem; }
-  .hero__cue { display: none !important; }
-  .reveal { opacity: 1 !important; transform: none !important; }
-</style></noscript>
 
 <script type="application/ld+json">
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "Dentistry CBCT",
-  "applicationCategory": "MedicalApplication",
+  "name": "ImplantPlan",
+  "applicationCategory": "HealthApplication",
   "operatingSystem": "Web",
   "url": "https://dentistry.dicomsegvr.com/",
-  "description": "Automatic segmentation of dental cone-beam CT: 47 structures including both jaws, the mandibular canal and every tooth in FDI notation, exported as RTSTRUCT, STL and NIfTI.",
-  "publisher": { "@type": "Organization", "name": "DicomSegVR", "address": { "@type": "PostalAddress", "addressCountry": "BR" } },
+  "description": "Dental CBCT segmentation and implant planning. Reports the clearance from a planned implant to the inferior alveolar canal, graded against the segmentation model's own measured error. Research preview; not a medical device.",
   "offers": [
-    { "@type": "Offer", "name": "Explorer",   "price": "12.99",  "priceCurrency": "USD", "category": "subscription" },
-    { "@type": "Offer", "name": "Pro",        "price": "49.99",  "priceCurrency": "USD", "category": "subscription" },
-    { "@type": "Offer", "name": "Enterprise", "price": "199.99", "priceCurrency": "USD", "category": "subscription" }
+    {"@type": "Offer", "name": "Explorer", "price": "12.99", "priceCurrency": "USD"},
+    {"@type": "Offer", "name": "Pro", "price": "49.99", "priceCurrency": "USD"},
+    {"@type": "Offer", "name": "Enterprise", "price": "199.99", "priceCurrency": "USD"}
   ]
 }
 </script>
+
+<noscript><style>
+  /* Without JS the sticky stage cannot scrub, so it collapses to the poster and the
+     readout shows the app's own measured numbers instead of a blank. Kept in sync with
+     .filmstage--static by hand — there is no build step here to do it. */
+  .filmstage { height: auto !important; }
+  .filmstage__bg { position: relative !important; height: auto !important; }
+  .filmstage__canvas { display: none !important; }
+  .filmstage__poster { display: block !important; }
+  .hero__live { display: none !important; }
+  .hero__fallback { display: block !important; }
+  .reveal { opacity: 1 !important; transform: none !important; }
+</style></noscript>
 </head>
 <body>
 <a class="skip-link" href="#main">Skip to content</a>
 
 <header class="nav" id="top">
   <div class="nav__inner">
-    <a class="brand" href="#top">
-      <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-        <defs><linearGradient id="bm" x1="0" y1="0" x2="1" y2="1">
-          <stop offset="0" stop-color="#8b5cf6"/><stop offset="1" stop-color="#6366f1"/>
-        </linearGradient></defs>
-        <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bm)"/>
-        <path d="M16 8.2c-2.6 0-3.3 1.1-5 1.1-1.9 0-3.1 1.5-3.1 3.9 0 3.1 1.1 5.4 1.9 7.6.7 1.9 1.2 3.4 2.4 3.4 1.3 0 1.5-1.9 1.7-3.6.2-1.5.5-2.6 2.1-2.6s1.9 1.1 2.1 2.6c.2 1.7.4 3.6 1.7 3.6 1.2 0 1.7-1.5 2.4-3.4.8-2.2 1.9-4.5 1.9-7.6 0-2.4-1.2-3.9-3.1-3.9-1.7 0-2.4-1.1-5-1.1z" fill="#0a0e13" fill-opacity=".82"/>
-      </svg>
-      Dentistry<span class="brand__sub">CBCT</span>
+    <a class="brand" href="#top" aria-label="ImplantPlan — home">
+      <img class="brand__wordmark" src="/assets/wordmark.png" width="669" height="114"
+           alt="ImplantPlan" decoding="async">
+      <img class="brand__icon" src="/assets/favicon-32.png" width="32" height="32"
+           alt="ImplantPlan" decoding="async">
     </a>
-    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Open menu">
-      <span></span><span></span><span></span>
-    </button>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu"
+            aria-label="Open menu"><span></span><span></span></button>
     <nav class="nav__menu" id="navMenu">
-      <a href="#outputs">What you get</a>
-      <a href="#arch">The arch</a>
+      <a href="#budget">The number</a>
+      <a href="#depths">Three depths</a>
+      <a href="#planning">Planning</a>
+      <a href="#engine">The engine</a>
       <a href="#pricing">Pricing</a>
-      <a href="#faq">FAQ</a>
-      <div class="nav__actions">
-        <a class="btn btn--ghost" href="/app">Sign in</a>
-        <a class="btn btn--primary" href="/app">Start free trial</a>
-      </div>
+      <a class="btn btn--ghost nav__signin" href="/app">Sign in</a>
+      <a class="btn btn--primary" href="/app">Start free trial</a>
     </nav>
   </div>
 </header>
@@ -104,165 +104,315 @@
 <div class="filmstage" data-filmstage>
   <div class="filmstage__bg" aria-hidden="true">
     <canvas class="filmstage__canvas" id="heroCanvas"></canvas>
-    <img class="filmstage__poster" src="/assets/hero-poster.png" alt="" loading="eager" decoding="async">
+    <img class="filmstage__poster" src="/assets/hero-implant.png" alt="" loading="eager" decoding="async">
     <div class="filmstage__scrim"></div>
   </div>
 
   <div class="filmstage__content">
     <section class="hero">
       <div class="hero__inner panel">
-        <p class="eyebrow">Dental CBCT segmentation</p>
-        <h1 class="display">Every tooth gets <span class="lit">one number</span></h1>
-        <p class="hero__sub">Upload a cone-beam CT. Get both jaws, the mandibular canal and
-          all 32 tooth positions in FDI notation — as an RTSTRUCT your planning software
-          already reads, printable STLs, and a labelled NIfTI on your own grid.</p>
-        <p class="hero__beat">
-          <b>Upload</b><span class="beat-sep">/</span><b>Segment</b><span class="beat-sep">/</span><b>Export</b>
-        </p>
+        <p class="eyebrow">Dental CBCT · implant planning</p>
+        <h1 class="display">Place the implant.<br><span class="lit">Get the number.</span></h1>
+        <p class="hero__sub">Upload a cone-beam CT. ImplantPlan segments the jaws, the teeth
+          and the inferior alveolar canal, then reports the clearance from a planned fixture
+          to that nerve — with the model&rsquo;s own measured error already subtracted from
+          it.</p>
+        <p class="hero__thesis">Every planner draws the nerve.<br>
+          <b>None of them tells you how wrong the nerve is.</b></p>
+
+        <!-- The live readout. Every value in here is written by assets/hero3d.js from the
+             geometry on screen; nothing is typed into the markup. The verdict is a WORD as
+             well as a colour, which is the app's own rule. -->
+        <div class="hero__live readout" data-hero-readout data-level="clear">
+          <div class="readout__row">
+            <span class="readout__chip" data-hero-level>CLEAR</span>
+            <span class="readout__label">clearance to the nerve canal</span>
+          </div>
+          <p class="readout__value"><span class="num" data-hero-mm>3.43</span><span class="readout__unit">mm</span></p>
+          <p class="readout__sub" data-hero-sub>3.43 measured &minus; 0.46 model error = 2.97 against a 2.00 mm margin</p>
+          <p class="readout__depth">platform <span class="num" data-hero-depth>0.0</span> mm below the crest &middot;
+            <span class="readout__hint">scroll to seat it</span></p>
+        </div>
+        <p class="visually-hidden" data-hero-live aria-live="polite"></p>
+
+        <!-- Shown only when WebGL or the asset fails. A millimetre with no geometry behind
+             it is exactly the failure this product exists to complain about, so the
+             fallback quotes the APP's own numbers and says whose they are. -->
+        <div class="hero__fallback readout readout--static" data-level="clear">
+          <div class="readout__row">
+            <span class="readout__chip">CLEAR</span>
+            <span class="readout__label">clearance to the nerve canal</span>
+          </div>
+          <p class="readout__value"><span class="num">3.51</span><span class="readout__unit">mm</span></p>
+          <p class="readout__sub">Measured by the app on a held-out scan at FDI 36, not by this
+            page &mdash; your browser could not start the 3-D view.</p>
+        </div>
+
         <div class="hero__cta">
           <div>
             <a class="btn btn--primary btn--lg" href="/app">Start free trial</a>
-            <p class="hero__note">30 scans · 14 days · no card</p>
+            <p class="hero__note">30 segmentations &middot; 14 days &middot; no card</p>
           </div>
-          <a class="btn btn--ghost btn--lg" href="#outputs">See what comes back</a>
+          <a class="btn btn--ghost btn--lg" href="#budget">See how it is graded</a>
         </div>
         <p class="hero__disclaimer">Research preview. Not a medical device, and not for
-          diagnostic use. Every finding is reported, never silently repaired.</p>
+          diagnostic use. No surgical guide is produced. Every finding is reported, never
+          silently repaired.</p>
       </div>
-      <div class="hero__cue" aria-hidden="true"><span>Scroll</span><span>↓</span></div>
+      <div class="hero__cue" aria-hidden="true"><span>Scroll</span><span>&darr;</span></div>
     </section>
 
     <section class="cred reveal">
       <ul class="cred__row container">
-        <li><span class="cred__dot" style="background:#d9c9a3"></span><b>47</b> structures</li>
-        <li><span class="cred__dot" style="background:#ff3b30"></span>the <b>mandibular canal</b>, never merged into a jaw</li>
-        <li><span class="cred__dot" style="background:#8b5cf6"></span><b>one</b> model, every check reported</li>
-        <li><span class="cred__dot" style="background:#4fc0a5"></span><b>54–93 s</b> on one GPU</li>
+        <li><span class="cred__dot" style="background:var(--clear);border-color:var(--clear-line)"></span><b>2.46 mm</b> safety envelope</li>
+        <li><span class="cred__dot" style="background:var(--canal);border-color:var(--breach-line)"></span><b>0.46 mm</b> the canal&rsquo;s own measured error</li>
+        <li><span class="cred__dot" style="background:var(--bone);border-color:var(--bone-line)"></span><b>47</b> structures, one network</li>
+        <li><span class="cred__dot" style="background:var(--accent);border-color:var(--accent-ink)"></span><b>~98 s</b> of GPU per scan</li>
       </ul>
     </section>
 
-    <section class="band band--tick" id="outputs">
+    <!-- THE SCRUB'S RUNWAY, and it ends here.
+         The dark page used the next six sections as the scroll length for its
+         choreography, and they rode over the sticky canvas. On paper that leaves a
+         translucent mandible drifting behind body copy, which reads as a bug rather than
+         as depth. So the stage owns the hero, the proof strip and this spacer -- about a
+         viewport and a quarter of scrub, enough for bone-to-glass, the seating and all
+         three verdicts -- and everything below it is ordinary flow on ordinary paper. -->
+    <section class="climax" aria-hidden="true"></section>
+  </div>
+</div>
+
+<section class="band band--tick" id="budget">
       <div class="container">
         <div class="section-head reveal">
-          <p class="eyebrow">What comes back</p>
-          <h2 class="display">Four files, not a screenshot</h2>
-          <p class="section-sub">A segmentation you cannot load into the software you already
-            use is a demo. Everything here is written in the coordinate frame you uploaded.</p>
+          <p class="eyebrow">The number</p>
+          <h2 class="display">A millimetre, minus what we know we get wrong</h2>
+          <p class="section-sub">Any planner can put a ruler between an implant and a line
+            somebody drew. The line is a prediction, and a prediction has an error. That
+            error is measured, published, and taken off the clearance before anything is
+            called safe.</p>
         </div>
-        <div class="panel reveal" style="padding:1.6rem clamp(1.2rem,3vw,2rem)">
-          <ul class="outputs">
-            <li>
-              <span class="o__name">RTSTRUCT</span>
-              <p class="o__desc">An RT Structure Set with one ROI per structure. ROI names are
-                capped at <b>16 characters</b> so they load in Varian Eclipse, and checked for
-                collisions at that length. Round-tripped through an independent reader:
-                34 ROIs, <b>median Dice 0.9920</b>. Upload NIfTI instead of DICOM and a
-                <b>DERIVED\SECONDARY</b> CT series ships in the same zip — an RTSTRUCT that
-                references nothing will not load in any planning system.</p>
-            </li>
-            <li>
-              <span class="o__name">STL</span>
-              <p class="o__desc">One mesh per structure, in patient LPS millimetres, Taubin
-                smoothed and quadric decimated. Iso-surfaced from a smoothed field rather
-                than a smoothed label map, so no thin cortical wall is ever pinched apart.</p>
-            </li>
-            <li>
-              <span class="o__name">NIfTI</span>
-              <p class="o__desc">The multi-label map, on <b>the grid you uploaded</b> — not the
-                canonical frame the network ran in. Re-export the same scan as LPS, RPI, RAS or
-                PIR and the labels come back <b>100.000000%</b> identical.</p>
-            </li>
-            <li>
-              <span class="o__name">Viewer</span>
-              <p class="o__desc">Three synced planes plus a 3D pane in the browser, with a
-                clickable FDI chart: pick a tooth and every view jumps to its centroid.
-                Centroids are computed in-browser and agree with SimpleITK to
-                <b>0.0000 mm</b>.</p>
-            </li>
-          </ul>
-        </div>
-      </div>
-    </section>
-
-    <section class="band" id="canal">
-      <div class="container">
-        <div class="grid grid--2">
-          <div class="section-head reveal" style="margin-bottom:0">
-            <p class="eyebrow">The high-stakes one</p>
-            <h2 class="display">The canal gets its own colour</h2>
-            <p class="section-sub">The inferior alveolar nerve is the structure you plan an
-              implant around. It is never merged into the mandible, and it is the one thing
-              on screen in red. Two models draw the nerves between them: the base model
-              draws the inferior alveolar canal itself, and a second, purpose-trained model
-              owns the three accessory canals &mdash; the two incisive canals and the
-              lingual canal &mdash; taking the main canal only as context.</p>
+        <div class="grid grid--2 budget">
+          <div class="panel reveal budget__sheet">
+            <ol class="budget__list">
+              <li>
+                <span class="budget__term">Measured clearance</span>
+                <span class="budget__val num">3.43 mm</span>
+                <span class="budget__note">implant surface to canal surface, in patient millimetres</span>
+              </li>
+              <li class="budget__minus">
+                <span class="budget__term">The canal&rsquo;s inward p95</span>
+                <span class="budget__val num">&minus; 0.46 mm</span>
+                <span class="budget__note">how far the drawn canal sits inside the true one, 95th percentile over a 20&#8209;case held&#8209;out set</span>
+              </li>
+              <li class="budget__rule">
+                <span class="budget__term">Graded clearance</span>
+                <span class="budget__val num">2.97 mm</span>
+                <span class="budget__note">what the verdict is computed from</span>
+              </li>
+              <li>
+                <span class="budget__term">Safety margin to the nerve</span>
+                <span class="budget__val num">2.00 mm</span>
+                <span class="budget__note">and 0.50 mm of headroom below that is <em>tight</em>, not clear</span>
+              </li>
+              <li class="budget__total" data-level="clear">
+                <span class="budget__term">Verdict</span>
+                <span class="budget__val"><span class="readout__chip">CLEAR</span></span>
+                <span class="budget__note">0.97 mm of headroom</span>
+              </li>
+            </ol>
+            <p class="budget__foot">The figures above are the hero&rsquo;s, at the crest. The
+              same arithmetic runs on every structure, with that structure&rsquo;s own prior:
+              1.11 mm for the lingual canal, 0.34 mm for a tooth.</p>
           </div>
           <div class="grid reveal">
             <article class="card">
-              <span class="card__kicker">Measured, without labels</span>
-              <h3>0.11 mm from the image edge</h3>
-              <p>The exported surface sits 0.11 mm inside where the image intensity crosses
-                half-way — 23% of one voxel, below the scan's own point-spread function,
-                over 25,487 sampled points. That is a precision number that needs no
-                ground truth.</p>
+              <span class="card__kicker">Quoted, never subtracted</span>
+              <h3>5.10 mm at the worst point</h3>
+              <p>The p95 is what gets deducted. The single worst inward excursion measured
+                anywhere in that holdout was <b>5.10 mm</b>, and it is printed rather than
+                built into the margin — because a number that large is a reason to look at
+                the scan, not a reason to move a threshold.</p>
             </article>
             <article class="card">
-              <span class="card__kicker">Thin things fragment</span>
-              <h3>Reported, never repaired</h3>
-              <p>A canal legitimately comes out in two pieces, so small-island removal is
-                switched off for it alone. Nothing is cleaned up behind your back:
-                the component count is in the report.</p>
+              <span class="card__kicker">A refusal is an answer</span>
+              <h3>Not graded outranks tight</h3>
+              <p>When a measurement carries a caveat — the canal drawn in pieces near the
+                site, a saturated distance, no canal at all in the maxilla — no grade is
+                issued. <b>NOT GRADED</b> sorts above <b>TIGHT</b> in the display on purpose:
+                it is the state that most needs somebody to look.</p>
+            </article>
+            <figure class="shot reveal">
+              <img src="/assets/shots/error-budget.jpg" width="1200" height="675" loading="lazy" decoding="async"
+                   alt="The ImplantPlan planning view: a cross-section with clearance callouts at 3.51 mm to the canal, and a rail showing the error budget of 0.34 to 1.11 mm deducted from the clearances.">
+              <figcaption>The error budget in the app, on a held-out scan. Every clearance in
+                the rail has already had it taken off.</figcaption>
+            </figure>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="depths">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">One site, three depths</p>
+          <h2 class="display">The same implant, a millimetre apart</h2>
+          <p class="section-sub">A real gap — a missing lower&#8209;left first molar with
+            <b>11.9 mm</b> of bone measured above the canal and <b>6.7 mm</b> of crestal
+            width. An 8 mm fixture seated on the crest sits <b>3.51 mm</b> off the inferior
+            alveolar canal. A millimetre deeper it is <b>2.55</b>. Half a millimetre deeper
+            again it is <b>2.07</b>, and the plan is refused.</p>
+        </div>
+        <figure class="reveal film">
+          <video class="film__video" src="/assets/verdict-loop.mp4" width="1280" height="720"
+                 autoplay muted loop playsinline preload="metadata"
+                 poster="/assets/shots/verdict-tight.jpg"
+                 aria-label="The ImplantPlan planning view at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, then CLEAR at 3.51 mm."></video>
+          <figcaption>Recorded from the running app on a real GPU. The clearances, the
+            verdicts and the captions are read out of the page rather than typed into a
+            script.</figcaption>
+        </figure>
+        <ul class="depths reveal">
+          <li data-level="tight">
+            <span class="readout__chip">TIGHT</span>
+            <p class="depths__val num">2.55<span class="readout__unit">mm</span></p>
+            <p class="depths__note">Inside the band, above the margin. Still a plan, and it
+              says so.</p>
+          </li>
+          <li data-level="breach">
+            <span class="readout__chip">BREACH</span>
+            <p class="depths__val num">2.07<span class="readout__unit">mm</span></p>
+            <p class="depths__note">Past the margin once the error is taken off. The plan is
+              refused, not softened.</p>
+          </li>
+          <li data-level="clear">
+            <span class="readout__chip">CLEAR</span>
+            <p class="depths__val num">3.51<span class="readout__unit">mm</span></p>
+            <p class="depths__note">Back at the crest. The number that made the difference is
+              half a millimetre of depth.</p>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <section class="band band--tick band--elev" id="planning">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">What planning actually does</p>
+          <h2 class="display">Seeded from the tooth it replaces</h2>
+          <p class="section-sub">The fixture is not dropped on the arch curve at the largest
+            size that fits. It is seeded as a restoration and seated in the bone that is
+            measured to be there.</p>
+        </div>
+        <div class="feature reveal">
+          <div class="feature__text">
+            <h3>Between the cortical plates</h3>
+            <p>Diameter comes from the tooth the site replaces — 3.3 mm for a lateral
+              incisor, 4.8 mm for a first molar — then narrows if the measured ridge cannot
+              take it. The platform is centred between the buccal and lingual plates rather
+              than on the arch spline, because that is where the bone is.</p>
+            <p>Then an auto&#8209;fit loop measures, steps the length down one catalogue size
+              if the canal clearance does not grade clear, and measures again. The card says
+              which happened — <em>&ldquo;shortened 2 sizes — the longest length that measures
+              clear of the canal here&rdquo;</em> — or admits that none did.</p>
+          </div>
+          <figure class="shot">
+            <img src="/assets/shots/seeded-clear.jpg" width="1200" height="675" loading="lazy" decoding="async"
+                 alt="A fixture seeded at a posterior mandibular site, with the clearance rows reading CLEAR.">
+          </figure>
+        </div>
+        <div class="feature feature--flip reveal">
+          <div class="feature__text">
+            <h3>Three axes, and one of them changes nothing</h3>
+            <p>Buccolingual tilt is drawn at its true angle in the cross&#8209;section;
+              mesiodistal yaw at its true angle on the panoramic, and foreshortened in the
+              section by exactly <span class="num">cos(yaw)</span> — exact, because the
+              orthogonal projection of a capsule is a capsule.</p>
+            <p>The third is clocking, and it is stated plainly to change <b>no</b>
+              measurement: the measured solid is a body of revolution. It exists so the
+              connection hex renders where a driver would engage it.</p>
+          </div>
+          <figure class="shot">
+            <img src="/assets/shots/angulation.jpg" width="1200" height="675" loading="lazy" decoding="async"
+                 alt="The angulation controls in ImplantPlan, with buccolingual, mesiodistal and clocking angles beside the clearance rows.">
+          </figure>
+        </div>
+        <div class="feature reveal">
+          <div class="feature__text">
+            <h3>The envelope is the surface the verdict is computed against</h3>
+            <p>Not a halo and not a highlight. The translucent shell around the fixture is
+              drawn at <b>2.46 mm</b> in the mandible — the 2.00 mm margin plus the canal&rsquo;s
+              own 0.46 mm inward p95 — so what you see touching is what the grader compared.</p>
+            <p>The fixture itself is machined titanium in every state. The verdict never
+              lives on the metal, because a reader who learns to read the implant&rsquo;s
+              colour has learned the wrong thing.</p>
+          </div>
+          <figure class="shot">
+            <img src="/assets/shots/safety-envelope.jpg" width="1200" height="675" loading="lazy" decoding="async"
+                 alt="The 3-D view in ImplantPlan: a titanium fixture inside a translucent green safety envelope, above the red inferior alveolar canal.">
+          </figure>
+        </div>
+        <div class="panel reveal density">
+          <h3>Bone density, and what it is not</h3>
+          <p>The site&rsquo;s density is reported as a ratio: the mean at the osteotomy
+            against this scan&rsquo;s own cancellous median, both referenced to its air. That
+            makes it affine&#8209;invariant, so it survives a scanner that is not calibrated —
+            and if the scan carries no reference population, no number is produced at all.
+            <b>It is never a Hounsfield number and never a Misch class.</b> CBCT grey values
+            are not calibrated attenuation, so anything that looks like a density measurement
+            is not one.</p>
+        </div>
+      </div>
+    </section>
+
+    <section class="band" id="engine">
+      <div class="container">
+        <div class="section-head reveal">
+          <p class="eyebrow">The engine underneath</p>
+          <h2 class="display">One network, 47 structures, then everything it will not tell you</h2>
+          <p class="section-sub">The clearance is the product. It stands on a segmentation,
+            and the segmentation is measured rather than asserted.</p>
+        </div>
+        <div class="grid grid--2 reveal">
+          <div class="panel">
+            <ul class="metrics">
+              <li><span class="metrics__k">Challenge Dice</span><span class="metrics__v num">0.8965</span></li>
+              <li><span class="metrics__k">Strict Dice</span><span class="metrics__v num">0.8292</span></li>
+              <li><span class="metrics__k">HD95</span><span class="metrics__v num">1.235 mm</span></li>
+              <li><span class="metrics__k">NSD</span><span class="metrics__v num">0.9736</span></li>
+              <li><span class="metrics__k">Inferior alveolar canal, Dice</span><span class="metrics__v num">0.9008 / 0.9009</span></li>
+            </ul>
+            <p class="metrics__foot">A 20&#8209;case held&#8209;out set, scored by the same
+              pipeline the product runs. Two of the seven models in the catalogue we trained
+              ourselves; a purpose&#8209;trained second model owns the three accessory canals
+              and beats the base model on 40 external cases at
+              <span class="num">p = 7.6 &times; 10<sup>&minus;4</sup></span>.</p>
+          </div>
+          <div class="grid">
+            <article class="card">
+              <span class="card__kicker">Four files, not a screenshot</span>
+              <h3>Into the software you already use</h3>
+              <p><b>RTSTRUCT</b> with ROI names capped at 16 characters so they load in
+                Varian Eclipse, round&#8209;tripped through an independent reader at median
+                Dice <span class="num">0.9920</span>. <b>STL</b> per structure in patient LPS
+                millimetres. <b>NIfTI</b> on the grid you uploaded — re&#8209;export the same
+                scan as LPS, RPI, RAS or PIR and the labels come back
+                <span class="num">100.000000%</span> identical. And the browser viewer.</p>
+            </article>
+            <article class="card">
+              <span class="card__kicker">Measured without labels</span>
+              <h3>0.11 mm from the image edge</h3>
+              <p>The exported canal surface sits 0.11 mm inside where the image intensity
+                crosses half&#8209;way — 23% of one voxel, below the scan&rsquo;s own
+                point&#8209;spread function, over 25,487 sampled points. That is a precision
+                number that needs no ground truth.</p>
             </article>
           </div>
         </div>
       </div>
     </section>
 
-    <section class="band band--tick" id="how">
-      <div class="container">
-        <div class="section-head reveal">
-          <p class="eyebrow">How it works</p>
-          <h2 class="display">One model, and everything it will not tell you</h2>
-          <p class="section-sub">A single network labels all 47 structures, including a class
-            per tooth. What it cannot do is mark its own mistakes, so the checks are separate
-            and they are all in the report.</p>
-        </div>
-        <ol class="flow">
-          <li class="reveal"><div class="flow__card">
-            <span class="flow__index">Step 01</span>
-            <h3>Into one known frame</h3>
-            <p>Teeth are numbered by <em>position</em>, so a scan in the wrong frame gets
-              every tooth mirrored. Every upload is canonicalised before a voxel is read,
-              including scans with a real patient tilt.</p>
-          </div></li>
-          <li class="reveal"><div class="flow__card">
-            <span class="flow__index">Step 02</span>
-            <h3>All 47 structures at once</h3>
-            <p>Both jaws, the mandibular canal, the maxillary sinuses, the pharynx, the
-              accessory canals, dental work, and a separate class for every FDI position —
-              from a single network, in about 20 s on one GPU.</p>
-          </div></li>
-          <li class="reveal"><div class="flow__card">
-            <span class="flow__index">Step 03</span>
-            <h3>Fragments removed, per class</h3>
-            <p>A speck of enamel is not a tooth. Each class is filtered against the smallest
-              that structure has ever legitimately been — except the canals, which are thin
-              tubes that come out in pieces and would be deleted by their own filter.</p>
-          </div></li>
-          <li class="reveal"><div class="flow__card">
-            <span class="flow__index">Check</span>
-            <h3>Checked against anatomy, not against itself</h3>
-            <p>Per-tooth component counts, contralateral volume symmetry, occlusal contact,
-              four laterality checks and an upper/lower check — all in the report, whether
-              they pass or not.</p>
-          </div></li>
-        </ol>
-      </div>
-    </section>
-
-    <section class="climax" aria-hidden="true" style="min-height:78svh"></section>
-  </div>
-</div>
 
 <section class="arch" id="arch">
   <div class="container">
@@ -367,6 +517,17 @@
         <li><b>Nothing is repaired.</b> Quality findings — extra components, a tooth sitting
           in the wrong arch, asymmetric contralateral volumes — are reported. The exported
           label map is exactly what the models produced.</li>
+        <li><b>No surgical guide is produced, and that is a position rather than a gap.</b>
+          A drill guide is a patient-contacting device that converts a plan into a hole. The
+          canal outline this product measures against is known to sit up to <b>5.10 mm</b>
+          inside the truth at its worst measured point, and CBCT grey values are not
+          calibrated attenuation. We publish the clearance and its error; we do not hand you
+          something that drills.</li>
+        <li><b>The hero on this page measures a web mesh, not your scan.</b> Its millimetre
+          is computed in your browser from a decimated, quantised display mesh — an
+          illustration of the method, honest to about a hundredth of a millimetre against an
+          exact recomputation, and checked at both levels of detail. The product measures on
+          the voxel grid.</li>
         <li><b>Research preview. Not a medical device, not for diagnostic use.</b> A
           clinician reads every result.</li>
       </ul>
@@ -487,7 +648,7 @@
       </details>
       <details class="faq__item reveal">
         <summary>How long does a scan take?</summary>
-        <p><b>54 to 93 seconds</b> of GPU time on the seeded example cases, plus roughly a
+        <p><b>About 98 seconds</b> of GPU for the two models that run — 95.0 s for the base network and 2.5 s for the anterior canal specialist, both figures published in the model catalogue before you upload anything — plus roughly a
           minute of CPU for the merge, the quality checks, the meshes and the viewer tiles.
           There is one GPU, so a job may queue behind another; the app shows you where you
           are.</p>
@@ -500,12 +661,34 @@
           are stored under their own prefix and no account can see another's.</p>
       </details>
       <details class="faq__item reveal">
-        <summary>Can I trust it for planning?</summary>
+        <summary>Can I trust the clearance it reports?</summary>
         <p>Treat it as a first pass that a clinician checks, which is what the
           <a href="#limits">limits</a> section is for. It is a research preview, not a
           medical device, and it is not for diagnostic use. The useful question is not
           whether it is perfect but whether checking its canal is faster than tracing one —
           and the report tells you where it is unsure.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>How is the clearance actually computed?</summary>
+        <p>The measured solid is a capsule — the fixture&rsquo;s axis segment, swept at its
+            radius, with a hemispherical apex. The clearance is the nearest distance from
+            that segment to the canal surface, less the radius, on the full-resolution grid
+            you uploaded. The axis span is the length <em>minus</em> the radius, not the
+            length: walking a full-length cylinder costs up to one radius of false
+            conservatism and used to suppress the verdict on every vertical implant over a
+            canal.</p>
+        <p>Then the structure&rsquo;s own inward p95 is subtracted, and the result is
+            compared to the margin. Both numbers, and the arithmetic, are on the printed plan
+          sheet under &ldquo;how every figure above was obtained&rdquo;.</p>
+      </details>
+      <details class="faq__item reveal">
+        <summary>Does it produce a surgical guide?</summary>
+        <p>No, and it will not. A guide is a patient-contacting device; this is a research
+            preview that publishes a measurement and its error. The canal outline it measures
+            against sat up to <b>5.10 mm</b> inside the truth at the worst single point of a
+            20-case held-out set, and CBCT grey values are not calibrated attenuation. You
+            get the clearance, the error budget behind it, and an STL of the planned fixture.
+          What you do with them is a clinical decision.</p>
       </details>
       <details class="faq__item reveal">
         <summary>What counts as one segmentation?</summary>
@@ -535,21 +718,20 @@
   <div class="container">
     <div class="footer__grid">
       <div>
-        <a class="brand" href="#top" style="margin-right:0">
-          <svg class="brand__mark" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <rect x="1" y="1" width="30" height="30" rx="8" fill="url(#bm)"/>
-            <path d="M16 8.2c-2.6 0-3.3 1.1-5 1.1-1.9 0-3.1 1.5-3.1 3.9 0 3.1 1.1 5.4 1.9 7.6.7 1.9 1.2 3.4 2.4 3.4 1.3 0 1.5-1.9 1.7-3.6.2-1.5.5-2.6 2.1-2.6s1.9 1.1 2.1 2.6c.2 1.7.4 3.6 1.7 3.6 1.2 0 1.7-1.5 2.4-3.4.8-2.2 1.9-4.5 1.9-7.6 0-2.4-1.2-3.9-3.1-3.9-1.7 0-2.4-1.1-5-1.1z" fill="#0a0e13" fill-opacity=".82"/>
-          </svg>
-          Dentistry<span class="brand__sub">CBCT</span>
+        <a class="brand brand--footer" href="#top" style="margin-right:0" aria-label="ImplantPlan — home">
+          <img class="brand__wordmark" src="/assets/wordmark.png" width="669" height="114"
+               alt="ImplantPlan" loading="lazy" decoding="async">
         </a>
-        <p class="footer__tagline">Automatic segmentation of dental cone-beam CT. Part of
-          DicomSegVR.</p>
+        <p class="footer__tagline">Dental cone-beam CT segmentation and implant planning.
+          The clearance to the nerve, as a number.</p>
         <p class="footer__copy">© 2026 DicomSegVR</p>
       </div>
       <div>
         <h4>Product</h4>
         <ul>
-          <li><a href="#outputs">What you get</a></li>
+          <li><a href="#budget">The number</a></li>
+          <li><a href="#depths">One site, three depths</a></li>
+          <li><a href="#planning">Planning</a></li>
           <li><a href="#arch">The FDI arch</a></li>
           <li><a href="#pricing">Pricing</a></li>
           <li><a href="/app">Open the app</a></li>
@@ -598,6 +780,6 @@
 </footer>
 
 <script src="/main.js" defer></script>
-<script type="module" src="/assets/hero3d.js?v=3"></script>
+<script type="module" src="/assets/hero3d.js?v=4"></script>
 </body>
 </html>
