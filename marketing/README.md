@@ -89,9 +89,14 @@ So: `curl -sI https://github.com/user-attachments/assets/<uuid>` from a shell wi
 session, or diff `curl -s <repo url> | grep -o '<video[^>]*'` against a repo whose videos
 are known to work. Signed-in eyes cannot see this bug.
 
-Until the assets are posted somewhere in the repo, the README uses poster stills linking
-to the committed masters — GitHub renders its own player on an `.mp4` blob page, which
-needs no attachment and works signed out.
+**The fix, confirmed.** Uploading the two masters into issue #1 and actually SUBMITTING
+it bound them, and GitHub now rewrites both to signed URLs on the issue page and in the
+README alike. So the README carries two real players, and issue #1 exists only to hold the
+attachments — deleting it unbinds them and the players go back to 404.
+
+Current URLs — `implantplan-plan.mp4` is `5adc1249-2341-44c1-aa0f-0d757de2b4dd`,
+`implantplan-pipeline.mp4` is `c71523b6-b412-4a82-ab27-3128c7a9daa9`. The committed files
+under `video/` stay the source of truth; the attachments are copies GitHub can stream.
 
 **If you do post them, write only `src`, `controls` and `muted`.** Everything else is
 dropped: `poster`, `playsinline` and `width` were all sanitized away, checked on the

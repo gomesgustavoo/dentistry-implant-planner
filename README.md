@@ -24,36 +24,27 @@ wrong the nerve is.
 
 ## Watch
 
-<table>
-<tr>
-<td width="50%"><a href="marketing/video/implantplan-plan.mp4"><img src="marketing/stills/plan/verdict-breach.jpg" alt="A breached plan, refused rather than softened"></a></td>
-<td width="50%"><a href="marketing/video/implantplan-pipeline.mp4"><img src="marketing/stills/pipeline/segmentation.jpg" alt="37 structures segmented from one cone-beam CT"></a></td>
-</tr>
-<tr valign="top">
-<td>
+**Implant planning** · 1:42 — click the gap where a tooth is missing, seed a fixture, watch
+it size itself to the bone that is actually there, angle it in three axes, and see a plan
+refused when it should be.
 
-**[Implant planning](marketing/video/implantplan-plan.mp4)** · 1:42 — click the gap where
-a tooth is missing, seed a fixture, watch it size itself to the bone that is actually
-there, angle it in three axes, and see a plan refused when it should be.
+<video src="https://github.com/user-attachments/assets/5adc1249-2341-44c1-aa0f-0d757de2b4dd" controls muted></video>
 
-</td>
-<td>
+**Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a byte
+is sent, about 98 seconds of GPU for the two models that run, and a report that publishes
+its own error.
 
-**[Scan to structures](marketing/video/implantplan-pipeline.mp4)** · 1:34 — one upload, a
-model catalogue you choose from before a byte is sent, about 98 seconds of GPU for the two
-models that run, and a report that publishes its own error.
-
-</td>
-</tr>
-</table>
+<video src="https://github.com/user-attachments/assets/c71523b6-b412-4a82-ab27-3128c7a9daa9" controls muted></video>
 
 Vertical cuts, for phones and for social:
 plan [9:16](marketing/video/implantplan-plan-9x16.mp4) ·
 [4:5](marketing/video/implantplan-plan-4x5.mp4) — pipeline
 [9:16](marketing/video/implantplan-pipeline-9x16.mp4) ·
 [4:5](marketing/video/implantplan-pipeline-4x5.mp4).
-Every cut is committed under [`marketing/video/`](marketing/video/); clicking a poster
-opens GitHub's own player on the file.
+Every cut is committed under [`marketing/video/`](marketing/video/), which is the source of
+truth; the two players above stream copies GitHub holds, because a file in a repository
+cannot reach its video player ([#1](https://github.com/gomesgustavoo/dentistry-implant-planner/issues/1)
+says why).
 
 Both films are recorded from the running app on a real GPU, and the case they use is a
 held-out scan the model never trained on. The verdicts, the clearances and the scores in
