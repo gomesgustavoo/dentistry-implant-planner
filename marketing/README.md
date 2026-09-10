@@ -85,13 +85,26 @@ working. What separates the two, on the rendered HTML:
 <video src="https://github.com/user-attachments/assets/<uuid>">
 ```
 
-So: `curl -sI https://github.com/user-attachments/assets/<uuid>` from a shell with no
-session, or diff `curl -s <repo url> | grep -o '<video[^>]*'` against a repo whose videos
-are known to work. Signed-in eyes cannot see this bug.
+So: `curl -sIL https://github.com/user-attachments/assets/<uuid>` from a shell with no
+session — bound gives `302` then `206 video/mp4`, orphaned gives `404`. Signed-in eyes
+cannot see this bug, and neither can `grep -c '<video'`: the element renders either way,
+which is what makes counting the markup a useless check. Only the media fetch settles it.
+
+A headless or automated browser is also not a witness here. Both our page and
+NVlabs/Eagle's — the reference this was modelled on — sit at `readyState 0` in the
+automation profile while curl pulls the bytes fine, so a stuck spinner there says nothing
+about a real visitor.
 
 **The fix, confirmed.** Uploading the two masters into issue #1 and actually SUBMITTING
-it bound them, and GitHub now rewrites both to signed URLs on the issue page and in the
-README alike. So the README carries two real players, and issue #1 exists only to hold the
+it bound them.
+
+One detail worth knowing, because it looks like a failure and is not: **the rewrite is
+per-document.** On the issue page — the content the assets are attached to — the src comes
+back as the signed `private-user-images` URL. In the README it stays the bare
+`user-attachments` URL. That is fine: once bound, the bare URL answers `302` and redirects
+to the signed asset, so the player follows it. Anonymously, both return `206 video/mp4`
+with byte counts equal to the committed files, where the orphaned uploads returned flat
+`404`. That redirect is the whole difference between working and not. So the README carries two real players, and issue #1 exists only to hold the
 attachments — deleting it unbinds them and the players go back to 404.
 
 Current URLs — `implantplan-plan.mp4` is `5adc1249-2341-44c1-aa0f-0d757de2b4dd`,
