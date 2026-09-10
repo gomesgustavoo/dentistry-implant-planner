@@ -392,6 +392,18 @@ html.nav-open .nav__scrim { display: block; }
 
 /* One uniform glass treatment for anything laid over the render. Heavy blur is
    what makes a low-opacity tint legible — frosted, but the arch shows through. */
+/* THE BASE PANEL, which did not exist until the engine section needed one.
+   Every `.panel` on this page used to live inside the filmstage, so the only rule
+   was the scoped one below and a panel anywhere else rendered as bare paper --
+   invisible next to the cards it was meant to sit beside. */
+.panel {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow);
+  padding: 1.5rem clamp(1.1rem, 3vw, 1.8rem);
+}
+
 .filmstage__content .panel {
   background: var(--glass);
   border: 1px solid var(--glass-border);
@@ -1225,3 +1237,63 @@ html.nav-open .nav__scrim { display: block; }
    progress function is -rect.top / (offsetHeight - innerHeight), so this number IS the
    pacing — there is nothing else to tune. */
 .climax { min-height: 125svh; }
+
+/* ============================================================
+   The engine and deployment sections
+
+   These lead the page now: it is a portfolio piece as much as a product, and the
+   first question a reader with an ML background asks is whose model it is and
+   what it scored. So the evidence gets the top of the page and the room to be
+   read, not a footnote under the clinical argument.
+   ============================================================ */
+
+/* A panel heading, matched to .card h3 so a panel and a card can sit side by side
+   in the same grid without one looking like a different rank of thing. */
+.feature__h,
+.panel > h3 {
+  margin: 0 0 .7rem;
+  font-family: var(--display); font-stretch: var(--wide);
+  font-size: var(--step-2); font-weight: 650;
+  letter-spacing: var(--tracking-display); line-height: 1.15;
+}
+.engine__lede { margin: 0 0 1.1rem; color: var(--text-muted); line-height: 1.6; }
+.engine__lede b { color: var(--text); font-weight: 600; }
+
+/* A card that carries an argument rather than a claim, so it gets two paragraphs
+   and a list instead of one paragraph. */
+.card--wide p { margin: 0 0 .8rem; }
+.card--wide p:last-child { margin-bottom: 0; }
+
+/* The A/B. Two rows, and the winning one is marked by weight and a rule of its own
+   colour rather than by a green tint — the verdict palette means something specific
+   on this page and it is not "better". */
+.ab { list-style: none; margin: .2rem 0 0; padding: 0; }
+.ab li {
+  display: flex; justify-content: space-between; align-items: baseline; gap: 1rem;
+  padding: .6rem .8rem; border-left: 3px solid var(--border);
+  background: var(--bg-elev); border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+}
+.ab li + li { margin-top: .4rem; }
+.ab__k { color: var(--text-muted); font-size: var(--step--1); }
+.ab__v {
+  font-family: var(--mono); font-size: var(--step--1); font-weight: 600;
+  font-variant-numeric: tabular-nums; color: var(--text); white-space: nowrap;
+}
+.ab__win { border-left-color: var(--accent); background: var(--accent-wash); }
+.ab__win .ab__k { color: var(--text); font-weight: 550; }
+
+/* The full-width closing statement of a section: the thing the section was for,
+   set once, with room around it. */
+.ownership { margin-top: 1.6rem; padding: 1.5rem clamp(1.1rem, 3vw, 2rem); }
+.ownership p { margin: 0; color: var(--text-muted); line-height: 1.65; max-width: 92ch; }
+.ownership b { color: var(--text); font-weight: 600; }
+
+code {
+  font-family: var(--mono); font-size: .88em;
+  padding: .08em .32em; border-radius: 4px;
+  background: var(--surface-2); color: var(--text);
+}
+
+@media (max-width: 900px) {
+  .ab li { flex-direction: column; align-items: flex-start; gap: .2rem; }
+}
