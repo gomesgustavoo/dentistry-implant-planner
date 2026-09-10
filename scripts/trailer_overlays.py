@@ -88,10 +88,23 @@ LEGAL = ("Research preview — not a medical device. Model weights derive from a
 # attribution, which is in LEGAL above and stays on screen.
 
 
-def font_face(family: str, filename: str, weights: str) -> str:
+def font_face(family: str, filename: str, weights: str, stretch: str = "") -> str:
+    """One @font-face, with the variable axes DECLARED.
+
+    `font-stretch: 62% 125%` is not decoration. Archivo is a two-axis variable font and
+    this product's one typographic liberty is the WIDTH axis, used semantically: display
+    runs expanded and labels run condensed, mirroring an arch. But a `font-stretch: 116%`
+    in a rule cannot move the `wdth` axis unless the FACE says it has one -- without the
+    descriptor Chrome matches the face, renders it at 100%, and every plate silently comes
+    out at the wrong width. It looks plausible, which is why it went unnoticed: the two
+    delivered films are set at 100% while their CSS asks for 116% and 78%.
+
+    ~/brand/make-raster.py has always declared it. This did not. `--probe-fonts` proves
+    the axis actually moves rather than trusting either file.
+    """
     return (f"@font-face{{font-family:'{family}';"
             f"src:url('file://{FONTS / filename}') format('woff2');"
-            f"font-weight:{weights};font-display:block;}}")
+            f"font-weight:{weights};{stretch}font-display:block;}}")
 
 
 def head(extra_css: str) -> str:
@@ -99,7 +112,7 @@ def head(extra_css: str) -> str:
     platform = (TOKENS / "platform.css").read_text(encoding="utf-8")
     band = (TOKENS / "band-implantplan.css").read_text(encoding="utf-8")
     return f"""<!doctype html><meta charset="utf-8"><style>
-{font_face('Archivo', 'Archivo-latin.woff2', '100 900')}
+{font_face('Archivo', 'Archivo-latin.woff2', '100 900', 'font-stretch:62% 125%;')}
 {font_face('Geist', 'Geist-latin.woff2', '300 800')}
 {font_face('Geist Mono', 'GeistMono-latin.woff2', '400 600')}
 {platform}

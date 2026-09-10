@@ -18,6 +18,68 @@ marketing/
 |---|---|--:|
 | `video/implantplan-plan.mp4` | Implant planning end to end: a real edentulous site, seeding, the fit loop, CLEAR → TIGHT → BREACH, angulation with the 3-D turned by hand, the safety envelope. | 1:42 |
 | `video/implantplan-pipeline.mp4` | The other half: upload, the model catalogue, segmentation, the findings report, the error budget, the structure list. | 1:34 |
+| `video/implantplan-linkedin-4x5.mp4` | The feed cut, in the landing page's light identity: a light frame, the dark app **placed** in a slot, and the caption on paper beneath it. | 1:11 |
+| `video/implantplan-linkedin-9x16.mp4` | The same cut, typeset natively for a vertical canvas. | 1:11 |
+
+### The LinkedIn cut
+
+**It is a re-cut of the implant film's body, not a second shoot.** The 92 s body is the
+real app on the real GPU and every number in it was scraped at capture time, so the
+honest thing to do with a feed film is select from that footage rather than re-record it
+and hope the second take says the same numbers.
+
+```bash
+scripts/build_social.sh              # cut -> plates -> two encodes -> thumbnail
+scripts/verify_social.sh             # 22 checks against the delivered files
+```
+
+`build_social.sh` calls `cut_social.py` (which segment list, and re-timing the beats onto
+the new timeline) and `social_overlays.py` (the light frame, plates, title and end card)
+before it encodes, so there is one command and no ordering to remember.
+
+**The frame is light and the app stays dark.** The app is dark and this folder forbids
+restyling it for a film, so the film contains a dark slab either way — the only question
+is what surrounds it. A light surround makes that slab the only dark thing on screen,
+which puts the eye on the product for free; a dark surround camouflages it. LinkedIn's
+feed is off-white, so the card bleeds into the column and the inset becomes the figure.
+It also deletes the scrim: the caption never touches a frame of CBCT, so the type runs at
+full contrast.
+
+**The order of composition is inverted, and that is the point.** `build_trailer.sh`
+composites plates onto the 1920-wide body and scales the result into the social frame
+afterwards, so a 56 px headline is delivered at 31 px and the app's own 11 px readouts at
+6. `build_social.sh` builds the frame first, places the footage into its slot at native
+size, and typesets the captions at the FINAL canvas scale. Nothing is resampled after it
+is set. `verify_social.sh` measures the smallest inked band in every plate and fails below
+40 px.
+
+**A caption may only be shown over the footage it was scraped from.** Beats are re-timed
+through the segment that contains them; a beat whose segment was cut is dropped, never
+slid onto neighbouring footage. The cold open borrows a real beat's scraped numeral and
+`cut_social.py` asserts the borrowed window falls inside that beat's own window — if the
+master is ever re-cut, that assertion fails rather than the caption quietly becoming wrong.
+
+**The verdicts are checked where the caption and the state agree.** The film's state
+changes a beat BEFORE the plate that names it, so a sample at a plate's midpoint can
+legitimately show the next verdict — measured: at 34.2 s of an early build the caption
+read TIGHT while the app read BREACH, and both were correct. `cut_social.py` therefore
+maps `make_preview_gif.sh`'s three already-proven windows onto the new timeline, refuses
+to emit one the cut has broken in half, and asserts that the plate on screen there is the
+one naming that verdict. `verify_social.sh` then reads the chip's hue back out of the
+delivered 4:5 file at exactly those points.
+
+**One assembly bug worth writing down, because it fails silently.** A plate input is
+`-loop 1 -t <dur>`, so its own clock starts at zero — its alpha fade-out has already run
+to nothing long before `enable` opens, and overlay's `eof_action=repeat` then repeats that
+transparent frame forever. The caption simply never appears and ffmpeg reports success.
+`setpts=PTS-STARTPTS+<start>/TB` delays the stream to its start time and puts the fades
+where the enable window is. `build_trailer.sh` has always carried that line; this one did
+not, for one build.
+
+Delivered: H.264 High L4.0, yuv420p, 30 fps CBR-capped (`-crf 18 -maxrate 8M`), BT.709
+tagged, `+faststart`, a silent AAC track, ~5 MB each, and
+`implantplan-linkedin-thumb.jpg` — frame 0, which is already the title card because the
+title gets no fade-in.
 
 `-9x16` and `-4x5` are the same master **placed** in a branded frame, never cropped or
 upscaled. Cropping 1920×1080 to 9:16 gives 608×1080 blown up 1.78×, which is visibly soft
