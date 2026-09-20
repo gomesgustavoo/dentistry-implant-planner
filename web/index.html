@@ -382,6 +382,22 @@
         <div id="teamBody"><p class="empty">Loading&hellip;</p></div>
       </section>
 
+      <!-- Headsets ------------------------------------------------------ -->
+      <!-- Pairing a headset grants the device exactly the access its holder already
+           has, so it sits with the other access-granting act, inviting, and before
+           billing: me, who is in my workspace, which devices are in it, then money.
+           The note is a live region for STATE changes (paired, expired, revoked); the
+           per-second countdown is written to a plain element so a screen reader is
+           not read a clock. -->
+      <section class="panel" id="headsetPanel">
+        <div class="panel-head">
+          <h2>Headsets</h2>
+          <span class="hint" id="headsetHint"></span>
+        </div>
+        <div id="headsetBody"><p class="empty">Loading&hellip;</p></div>
+        <p class="form-note" id="headsetNote" role="status" aria-live="polite"></p>
+      </section>
+
       <!-- Plan and billing --------------------------------------------- -->
       <section class="panel" id="planPanel">
         <div class="panel-head">
@@ -762,6 +778,11 @@
      the web image has no build step. -->
 <script src="auth.js?v=dev"></script>
 <script src="viewer.js?v=dev"></script>
+<!-- Vendored, never a CDN: Project Nayuki's QR Code generator v1.8.0 (MIT), byte-identical
+     to `qrcodegen-v1.8.0-es6.js` from the GitHub release. Declares the global `qrcodegen`
+     and nothing else; app.js's drawQr() renders the pairing code with it. If it fails to
+     load the pairing panel still works -- the typed code carries the same secret. -->
+<script src="qrcodegen.js?v=dev"></script>
 <script src="app.js?v=dev"></script>
 </body>
 </html>

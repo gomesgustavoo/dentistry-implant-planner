@@ -444,6 +444,27 @@ main#settings { max-width: var(--page-narrow); }
   flex: 1; min-width: 0; font-family: var(--mono); font-size: .7rem;
   color: var(--ink); word-break: break-all; user-select: all;
 }
+/* Pairing a headset. The QR tile is WHITE, and literally so rather than a token: a
+   scanner wants dark modules on a light ground with a quiet zone around them, and on this
+   near-black page the only light surface is one we paint on purpose. The modules take
+   `--ground`, the darkest thing the page has. The code beside it is the same secret in
+   letters, for the headset's typed fallback, so it is selectable in one click. */
+.pairing {
+  display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 1.1rem; align-items: start;
+  margin-top: 1.1rem; padding-top: .9rem; border-top: 1px solid var(--border);
+}
+.pairing-qr {
+  padding: .5rem; background: #fff; border-radius: var(--radius-sm); line-height: 0;
+  justify-self: start;
+}
+.pairing-qr canvas { display: block; }
+.pairmeta { display: grid; gap: .5rem; min-width: 0; align-content: start; }
+.paircode {
+  font-family: var(--mono); font-size: 1.7rem; letter-spacing: .1em; color: var(--ink);
+  user-select: all;
+}
+.paircode.expired { color: var(--muted); text-decoration: line-through; }
+@media (max-width: 620px) { .pairing { grid-template-columns: 1fr; } }
 
 /* ------------------------------------------------------------- workspace */
 .workspace {

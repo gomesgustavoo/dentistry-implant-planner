@@ -22,6 +22,7 @@ violation on `keycloak_sub` is caught and the row re-read.
 
 from __future__ import annotations
 
+import hashlib
 import datetime as dt
 import json
 import logging
@@ -305,6 +306,57 @@ def caller_from_token(session, token: str) -> Caller:
     return found if found else _provision(session, sub, email, username)
 
 
+DEVICE_TOKEN_PREFIX = "ipv1_"
+_DEVICE_IDLE_DAYS = 30
+_DEVICE_SEEN_INTERVAL_MINUTES = 60
+
+
+def caller_from_device_token(session, credential: str) -> Caller | None:
+    """A paired headset's credential, or None when this is not one.
+
+    Returning None rather than raising is what lets a JWT and a device token share one
+    Authorization header without either path knowing about the other: only a credential
+    carrying the prefix is ours, and everything else falls through to `caller_from_token`
+    unchanged.
+
+    The row says WHICH user. It does not say what they may do -- the tenant, the role and
+    the disabled check all come back out of `_lookup`, which is the same boundary every
+    other request crosses. A headset therefore cannot outlive the membership that
+    justified it, and cannot hold a role its owner has since lost.
+    """
+    if not credential.startswith(DEVICE_TOKEN_PREFIX):
+        return None
+
+    row = session.execute(text(
+        "SELECT d.id::text, u.keycloak_sub, d.last_seen_at "
+        "FROM device_pairings d JOIN users u ON u.id = d.user_id "
+        "WHERE d.token_hash = :h AND d.revoked_at IS NULL "
+        "  AND d.expires_at > now() "
+        "  AND d.last_seen_at > now() - CAST(:idle AS interval)"
+    ), {"h": hashlib.sha256(credential.encode()).hexdigest(),
+        "idle": f"{_DEVICE_IDLE_DAYS} days"}).first()
+    if row is None:
+        raise unauthorized("This headset is not paired any more")
+
+    pairing_id, sub, last_seen = row
+
+    # Touched at most hourly. The dashboard wants a "last seen" column; paying a write on
+    # every authenticated request to make that column sharper is not a trade worth making,
+    # and the idle expiry above is measured in days.
+    if last_seen is None or (db.utcnow() - last_seen) > dt.timedelta(
+            minutes=_DEVICE_SEEN_INTERVAL_MINUTES):
+        session.execute(text(
+            "UPDATE device_pairings SET last_seen_at = now() WHERE id = CAST(:i AS uuid)"
+        ), {"i": pairing_id})
+        session.commit()
+
+    caller = _lookup(session, sub)
+    if caller is None:
+        # The user row went away and the pairing outlived it. There is nobody to act as.
+        raise unauthorized("This headset is not paired any more")
+    return caller
+
+
 def current_caller(
     request: Request,
     creds: HTTPAuthorizationCredentials | None = Depends(_bearer),
@@ -320,7 +372,8 @@ def current_caller(
     """
     with db.SessionLocal() as session:
         if creds and creds.credentials:
-            caller = caller_from_token(session, creds.credentials)
+            device = caller_from_device_token(session, creds.credentials)
+            caller = device if device is not None else caller_from_token(session, creds.credentials)
             request.state.caller = caller
             return caller
         if settings.REQUIRE_AUTH:

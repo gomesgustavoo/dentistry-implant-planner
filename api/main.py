@@ -120,7 +120,7 @@ def _quota_denied(request: Request, exc: quota.QuotaDenied) -> JSONResponse:
                         content={"detail": exc.body()})
 
 from api.routes import (  # noqa: E402
-    billing, edits, examples, files, jobs, me, plans, system, teams,
+    billing, edits, examples, files, jobs, me, pair, plans, system, teams,
 )
 
 app.include_router(system.router)
@@ -128,6 +128,9 @@ app.include_router(me.router)
 # BEFORE jobs/files, for the same reason those two are ordered: `/v1/tenants/...`
 # and `/v1/invites/...` must not be shadowed by anything with a greedy path param.
 app.include_router(teams.router)
+# Literal /v1/pair/... paths, mounted with the other literal-path routers and
+# well clear of files.py's /{job_id}/files/{path:path} catch-all.
+app.include_router(pair.router)
 app.include_router(examples.router)
 # jobs before files: both are mounted under /v1/jobs, and the literal
 # /v1/jobs/{job_id} must be matched before the /{job_id}/files/{path:path} greedy

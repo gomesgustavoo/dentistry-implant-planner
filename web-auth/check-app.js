@@ -104,6 +104,10 @@ const REQUIRED = [
   'renderUsageChip', 'renderUsageHistory', 'renderPlanPanel', 'renderJobs',
   'refreshAccount', 'loadTeam', 'loadMembers', 'refreshWorkspaces',
   'switchWorkspace', 'startCheckout', 'openPortal',
+  // headset pairing: the code is a one-time secret held in state and drawn as a QR
+  // client-side, so the panel has the same rebuild-from-state shape as the invite link
+  'loadDevices', 'renderHeadsets', 'startPairing', 'tickPairing', 'pollPaired',
+  'stopPairing', 'revokeDevice', 'drawQr',
   // --- plumbing ------------------------------------------------------------
   'api', 'authed', 'cachedFetch', 'navigate', 'setNotice', 'boot',
   // Artifact pictures travel through the bearer-authenticated path. An <img> cannot

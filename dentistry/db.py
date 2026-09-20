@@ -284,6 +284,53 @@ class TenantInvite(Base):
     revoked_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
 
+class DevicePairing(Base):
+    """A headset paired into a workspace, and the code that paired it.
+
+    One row covers both halves of the ceremony. `code_hash` is the short code the
+    dashboard shows and the headset scans, live for minutes; `token_hash` is the
+    credential the headset keeps afterwards, rotated on every reconnection. Both are
+    SHA-256 hashes for the reason `TenantInvite` gives: this row is readable by
+    anything with database access, and either value alone reaches a tenant's scans.
+
+    `tenant_id` is here for the dashboard's device list and for the cascade when a
+    workspace is deleted. It is NOT the authorisation boundary: `auth._lookup`
+    resolves that from live membership rows on every request, so a headset follows
+    its owner's active workspace and dies with their membership rather than carrying
+    a tenant of its own that nothing re-checks.
+    """
+
+    __tablename__ = "device_pairings"
+
+    id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), primary_key=True, default=lambda: str(uuid.uuid4())
+    )
+    tenant_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("tenants.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    user_id: Mapped[str] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("users.id", ondelete="CASCADE"),
+        nullable=False, index=True
+    )
+    label: Mapped[str | None] = mapped_column(String(120), nullable=True)
+    code_hash: Mapped[str] = mapped_column(String(64), nullable=False, unique=True, index=True)
+    # Nullable so revocation can clear the material without deleting the row, and
+    # unique because that is the index every authenticated request looks up on.
+    token_hash: Mapped[str | None] = mapped_column(String(64), nullable=True, unique=True, index=True)
+    created_by: Mapped[str | None] = mapped_column(
+        UUID(as_uuid=False), ForeignKey("users.id", ondelete="SET NULL"), nullable=True
+    )
+    created_at: Mapped[dt.datetime] = mapped_column(
+        DateTime(timezone=True), default=utcnow, server_default=text("now()"), nullable=False
+    )
+    code_expires_at: Mapped[dt.datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    claimed_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    expires_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_seen_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    revoked_at: Mapped[dt.datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+
+
 class Plan(Base):
     __tablename__ = "plans"
 
