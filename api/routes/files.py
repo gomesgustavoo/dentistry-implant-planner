@@ -16,10 +16,11 @@ from __future__ import annotations
 from datetime import datetime, timezone
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from fastapi.responses import FileResponse, Response
 from sqlalchemy.orm import Session
 
+from api import mesh_lod
 from api.deps import Caller, current_caller, get_session, load_owned
 from dentistry import db, storage
 from dentistry.config import settings
@@ -63,6 +64,7 @@ def get_file(
     job_id: str,
     path: str,
     request: Request,
+    lod: str | None = Query(None, pattern="^vr$"),
     s: Session = Depends(get_session),
     caller: Caller = Depends(current_caller),
 ):
@@ -86,6 +88,18 @@ def get_file(
     if not target.is_relative_to(root) or not target.is_file():
         raise HTTPException(404, "No such file")
     media = MEDIA_TYPES.get(target.suffix, "application/octet-stream")
+
+    # `?lod=vr` -- the Quest headset's lighter copy of the jaws and the pharynx, derived
+    # on first request and cached (see api/mesh_lod.py). Every other path, and every
+    # structure outside the table, answers with the file itself and says so. A server
+    # without this parameter ignores it and serves the full mesh, so the client's
+    # fallback is automatic in both directions.
+    tier_headers: dict = {}
+    if lod == "vr":
+        target, tier, tris = mesh_lod.resolve_vr(root, path, target)
+        tier_headers = {"X-Mesh-Lod": tier}
+        if tris is not None:
+            tier_headers["X-Mesh-Lod-Triangles"] = str(tris)
 
     # gzip_static semantics: the worker pre-compressed this at export time, so serve
     # those bytes instead of re-gzipping the same file on every request. Verified
@@ -113,6 +127,11 @@ def get_file(
     headers = _cache_headers(j, send)
     if encoding:
         headers = {**headers, "Content-Encoding": encoding, "Vary": "Accept-Encoding"}
+    if tier_headers:
+        # A derived file is NOT immutable: a LOD_VERSION bump replaces it in place. The
+        # validator still comes from the bytes actually sent.
+        headers = {**headers, **tier_headers,
+                   "Cache-Control": "private, max-age=3600"}
 
     # Nothing here ever changes, so a matching validator is always a 304.
     if request.headers.get("if-none-match") == headers["ETag"]:

@@ -5,11 +5,12 @@
 # python version (3.12.13 -> python:3.12-slim), the /venv layout, the uid-1000 `app`
 # user, the env block and the import smoke test below.
 #
-# IMPORTANT: this image has NO numpy and NO scipy -- see requirements-api.txt, which
-# is itself a recovery of what the deployed container had installed. `api/` therefore
-# imports only the torch-free, numpy-free half of `dentistry/` (auth, billing, config,
-# db, labels, quota, storage). Anything the API executes must be stdlib; that is why
-# dentistry/plan_metrics.py and dentistry/plan_safety.py are written numpy-free.
+# IMPORTANT: the API PROCESS runs without numpy -- `api/` imports only the torch-free,
+# numpy-free half of `dentistry/` (auth, billing, config, db, labels, quota, storage),
+# and dentistry/plan_metrics.py and dentistry/plan_safety.py are written numpy-free.
+# Since 0.20.0 numpy and fast_simplification ARE installed, for one purpose: the
+# headset's `?lod=vr` mesh tier, derived by `api.lod_child` in a SUBPROCESS (see
+# api/mesh_lod.py). tests/test_phantom.py api_purity_checks keeps the process clean.
 FROM python:3.12-slim AS builder
 COPY requirements-api.txt /tmp/requirements-api.txt
 RUN python -m venv /venv \
@@ -32,7 +33,10 @@ COPY api/ /srv/api/
 # that would make every replica fail that probe simultaneously.
 RUN python -c "import sys; sys.path.insert(0, '/srv'); from api.main import app; \
     routes = [r.path for r in app.routes]; \
-    assert '/v1/jobs' in routes, routes; print('api import OK:', len(routes), 'routes')"
+    assert '/v1/jobs' in routes, routes; \
+    assert 'numpy' not in sys.modules, 'the API process imported numpy'; \
+    print('api import OK:', len(routes), 'routes')" \
+    && python -c "import numpy, fast_simplification; print('lod child deps OK')"
 
 ARG VERSION=dev
 ENV DENT_VERSION=${VERSION}

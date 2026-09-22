@@ -1,5 +1,9 @@
 # Recovered 2026-09-01 from the running dentistry-api:0.10.0 container after the
 # project tree was destroyed. This is exactly what the deployed API had installed.
+#
+# 2026-09-22: + numpy and fast_simplification, for api/lod_child.py ONLY -- the
+# headset's `?lod=vr` mesh tier, derived in a SUBPROCESS. Nothing the API process
+# itself imports may use them (tests/test_phantom.py api_purity_checks).
 annotated-doc==0.0.5
 annotated-types==0.8.0
 anyio==4.14.2
@@ -34,3 +38,5 @@ uvicorn==0.42.0
 uvloop==0.22.1
 watchfiles==1.2.0
 websockets==17.0.1
+fast_simplification==0.2.0
+numpy==2.5.2

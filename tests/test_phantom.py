@@ -675,9 +675,11 @@ def api_purity_checks() -> bool:
     # which has a numpy import INSIDE `task1_to_merged_lut` and a numpy-free
     # `task1_to_merged_map` beside it. Calling the wrong one of those two would be an
     # ImportError on the endpoint that decides which models run.
+    # `api.mesh_lod` joins it: the files route imports it on every request, and its
+    # numpy-using half (`api.lod_child`) must only ever run as a subprocess.
     src = ("import sys, json; "
            "import dentistry.plan_metrics, dentistry.plan_safety, "
-           "dentistry.plan_geometry, dentistry.models; "
+           "dentistry.plan_geometry, dentistry.models, api.mesh_lod; "
            "dentistry.models.describe_all(None); "
            "[m.structures() for m in dentistry.models.CATALOGUE]; "
            "print(json.dumps(sorted(m for m in sys.modules "
@@ -696,6 +698,137 @@ def api_purity_checks() -> bool:
                         cwd=str(Path(__file__).resolve().parent.parent))
     ok &= check("the probe detects a heavy import when there is one",
                 r2.returncode == 0 and "numpy" in r2.stdout)
+    return ok
+
+
+def _icosphere(levels: int):
+    """Unit icosphere as (verts float32, faces uint32), outward winding."""
+    import numpy as np
+
+    t = (1.0 + 5 ** 0.5) / 2.0
+    v = [(-1, t, 0), (1, t, 0), (-1, -t, 0), (1, -t, 0), (0, -1, t), (0, 1, t),
+         (0, -1, -t), (0, 1, -t), (t, 0, -1), (t, 0, 1), (-t, 0, -1), (-t, 0, 1)]
+    f = [(0, 11, 5), (0, 5, 1), (0, 1, 7), (0, 7, 10), (0, 10, 11), (1, 5, 9), (5, 11, 4),
+         (11, 10, 2), (10, 7, 6), (7, 1, 8), (3, 9, 4), (3, 4, 2), (3, 2, 6), (3, 6, 8),
+         (3, 8, 9), (4, 9, 5), (2, 4, 11), (6, 2, 10), (8, 6, 7), (9, 8, 1)]
+    verts = [np.array(x, dtype=np.float64) / np.linalg.norm(x) for x in v]
+    for _ in range(levels):
+        cache: dict = {}
+
+        def mid(a, b):
+            key = (min(a, b), max(a, b))
+            if key not in cache:
+                m = verts[a] + verts[b]
+                verts.append(m / np.linalg.norm(m))
+                cache[key] = len(verts) - 1
+            return cache[key]
+
+        nf = []
+        for a, b, c in f:
+            ab, bc, ca = mid(a, b), mid(b, c), mid(c, a)
+            nf += [(a, ab, ca), (b, bc, ab), (c, ca, bc), (ab, bc, ca)]
+        f = nf
+    return np.array(verts, dtype=np.float32), np.array(f, dtype=np.uint32)
+
+
+def lod_checks() -> bool:
+    """The headset's `?lod=vr` mesh tier (api/mesh_lod.py, api/lod_child.py).
+
+    What has to hold, and why each one matters on a headset:
+
+    * **Over budget: a lighter copy, within budget, that is still the same solid.** A
+      decimation that shrinks or shifts the jaw would move the thing a clinician is
+      looking at, so the phantom sphere's volume must survive to within a percent.
+    * **The gzip twin exists and matches**, because the files route prefers it.
+    * **Derived once.** A second request reads the cache; a changed SOURCE re-derives.
+    * **Outside the table or under budget: the file itself**, tier `full`.
+    * **A copy the guard refuses is never served**, and the refusal is cached, not
+      retried on every request.
+    """
+    import gzip
+    import struct
+    import tempfile
+
+    import numpy as np
+
+    from api import mesh_lod as ML
+
+    ok = True
+    v, f = _icosphere(5)                                   # 20,480 triangles
+    r_mm = 10.0
+    blob = (b"DSVM" + struct.pack("<III", 1, len(v), len(f))
+            + (v * r_mm).astype("<f4").tobytes() + f.astype("<u4").tobytes())
+    sphere = 4.0 / 3.0 * np.pi * r_mm ** 3
+
+    saved_budgets = dict(ML.BUDGETS)
+    saved_drift = dict(ML.MAX_AREA_DRIFT)
+    try:
+        ML.BUDGETS.update({"mandible": 2000, "pharynx": 2000})
+        # The phantom is coarse, so allow it the pharynx's looser drift.
+        ML.MAX_AREA_DRIFT["mandible"] = 0.02
+        with tempfile.TemporaryDirectory() as td:
+            root = Path(td)
+            (root / "mesh").mkdir()
+            src = root / "mesh" / "mandible.msh"
+            src.write_bytes(blob)
+
+            out, tier, tris = ML.resolve_vr(root, "mesh/mandible.msh", src)
+            ok &= check("a structure over budget is served from the vr tier", tier == "vr",
+                        f"tier {tier}")
+            ok &= check("the vr copy is within its budget", tris is not None and tris <= 2000,
+                        f"{tris} triangles")
+            if tier == "vr":
+                b = out.read_bytes()
+                n_p, n_t = struct.unpack_from("<III", b, 4)[1:]
+                pts = np.frombuffer(b, "<f4", n_p * 3, 16).reshape(-1, 3).astype(np.float64)
+                tri = np.frombuffer(b, "<u4", n_t * 3, 16 + n_p * 12).reshape(-1, 3)
+                a_, b_, c_ = pts[tri[:, 0]], pts[tri[:, 1]], pts[tri[:, 2]]
+                vol = float(np.einsum("ij,ij->i", a_, np.cross(b_, c_)).sum() / 6.0)
+                ok &= check("the vr copy is the same solid (volume within 2%)",
+                            abs(vol - sphere) / sphere < 0.02,
+                            f"{vol:.1f} vs {sphere:.1f} mm3")
+                gz = out.with_name(out.name + ".gz")
+                ok &= check("its gzip twin exists and round-trips",
+                            gz.is_file() and gzip.decompress(gz.read_bytes()) == b)
+
+                stamp = out.stat().st_mtime_ns
+                out2, tier2, _ = ML.resolve_vr(root, "mesh/mandible.msh", src)
+                ok &= check("a second request reads the cache instead of re-deriving",
+                            tier2 == "vr" and out2.stat().st_mtime_ns == stamp)
+
+                src.write_bytes(blob + b"")                   # new mtime, same bytes
+                import os
+                os.utime(src, ns=(stamp + 10**9, stamp + 10**9))
+                ML.resolve_vr(root, "mesh/mandible.msh", src)
+                ok &= check("a changed source re-derives the copy",
+                            out.stat().st_mtime_ns != stamp)
+
+            tooth = root / "mesh" / "tooth_11.msh"
+            tooth.write_bytes(blob)
+            t_out, t_tier, _ = ML.resolve_vr(root, "mesh/tooth_11.msh", tooth)
+            ok &= check("a structure outside the table is served untouched",
+                        t_tier == "full" and t_out == tooth)
+
+            ML.BUDGETS["mandible"] = 50_000
+            u_out, u_tier, _ = ML.resolve_vr(root, "mesh/mandible.msh", src)
+            ok &= check("a structure under budget is served untouched",
+                        u_tier == "full" and u_out == src)
+
+            # Refusal: no surface-area drift at all is allowed, so the guard must refuse.
+            ML.MAX_AREA_DRIFT["pharynx"] = 0.0
+            ph = root / "mesh" / "pharynx.msh"
+            ph.write_bytes(blob)
+            p_out, p_tier, _ = ML.resolve_vr(root, "mesh/pharynx.msh", ph)
+            ok &= check("a copy the guard refuses is not served", p_tier == "full" and p_out == ph)
+            side = root / "mesh-vr" / "pharynx.json"
+            meta = __import__("json").loads(side.read_text()) if side.is_file() else {}
+            ok &= check("the refusal is recorded, so it is not retried every request",
+                        bool(meta.get("failed")), meta.get("failed", "no sidecar"))
+    finally:
+        ML.BUDGETS.clear()
+        ML.BUDGETS.update(saved_budgets)
+        ML.MAX_AREA_DRIFT.clear()
+        ML.MAX_AREA_DRIFT.update(saved_drift)
     return ok
 
 
@@ -1978,6 +2111,10 @@ def test_api_purity():
     assert api_purity_checks()
 
 
+def test_lod():
+    assert lod_checks()
+
+
 def test_model_menu():
     assert model_menu_checks()
 
@@ -2024,7 +2161,7 @@ def main() -> int:
                panoramic_pitch_checks, plan_geometry_checks,
                foreign_model_checks, plan_metrics_checks, model_menu_checks,
                pack_sampler_checks, pack_cache_checks, rtstruct_checks,
-               volume_pack_checks, cc_filter_checks):
+               volume_pack_checks, cc_filter_checks, api_purity_checks, lod_checks):
         print(f"\n--- {fn.__name__} ---")
         fn()
     print("\n" + ("ALL PASS" if not _FAILURES else f"FAILURES: {_FAILURES}"))
