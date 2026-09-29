@@ -92,3 +92,48 @@ def export(grey: np.ndarray, merged: np.ndarray, spacing_zyx, origin, direction,
     }
     (out_dir / "meta.json").write_text(json.dumps(meta))
     return meta
+
+
+HR_FORMAT = "ipvr-volume-hr/1"
+
+
+def export_hr(grey: np.ndarray, spacing_zyx, origin, direction, out_dir: Path,
+              window: tuple[float, float]) -> dict:
+    """The headset's FULL-RESOLUTION copy: `volume-hr/`, int16, unwindowed, not downsampled.
+
+    `export` above is a display object for the browser. A specialist reading the scan in
+    the Quest needs the exam itself, and the upload it came from is purged when the job
+    succeeds - so it is written here, from the same canonical grid, before that happens.
+    Same layout as `volume/image.raw` (C order (z, y, x), x fastest) and the same
+    origin/direction convention as its meta.json; `bake.bake` adds the `.gz` the files
+    route serves. `scripts/bake_volume_hr.py` writes the identical format for jobs that
+    finished before this existed, from `rtstruct/derived`.
+    """
+    import hashlib
+
+    out_dir.mkdir(parents=True, exist_ok=True)
+    g = np.clip(np.rint(grey) if np.issubdtype(grey.dtype, np.floating) else grey,
+                -32768, 32767).astype("<i2")
+    raw = np.ascontiguousarray(g).tobytes()
+    (out_dir / "image.raw").write_bytes(raw)
+    sample = g[::2, ::2, ::2].ravel()
+    width, level = window
+    meta = {
+        "format": HR_FORMAT,
+        "dimensions": [int(x) for x in reversed(g.shape)],                       # (x, y, z)
+        "spacing": [float(spacing_zyx[2]), float(spacing_zyx[1]), float(spacing_zyx[0])],
+        "origin": [float(x) for x in origin],
+        "direction": [float(x) for x in direction],
+        "downsample_factor": 1,
+        "image": {"file": "image.raw", "dtype": "int16", "byte_order": "little",
+                  "layout": "C order (z, y, x), x fastest", "bytes": len(raw),
+                  "sha256": hashlib.sha256(raw).hexdigest(),
+                  "rescale": {"slope": 1.0, "intercept": 0.0},
+                  "window": {"width": float(width), "level": float(level)},
+                  "min": int(g.min()), "max": int(g.max()),
+                  "percentiles": {str(q): float(np.percentile(sample, q))
+                                  for q in (0.5, 1, 5, 25, 50, 75, 95, 99, 99.5, 99.9)}},
+        "source": {"series": "canonical grid (worker)"},
+    }
+    (out_dir / "meta.json").write_text(json.dumps(meta, indent=1))
+    return {"file": "volume-hr/meta.json", "dimensions": meta["dimensions"], "bytes": len(raw)}

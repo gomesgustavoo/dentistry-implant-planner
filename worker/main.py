@@ -257,6 +257,14 @@ def _run(job: dict) -> None:
         results / "volume",
         window=(reports["preview"]["window"]["width"], reports["preview"]["window"]["level"]),
         conflicts=conflicts)
+    # The headset's full-resolution copy - the upload it comes from is purged below.
+    try:
+        reports["volume_hr"] = volume_pack.export_hr(
+            grey, spacing_zyx, vol.image.GetOrigin(), vol.image.GetDirection(), results / "volume-hr",
+            window=(reports["preview"]["window"]["width"], reports["preview"]["window"]["level"]))
+    except Exception as exc:  # noqa: BLE001 - the browser's volume above is unaffected
+        log.exception("the full-resolution volume for the headset failed")
+        reports["volume_hr"] = {"error": f"{type(exc).__name__}: {exc}"}
     del grey
 
     reports["outputs"] = {
@@ -264,6 +272,7 @@ def _run(job: dict) -> None:
         "stl": stls,
         "mesh": web_meshes,
         "volume": "volume/meta.json",
+        "volume_hr": "volume-hr/meta.json" if "error" not in (reports.get("volume_hr") or {"error": 1}) else None,
         "rtstruct": (reports.get("rtstruct") or {}).get("file"),
         "planning": (reports.get("planning") or {}).get("file"),
     }
