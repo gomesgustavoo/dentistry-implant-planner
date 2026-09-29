@@ -89,6 +89,49 @@ CANAL_OFFSET_STEP_MM = 0.5
 CREST_OFFSET_SEARCH_MM = 3.0
 CREST_OFFSET_STEP_MM = 0.25
 
+# A HEALED EXTRACTION SITE OFTEN HAS NO CORTICAL CAP, and that is anatomy, not a bad
+# scan. Measured on a real single-tooth gap (ToothFairy3F_058, FDI 36): down the whole
+# 20 mm search window the crest never exceeds 1.32x the cancellous median, so no column
+# crosses `CORTICAL_RATIO` -- the only "cortical" crossing below the gap is the inferior
+# border of the mandible, 33 mm down -- while the profile shows a clean step from oral
+# air (ratio ~0.1) to bone (~0.8-1.1) at the ridge and ~14 mm of cancellous bone above
+# the canal. Refusing that site refused the one site a planner would use.
+#
+# So when the cortical search finds nothing, the crest is taken where the profile first
+# reaches the level HALF-WAY between this scan's own soft tissue and its cancellous bone:
+# the same half-maximum argument `_falling_half_max` makes, between the two tissues the
+# boundary separates. Mucosa sits at the soft-tissue level and cannot reach it; bone
+# does. It is a FALLBACK ONLY: the cortical search still runs first and wins, so no site
+# that was measured before changes, and a scan with no soft-tissue reference gets no
+# fallback at all. Every figure derived from it says so in its basis.
+BONE_CONFIRM_MM = 1.0
+
+
+def _bone_surface_ratio(refs):
+    """Half-way between soft tissue and cancellous bone, in ratio units, or None."""
+    air, ref, soft = refs.get("air"), refs.get("cancellous"), refs.get("soft_tissue")
+    if air is None or ref is None or soft is None or abs(ref - air) < 1e-6:
+        return None
+    soft_ratio = (soft - air) / (ref - air)
+    if not (0.0 < soft_ratio < 1.0):
+        return None
+    return (soft_ratio + 1.0) / 2.0
+
+
+def _first_bone(zs, ratios, level):
+    """First sample at or above `level` that stays in bone for `BONE_CONFIRM_MM`."""
+    need = max(1, int(round(BONE_CONFIRM_MM / PROFILE_STEP_MM)))
+    for i, r in enumerate(ratios):
+        if r >= level and i + need <= len(ratios):
+            window = ratios[i:i + need]
+            if sum(window) / len(window) >= level:
+                if i == 0:
+                    return zs[0]
+                a, b = ratios[i - 1], r
+                frac = 0.0 if a == b else (level - a) / (b - a)
+                return zs[i - 1] + frac * (zs[i] - zs[i - 1])
+    return None
+
 
 def _ratio_profile(sampler, s_mm, t_mm, z_from, z_to, refs):
     """`(zs, ratios)` sampled vertically, or `(None, None)` with no usable reference."""
@@ -162,14 +205,23 @@ def _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom):
             continue
         for i, r in enumerate(ratios):
             if r >= CORTICAL_RATIO:
-                return zs[i], t, None
+                return zs[i], t, None, "cortical"
+    level = None if no_refs else _bone_surface_ratio(refs)
+    if level is not None:
+        for t in offsets:
+            zs, ratios = _ratio_profile(sampler, s_mm, t, z_from, z_to, refs)
+            if zs is None:
+                continue
+            z = _first_bone(zs, ratios, level)
+            if z is not None:
+                return z, t, None, "bone surface"
     if no_refs:
-        return None, None, "this scan has no usable cancellous reference population"
+        return None, None, "this scan has no usable cancellous reference population", None
     return None, None, (
         f"no cortical crest was found within {CREST_SEARCH_MM:.0f} mm of the "
         f"{'bottom' if up else 'top'} of the measured band, at the arch curve or "
         f"anywhere within {CREST_OFFSET_SEARCH_MM:.0f} mm either side of it, where a "
-        f"{jaw} crest would be")
+        f"{jaw} crest would be, and no bone surface either"), None
 
 
 def _canal_roof_z(sampler, s_mm, crest_z, seat_t=0.0):
@@ -263,6 +315,7 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
                  "crest_t_mm": None,
                  "reason": None, "height_reason": None, "width_reason": None,
                  "basis_height": None, "basis_width": None,
+                 "crest_kind": None,
                  "position_interpolated": bool(site.get("interpolated"))}
         if s_mm is None:
             entry["reason"] = "this site has no arc position"
@@ -274,7 +327,7 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
             out[str(fdi)] = entry
             continue
 
-        crest, crest_t, why = _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom)
+        crest, crest_t, why, kind = _crest_z(sampler, s_mm, refs, jaw, z_top, z_bottom)
         if crest is None:
             entry["reason"] = why
             out[str(fdi)] = entry
@@ -283,6 +336,7 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
         # WHERE TO SEAT, decided before anything is measured under it. The cortical plates
         # give the middle of the ridge; `crest_t` -- the column the crest was found on --
         # is only the fallback for a curve that missed the bone entirely.
+        entry["crest_kind"] = kind
         edges = _plate_edges(sampler, s_mm, crest, jaw, refs)
         if edges.get("buccal") is not None and edges.get("lingual") is not None:
             seat_t = (edges["buccal"] - edges["lingual"]) / 2.0
@@ -317,7 +371,10 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
                     else:
                         entry["height_mm"] = round(crest - roof, 2)
                         entry["basis_height"] = (
-                            "cortical crest to the roof of the drawn inferior alveolar "
+                            ("cortical crest" if kind == "cortical" else
+                             "crest (no cortical cap: the bone surface, half-way between "
+                             "this scan's soft tissue and cancellous bone)")
+                            + " to the roof of the drawn inferior alveolar "
                             "canal, read from the same distance field the implant "
                             "clearance is measured against"
                             + (f"; the canal sits {abs(t_at):.1f} mm "
@@ -358,6 +415,10 @@ def measure_sites(sampler, fit_info: dict, jaw: str, refs: dict,
             entry["width_reason"] = (
                 f"no cortical plate found on the {' or '.join(missing) or 'either'} side "
                 f"within {WIDTH_SEARCH_MM:.0f} mm -- a knife-edge or resorbed ridge "
-                f"genuinely has none, and that is the finding")
+                f"genuinely has none, and that is the finding"
+                if kind == "cortical" else
+                "this ridge has no cortical cap and no cortical plates 1 mm below it, and "
+                "bone and soft tissue are too close in grey level there to place an edge "
+                "without guessing, so the width is not measured")
         out[str(fdi)] = entry
     return out

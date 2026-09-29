@@ -2168,5 +2168,47 @@ def main() -> int:
     return 0 if not _FAILURES else 1
 
 
+
+class _ProfileSampler:
+    """A grey field that depends on z only: air above `surface`, `bone` below it."""
+
+    def __init__(self, surface, bone, cap=None, air=-1000.0, ref=700.0):
+        self.surface, self.bone, self.cap, self.air, self.ref = surface, bone, cap, air, ref
+
+    def sample(self, field, pts):
+        out = []
+        for _s, _t, z in pts:
+            if z > self.surface:
+                r = 0.05
+            elif self.cap is not None and z > self.surface - 1.0:
+                r = self.cap
+            else:
+                r = self.bone
+            out.append(self.air + r * (self.ref - self.air))
+        return out
+
+
+def test_ridge_crest_without_a_cortical_cap_uses_the_bone_surface():
+    from dentistry import ridge
+    refs = {"air": -1000.0, "cancellous": 700.0, "soft_tissue": -40.0}
+    z, t, why, kind = ridge._crest_z(_ProfileSampler(40.0, 0.95), 0.0, refs,
+                                     "mandible", 57.0, 12.0)
+    assert why is None and kind == "bone surface"
+    assert abs(z - 40.0) < 0.15 and t == 0.0
+
+
+def test_ridge_cortical_crest_is_unchanged_by_the_fallback():
+    from dentistry import ridge
+    refs = {"air": -1000.0, "cancellous": 700.0, "soft_tissue": -40.0}
+    z, _t, why, kind = ridge._crest_z(_ProfileSampler(40.0, 0.95, cap=1.6), 0.0, refs,
+                                      "mandible", 57.0, 12.0)
+    assert why is None and kind == "cortical" and abs(z - 40.0) < 0.15
+    # And with no soft-tissue reference there is no fallback at all.
+    z, _t, why, kind = ridge._crest_z(_ProfileSampler(40.0, 0.95), 0.0,
+                                      {"air": -1000.0, "cancellous": 700.0},
+                                      "mandible", 57.0, 12.0)
+    assert z is None and kind is None and "no cortical crest" in why
+
+
 if __name__ == "__main__":
     raise SystemExit(main())
