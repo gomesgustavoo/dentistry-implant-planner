@@ -1,0 +1,177 @@
+/* ============================================================================
+   DicomSegVR platform tokens — THE canonical source. Edit only this file.
+   ============================================================================
+
+   One colormap, three labels.
+
+   Three products ship on this: DicomSegVR (the flagship), ImplantPlan (dental
+   CBCT + implant planning) and Text2Seg (segmentation inside Varian Eclipse).
+   Everything that is NOT the accent lives here and is identical in all three.
+   The accent lives in tokens/band-<product>.css and is the only thing that
+   changes between them.
+
+   WHY THAT SPLIT
+
+   These are three products from one author that a customer may buy on one
+   subscription, and a visitor moving between them should never wonder whether
+   they left. So the ground, the surfaces, the border, the ink, the type, the
+   radii and the motion are shared value-for-value; only the hue moves.
+
+   The accents are not arbitrary either. Each band mirrors the STRUCTURE of the
+   flagship's ramp rather than copying it: two adjacent, similarly-bright hues,
+   never a light-to-dark fade. That is what makes three gradients read as
+   siblings without being the same colour.
+
+        Text2Seg     cyan   -> blue      187deg -> 217deg
+        ImplantPlan  violet -> indigo    258deg -> 239deg
+        DicomSegVR   rose   -> fuchsia   340deg -> 325deg
+
+   This is a segmentation label colormap, which is the one metaphor native to
+   all three products: each paints anatomy in a discrete label palette, and
+   each product owns a band the way each structure owns a label.
+
+   NO WARN TOKEN IN THE CHROME. There is no --ds-warn at all, rather than an
+   unused one, because an unused token gets used. Amber collides with the very
+   structure colours it sits next to (liver is tan-brown, pancreas orange, cord
+   yellow, dental bone cream) — that collision is what made an earlier VoxTell
+   palette read as loud: the interface and the data competed on one hue. Yellow
+   survives at exactly two tokens, --ds-s-cord and --ds-s-q3, because those are
+   inside an image, where they are data and not chrome.
+
+   Accent means "active or interactive". --ds-ok means "finished". --ds-danger
+   means "failed". --ds-muted means "waiting". Nothing else is coloured.
+
+   GENERATED CONSUMERS — never hand-edit a target, run sync-tokens.py.
+   ========================================================================= */
+
+:root {
+  /* ---- ground and surfaces ---------------------------------------------
+          The cool ground (#0a0e13) rather than a warmer one, because cyan
+          sits on it without turning green.
+
+          --ds-bg-stage is deliberately different and is NOT drift. The
+          DicomSegVR landing samples it from its WebGL clear colour (RGB
+          12,11,16) so there is no visible seam where the 3D canvas meets the
+          page. Use it ONLY on a surface that hosts a live 3D canvas. */
+  --ds-ground: #0a0e13;
+  --ds-bg-stage: #0c0b10;
+  --ds-bg-elev: #0e141b;
+  --ds-surface: #131a25;
+  --ds-surface-2: #1b2230;
+  --ds-surface-3: #232c3c;
+  --ds-border: #232d3d;
+  --ds-border-soft: #1a2331;
+  --ds-hairline: rgba(255, 255, 255, 0.07);
+  --ds-hairline-strong: rgba(255, 255, 255, 0.16);
+
+  /* ---- ink -------------------------------------------------------------- */
+  --ds-ink: #f4f7fa;
+  --ds-ink-dim: #cbd5e3;
+  --ds-muted: #93a1b8;
+  --ds-faint: #6b7a90;
+
+  /* ---- status. No warn token — see the header. -------------------------- */
+  --ds-ok: #10b981;
+  --ds-danger: #ef4444;
+
+  /* ---- type ------------------------------------------------------------
+          Geist + Geist Mono, self-hosted latin-subset woff2 only, 59 KB for
+          the pair. NO CDN, ever: a hospital workstation may have no outbound
+          internet at all — the same constraint that keeps oidc-client-ts
+          bundled rather than fetched.
+
+          Mono is SEMANTIC, not decorative. It is the instrument-readout
+          voice: eyebrows, section codes, prices, tick labels, volumes,
+          anything numeric or tabular. Always with tabular figures.
+
+          --ds-font-display is per-product and set in the band file. Each
+          product elects exactly one display voice and no more. */
+  --ds-font-sans: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ds-font-mono: "Geist Mono", ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
+
+  --ds-text-xs: 0.75rem;
+  --ds-text-sm: 0.875rem;
+  --ds-text-base: 1rem;
+  --ds-text-md: 1.125rem;
+  --ds-text-lg: 1.25rem;
+  --ds-text-xl: 1.75rem;
+  --ds-text-2xl: 2.5rem;
+  --ds-text-3xl: clamp(2.5rem, 6vw, 4rem);
+  --ds-text-4xl: clamp(3rem, 7.5vw, 5.25rem);
+
+  --ds-tracking-display: -0.035em;
+  --ds-tracking-eyebrow: 0.22em;
+  --ds-tracking-label: 0.14em;
+  --ds-leading-display: 1.04;
+
+  /* ---- space, radius, elevation ----------------------------------------
+          The 5px button is one of the flagship's most recognisable traits —
+          square-ish, not a pill. Do not round it up to match a component
+          library. */
+  --ds-maxw: 1180px;
+  --ds-maxw-prose: 720px;
+  --ds-card-pad: 1.6rem;
+  --ds-radius: 10px;
+  --ds-radius-sm: 5px;
+  --ds-radius-lg: 16px;
+  --ds-radius-pill: 999px;
+  /* The mark tile. 7.5/32 of the tile edge — scale it with the icon, do not
+     hardcode 7.5px at other sizes. */
+  --ds-radius-tile: 23.4%;
+
+  --ds-shadow: 0 10px 34px rgba(0, 0, 0, 0.4);
+  --ds-shadow-soft: 0 8px 30px rgba(0, 0, 0, 0.35);
+
+  --ds-glass-bg: rgba(19, 26, 37, 0.55);
+  --ds-glass-border: rgba(255, 255, 255, 0.1);
+
+  /* ---- motion ----------------------------------------------------------
+          One orchestrated moment per page; everything else is
+          reveal-on-scroll. Both must respect prefers-reduced-motion. */
+  --ds-ease: cubic-bezier(0.16, 1, 0.3, 1);
+  --ds-draw-ms: 700ms;
+
+  /* ---- structure colours ------------------------------------------------
+          DATA, NEVER CHROME. Used only to paint anatomy: contour overlays,
+          3D surfaces, prompt chips, the dental chart. Never for UI state,
+          never for a button, never for a link.
+
+          Names follow TG-263 where one exists; the colours follow
+          treatment-planning-system convention rather than any standard, so
+          do not claim TG-263 mandates them. */
+  --ds-s-liver: #b5651d;
+  --ds-s-spleen: #6b8f3a;
+  --ds-s-stomach: #9c7c38;
+  --ds-s-pancreas: #e08b3a;
+  --ds-s-aorta: #d1495b;
+  --ds-s-ivc: #4a6fa5;
+  --ds-s-vein: #6a8fc9;
+  --ds-s-cord: #f2d94e;
+  --ds-s-bone: #c9b8a0;
+  --ds-s-vertebra: #a78bfa;
+  --ds-s-colon: #a37f5a;
+  --ds-s-muscle: #a85751;
+  --ds-s-cartilage: #cbd5c0;
+  --ds-s-adrenal: #c98fb0;
+  --ds-s-kidney: #4a9d5f;
+  --ds-s-heart: #c1443f;
+  --ds-s-lung: #5b9bd5;
+  --ds-s-bladder: #e0a3c8;
+  --ds-s-esophagus: #b46bb0;
+  --ds-s-rectum: #8a6a4a;
+  --ds-s-brain: #d4a5a5;
+  --ds-s-parotid: #7a9ec9;
+  --ds-s-target: #e0392b;
+
+  /* Dental structures. The canal is the one structure in the whole platform
+     that is allowed to be alarming: an implant plan is judged on its
+     clearance from it, so it reads as a hazard on purpose. Quadrant hues
+     are FDI q1-q4 and must stay mutually distinguishable at chart size. */
+  --ds-s-dental-bone: #d9c9a3;
+  --ds-s-dental-bone-deep: #c2a878;
+  --ds-s-canal: #ff3b30;
+  --ds-s-q1: #6ca4d8;
+  --ds-s-q2: #4fc0a5;
+  --ds-s-q3: #d9a13f;
+  --ds-s-q4: #e0568f;
+}

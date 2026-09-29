@@ -1,201 +1,11 @@
-<!doctype html>
-<html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>ImplantPlan — the clearance to the nerve, as a number</title>
-<meta name="description" content="Place an implant on a cone-beam CT and get the clearance to the inferior alveolar canal as a number — with the model's own measured error already subtracted from it. Research preview; not a medical device.">
-<link rel="canonical" href="https://dentistry.dicomsegvr.com/">
-<meta name="theme-color" content="#fbfbfd">
-
-<meta property="og:type" content="website">
-<meta property="og:site_name" content="ImplantPlan">
-<meta property="og:title" content="ImplantPlan — every implant, clear of the canal">
-<meta property="og:description" content="Every planner draws the nerve. None of them tells you how wrong the nerve is. ImplantPlan grades each clearance against the model's own measured error.">
-<meta property="og:url" content="https://dentistry.dicomsegvr.com/">
-<meta property="og:image" content="https://dentistry.dicomsegvr.com/assets/og-image.a270e3f9.png">
-<meta property="og:image:width" content="1200">
-<meta property="og:image:height" content="630">
-<meta property="og:image:alt" content="A titanium implant seated in a translucent mandible above the highlighted inferior alveolar canal, beside the ImplantPlan wordmark.">
-<meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="ImplantPlan — every implant, clear of the canal">
-<meta name="twitter:description" content="The clearance to the inferior alveolar canal as a number, with the model's own measured error subtracted.">
-<meta name="twitter:image" content="https://dentistry.dicomsegvr.com/assets/og-image.a270e3f9.png">
-
-<!-- Content-hashed, because /assets/ is served `immutable` for a year and these two
-     filenames already existed with DIFFERENT bytes in the deployed image: the og card and
-     the touch icon were both blank rectangles. A same-name replacement would sit behind
-     Cloudflare's cache and behind every social crawler's cache of the old URL, so the
-     black-box link preview would survive the fix. New name, new fetch. -->
-<link rel="icon" href="/assets/favicon-32.png" sizes="32x32" type="image/png">
-<link rel="icon" href="/assets/favicon-16.png" sizes="16x16" type="image/png">
-<link rel="apple-touch-icon" href="/assets/apple-touch-icon.b3503f63.png">
-
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/Archivo-latin.woff2" crossorigin>
-<link rel="preload" as="font" type="font/woff2" href="/assets/fonts/Geist-latin.woff2" crossorigin>
-<link rel="stylesheet" href="/styles.css">
-
-<!-- three.js only. The implant geometry and the grading thresholds are content-hashed and
-     reached through /assets/arch.assets.json at runtime, because /assets/ is served
-     immutable for a year and a STATIC import specifier does not inherit a ?v= query — a
-     returning visitor would keep last month's geometry. See scripts/bake_landing_geometry.mjs. -->
-<link rel="modulepreload" href="/assets/vendor/three/three.module.js">
-<script type="importmap">
-{
-  "imports": {
-    "three": "/assets/vendor/three/three.module.js",
-    "three/addons/": "/assets/vendor/three/jsm/"
-  }
-}
-</script>
-
-<script type="application/ld+json">
-{
-  "@context": "https://schema.org",
-  "@type": "SoftwareApplication",
-  "name": "ImplantPlan",
-  "applicationCategory": "HealthApplication",
-  "operatingSystem": "Web",
-  "url": "https://dentistry.dicomsegvr.com/",
-  "description": "Dental CBCT segmentation and implant planning. Reports the clearance from a planned implant to the inferior alveolar canal, graded against the segmentation model's own measured error. Research preview; not a medical device.",
-  "offers": [
-    {"@type": "Offer", "name": "Explorer", "price": "12.99", "priceCurrency": "USD"},
-    {"@type": "Offer", "name": "Pro", "price": "49.99", "priceCurrency": "USD"},
-    {"@type": "Offer", "name": "Enterprise", "price": "199.99", "priceCurrency": "USD"}
-  ]
-}
-</script>
-
-<noscript><style>
-  /* Without JS the sticky stage cannot scrub, so it collapses to the poster and the
-     readout shows the app's own measured numbers instead of a blank. Kept in sync with
-     .filmstage--static by hand — there is no build step here to do it. */
-  .filmstage { height: auto !important; }
-  .filmstage__bg { position: relative !important; height: auto !important; }
-  .filmstage__canvas { display: none !important; }
-  .filmstage__poster { display: block !important; }
-  .hero__live { display: none !important; }
-  .hero__fallback { display: block !important; }
-  .reveal { opacity: 1 !important; transform: none !important; }
-</style></noscript>
-</head>
-<body>
-<a class="skip-link" href="#main">Skip to content</a>
-
-<header class="nav" id="top">
-  <div class="nav__inner">
-    <a class="brand" href="#top" aria-label="ImplantPlan — home">
-      <img class="brand__wordmark" src="/assets/wordmark.png" width="669" height="114"
-           alt="ImplantPlan" decoding="async">
-      <img class="brand__icon" src="/assets/favicon-32.png" width="32" height="32"
-           alt="ImplantPlan" decoding="async">
-    </a>
-    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu"
-            aria-label="Open menu"><span></span><span></span></button>
-    <nav class="nav__menu" id="navMenu">
-      <a href="#engine">The models</a>
-      <a href="#serving">Deployment</a>
-      <a href="#budget">The number</a>
-      <a href="#planning">Planning</a>
-      <a href="#pricing">Pricing</a>
-      <a class="btn btn--ghost nav__signin" href="/app">Sign in</a>
-      <a class="btn btn--primary" href="/app">Start free trial</a>
-    </nav>
-  </div>
-</header>
-<div class="nav__scrim" id="navScrim" hidden></div>
-
-<main id="main">
-<div class="filmstage" data-filmstage>
-  <div class="filmstage__bg" aria-hidden="true">
-    <canvas class="filmstage__canvas" id="heroCanvas"></canvas>
-    <img class="filmstage__poster" src="/assets/hero-implant.png" alt="" loading="eager" decoding="async">
-    <div class="filmstage__scrim"></div>
-  </div>
-
-  <div class="filmstage__content">
-    <section class="hero">
-      <div class="hero__inner panel">
-        <p class="eyebrow">Dental CBCT · implant planning</p>
-        <h1 class="display">Place the implant.<br><span class="lit">Get the number.</span></h1>
-        <p class="hero__sub">Upload a cone-beam CT. A network <b>we trained</b> segments the
-          jaws, all 32 teeth in FDI notation and the inferior alveolar canal in about
-          98&nbsp;seconds on one GPU; the app then reports the clearance from a planned
-          fixture to that nerve — with the model&rsquo;s own measured error already
-          subtracted from it.</p>
-        <p class="hero__thesis">Every planner draws the nerve.<br>
-          <b>None of them tells you how wrong the nerve is.</b></p>
-
-        <!-- The live readout. Every value in here is written by assets/hero3d.js from the
-             geometry on screen; nothing is typed into the markup. The verdict is a WORD as
-             well as a colour, which is the app's own rule. -->
-        <div class="hero__live readout" data-hero-readout data-level="clear">
-          <div class="readout__row">
-            <span class="readout__chip" data-hero-level>CLEAR</span>
-            <span class="readout__label">clearance to the nerve canal</span>
-          </div>
-          <p class="readout__value"><span class="num" data-hero-mm>3.43</span><span class="readout__unit">mm</span></p>
-          <p class="readout__sub" data-hero-sub>3.43 measured &minus; 0.46 model error = 2.97 against a 2.00 mm margin</p>
-          <p class="readout__depth">platform <span class="num" data-hero-depth>0.0</span> mm below the crest &middot;
-            <span class="readout__hint">scroll to seat it</span></p>
-        </div>
-        <p class="visually-hidden" data-hero-live aria-live="polite"></p>
-
-        <!-- Shown only when WebGL or the asset fails. A millimetre with no geometry behind
-             it is exactly the failure this product exists to complain about, so the
-             fallback quotes the APP's own numbers and says whose they are. -->
-        <div class="hero__fallback readout readout--static" data-level="clear">
-          <div class="readout__row">
-            <span class="readout__chip">CLEAR</span>
-            <span class="readout__label">clearance to the nerve canal</span>
-          </div>
-          <p class="readout__value"><span class="num">3.51</span><span class="readout__unit">mm</span></p>
-          <p class="readout__sub">Measured by the app on a held-out scan at FDI 36, not by this
-            page &mdash; your browser could not start the 3-D view.</p>
-        </div>
-
-        <div class="hero__cta">
-          <div>
-            <a class="btn btn--primary btn--lg" href="/app">Start free trial</a>
-            <p class="hero__note">30 segmentations &middot; 14 days &middot; no card</p>
-          </div>
-          <a class="btn btn--ghost btn--lg" href="#budget">See how it is graded</a>
-        </div>
-        <p class="hero__disclaimer">Research preview. Not a medical device, and not for
-          diagnostic use. No surgical guide is produced. Every finding is reported, never
-          silently repaired.</p>
-      </div>
-      <div class="hero__cue" aria-hidden="true"><span>Scroll</span><span>&darr;</span></div>
-    </section>
-
-    <section class="cred reveal">
-      <ul class="cred__row container">
-        <li><span class="cred__dot" style="background:var(--accent);border-color:var(--accent-ink)"></span><b>0.8965</b> challenge Dice, 20-case holdout</li>
-        <li><span class="cred__dot" style="background:var(--clear);border-color:var(--clear-line)"></span><b>2</b> networks trained here, 5 third-party and labelled</li>
-        <li><span class="cred__dot" style="background:var(--bone);border-color:var(--bone-line)"></span><b>47</b> structures in one pass</li>
-        <li><span class="cred__dot" style="background:var(--canal);border-color:var(--breach-line)"></span><b>~98 s</b> on one GPU, in production</li>
-      </ul>
-    </section>
-
-    <!-- THE SCRUB'S RUNWAY, and it ends here.
-         The dark page used the next six sections as the scroll length for its
-         choreography, and they rode over the sticky canvas. On paper that leaves a
-         translucent mandible drifting behind body copy, which reads as a bug rather than
-         as depth. So the stage owns the hero, the proof strip and this spacer -- about a
-         viewport and a quarter of scrub, enough for bone-to-glass, the seating and all
-         three verdicts -- and everything below it is ordinary flow on ordinary paper. -->
-    <section class="climax" aria-hidden="true"></section>
-  </div>
-</div>
-
-<section class="band band--tick" id="engine">
+<section id="engine">
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">Trained here</p>
-      <h2 class="display">The models are ours, and so is the evidence</h2>
+      <h2 class="display">The models I trained, and the evidence</h2>
       <p class="section-sub">Seven models sit in the catalogue and five of them are
         third&#8209;party, labelled as such, with what each is measured to do and whether it
-        is installed at all. <b>Two we trained ourselves</b> — the network that paints all
+        is installed at all. <b>Two I trained</b> — the network that paints all
         47 structures, and a second one built for the three canals an anterior implant has
         to clear.</p>
     </div>
@@ -291,7 +101,7 @@
   </div>
 </section>
 
-<section class="band band--elev" id="serving">
+<section id="serving">
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">Deployed here</p>
@@ -352,11 +162,11 @@
   </div>
 </section>
 
-<section class="band band--tick" id="budget">
+<section id="budget">
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">The number</p>
-      <h2 class="display">A millimetre, minus what we know we get wrong</h2>
+      <h2 class="display">A millimetre, minus the measured model error</h2>
       <p class="section-sub">Any planner can put a ruler between an implant and a line
         somebody drew. The line is a prediction, and a prediction has an error — the one
         measured on the holdout above. It is published, and it is taken off the clearance
@@ -423,7 +233,7 @@
   </div>
 </section>
 
-<section class="band" id="depths">
+<section id="depths">
   <div class="container">
 <div class="section-head reveal">
   <p class="eyebrow">One site, three depths</p>
@@ -436,7 +246,7 @@
 </div>
 <figure class="reveal film">
   <video class="film__video" src="/assets/verdict-loop.mp4" width="1280" height="720"
-         autoplay muted loop playsinline preload="metadata"
+         controls playsinline preload="none"
          poster="/assets/shots/verdict-tight.jpg"
          aria-label="The ImplantPlan planning view at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, then CLEAR at 3.51 mm."></video>
   <figcaption>Recorded from the running app on a real GPU. The clearances, the
@@ -466,7 +276,7 @@
   </div>
 </section>
 
-<section class="band band--tick band--elev" id="planning">
+<section id="planning">
   <div class="container">
 <div class="section-head reveal">
   <p class="eyebrow">What planning actually does</p>
@@ -615,11 +425,11 @@
   </div>
 </section>
 
-<section class="band limits" id="limits">
+<section id="limits">
   <div class="container--narrow">
     <div class="section-head reveal">
       <p class="eyebrow">Before you trust it</p>
-      <h2 class="display">What we do not claim</h2>
+      <h2 class="display">Limits of the research</h2>
     </div>
     <div class="limits__panel reveal">
       <ul class="limits__list">
@@ -643,7 +453,7 @@
           A drill guide is a patient-contacting device that converts a plan into a hole. The
           canal outline this product measures against is known to sit up to <b>5.10 mm</b>
           inside the truth at its worst measured point, and CBCT grey values are not
-          calibrated attenuation. We publish the clearance and its error; we do not hand you
+          calibrated attenuation. This project publishes the clearance and its error, without providing
           something that drills.</li>
         <li><b>The hero on this page measures a web mesh, not your scan.</b> Its millimetre
           is computed in your browser from a decimated, quantised display mesh — an
@@ -656,253 +466,3 @@
     </div>
   </div>
 </section>
-
-<section class="band band--tick band--elev" id="pricing">
-  <div class="container">
-    <div class="section-head reveal">
-      <p class="eyebrow">Plans</p>
-      <h2 class="display">Priced by the scan</h2>
-      <p class="section-sub">One segmentation job is one scan through the full pipeline, with
-        every export. Unused jobs do not roll over.</p>
-    </div>
-
-    <div class="grid grid--3 plans">
-      <article class="plan reveal">
-        <span class="plan__trial">14-day free trial</span>
-        <h3 class="plan__name">Explorer</h3>
-        <p class="plan__tagline">For a single clinician, a researcher, or anyone deciding
-          whether this belongs in their workflow.</p>
-        <p class="plan__price"><span class="plan__amount" data-count="12.99" data-prefix="$" data-decimals="2">$12.99</span><span class="plan__period">per month</span></p>
-        <p class="plan__jobs">30 segmentations / month</p>
-        <ul class="plan__features">
-          <li>All 47 structures, every export format</li>
-          <li>RTSTRUCT, STL, NIfTI and the browser viewer</li>
-          <li>Results kept 72 hours, then purged</li>
-          <li>Uploads deleted the moment a job finishes</li>
-        </ul>
-        <a class="btn btn--ghost btn--block" href="/app">Start free trial</a>
-        <p class="plan__cta-note">No card required · Cancel anytime</p>
-      </article>
-
-      <article class="plan plan--featured reveal">
-        <span class="plan__pill">Most popular</span>
-        <h3 class="plan__name">Pro</h3>
-        <p class="plan__tagline">For a practice running implant or orthognathic planning as
-          routine work rather than the occasional case.</p>
-        <p class="plan__price"><span class="plan__amount" data-count="49.99" data-prefix="$" data-decimals="2">$49.99</span><span class="plan__period">per month</span></p>
-        <p class="plan__jobs">60 segmentations / month</p>
-        <ul class="plan__features">
-          <li>Everything in Explorer</li>
-          <li>Twice the monthly volume</li>
-          <li>Priority in the GPU queue</li>
-          <li>Full measurement report per case</li>
-        </ul>
-        <a class="btn btn--primary btn--block" href="/app?plan=clinician">Choose Pro</a>
-        <p class="plan__cta-note">Starts your 14-day trial first</p>
-      </article>
-
-      <article class="plan reveal">
-        <h3 class="plan__name">Enterprise</h3>
-        <p class="plan__tagline">For a clinic group or a lab where several people send scans
-          from the same account.</p>
-        <p class="plan__price"><span class="plan__amount" data-count="199.99" data-prefix="$" data-decimals="2">$199.99</span><span class="plan__period">per month</span></p>
-        <p class="plan__jobs">120 segmentations / month</p>
-        <ul class="plan__features">
-          <li>Everything in Pro</li>
-          <li>Four times the monthly volume</li>
-          <li>Shared case list across your account</li>
-          <li>Direct line for support</li>
-        </ul>
-        <a class="btn btn--ghost btn--block" href="/app?plan=enterprise">Choose Enterprise</a>
-        <p class="plan__cta-note">Talk to us about higher volumes</p>
-      </article>
-    </div>
-
-    <p class="pricing__secure">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-        <rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/>
-      </svg>
-      Secure checkout powered by Stripe · PCI-DSS Level 1
-    </p>
-    <p class="pricing__note">Your trial is 30 segmentations over 14 days, whichever runs out
-      first, and it needs no card. Uploads are deleted as soon as a job completes; results
-      expire after 72 hours. Subscriptions are billed monthly and cancel from your account
-      page at any time.</p>
-  </div>
-</section>
-
-<section class="band" id="faq">
-  <div class="container--narrow">
-    <div class="section-head reveal">
-      <p class="eyebrow">Reference</p>
-      <h2 class="display">Questions worth asking</h2>
-    </div>
-    <div class="faq">
-      <details class="faq__item reveal">
-        <summary>What can I upload?</summary>
-        <p>A DICOM series as a <b>.zip</b>, or a single-file volume: <b>.nii</b> / <b>.nii.gz</b>.
-          Upload DICOM if you can — the RTSTRUCT then references your own series, which is
-          what makes it drop straight into a planning system.</p>
-        <p>There is a hard <b>100 MB</b> ceiling per upload at our edge, which a 0.25 mm
-          full-head CBCT can exceed. Chunked upload for larger scans is not built yet, and
-          the app tells you before it wastes your time rather than after.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>Whose models are these?</summary>
-        <p>Ours, finetuned from someone else&rsquo;s. The architecture is
-          <b>U-Mamba2</b> (Wu et al., MICCAI 2025), which won both ToothFairy3 tasks; we
-          finetuned it on the <b>ToothFairy3</b> challenge dataset — 512 annotated CBCT
-          volumes from the University of Modena and Reggio Emilia — and that checkpoint is
-          what runs here. The service used to run two published models instead; it does not
-          any more.</p>
-        <p>Because the training data is <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener"><b>CC BY-NC-SA 4.0</b></a>,
-          so is the model: attribution, share-alike, and <b>non-commercial use only</b>.
-          This is a research preview and is licensed as one.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>Does the orientation of my scan matter?</summary>
-        <p>No, and this is worth being specific about because it is the failure everyone
-          hits. The model numbers teeth by <em>position</em>, so a scan in the wrong frame
-          gets every tooth mirrored — 11 becomes 21, left becomes right. Every upload is
-          canonicalised first, including scans with a real patient tilt. Re-export the same
-          scan as LPS, RPI, RAS or PIR and the labels come back <b>100.000000%</b> identical
-          over 4.8 million voxels.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>How long does a scan take?</summary>
-        <p><b>About 98 seconds</b> of GPU for the two models that run — 95.0 s for the base network and 2.5 s for the anterior canal specialist, both figures published in the model catalogue before you upload anything — plus roughly a
-          minute of CPU for the merge, the quality checks, the meshes and the viewer tiles.
-          There is one GPU, so a job may queue behind another; the app shows you where you
-          are.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>What happens to my data?</summary>
-        <p>The upload is deleted the moment a job reaches <em>done</em> — it is never read
-          again. Results expire <b>72 hours</b> after completion and the endpoint then answers
-          <b>410 Gone</b> rather than a 404 that would read like a bug. Each account's cases
-          are stored under their own prefix and no account can see another's.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>Can I trust the clearance it reports?</summary>
-        <p>Treat it as a first pass that a clinician checks, which is what the
-          <a href="#limits">limits</a> section is for. It is a research preview, not a
-          medical device, and it is not for diagnostic use. The useful question is not
-          whether it is perfect but whether checking its canal is faster than tracing one —
-          and the report tells you where it is unsure.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>How is the clearance actually computed?</summary>
-        <p>The measured solid is a capsule — the fixture&rsquo;s axis segment, swept at its
-            radius, with a hemispherical apex. The clearance is the nearest distance from
-            that segment to the canal surface, less the radius, on the full-resolution grid
-            you uploaded. The axis span is the length <em>minus</em> the radius, not the
-            length: walking a full-length cylinder costs up to one radius of false
-            conservatism and used to suppress the verdict on every vertical implant over a
-            canal.</p>
-        <p>Then the structure&rsquo;s own inward p95 is subtracted, and the result is
-            compared to the margin. Both numbers, and the arithmetic, are on the printed plan
-          sheet under &ldquo;how every figure above was obtained&rdquo;.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>Does it produce a surgical guide?</summary>
-        <p>No, and it will not. A guide is a patient-contacting device; this is a research
-            preview that publishes a measurement and its error. The canal outline it measures
-            against sat up to <b>5.10 mm</b> inside the truth at the worst single point of a
-            20-case held-out set, and CBCT grey values are not calibrated attenuation. You
-            get the clearance, the error budget behind it, and an STL of the planned fixture.
-          What you do with them is a clinical decision.</p>
-      </details>
-      <details class="faq__item reveal">
-        <summary>What counts as one segmentation?</summary>
-        <p>One scan through the full pipeline, with every export produced. Re-running the same
-          scan counts again. A job that fails does not count, and a job you cancel before it
-          reaches the GPU does not count either.</p>
-      </details>
-    </div>
-  </div>
-</section>
-
-<section class="final-cta">
-  <div class="container--narrow">
-    <div class="final-cta__panel reveal">
-      <h2 class="display">Send one scan through it</h2>
-      <p class="final-cta__sub">Thirty segmentations and fourteen days, no card. If the canal
-        it finds is not worth checking, you have lost an upload.</p>
-      <a class="btn btn--primary btn--lg" href="/app">Start free trial</a>
-      <p class="final-cta__contact">Questions, or a volume that does not fit these plans?
-        <a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a></p>
-    </div>
-  </div>
-</section>
-</main>
-
-<footer class="footer">
-  <div class="container">
-    <div class="footer__grid">
-      <div>
-        <a class="brand brand--footer" href="#top" style="margin-right:0" aria-label="ImplantPlan — home">
-          <img class="brand__wordmark" src="/assets/wordmark.png" width="669" height="114"
-               alt="ImplantPlan" loading="lazy" decoding="async">
-        </a>
-        <p class="footer__tagline">Dental cone-beam CT segmentation and implant planning.
-          The clearance to the nerve, as a number.</p>
-        <p class="footer__copy">© 2026 DicomSegVR</p>
-      </div>
-      <div>
-        <h4>Product</h4>
-        <ul>
-          <li><a href="#engine">The models</a></li>
-          <li><a href="#serving">Deployment</a></li>
-          <li><a href="#budget">The number</a></li>
-          <li><a href="#planning">Planning</a></li>
-          <li><a href="#arch">The FDI arch</a></li>
-          <li><a href="#pricing">Pricing</a></li>
-          <li><a href="/app">Open the app</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Honesty</h4>
-        <ul>
-          <li><a href="#limits">What we do not claim</a></li>
-          <li><a href="#faq">FAQ</a></li>
-          <li><a href="/privacy.html">Privacy</a></li>
-          <li><a href="/terms.html">Terms</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4>Contact</h4>
-        <ul>
-          <li><a href="mailto:support@dicomsegvr.com">support@dicomsegvr.com</a></li>
-          <li><a href="https://dicomsegvr.com">dicomsegvr.com</a></li>
-        </ul>
-      </div>
-    </div>
-
-    <p class="footer__credits">
-      Segmentation uses a <strong>U-Mamba2</strong> checkpoint we finetuned on the
-      <strong>ToothFairy3</strong> dataset, and therefore inherits that dataset&rsquo;s
-      <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener">CC BY-NC-SA 4.0</a>
-      licence — non-commercial, share-alike.
-      ToothFairy3 — Bolelli F, et al., University of Modena and Reggio Emilia
-      (<a href="https://ditto.ing.unimore.it/toothfairy3" rel="noopener">ditto.ing.unimore.it/toothfairy3</a>).
-      U-Mamba2 — Wu J, et al., MICCAI 2025 (<a href="https://arxiv.org/abs/2509.12069" rel="noopener">arXiv:2509.12069</a>).
-      Built on nnU-Net — Isensee F, et al., <em>Nature Methods</em> 2021.
-      Example cases are 3D Slicer public sample data.
-      Cases segmented before 2026-08-25 came from two CC BY 4.0 checkpoints we no longer
-      run, and their downloads still derive from them: <strong>DentalSegmentator</strong> —
-      Dot G, et al., <em>Journal of Dentistry</em> 2024; <strong>ToothSeg</strong> —
-      van Nistelrooij N, et al., <em>IEEE JBHI</em> 2025.
-      No upstream author endorses this service.
-      <br><br>
-      This is a research preview. It is <strong>not a medical device</strong>, has no
-      regulatory clearance, and is <strong>not for diagnostic use</strong>. CBCT grey values
-      are not calibrated Hounsfield units. Every result requires review by a qualified
-      clinician.
-    </p>
-  </div>
-</footer>
-
-<script src="/main.js" defer></script>
-<script type="module" src="/assets/hero3d.js?v=4"></script>
-</body>
-</html>

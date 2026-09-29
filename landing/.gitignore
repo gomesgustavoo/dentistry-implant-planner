@@ -1,0 +1,12 @@
+node_modules/
+dist/
+.astro/
+.generated-public/
+artifacts/
+!/vendor/
+!/vendor/landing-ui/
+!/vendor/landing-ui/**
+# These existing Three.js files are needed by an independent checkout/build.
+!/assets/vendor/
+!/assets/vendor/three/
+!/assets/vendor/three/**

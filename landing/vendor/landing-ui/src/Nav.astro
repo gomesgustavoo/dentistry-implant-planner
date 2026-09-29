@@ -1,0 +1,21 @@
+---
+import type { Project } from './types';
+interface Props { project: Project; engineering?: boolean }
+const { project: p, engineering = false } = Astro.props;
+const home = engineering ? '/' : '';
+---
+<header class="nav" id="top">
+  <div class="container nav__inner">
+    <a class="brand" href={engineering ? '/' : '#top'} aria-label={`${p.name} home`}>{p.wordmark[0]}<span>{p.wordmark[1]}</span></a>
+    <span class="nav__divider" aria-hidden="true"></span><span class="nav__annotation">An independent project</span>
+    <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label="Open menu"><span></span><span></span></button>
+    <nav class="nav__menu" id="navMenu" aria-label="Primary">
+      <a href={`${home}#demo`}>The project</a>
+      <a href="/engineering/" aria-current={engineering ? 'page' : undefined}>Engineering</a>
+      <a href={`${home}#pricing`}>Pricing</a>
+      <a href={`${home}#creator`}>Creator</a>
+      <a class="button button--small" href={p.primary.href}>Open app <span aria-hidden="true">↗</span></a>
+    </nav>
+  </div>
+</header>
+<div class="nav__scrim" id="navScrim" hidden></div>

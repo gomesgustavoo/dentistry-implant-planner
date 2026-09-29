@@ -1,0 +1,14 @@
+{
+  "extends": "astro/tsconfigs/strict",
+  "include": [
+    ".astro/types.d.ts",
+    "src/**/*",
+    "vendor/landing-ui/src/**/*"
+  ],
+  "exclude": [
+    "dist",
+    ".generated-public",
+    "assets",
+    "node_modules"
+  ]
+}

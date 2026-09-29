@@ -1,0 +1,13 @@
+{
+  "name": "@dicomsegvr/landing-ui",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*": "./src/*",
+    "./types": "./src/types.ts"
+  },
+  "files": [
+    "src"
+  ]
+}

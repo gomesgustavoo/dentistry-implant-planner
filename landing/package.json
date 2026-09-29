@@ -1,0 +1,23 @@
+{
+  "name": "implantplan-landing",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "prepare:static": "node scripts/prepare-static.mjs",
+    "dev": "npm run prepare:static && astro dev --host 0.0.0.0",
+    "check": "astro check",
+    "build": "npm run prepare:static && astro build",
+    "preview": "astro preview --host 0.0.0.0",
+    "check:browser": "node scripts/check-browser.mjs"
+  },
+  "dependencies": {
+    "@dicomsegvr/landing-ui": "file:vendor/landing-ui",
+    "astro": "7.3.3"
+  },
+  "devDependencies": {
+    "@astrojs/check": "0.9.10",
+    "typescript": "5.9.3",
+    "@playwright/test": "1.58.2"
+  }
+}

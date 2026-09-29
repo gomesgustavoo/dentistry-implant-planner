@@ -1,0 +1,40 @@
+/* ============================================================================
+   BAND: DicomSegVR — rose -> fuchsia (340deg -> 325deg), the warm end.
+   ----------------------------------------------------------------------------
+   The flagship. Load AFTER tokens/platform.css; this file defines only the
+   accent slots. Product: DicomSegVR. Sub-mark: none (the flagship needs no
+   qualifier). Display voice: Geist 700 at --ds-tracking-display.
+
+   Rose on near-black is deliberately warmer than the default clinical
+   blue-teal — the teal->violet v1/v2 palette was tried and rejected (it
+   survives in redesign-screenshots/logo-lab.html). The mono readouts, the
+   calibration ticks and the not-a-medical-device disclaimers are what pull it
+   back toward credibility.
+   ========================================================================= */
+
+:root {
+  --ds-accent: #ff5d8f;
+  --ds-accent-2: #e0399b;
+  --ds-accent-3: #ffc2d6;
+  --ds-accent-hi: #ff89ad;
+  /* Ink for text sitting ON the brand gradient. Verified: 6.6:1 at the rose
+     end, 4.8:1 at the fuchsia end. */
+  --ds-accent-ink: #0c0b10;
+  --ds-accent-line: rgba(255, 93, 143, 0.32);
+  --ds-tick: rgba(255, 93, 143, 0.6);
+
+  --ds-shadow-accent: 0 0 0 1px rgba(255, 93, 143, 0.25), 0 0 40px -8px rgba(255, 93, 143, 0.45);
+
+  /* Decorative: 2px top-rules, .text-grad, border rings, hairlines. */
+  --ds-grad-brand: linear-gradient(135deg, #ff5d8f, #e0399b);
+  /* Interactive: anything carrying a label in --ds-accent-ink. Identical here
+     because both stops already clear AA against it. */
+  --ds-grad-cta: linear-gradient(135deg, #ff5d8f, #e0399b);
+  --ds-grad-mesh:
+    radial-gradient(60% 60% at 18% 8%, rgba(255, 93, 143, 0.14), transparent 60%),
+    radial-gradient(50% 50% at 85% 28%, rgba(224, 57, 155, 0.14), transparent 60%),
+    radial-gradient(70% 70% at 60% 100%, rgba(255, 194, 214, 0.08), transparent 65%);
+
+  --ds-font-display: "Geist", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --ds-weight-display: 700;
+}

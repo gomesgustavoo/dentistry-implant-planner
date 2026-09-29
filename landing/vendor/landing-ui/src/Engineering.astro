@@ -1,0 +1,17 @@
+---
+import type { Project } from './types';
+import Base from './Base.astro';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+interface Props { project: Project; content: string }
+const { project: p, content } = Astro.props;
+---
+<Base project={p} engineering>
+  <Nav project={p} engineering />
+  <main id="main" class="engineering-page container">
+    <header class="engineering-head"><a class="text-link" href="/">← Back to {p.name}</a><p class="eyebrow">An engineering notebook / Gustavo Formento</p><h1>How {p.name}<br /><span>comes together.</span></h1><p>{p.engineeringIntro}</p><div class="creator__links"><a class="button" href={p.repo}>Explore the source ↗</a><a class="text-link" href={p.primary.href}>Open the app ↗</a></div></header>
+    <div class="research" set:html={content} />
+    <div class="section-end"><a class="text-link" href="/">← Back to the project</a><a class="text-link" href="https://www.linkedin.com/in/gustavoogomesss/">Discuss the work ↗</a></div>
+  </main>
+  <Footer project={p} />
+</Base>

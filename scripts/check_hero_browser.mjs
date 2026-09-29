@@ -24,7 +24,8 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const LANDING = path.join(ROOT, 'landing');
+// Validate what nginx serves, not the Astro source tree.
+const LANDING = path.resolve(process.env.LANDING_DIST || path.join(ROOT, 'landing/dist'));
 const PORT_DEBUG = Number(process.env.HERO_DEBUG_PORT || 9337);
 const SHOT = process.argv.includes('--shot')
   ? process.argv[process.argv.indexOf('--shot') + 1] : null;
