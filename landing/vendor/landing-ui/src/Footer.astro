@@ -1,10 +1,12 @@
 ---
 import type { Project } from './types';
+import { localePath, t } from './i18n';
 interface Props { project: Project }
 const { project: p } = Astro.props;
+const s = t(p.locale);
 ---
 <footer class="footer container">
-  <div class="footer__top"><a class="brand" href="/">{p.wordmark[0]}<span>{p.wordmark[1]}</span></a><a href={p.sibling.href}>Also by Gustavo: {p.sibling.label} <span aria-hidden="true">↗</span></a><a href="#top">Back to top ↑</a></div>
-  <div class="footer__bottom"><p>© {new Date().getFullYear()} Gustavo Formento · Research and educational use only. Not a medical device.</p><nav aria-label="Legal"><a href="/privacy.html">Privacy</a><a href="/terms.html">Terms</a><a href="mailto:support@dicomsegvr.com">Support</a></nav></div>
-  {p.id === 'implantplan' && <p class="license">Segmentation model derived from ToothFairy3 · <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license">CC BY-NC-SA 4.0</a> · Non-commercial research use.</p>}
+  <div class="footer__top"><a class="brand" href={localePath(p.locale, '/')}>{p.wordmark[0]}<span>{p.wordmark[1]}</span></a><a href={p.sibling.href}>{s.footer.also} {p.sibling.label} <span aria-hidden="true">↗</span></a><a href="#top">{s.footer.top} ↑</a></div>
+  <div class="footer__bottom"><p>© {new Date().getFullYear()} Gustavo Formento · {s.footer.notice}</p><nav aria-label={s.footer.legal}><a href={localePath(p.locale, '/privacy/')}>{s.footer.privacy}</a><a href={localePath(p.locale, '/terms/')}>{s.footer.terms}</a><a href="mailto:support@dicomsegvr.com">{s.footer.support}</a></nav></div>
+  {p.license && <p class="license">{p.license.text} <a href={p.license.href} rel="license">{p.license.name}</a> · <a href={p.license.credits.href}>{p.license.credits.label}</a></p>}
 </footer>

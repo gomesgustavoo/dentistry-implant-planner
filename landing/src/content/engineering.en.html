@@ -3,11 +3,10 @@
     <div class="section-head reveal">
       <p class="eyebrow">Trained here</p>
       <h2 class="display">The models I trained, and the evidence</h2>
-      <p class="section-sub">Seven models sit in the catalogue and five of them are
-        third&#8209;party, labelled as such, with what each is measured to do and whether it
-        is installed at all. <b>Two I trained</b> — the network that paints all
-        47 structures, and a second one built for the three canals an anterior implant has
-        to clear.</p>
+      <p class="section-sub">The model catalog lists seven models. Five are third&#8209;party
+        and labeled as such, with what each is measured to do and whether it is installed.
+        <b>I trained the other two</b>: the network that segments all 47 structures, and a
+        second one built for the three canals an anterior implant has to clear.</p>
     </div>
 
     <div class="grid grid--2 reveal">
@@ -15,14 +14,14 @@
         <span class="card__kicker">The base network</span>
         <h3 class="feature__h">nnU&#8209;Net with a U&#8209;Mamba2 bottleneck</h3>
         <p class="engine__lede">Fine&#8209;tuned on ToothFairy3 over <b>512 cases</b> for
-          <b>1000 epochs</b>, and scored on a <b>20&#8209;case holdout it never saw</b> by
-          the same pipeline that serves predictions.</p>
+          <b>1,000 epochs</b>, and scored on a <b>20&#8209;case held&#8209;out set it never saw</b>,
+          by the same pipeline that serves predictions.</p>
         <ul class="metrics">
           <li><span class="metrics__k">Challenge Dice</span><span class="metrics__v num">0.8965</span></li>
           <li><span class="metrics__k">Strict Dice</span><span class="metrics__v num">0.8292</span></li>
           <li><span class="metrics__k">HD95</span><span class="metrics__v num">1.235 mm</span></li>
           <li><span class="metrics__k">NSD</span><span class="metrics__v num">0.9736</span></li>
-          <li><span class="metrics__k">Inferior alveolar canal, Dice</span><span class="metrics__v num">0.9008 / 0.9009</span></li>
+          <li><span class="metrics__k">Inferior alveolar canal, Dice (left / right)</span><span class="metrics__v num">0.9008 / 0.9009</span></li>
         </ul>
         <p class="metrics__foot">Above the published SegResNet entry (0.87) and within
           <b>0.012</b> of the ToothFairy3 challenge winners (0.908) — reached on a
@@ -32,13 +31,13 @@
       <div class="grid">
         <article class="card">
           <span class="card__kicker">The training run</span>
-          <h3>Clean for all 1000 epochs</h3>
+          <h3>Clean for all 1,000 epochs</h3>
           <p>Validation loss tracked training loss the whole way: <b>no overfitting</b> on
             512 cases, and the pseudo&#8209;Dice moving average was <b>still rising at
-            1000</b> — not saturated, and the winners trained 1500.
+            epoch 1,000</b>. It had not saturated, and the winners trained for 1,500.
             <code>checkpoint_final</code> beat <code>checkpoint_best</code> on every metric
-            (0.8887 against 0.8849), which is what a fully annealed poly schedule should
-            do.</p>
+            (challenge Dice 0.8887 against 0.8849, under the earlier component filter),
+            which is what a fully annealed poly schedule should do.</p>
         </article>
         <article class="card">
           <span class="card__kicker">A second network, for a reason</span>
@@ -46,7 +45,7 @@
           <p>The inferior alveolar canal ends at the mental foramen, so an implant in front
             of it has three <em>other</em> canals to clear. A network trained on the
             anterior mandible alone gains <b>+0.0505 / +0.0874 / +0.0172</b> Dice on the
-            left incisive, right incisive and lingual canals, pulls their predicted volume
+            left incisive, right incisive, and lingual canals, pulls their predicted volume
             from <b>155–205%</b> of ground truth to <b>99–111%</b>, and beats the base
             model on <b>40 external</b> PMCanalSeg cases at
             <span class="num">p&nbsp;=&nbsp;7.6&nbsp;&times;&nbsp;10<sup>&minus;4</sup></span>.</p>
@@ -58,8 +57,8 @@
       <article class="card card--wide">
         <span class="card__kicker">The finding that was worth the most</span>
         <h3>A threshold table that was quietly all&#8209;ones</h3>
-        <p>Small&#8209;island removal is per class, against the smallest that structure has
-          ever legitimately been. Rebuilding that table by taking the 2nd percentile over
+        <p>Small&#8209;island removal works per class: a fragment is dropped when it is smaller
+          than that structure has ever legitimately been. Rebuilding that table by taking the 2nd percentile over
           <em>every</em> connected component in the training annotations produced a
           threshold of <b>one voxel</b> for everything — because ground truth is not clean:
           the lower jawbone alone has <b>17,733 components across 512 cases</b>, about 34
@@ -75,11 +74,11 @@
       <article class="card card--wide">
         <span class="card__kicker">Published because it failed</span>
         <h3>A negative result, with the threshold set first</h3>
-        <p>Three head/neck models were evaluated for an extended taxonomy — 42 more
-          structures beyond the dental set. Across three holdout cases that is
+        <p>Three head and neck models were evaluated for an extended taxonomy of 42 structures
+          beyond the dental set. Across three held&#8209;out cases, that is
           <b>126 structure&#8209;opportunities</b>, and the plausibility gate was committed
           <em>before</em> anything was measured. <b>One</b> survived it.</p>
-        <p>The tongue came out at <b>1.76 cm³</b> against an anatomical 70–100. One masseter
+        <p>The tongue came out at <b>1.76 cm³</b> against an anatomical 70–100 cm³. One masseter
           was found and the other was not, inside a field of view containing both. The
           oropharynx arrived in <b>155 connected pieces</b>. All three models ship
           <b>off</b>, and the extended pass is structurally incapable of moving a clearance:
@@ -89,14 +88,14 @@
     </div>
 
     <div class="panel reveal ownership">
-      <h3>What a holdout cannot tell you</h3>
-      <p>Stated before the numbers, because it decides what they mean: this holdout
-        <b>cannot grant ownership</b> of a structure to us or to anyone else — the
-        third&#8209;party models trained on the same public release, so only a
-        <em>loss</em> is evidence. Measured that way over 18 cases, TotalSegmentator took
-        ownership of <b>nothing</b>: zero accessory&#8209;canal voxels in 18 of 18, pulp
-        &minus;0.078 Dice, and the two inferior alveolar canals &minus;0.014 and
-        &minus;0.021.</p>
+      <h3>What a held&#8209;out set cannot tell you</h3>
+      <p>Stated before the numbers, because it decides what they mean: this held&#8209;out
+        set <b>cannot grant ownership</b> of a structure to me or to anyone else. The
+        third&#8209;party models were trained on the same public release, so only a
+        <em>loss</em> is evidence. Measured that way on 18 of the held&#8209;out cases,
+        TotalSegmentator earned ownership of <b>nothing</b>: zero accessory&#8209;canal
+        voxels in 18 of 18, &minus;0.078 Dice on the pulp, and &minus;0.014 and &minus;0.021
+        on the two inferior alveolar canals.</p>
     </div>
   </div>
 </section>
@@ -105,10 +104,11 @@
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">Deployed here</p>
-      <h2 class="display">…and it runs, in production, on one GPU</h2>
-      <p class="section-sub">Training a network is half of it. This one has an API in front
-        of it, a queue behind it, single sign&#8209;on, per&#8209;tenant isolation and
-        quotas, and it has been serving real uploads on the public internet since August.</p>
+      <h2 class="display">And it runs in production, on one GPU</h2>
+      <p class="section-sub">Training a network is half of the work. This one has an API in
+        front of it, a queue behind it, single sign&#8209;on, per&#8209;tenant isolation, and
+        quotas, and it has been serving real uploads on the public internet since August
+        2026.</p>
     </div>
 
     <div class="grid grid--2 reveal">
@@ -120,44 +120,44 @@
           <li><span class="metrics__k">Structures per pass</span><span class="metrics__v num">47</span></li>
           <li><span class="metrics__k">Tooth classes, FDI</span><span class="metrics__v num">32</span></li>
         </ul>
-        <p class="metrics__foot">Those seconds are published in the model catalogue
-          <em>before</em> you upload a byte, next to what each model is measured to do —
-          because &ldquo;which model should segment my teeth&rdquo; is a question a user is
-          about to be asked and a name does not answer it.</p>
+        <p class="metrics__foot">Those seconds are published in the model catalog
+          <em>before</em> you upload a byte, next to what each model is measured to do,
+          because &ldquo;which model should segment my teeth?&rdquo; is a question a user is
+          about to be asked, and a model name does not answer it.</p>
       </div>
       <div class="grid">
         <article class="card">
           <span class="card__kicker">The stack</span>
           <h3>Three services, one GPU, one lock</h3>
-          <p>A FastAPI service, a browser viewer and a static front end run as separate
+          <p>A FastAPI service, a browser viewer, and a static front end run as separate
             deployments on <b>k3s</b> behind Cloudflare, with <b>Keycloak</b> SSO, tenant
-            isolation enforced in the data layer and per&#8209;plan quotas. Inference runs
-            in a host worker that takes a <b>Postgres advisory lock</b> for the card, so a
+            isolation enforced in the data layer, and per&#8209;plan quotas. Inference runs
+            in a host worker that takes a <b>Postgres advisory lock</b> on the GPU, so a
             training run and a user upload cannot collide on it.</p>
         </article>
         <article class="card">
           <span class="card__kicker">Exports that load</span>
           <h3>Into the software that already exists</h3>
-          <p>An <b>RTSTRUCT</b> whose ROI names are capped at 16 characters so Varian
-            Eclipse will take them, round&#8209;tripped through an independent reader at
+          <p>An <b>RTSTRUCT</b> whose ROI names are capped at 16 characters so that Varian
+            Eclipse accepts them, round&#8209;tripped through an independent reader at
             median Dice <span class="num">0.9920</span>. <b>NIfTI</b> on the grid you
             uploaded, not the canonical frame the network ran in: re&#8209;export the same
-            scan as LPS, RPI, RAS or PIR and the labels come back
+            scan as LPS, RPI, RAS, or PIR, and the labels come back
             <span class="num">100.000000%</span> identical. Per&#8209;structure
-            <b>STL</b> in patient millimetres.</p>
+            <b>STL</b> in patient coordinates, in millimeters.</p>
         </article>
       </div>
     </div>
 
     <div class="panel reveal ownership">
-      <h3>The same geometry, in two languages, to 1e&#8209;9</h3>
-      <p>The implant you are looking at above is not an illustration of the product — it is
-        the product&rsquo;s own geometry, running in your browser. The code that draws a
-        fixture in the viewer and the Python that measures one on the server are held to
-        the same map, asserted equal to <b>1e&#8209;9</b> on a real GPU, and every drawn
-        vertex is proven to sit inside the measured capsule to <b>4&times;10<sup>&minus;6</sup> mm</b>.
-        A number a reader can see is worth less than a number two independent
-        implementations agree on.</p>
+      <h3>The same geometry in two languages, equal to 1e&#8209;9</h3>
+      <p>The implant in the 3D scene on the home page is not an illustration of the product:
+        it is the product&rsquo;s own implant geometry, running in your browser. The
+        JavaScript that draws an implant in the viewer and the Python that measures one on
+        the server are held to the same map, asserted equal to <b>1e&#8209;9</b> on a real
+        GPU, and every drawn vertex is proven to lie inside the measured capsule to within
+        <b>4&times;10<sup>&minus;6</sup> mm</b>. A number you can see is worth less than a
+        number two independent implementations agree on.</p>
     </div>
   </div>
 </section>
@@ -166,11 +166,11 @@
   <div class="container">
     <div class="section-head reveal">
       <p class="eyebrow">The number</p>
-      <h2 class="display">A millimetre, minus the measured model error</h2>
+      <h2 class="display">A millimeter, minus the measured model error</h2>
       <p class="section-sub">Any planner can put a ruler between an implant and a line
-        somebody drew. The line is a prediction, and a prediction has an error — the one
-        measured on the holdout above. It is published, and it is taken off the clearance
-        before anything is called safe.</p>
+        somebody drew. That line is a prediction, and a prediction has an error: the one
+        measured on the held&#8209;out set above. The error is published, and it is
+        subtracted from the clearance before anything is called safe.</p>
     </div>
     <div class="grid grid--2 budget">
       <div class="panel reveal budget__sheet">
@@ -178,7 +178,7 @@
           <li>
             <span class="budget__term">Measured clearance</span>
             <span class="budget__val num">3.43 mm</span>
-            <span class="budget__note">implant surface to canal surface, in patient millimetres</span>
+            <span class="budget__note">implant surface to canal surface, in millimeters</span>
           </li>
           <li class="budget__minus">
             <span class="budget__term">The canal&rsquo;s inward p95</span>
@@ -191,9 +191,9 @@
             <span class="budget__note">what the verdict is computed from</span>
           </li>
           <li>
-            <span class="budget__term">Safety margin to the nerve</span>
+            <span class="budget__term">Safety margin to the canal</span>
             <span class="budget__val num">2.00 mm</span>
-            <span class="budget__note">and 0.50 mm of headroom below that is <em>tight</em>, not clear</span>
+            <span class="budget__note">a graded clearance up to 0.50 mm above this margin is <em>tight</em>, not clear</span>
           </li>
           <li class="budget__total" data-level="clear">
             <span class="budget__term">Verdict</span>
@@ -201,25 +201,24 @@
             <span class="budget__note">0.97 mm of headroom</span>
           </li>
         </ol>
-        <p class="budget__foot">The figures above are the hero&rsquo;s, at the crest. The
-          same arithmetic runs on every structure, with that structure&rsquo;s own prior:
-          1.11 mm for the lingual canal, 0.34 mm for a tooth.</p>
+        <p class="budget__foot">These are the figures of the 3D scene on the home page, with
+          the implant at the crest. The same arithmetic runs on every structure, each with
+          its own prior: 1.11 mm for the lingual canal, 0.34 mm for a tooth.</p>
       </div>
       <div class="grid reveal">
         <article class="card">
           <span class="card__kicker">Quoted, never subtracted</span>
           <h3>5.10 mm at the worst point</h3>
           <p>The p95 is what gets deducted. The single worst inward excursion measured
-            anywhere in that holdout was <b>5.10 mm</b>, and it is printed rather than
-            built into the margin — because a number that large is a reason to look at
-            the scan, not a reason to move a threshold.</p>
+            anywhere in that held&#8209;out set was <b>5.10 mm</b>. It is printed rather than
+            built into the margin, because a number that large is a reason to look at the
+            scan, not a reason to move a threshold.</p>
         </article>
         <article class="card">
           <span class="card__kicker">A refusal is an answer</span>
           <h3>Not graded outranks tight</h3>
-          <p>When a measurement carries a caveat — the canal drawn in pieces near the
-            site, a saturated distance, no canal at all in the maxilla — no grade is
-            issued. <b>NOT GRADED</b> sorts above <b>TIGHT</b> in the display on purpose:
+          <p>When a measurement carries a caveat (the canal drawn in pieces near the site,
+            a saturated distance, no canal at all in the maxilla), no grade is issued. <b>NOT GRADED</b> sorts above <b>TIGHT</b> in the display on purpose:
             it is the state that most needs somebody to look.</p>
         </article>
         <figure class="shot reveal">
@@ -237,40 +236,41 @@
   <div class="container">
 <div class="section-head reveal">
   <p class="eyebrow">One site, three depths</p>
-  <h2 class="display">The same implant, a millimetre apart</h2>
-  <p class="section-sub">A real gap — a missing lower&#8209;left first molar with
-    <b>11.9 mm</b> of bone measured above the canal and <b>6.7 mm</b> of crestal
-    width. An 8 mm fixture seated on the crest sits <b>3.51 mm</b> off the inferior
-    alveolar canal. A millimetre deeper it is <b>2.55</b>. Half a millimetre deeper
-    again it is <b>2.07</b>, and the plan is refused.</p>
+  <h2 class="display">The same implant, a millimeter apart</h2>
+  <p class="section-sub">A real gap on a held&#8209;out scan: the lower left first molar
+    and second premolar (FDI 36 and 35) are both missing, and the 36 site has
+    <b>11.9 mm</b> of bone measured above the canal and <b>6.7 mm</b> of crestal width.
+    An 8 mm implant seated at the crest sits <b>3.51 mm</b> from the inferior alveolar
+    canal. A millimeter deeper, it is <b>2.55 mm</b>. Half a millimeter deeper again, it
+    is <b>2.07 mm</b>, and the plan is refused.</p>
 </div>
 <figure class="reveal film">
   <video class="film__video" src="/assets/verdict-loop.mp4" width="1280" height="720"
          controls playsinline preload="none"
          poster="/assets/shots/verdict-tight.jpg"
-         aria-label="The ImplantPlan planning view at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, then CLEAR at 3.51 mm."></video>
+         aria-label="The ImplantPlan planning view at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, and CLEAR at 3.51 mm."></video>
   <figcaption>Recorded from the running app on a real GPU. The clearances, the
-    verdicts and the captions are read out of the page rather than typed into a
+    verdicts, and the captions are read from the page, not typed into a
     script.</figcaption>
 </figure>
 <ul class="depths reveal">
   <li data-level="tight">
     <span class="readout__chip">TIGHT</span>
     <p class="depths__val num">2.55<span class="readout__unit">mm</span></p>
-    <p class="depths__note">Inside the band, above the margin. Still a plan, and it
+    <p class="depths__note">Within 0.50 mm above the margin. Still a plan, and the app
       says so.</p>
   </li>
   <li data-level="breach">
     <span class="readout__chip">BREACH</span>
     <p class="depths__val num">2.07<span class="readout__unit">mm</span></p>
-    <p class="depths__note">Past the margin once the error is taken off. The plan is
-      refused, not softened.</p>
+    <p class="depths__note">Past the margin once the error budget is subtracted. The
+      plan is refused, not softened.</p>
   </li>
   <li data-level="clear">
     <span class="readout__chip">CLEAR</span>
     <p class="depths__val num">3.51<span class="readout__unit">mm</span></p>
-    <p class="depths__note">Back at the crest. The number that made the difference is
-      half a millimetre of depth.</p>
+    <p class="depths__note">Back at the crest. One millimeter of depth separates this
+      from tight.</p>
   </li>
 </ul>
   </div>
@@ -281,35 +281,35 @@
 <div class="section-head reveal">
   <p class="eyebrow">What planning actually does</p>
   <h2 class="display">Seeded from the tooth it replaces</h2>
-  <p class="section-sub">The fixture is not dropped on the arch curve at the largest
-    size that fits. It is seeded as a restoration and seated in the bone that is
-    measured to be there.</p>
+  <p class="section-sub">The implant is not dropped on the arch curve at the largest
+    size that fits. It is seeded from the tooth it replaces and seated in the bone that
+    is measured to be there.</p>
 </div>
 <div class="feature reveal">
   <div class="feature__text">
     <h3>Between the cortical plates</h3>
     <p>Diameter comes from the tooth the site replaces — 3.3 mm for a lateral
       incisor, 4.8 mm for a first molar — then narrows if the measured ridge cannot
-      take it. The platform is centred between the buccal and lingual plates rather
+      take it. The platform is centered between the buccal and lingual plates rather
       than on the arch spline, because that is where the bone is.</p>
-    <p>Then an auto&#8209;fit loop measures, steps the length down one catalogue size
-      if the canal clearance does not grade clear, and measures again. The card says
-      which happened — <em>&ldquo;shortened 2 sizes — the longest length that measures
-      clear of the canal here&rdquo;</em> — or admits that none did.</p>
+    <p>Then an auto&#8209;fit loop measures, steps the length down one catalog size if
+      the canal clearance does not grade clear, and measures again. The implant card says
+      what happened, for example that the implant was shortened two sizes to the longest
+      length that measures clear of the canal, or admits that no length did.</p>
   </div>
   <figure class="shot">
     <img src="/assets/shots/seeded-clear.jpg" width="1200" height="675" loading="lazy" decoding="async"
-         alt="A fixture seeded at a posterior mandibular site, with the clearance rows reading CLEAR.">
+         alt="An implant seeded at a posterior mandibular site, with the clearance rows reading CLEAR.">
   </figure>
 </div>
 <div class="feature feature--flip reveal">
   <div class="feature__text">
     <h3>Three axes, and one of them changes nothing</h3>
-    <p>Buccolingual tilt is drawn at its true angle in the cross&#8209;section;
-      mesiodistal yaw at its true angle on the panoramic, and foreshortened in the
-      section by exactly <span class="num">cos(yaw)</span> — exact, because the
+    <p>Buccolingual tilt is drawn at its true angle in the cross&#8209;section, and
+      mesiodistal yaw at its true angle on the panoramic view, foreshortened in the
+      section by exactly <span class="num">cos(yaw)</span>. That is exact, because the
       orthogonal projection of a capsule is a capsule.</p>
-    <p>The third is clocking, and it is stated plainly to change <b>no</b>
+    <p>The third axis is clocking, and the app states plainly that it changes <b>no</b>
       measurement: the measured solid is a body of revolution. It exists so the
       connection hex renders where a driver would engage it.</p>
   </div>
@@ -321,25 +321,26 @@
 <div class="feature reveal">
   <div class="feature__text">
     <h3>The envelope is the surface the verdict is computed against</h3>
-    <p>Not a halo and not a highlight. The translucent shell around the fixture is
-      drawn at <b>2.46 mm</b> in the mandible — the 2.00 mm margin plus the canal&rsquo;s
-      own 0.46 mm inward p95 — so what you see touching is what the grader compared.</p>
-    <p>The fixture itself is machined titanium in every state. The verdict never
-      lives on the metal, because a reader who learns to read the implant&rsquo;s
-      colour has learned the wrong thing.</p>
+    <p>It is not a halo or a highlight. The translucent shell around the implant is drawn
+      at <b>2.46 mm</b> in the mandible (the 2.00 mm margin plus the canal&rsquo;s own
+      0.46 mm inward p95), so what you see touching is exactly what the grader
+      compared.</p>
+    <p>The implant itself is machined titanium in every state. The verdict never lives
+      on the metal, because a reader who learns to read the implant&rsquo;s color has
+      learned the wrong thing.</p>
   </div>
   <figure class="shot">
     <img src="/assets/shots/safety-envelope.jpg" width="1200" height="675" loading="lazy" decoding="async"
-         alt="The 3-D view in ImplantPlan: a titanium fixture inside a translucent green safety envelope, above the red inferior alveolar canal.">
+         alt="The 3D view in ImplantPlan: a titanium implant inside a translucent green safety envelope, above the red inferior alveolar canal.">
   </figure>
 </div>
 <div class="panel reveal density">
   <h3>Bone density, and what it is not</h3>
   <p>The site&rsquo;s density is reported as a ratio: the mean at the osteotomy
     against this scan&rsquo;s own cancellous median, both referenced to its air. That
-    makes it affine&#8209;invariant, so it survives a scanner that is not calibrated —
+    makes it affine&#8209;invariant, so it survives a scanner that is not calibrated,
     and if the scan carries no reference population, no number is produced at all.
-    <b>It is never a Hounsfield number and never a Misch class.</b> CBCT grey values
+    <b>It is never a Hounsfield number and never a Misch class.</b> CBCT gray values
     are not calibrated attenuation, so anything that looks like a density measurement
     is not one.</p>
 </div>
@@ -351,9 +352,11 @@
     <div class="section-head reveal" style="text-align:center">
       <p class="eyebrow" style="justify-content:center">FDI notation</p>
       <h2 class="display">Thirty-two positions. Twenty-nine found.</h2>
-      <p class="section-sub" style="margin-inline:auto">This is a real result on a real scan —
-        the same case the model above is built from. Hover a tooth for what the pipeline
-        actually reported. The dashed outlines are positions it found nothing at.</p>
+      <p class="section-sub" style="margin-inline:auto">A real result on a real scan: the
+        segmentation the home&#8209;page 3D scene is built from, produced by the earlier
+        two&#8209;model pipeline (DentalSegmentator and ToothSeg) on 3D Slicer&rsquo;s
+        public CBCT sample. Select a tooth to see what that pipeline reported. Dashed
+        outlines mark positions where it found nothing.</p>
     </div>
 
     <div class="arch__chart reveal" id="archChart" role="group" aria-label="FDI dental chart">
@@ -361,47 +364,47 @@
           <div class="arch__row arch__row--upper">
             <div class="arch__quad" aria-label="Upper right quadrant, FDI 1x">
               <button type="button" class="tooth tooth--absent" data-fdi="18" data-vol="" data-comp="" aria-label="18, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">18</span></button>
-              <button type="button" class="tooth" style="--c:#80aed9" data-fdi="17" data-vol="0.74" data-comp="1" aria-label="17, upper right second molar, 0.74 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">17</span></button>
-              <button type="button" class="tooth" style="--c:#6ca4d8" data-fdi="16" data-vol="0.94" data-comp="1" aria-label="16, upper right first molar, 0.94 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">16</span></button>
-              <button type="button" class="tooth" style="--c:#5699d7" data-fdi="15" data-vol="0.47" data-comp="1" aria-label="15, upper right second premolar, 0.47 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">15</span></button>
-              <button type="button" class="tooth" style="--c:#408fd8" data-fdi="14" data-vol="0.45" data-comp="1" aria-label="14, upper right first premolar, 0.45 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">14</span></button>
-              <button type="button" class="tooth" style="--c:#2984d9" data-fdi="13" data-vol="0.65" data-comp="1" aria-label="13, upper right canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">13</span></button>
-              <button type="button" class="tooth" style="--c:#1f7acd" data-fdi="12" data-vol="0.39" data-comp="1" aria-label="12, upper right lateral incisor, 0.39 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">12</span></button>
-              <button type="button" class="tooth" style="--c:#186ebf" data-fdi="11" data-vol="0.54" data-comp="1" aria-label="11, upper right central incisor, 0.54 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">11</span></button>
+              <button type="button" class="tooth" style="--c:#80aed9" data-fdi="17" data-vol="0.74" data-comp="1" aria-label="17, upper right second molar, 0.74 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">17</span></button>
+              <button type="button" class="tooth" style="--c:#6ca4d8" data-fdi="16" data-vol="0.94" data-comp="1" aria-label="16, upper right first molar, 0.94 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">16</span></button>
+              <button type="button" class="tooth" style="--c:#5699d7" data-fdi="15" data-vol="0.47" data-comp="1" aria-label="15, upper right second premolar, 0.47 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">15</span></button>
+              <button type="button" class="tooth" style="--c:#408fd8" data-fdi="14" data-vol="0.45" data-comp="1" aria-label="14, upper right first premolar, 0.45 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">14</span></button>
+              <button type="button" class="tooth" style="--c:#2984d9" data-fdi="13" data-vol="0.65" data-comp="1" aria-label="13, upper right canine, 0.65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">13</span></button>
+              <button type="button" class="tooth" style="--c:#1f7acd" data-fdi="12" data-vol="0.39" data-comp="1" aria-label="12, upper right lateral incisor, 0.39 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">12</span></button>
+              <button type="button" class="tooth" style="--c:#186ebf" data-fdi="11" data-vol="0.54" data-comp="1" aria-label="11, upper right central incisor, 0.54 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">11</span></button>
             </div>
             <span class="arch__mid" aria-hidden="true"></span>
             <div class="arch__quad" aria-label="Upper left quadrant, FDI 2x">
-              <button type="button" class="tooth" style="--c:#18bf8d" data-fdi="21" data-vol="0.58" data-comp="1" aria-label="21, upper left central incisor, 0.58 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">21</span></button>
-              <button type="button" class="tooth" style="--c:#1fcd99" data-fdi="22" data-vol="0.41" data-comp="1" aria-label="22, upper left lateral incisor, 0.41 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">22</span></button>
-              <button type="button" class="tooth" style="--c:#29d9a4" data-fdi="23" data-vol="0.65" data-comp="1" aria-label="23, upper left canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">23</span></button>
-              <button type="button" class="tooth" style="--c:#40d8aa" data-fdi="24" data-vol="0.48" data-comp="1" aria-label="24, upper left first premolar, 0.48 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">24</span></button>
-              <button type="button" class="tooth" style="--c:#56d7b1" data-fdi="25" data-vol="0.51" data-comp="1" aria-label="25, upper left second premolar, 0.51 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">25</span></button>
-              <button type="button" class="tooth" style="--c:#6cd8b7" data-fdi="26" data-vol="0.86" data-comp="1" aria-label="26, upper left first molar, 0.86 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">26</span></button>
-              <button type="button" class="tooth" style="--c:#80d9be" data-fdi="27" data-vol="0.74" data-comp="1" aria-label="27, upper left second molar, 0.74 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">27</span></button>
+              <button type="button" class="tooth" style="--c:#18bf8d" data-fdi="21" data-vol="0.58" data-comp="1" aria-label="21, upper left central incisor, 0.58 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">21</span></button>
+              <button type="button" class="tooth" style="--c:#1fcd99" data-fdi="22" data-vol="0.41" data-comp="1" aria-label="22, upper left lateral incisor, 0.41 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">22</span></button>
+              <button type="button" class="tooth" style="--c:#29d9a4" data-fdi="23" data-vol="0.65" data-comp="1" aria-label="23, upper left canine, 0.65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">23</span></button>
+              <button type="button" class="tooth" style="--c:#40d8aa" data-fdi="24" data-vol="0.48" data-comp="1" aria-label="24, upper left first premolar, 0.48 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">24</span></button>
+              <button type="button" class="tooth" style="--c:#56d7b1" data-fdi="25" data-vol="0.51" data-comp="1" aria-label="25, upper left second premolar, 0.51 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">25</span></button>
+              <button type="button" class="tooth" style="--c:#6cd8b7" data-fdi="26" data-vol="0.86" data-comp="1" aria-label="26, upper left first molar, 0.86 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">26</span></button>
+              <button type="button" class="tooth" style="--c:#80d9be" data-fdi="27" data-vol="0.74" data-comp="1" aria-label="27, upper left second molar, 0.74 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">27</span></button>
               <button type="button" class="tooth tooth--absent" data-fdi="28" data-vol="" data-comp="" aria-label="28, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">28</span></button>
             </div>
           </div>
           <div class="arch__row arch__row--lower">
             <div class="arch__quad" aria-label="Lower right quadrant, FDI 4x">
-              <button type="button" class="tooth" style="--c:#db94b2" data-fdi="48" data-vol="0.90" data-comp="1" aria-label="48, lower right third molar, 0.90 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">48</span></button>
-              <button type="button" class="tooth" style="--c:#d980a6" data-fdi="47" data-vol="1.04" data-comp="1" aria-label="47, lower right second molar, 1.04 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">47</span></button>
+              <button type="button" class="tooth" style="--c:#db94b2" data-fdi="48" data-vol="0.90" data-comp="1" aria-label="48, lower right third molar, 0.90 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">48</span></button>
+              <button type="button" class="tooth" style="--c:#d980a6" data-fdi="47" data-vol="1.04" data-comp="1" aria-label="47, lower right second molar, 1.04 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">47</span></button>
               <button type="button" class="tooth tooth--absent" data-fdi="46" data-vol="" data-comp="" aria-label="46, not found in this scan"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">46</span></button>
-              <button type="button" class="tooth" style="--c:#d7568c" data-fdi="45" data-vol="0.44" data-comp="1" aria-label="45, lower right second premolar, 0.44 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">45</span></button>
-              <button type="button" class="tooth" style="--c:#d84080" data-fdi="44" data-vol="0.38" data-comp="1" aria-label="44, lower right first premolar, 0.38 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">44</span></button>
-              <button type="button" class="tooth" style="--c:#d92973" data-fdi="43" data-vol="0.65" data-comp="1" aria-label="43, lower right canine, 0.65 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">43</span></button>
-              <button type="button" class="tooth" style="--c:#cd1f68" data-fdi="42" data-vol="0.32" data-comp="1" aria-label="42, lower right lateral incisor, 0.32 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">42</span></button>
-              <button type="button" class="tooth" style="--c:#bf185e" data-fdi="41" data-vol="0.28" data-comp="1" aria-label="41, lower right central incisor, 0.28 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">41</span></button>
+              <button type="button" class="tooth" style="--c:#d7568c" data-fdi="45" data-vol="0.44" data-comp="1" aria-label="45, lower right second premolar, 0.44 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">45</span></button>
+              <button type="button" class="tooth" style="--c:#d84080" data-fdi="44" data-vol="0.38" data-comp="1" aria-label="44, lower right first premolar, 0.38 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">44</span></button>
+              <button type="button" class="tooth" style="--c:#d92973" data-fdi="43" data-vol="0.65" data-comp="1" aria-label="43, lower right canine, 0.65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">43</span></button>
+              <button type="button" class="tooth" style="--c:#cd1f68" data-fdi="42" data-vol="0.32" data-comp="1" aria-label="42, lower right lateral incisor, 0.32 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">42</span></button>
+              <button type="button" class="tooth" style="--c:#bf185e" data-fdi="41" data-vol="0.28" data-comp="1" aria-label="41, lower right central incisor, 0.28 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">41</span></button>
             </div>
             <span class="arch__mid" aria-hidden="true"></span>
             <div class="arch__quad" aria-label="Lower left quadrant, FDI 3x">
-              <button type="button" class="tooth" style="--c:#bf8618" data-fdi="31" data-vol="0.28" data-comp="1" aria-label="31, lower left central incisor, 0.28 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">31</span></button>
-              <button type="button" class="tooth" style="--c:#cd921f" data-fdi="32" data-vol="0.31" data-comp="1" aria-label="32, lower left lateral incisor, 0.31 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">32</span></button>
-              <button type="button" class="tooth" style="--c:#d99d29" data-fdi="33" data-vol="0.62" data-comp="1" aria-label="33, lower left canine, 0.62 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">33</span></button>
-              <button type="button" class="tooth" style="--c:#d8a440" data-fdi="34" data-vol="0.37" data-comp="1" aria-label="34, lower left first premolar, 0.37 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">34</span></button>
-              <button type="button" class="tooth" style="--c:#d7ab56" data-fdi="35" data-vol="0.44" data-comp="1" aria-label="35, lower left second premolar, 0.44 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">35</span></button>
-              <button type="button" class="tooth" style="--c:#d8b36c" data-fdi="36" data-vol="1.01" data-comp="1" aria-label="36, lower left first molar, 1.01 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">36</span></button>
-              <button type="button" class="tooth" style="--c:#d9bb80" data-fdi="37" data-vol="0.27" data-comp="1" aria-label="37, lower left second molar, 0.27 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">37</span></button>
-              <button type="button" class="tooth" style="--c:#dbc394" data-fdi="38" data-vol="0.87" data-comp="1" aria-label="38, lower left third molar, 0.87 cm3"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">38</span></button>
+              <button type="button" class="tooth" style="--c:#bf8618" data-fdi="31" data-vol="0.28" data-comp="1" aria-label="31, lower left central incisor, 0.28 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">31</span></button>
+              <button type="button" class="tooth" style="--c:#cd921f" data-fdi="32" data-vol="0.31" data-comp="1" aria-label="32, lower left lateral incisor, 0.31 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">32</span></button>
+              <button type="button" class="tooth" style="--c:#d99d29" data-fdi="33" data-vol="0.62" data-comp="1" aria-label="33, lower left canine, 0.62 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">33</span></button>
+              <button type="button" class="tooth" style="--c:#d8a440" data-fdi="34" data-vol="0.37" data-comp="1" aria-label="34, lower left first premolar, 0.37 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">34</span></button>
+              <button type="button" class="tooth" style="--c:#d7ab56" data-fdi="35" data-vol="0.44" data-comp="1" aria-label="35, lower left second premolar, 0.44 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">35</span></button>
+              <button type="button" class="tooth" style="--c:#d8b36c" data-fdi="36" data-vol="1.01" data-comp="1" aria-label="36, lower left first molar, 1.01 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">36</span></button>
+              <button type="button" class="tooth" style="--c:#d9bb80" data-fdi="37" data-vol="0.27" data-comp="1" aria-label="37, lower left second molar, 0.27 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">37</span></button>
+              <button type="button" class="tooth" style="--c:#dbc394" data-fdi="38" data-vol="0.87" data-comp="1" aria-label="38, lower left third molar, 0.87 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">38</span></button>
             </div>
           </div>
       <!-- ARCH:END -->
@@ -415,13 +418,14 @@
     </p>
 
     <p class="arch__readout reveal" id="archReadout" aria-live="polite">
-      Hover a tooth to see what the segmentation found.
+      Select a tooth to see what the segmentation found.
     </p>
 
-    <p class="arch__foot reveal">Colour runs by quadrant and lightens from the midline
-      backwards, so a mis-numbered tooth reads as a break in the ramp rather than merely
-      a different colour. The third molars are absent because this patient does not have
-      them — the chart says so instead of guessing.</p>
+    <p class="arch__foot reveal">Color runs by quadrant and lightens from the midline
+      backward, so a misnumbered tooth reads as a break in the ramp rather than merely a
+      different color. No label was produced at 18, 28, or 46: 46 is the gap the implant
+      on the home page fills, and 18 and 28 are upper third molars. The chart reports
+      what was found instead of guessing.</p>
   </div>
 </section>
 
@@ -433,36 +437,68 @@
     </div>
     <div class="limits__panel reveal">
       <ul class="limits__list">
-        <li><b>None of these numbers are accuracy.</b> The example cases are public sample
-          data with no ground truth. "29 of 32 teeth" is how many labels the model
-          <em>produced</em>, not how many it got right.</li>
-        <li><b>The checks are consistency, not correctness.</b> Symmetry, laterality and
-          component counts catch gross failure and say nothing about whether tooth 26 is
+        <li><b>Counts are not accuracy.</b> &ldquo;Twenty&#8209;nine of 32 teeth&rdquo; is
+          how many labels a model <em>produced</em> on a scan without ground truth, not how
+          many it got right. Accuracy is the held&#8209;out Dice and HD95 above, measured
+          against expert annotation.</li>
+        <li><b>The checks measure consistency, not correctness.</b> Symmetry, laterality,
+          and component counts catch gross failure and say nothing about whether tooth 26 is
           really tooth 26. There is no ground truth on a patient scan, so nothing here is
           an accuracy figure.</li>
         <li><b>The same scan twice is not bit-identical.</b> Three runs of one file differ by
           <b>108–185 voxels out of 42.8 million</b> — ordinary GPU non-determinism, almost
           all of it single voxels on a soft-tissue boundary. No numbered tooth differs by
           more than one voxel, but do not quote these figures to four significant digits.</li>
-        <li><b>CBCT grey values are not calibrated Hounsfield units.</b> Anything that looks
+        <li><b>CBCT gray values are not calibrated Hounsfield units.</b> Anything that looks
           like a density measurement is not one.</li>
-        <li><b>Nothing is repaired.</b> Quality findings — extra components, a tooth sitting
-          in the wrong arch, asymmetric contralateral volumes — are reported. The exported
+        <li><b>Nothing is repaired.</b> Quality findings, such as extra components, a tooth
+          sitting in the wrong arch, or asymmetric contralateral volumes, are reported. The exported
           label map is exactly what the models produced.</li>
         <li><b>No surgical guide is produced, and that is a position rather than a gap.</b>
-          A drill guide is a patient-contacting device that converts a plan into a hole. The
-          canal outline this product measures against is known to sit up to <b>5.10 mm</b>
-          inside the truth at its worst measured point, and CBCT grey values are not
-          calibrated attenuation. This project publishes the clearance and its error, without providing
-          something that drills.</li>
-        <li><b>The hero on this page measures a web mesh, not your scan.</b> Its millimetre
-          is computed in your browser from a decimated, quantised display mesh — an
-          illustration of the method, honest to about a hundredth of a millimetre against an
-          exact recomputation, and checked at both levels of detail. The product measures on
-          the voxel grid.</li>
-        <li><b>Research preview. Not a medical device, not for diagnostic use.</b> A
-          clinician reads every result.</li>
+          A drill guide is a patient&#8209;contacting device that turns a plan into a hole. The
+          canal outline this project measures against is known to sit up to <b>5.10 mm</b>
+          inside the truth at its worst measured point, and CBCT gray values are not
+          calibrated attenuation. The project publishes the clearance and its error, and
+          stops short of anything that drills.</li>
+        <li><b>The 3D scene on the home page measures a web mesh, not your scan.</b> Its
+          millimeter is computed in your browser from a decimated, quantized display mesh:
+          an illustration of the method, within about a hundredth of a millimeter of an
+          exact recomputation and checked at both levels of detail. It shows 3D
+          Slicer&rsquo;s public CBCT sample as segmented by the earlier two&#8209;model
+          pipeline, not by the trained network. The application measures on the voxel
+          grid.</li>
+        <li><b>Research preview. Not a medical device, not for diagnostic use.</b> Every
+          result requires review by a qualified clinician.</li>
       </ul>
     </div>
+  </div>
+</section>
+
+<section id="credits">
+  <div class="container--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">Credits</p>
+      <h2 class="display">Data, models, and licenses</h2>
+    </div>
+    <ul class="limits__list">
+      <li><b>ToothFairy3</b>: Bolelli F, et al., University of Modena and Reggio Emilia
+        (<a href="https://ditto.ing.unimore.it/toothfairy3/" rel="noopener">ditto.ing.unimore.it/toothfairy3</a>).
+        Released under <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener">CC BY&#8209;NC&#8209;SA 4.0</a>,
+        and the models trained on it here inherit those terms: attribution,
+        non&#8209;commercial use, and share&#8209;alike. The example cases in the app are
+        ToothFairy3 scans; each one is labeled as held out of training or as a training
+        case.</li>
+      <li><b>U&#8209;Mamba2</b>: Wu J, et al., MICCAI 2025
+        (<a href="https://arxiv.org/abs/2509.12069" rel="noopener">arXiv:2509.12069</a>).
+        Built on <b>nnU&#8209;Net</b>: Isensee F, et al., <em>Nature Methods</em>, 2021.</li>
+      <li><b>DentalSegmentator</b>: Dot G, et al., <em>Journal of Dentistry</em>, 2024, and
+        <b>ToothSeg</b>: van Nistelrooij N, et al., <em>IEEE JBHI</em>, 2025. Both
+        CC&nbsp;BY&nbsp;4.0. They produced the segmentation behind the home&#8209;page 3D
+        scene and every case processed before 25 August 2026; the service no longer runs
+        them.</li>
+      <li>The home&#8209;page 3D scene is built from <b>3D Slicer&rsquo;s public CBCT
+        sample data</b>.</li>
+      <li>No upstream author endorses this project.</li>
+    </ul>
   </div>
 </section>

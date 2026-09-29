@@ -1,17 +1,20 @@
 ---
-import type { Media } from './types';
-interface Props { media: Media; compact?: boolean }
-const { media, compact = false } = Astro.props;
+import type { Locale, Media } from './types';
+import { clock, t } from './i18n';
+interface Props { media: Media; locale: Locale; compact?: boolean }
+const { media, locale, compact = false } = Astro.props;
+const s = t(locale).media;
+const at = clock(media.start);
 ---
 <figure class:list={['media', { 'media--compact': compact }]} data-reveal>
   <div class="media__screen" data-video-id={media.videoId} data-video-start={media.start} data-video-title={media.title}>
-    <img src={`https://i.ytimg.com/vi_webp/${media.videoId}/maxresdefault.webp`} alt="Preview of the Balanço Geral Florianópolis report" width="1920" height="1080" loading="lazy" decoding="async" />
+    <img src={`https://i.ytimg.com/vi_webp/${media.videoId}/maxresdefault.webp`} alt={media.alt} width="1920" height="1080" loading="lazy" decoding="async" />
     <div class="media__shade"></div>
-    <div class="media__badge">On Brazilian television <span>PT-BR</span></div>
-    <button class="media__play" aria-label={`Play ${media.title}, starting at ${media.start} seconds`}>
+    <div class="media__badge">{s.badge} <span lang="pt-BR">PT-BR</span></div>
+    <button class="media__play" aria-label={s.play(media.title, at)}>
       <span class="play-icon" aria-hidden="true">▶</span>
-      <span>Watch the demonstration<small>From 0:25 · {media.language}</small></span>
+      <span>{s.watch}<small>{s.from} {at} · {media.language}</small></span>
     </button>
   </div>
-  <figcaption><div><strong>{media.title}</strong><p>{media.caption}</p></div><a href={`https://www.youtube.com/watch?v=${media.videoId}`} target="_blank" rel="noopener noreferrer">Full report <span aria-hidden="true">↗</span></a></figcaption>
+  <figcaption><div><strong>{media.title}</strong><p>{media.caption}</p></div><a href={`https://www.youtube.com/watch?v=${media.videoId}`} target="_blank" rel="noopener noreferrer">{s.full} <span aria-hidden="true">↗</span></a></figcaption>
 </figure>

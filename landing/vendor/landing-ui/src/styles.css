@@ -43,3 +43,8 @@
 [data-level=tight] .readout__chip{background:#fbbf24;border-color:#a16207}
 [data-level=breach] .readout__chip{background:#f87171;border-color:#dc2626}
 .research .depths{padding:0;list-style:none}.research .depths>li{border:1px solid var(--border);border-radius:var(--radius);padding:22px}.research .depths__mm{font-size:1.5rem;font-family:var(--mono)}
+/* Language switcher: three short codes, the current one marked. */
+.lang{display:flex;align-items:center;gap:2px;font-family:var(--mono);font-size:.68rem;letter-spacing:.06em}.lang a{display:inline-flex;align-items:center;justify-content:center;min-width:32px;min-height:32px;padding:0 6px;border-radius:3px;color:var(--muted);transition:color .2s,background .2s}.lang a:hover{color:var(--text)}.lang a[aria-current]{color:var(--text);background:var(--surface-2)}
+@media(max-width:999px){.lang{padding-block:8px;gap:8px}.lang a{min-width:44px;min-height:44px;font-size:.8rem}}
+/* Legal pages reuse the engineering document styles. */
+.legal-page{max-width:880px;padding-block:56px 72px}.research.legal h1{font-size:clamp(2.4rem,4.4vw,3.6rem);margin-bottom:12px}.research.legal h2{font-size:1.35rem;margin-block:36px 10px;letter-spacing:-.02em}.legal__meta{font-family:var(--mono);font-size:.75rem!important}.legal__note,.legal__translated{padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-size:.86rem!important}.legal__translated{margin-bottom:28px}.research.legal .button{text-decoration:none;color:var(--accent-ink)}

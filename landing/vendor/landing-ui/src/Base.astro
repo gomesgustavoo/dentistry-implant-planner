@@ -1,40 +1,47 @@
 ---
 import type { Project } from './types';
+import { LOCALES, LOCALE_META, localePath, t } from './i18n';
 import './styles.css';
-interface Props { project: Project; engineering?: boolean }
-const { project: p, engineering = false } = Astro.props;
-const title = engineering ? `${p.name} — Engineering notes · Gustavo Formento` : p.title;
-const description = engineering ? p.engineeringIntro : p.description;
-const canonical = new URL(engineering ? '/engineering/' : '/', p.url).href;
+interface Props { project: Project; path?: string; title?: string; description?: string; noindex?: boolean }
+const { project: p, path = '/', title = p.title, description = p.description, noindex = false } = Astro.props;
+const s = t(p.locale);
+const canonical = new URL(localePath(p.locale, path), p.url).href;
+const alternates = LOCALES.map(locale => ({ locale, href: new URL(localePath(locale, path), p.url).href }));
 const schema = {
   '@context': 'https://schema.org', '@type': 'SoftwareApplication',
-  name: p.name, description, url: p.url,
+  name: p.name, description, url: p.url, inLanguage: LOCALE_META[p.locale].html,
   applicationCategory: 'EducationalApplication',
   operatingSystem: p.id === 'dicomsegvr' ? 'Web, Meta Quest' : 'Web',
   author: { '@type': 'Person', name: 'Gustavo Formento', sameAs: ['https://github.com/gomesgustavoo', 'https://www.linkedin.com/in/gustavoogomesss/'] },
   offers: p.plans.map(plan => ({ '@type': 'Offer', name: plan.name, price: plan.price, priceCurrency: 'USD', url: new URL(plan.action.href, p.url).href }))
 };
+const runtime = JSON.stringify(s.runtime).replace(/</g, '\\u003c');
 ---
 <!doctype html>
-<html lang="en" class={`theme-${p.theme}`}>
+<html lang={LOCALE_META[p.locale].html} class={`theme-${p.theme}`}>
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>{title}</title>
     <meta name="description" content={description} />
+    {noindex && <meta name="robots" content="noindex" />}
     <meta name="theme-color" content={p.theme === 'dark' ? '#0c0b10' : '#fbfbfd'} />
     <link rel="canonical" href={canonical} />
+    {alternates.map(a => <link rel="alternate" hreflang={LOCALE_META[a.locale].html} href={a.href} />)}
+    <link rel="alternate" hreflang="x-default" href={alternates[0].href} />
     <link rel="icon" href={p.favicon} type="image/png" />
     <link rel="apple-touch-icon" href={p.touchIcon} />
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content={p.name} />
+    <meta property="og:locale" content={LOCALE_META[p.locale].og} />
+    {LOCALES.filter(l => l !== p.locale).map(l => <meta property="og:locale:alternate" content={LOCALE_META[l].og} />)}
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
     <meta property="og:url" content={canonical} />
     <meta property="og:image" content={new URL(p.socialImage, p.url).href} />
     <meta property="og:image:width" content="1200" />
     <meta property="og:image:height" content="630" />
-    <meta property="og:image:alt" content={`${p.name}, a medical imaging project by Gustavo Formento`} />
+    <meta property="og:image:alt" content={p.socialImageAlt} />
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content={title} />
     <meta name="twitter:description" content={description} />
@@ -42,10 +49,11 @@ const schema = {
     <link rel="preload" href="/assets/fonts/Geist-latin.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/assets/fonts/Archivo-latin.woff2" as="font" type="font/woff2" crossorigin />
     <script type="application/ld+json" set:html={JSON.stringify(schema).replace(/</g, '\\u003c')} />
+    <script type="application/json" id="ui-strings" set:html={runtime} />
     <noscript><style>.filmstage{height:auto!important}.stage-pin{position:relative!important;top:auto!important;height:auto!important;min-height:0!important}.scene{min-height:340px!important}.filmstage__canvas{display:none!important}.filmstage__poster{opacity:1!important}.hero__live{display:none!important}.hero__fallback{display:block!important}.scene-progress{display:none!important}.nav{height:auto!important;position:relative!important}.nav__inner{height:auto!important;min-height:64px;flex-wrap:wrap;padding-block:16px}.nav__toggle{display:none!important}.nav__menu{display:flex!important;position:static!important;flex-wrap:wrap!important;padding:0!important;border:0!important}.media__play{display:none!important}</style></noscript>
   </head>
   <body data-project={p.id}>
-    <a class="skip-link" href="#main">Skip to content</a>
+    <a class="skip-link" href="#main">{s.skip}</a>
     <slot />
     <script>import './interactions';</script>
   </body>

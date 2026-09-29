@@ -5,8 +5,11 @@ import Nav from './Nav.astro';
 import Hero from './Hero.astro';
 import Media from './Media.astro';
 import Footer from './Footer.astro';
+import { localePath, t } from './i18n';
 interface Props { project: Project }
 const { project: p } = Astro.props;
+const s = t(p.locale).landing;
+const v = p.demo.video;
 ---
 <Base project={p}>
   <Nav project={p} />
@@ -14,29 +17,29 @@ const { project: p } = Astro.props;
     <Hero project={p} />
     <section class="section section--demo" id="demo">
       <div class="container">
-        <div class="section-head" data-reveal><p class="eyebrow">01 / In practice</p><div><h2>{p.demo.title}</h2><p>{p.demo.description}</p></div></div>
-        {p.id === 'dicomsegvr' ? <Media media={p.media} /> : <figure class="app-demo" data-reveal><div class="app-demo__bar"><span class="status-dot"></span><span>ImplantPlan / A real case, three seating depths</span><span>Research preview</span></div><video controls playsinline preload="none" poster="/assets/shots/seeded-clear.jpg" aria-label="ImplantPlan demonstration of clear, tight and breach measurements"><source src="/assets/verdict-loop.mp4" type="video/mp4" /><a href="/assets/verdict-loop.mp4">Watch the demonstration</a></video><figcaption>Change the implant position. The measured clearance and its error-adjusted grade update together.</figcaption></figure>}
+        <div class="section-head" data-reveal><p class="eyebrow">{s.practice}</p><div><h2>{p.demo.title}</h2><p>{p.demo.description}</p></div></div>
+        {v ? <figure class="app-demo" data-reveal><div class="app-demo__bar"><span class="status-dot"></span><span>{v.bar}</span><span>{v.badge}</span></div><video controls playsinline preload="none" poster={v.poster} aria-label={v.label}><source src={v.src} type="video/mp4" /><a href={v.src}>{s.watch}</a></video><figcaption>{v.caption}</figcaption></figure> : <Media media={p.media} locale={p.locale} />}
         <div class="steps" id="how-it-works">{p.demo.steps.map((step, i) => <article data-reveal><span class="step-index">0{i + 1}</span><h3>{step.title}</h3><p>{step.description}</p></article>)}</div>
-        {p.id === 'dicomsegvr' && <div class="section-end"><p>Continue the experience on your headset.</p><a class="text-link" href="/get-app.html">Get the Meta Quest app ↗</a></div>}
+        {p.getApp && <div class="section-end"><p>{s.headset}</p><a class="text-link" href={localePath(p.locale, p.getApp.href)}>{p.getApp.label} ↗</a></div>}
       </div>
     </section>
     <section class="section section--tinted" id="engineering">
       <div class="container">
-        <span class="anchor-alias" id="problem"></span><span class="anchor-alias" id="engine"></span><span class="anchor-alias" id="serving"></span><span class="anchor-alias" id="budget"></span><span class="anchor-alias" id="planning"></span><span class="anchor-alias" id="depths"></span><span class="anchor-alias" id="arch"></span><span class="anchor-alias" id="limits"></span>
-        <div class="section-head" data-reveal><p class="eyebrow">02 / Behind the interface</p><div><h2>A working system.<br /><span class="muted">Every layer connected.</span></h2><p>I built the experience from data processing to the interface. Here are the engineering decisions behind it.</p></div></div>
-        <div class="highlight-grid">{p.highlights.map((h, i) => <article class="highlight" data-reveal><div class="highlight__top"><span class="mono">{h.category}</span><span class="highlight__number">0{i + 1}</span></div><h3>{h.title}</h3><p>{h.description}</p><ul class="tags" aria-label="Technologies">{h.technologies.map(t => <li>{t}</li>)}</ul></article>)}</div>
-        <div class="section-end"><p>Architecture, implementation details, and what I learned.</p><a class="text-link" href="/engineering/">Read the engineering notes <span aria-hidden="true">↗</span></a><a class="text-link" href={p.repo}>View source on GitHub ↗</a></div>
+        <span class="anchor-alias" id="problem"></span><span class="anchor-alias" id="engine"></span><span class="anchor-alias" id="serving"></span><span class="anchor-alias" id="budget"></span><span class="anchor-alias" id="planning"></span><span class="anchor-alias" id="depths"></span><span class="anchor-alias" id="arch"></span>
+        <div class="section-head" data-reveal><p class="eyebrow">{s.behind}</p><div><h2>{s.systemTitle[0]}<br /><span class="muted">{s.systemTitle[1]}</span></h2><p>{s.systemText}</p></div></div>
+        <div class="highlight-grid">{p.highlights.map((h, i) => <article class="highlight" data-reveal><div class="highlight__top"><span class="mono">{h.category}</span><span class="highlight__number">0{i + 1}</span></div><h3>{h.title}</h3><p>{h.description}</p><ul class="tags" aria-label={s.technologies}>{h.technologies.map(tech => <li>{tech}</li>)}</ul></article>)}</div>
+        <div class="section-end"><p>{s.notesLead}</p><a class="text-link" href={localePath(p.locale, '/engineering/')}>{s.notes} <span aria-hidden="true">↗</span></a>{p.repo && <a class="text-link" href={p.repo}>{s.source} ↗</a>}</div>
       </div>
     </section>
     <section class="section" id="pricing">
       <div class="container">
-        <div class="section-head" data-reveal><p class="eyebrow">03 / Try it yourself</p><div><h2>Explore with your own scan.</h2><p>{p.trial} All prices in USD, billed monthly.</p></div></div>
-        <div class="plans">{p.plans.map((plan, i) => <article class:list={['plan', { 'plan--accent': i === 0 }]} data-reveal><div class="plan__top"><h3>{plan.name}</h3>{i === 0 && <span class="plan__badge">Start here</span>}</div><p class="plan__price">${plan.price}<span>/ month</span></p><p class="plan__allowance">{plan.allowance}</p><ul>{plan.features.map(f => <li>{f}</li>)}</ul><a class:list={['button', 'button--full', { 'button--secondary': i !== 0 }]} href={plan.action.href}>{plan.action.label}<span aria-hidden="true">↗</span></a><p class="plan__note">{plan.note}</p></article>)}</div>
+        <div class="section-head" data-reveal><p class="eyebrow">{s.tryIt}</p><div><h2>{s.tryTitle}</h2><p>{p.trial} {s.usd}</p></div></div>
+        <div class="plans">{p.plans.map((plan, i) => <article class:list={['plan', { 'plan--accent': i === 0 }]} data-reveal><div class="plan__top"><h3>{plan.name}</h3>{i === 0 && <span class="plan__badge">{s.start}</span>}</div><p class="plan__price">${plan.price}<span>{s.month}</span></p><p class="plan__allowance">{plan.allowance}</p><ul>{plan.features.map(f => <li>{f}</li>)}</ul><a class:list={['button', 'button--full', { 'button--secondary': i !== 0 }]} href={plan.action.href}>{plan.action.label}<span aria-hidden="true">↗</span></a><p class="plan__note">{plan.note}</p></article>)}</div>
         <p class="pricing-note">{p.pricingNote}</p>
       </div>
     </section>
-    <section class="section section--faq" id="faq"><div class="container faq-layout"><div data-reveal><p class="eyebrow">The essentials</p><h2>Before you<br />get started.</h2><a class="text-link" href="/engineering/">Go deeper into the project ↗</a></div><div class="faq">{p.faq.map(f => <details><summary>{f.question}<span aria-hidden="true">+</span></summary><p>{f.answer}</p></details>)}</div></div></section>
-    <section class="section section--tinted" id="creator"><div class="container"><div class="creator" data-reveal><div><p class="eyebrow">04 / The person behind the project</p><h2>Built by<br />Gustavo Formento.</h2></div><div><p class="creator__intro">I turn complex imaging problems into software people can explore.</p><p>{p.id === 'dicomsegvr' ? 'DicomSegVR is my personal exploration of medical imaging, AI segmentation, and spatial interfaces. I connect the browser experience to the processing pipeline and the VR viewer.' : 'ImplantPlan brings together my work in model training, medical-image visualization, and interaction design. It is a research project built to make the reasoning behind a measurement visible.'}</p><div class="creator__links"><a class="button" href="https://www.linkedin.com/in/gustavoogomesss/">Connect on LinkedIn ↗</a><a class="text-link" href="https://github.com/gomesgustavoo">GitHub ↗</a></div></div></div>{p.id === 'implantplan' && <div class="related-media"><div><p class="eyebrow">A related project</p><h3>From the browser<br />to virtual reality.</h3><p>My DicomSegVR project explores another way to interact with medical images.</p><a class="text-link" href={p.sibling.href}>Explore DicomSegVR ↗</a></div><Media media={p.media} compact /></div>}</div></section>
+    <section class="section section--faq" id="faq"><div class="container faq-layout"><div data-reveal><p class="eyebrow">{s.questions}</p><h2>{s.questionsTitle[0]}<br />{s.questionsTitle[1]}</h2><a class="text-link" href={localePath(p.locale, '/engineering/')}>{s.deeper} ↗</a></div><div class="faq">{p.faq.map(f => <details><summary>{f.question}<span aria-hidden="true">+</span></summary><p set:html={f.answer} /></details>)}</div></div></section>
+    <section class="section section--tinted" id="creator"><div class="container"><div class="creator" data-reveal><div><p class="eyebrow">{s.person}</p><h2>{s.builtBy[0]}<br />{s.builtBy[1]}</h2></div><div><p class="creator__intro">{s.intro}</p><p>{p.creatorBio}</p><div class="creator__links"><a class="button" href="https://www.linkedin.com/in/gustavoogomesss/">{s.linkedin} ↗</a><a class="text-link" href="https://github.com/gomesgustavoo">{s.github} ↗</a></div></div></div>{p.related && <div class="related-media"><div><p class="eyebrow">{p.related.eyebrow}</p><h3>{p.related.title[0]}<br />{p.related.title[1]}</h3><p>{p.related.text}</p><a class="text-link" href={p.sibling.href}>{s.explore(p.sibling.label)} ↗</a></div><Media media={p.media} locale={p.locale} compact /></div>}</div></section>
   </main>
   <Footer project={p} />
 </Base>

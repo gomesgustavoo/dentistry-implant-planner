@@ -1,0 +1,21 @@
+---
+import type { Project } from './types';
+import Base from './Base.astro';
+import Nav from './Nav.astro';
+import Footer from './Footer.astro';
+import { localePath, t } from './i18n';
+interface Props { project: Project; path: string; title: string; description: string; content: string }
+const { project: p, path, title, description, content } = Astro.props;
+const s = t(p.locale).legal;
+---
+<Base project={p} path={path} title={`${title} — ${p.name}`} description={description} noindex>
+  <Nav project={p} path={path} />
+  <main id="main" class="engineering-page legal-page container">
+    <div class="research legal">
+      {p.locale !== 'en' && <p class="legal__translated">{s.translated} <a href={path}>{s.english}</a></p>}
+      <Fragment set:html={content} />
+      <p><a class="text-link" href={localePath(p.locale, '/')}>{s.back}</a></p>
+    </div>
+  </main>
+  <Footer project={p} />
+</Base>

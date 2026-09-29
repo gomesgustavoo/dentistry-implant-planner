@@ -1,0 +1,10 @@
+---
+import Landing from '@dicomsegvr/landing-ui/Landing.astro';
+import { localeStaticPaths } from '@dicomsegvr/landing-ui/i18n';
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import { projects } from '../../content';
+export const getStaticPaths = localeStaticPaths;
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Landing project={projects[locale]} />

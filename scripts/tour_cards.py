@@ -76,7 +76,7 @@ def end_card(w: int, h: int, out: Path) -> Path:
 
     y = int(h * 0.36)
     y += _centre(d, y, "dentistry.dicomsegvr.com", big, INK, w) + int(h * 0.045)
-    y += _centre(d, y, "Gustavo Formento · contact@example.org",
+    y += _centre(d, y, "Gustavo Formento · github.com/gomesgustavoo",
                  mid, MUTED, w) + int(h * 0.055)
     # The disclaimer is on the end card and not only in the footer, because a video is the
     # one artifact that travels away from the site it was recorded on.

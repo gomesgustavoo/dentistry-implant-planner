@@ -169,7 +169,28 @@ let structures = {};
 const clamp01 = (x) => (x < 0 ? 0 : x > 1 ? 1 : x);
 const remap = (x, a, b) => clamp01((x - a) / (b - a));
 const easeInOutCubic = (t) => (t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2);
-const fmt = (x) => (x == null || !isFinite(x) ? "—" : x.toFixed(2));
+// The page's own language. `Readout.astro` renders these strings next to the canvas;
+// without them (a bare harness, an old page) everything reads in English, as before.
+const L = (() => {
+  const en = {
+    locale: "en", clear: "CLEAR", tight: "TIGHT", breach: "BREACH", no_verdict: "NOT GRADED",
+    spoken: { clear: "clear", tight: "tight", breach: "breach", no_verdict: "not graded" },
+    noCanal: "no canal at this site",
+    sub: "{measured} mm measured − {p95} mm error budget = {graded} mm against a {margin} mm margin",
+    depth: "Platform {depth} mm below the crest",
+    live: "Clearance to the inferior alveolar canal: {level}, {mm} millimeters.",
+    fixture: "Titanium implant · {d} × {l} mm", envelope: "Safety envelope · {r} mm",
+    envelopeMeta: "{margin} mm margin + {p95} mm p95", structure: "Structure", names: {},
+  };
+  try {
+    const el = typeof document !== "undefined" && document.getElementById("hero-strings");
+    return el ? { ...en, ...JSON.parse(el.textContent) } : en;
+  } catch { return en; }
+})();
+const fill = (tpl, v) => tpl.replace(/\{(\w+)\}/g, (_, k) => (v[k] == null ? "" : v[k]));
+const num = (x, digits = 2) => (x == null || !isFinite(x) ? "—"
+  : x.toLocaleString(L.locale, { minimumFractionDigits: digits, maximumFractionDigits: digits }));
+const fmt = (x) => num(x, 2);
 
 function progress() {
   const rect = stage.getBoundingClientRect();
@@ -213,8 +234,10 @@ function structureId(o) {
 
 function prettyLabel(id) {
   const s = structures[id];
-  if (!s) return id || "Structure";
-  return s.fdi ? s.fdi + " · " + s.name.toLowerCase() : s.name;
+  if (!s) return (L.names && L.names[id]) || id || L.structure;
+  // The manifest's tooth names already end in "(45)"; the FDI number leads instead.
+  const name = (L.names && L.names[id]) || s.name.replace(/\s*\(\d+\)$/, "");
+  return s.fdi ? s.fdi + " · " + name : name;
 }
 
 // ---------------------------------------------------------------- geometry helpers
@@ -591,8 +614,7 @@ function buildImplant(root) {
   const screw = G.screwLocal(LENGTH_MM, DIAMETER_MM, nAz);
   screwMesh = new THREE.Mesh(toBufferGeometry(screw), titaniumMaterial());
   screwMesh.renderOrder = 1;
-  screwMesh.userData.label = "Titanium fixture · " +
-    DIAMETER_MM.toFixed(1) + " × " + LENGTH_MM.toFixed(0) + " mm";
+  screwMesh.userData.label = fill(L.fixture, { d: num(DIAMETER_MM, 1), l: num(LENGTH_MM, 0) });
   screwMesh.userData.swatch = "rgb(" + G.BODY_RGB.join(",") + ")";
   screwMesh.userData.meta = "FDI " + SITE_FDI;
   implantGroup.add(screwMesh);
@@ -603,10 +625,10 @@ function buildImplant(root) {
   shellMat = shellMaterial();
   shellMesh = new THREE.Mesh(toBufferGeometry(shell), shellMat);
   shellMesh.renderOrder = 14;
-  shellMesh.userData.label = "Safety envelope · " + shellR.toFixed(2) + " mm";
+  shellMesh.userData.label = fill(L.envelope, { r: num(shellR) });
   shellMesh.userData.swatch = "#34d399";
-  shellMesh.userData.meta =
-    S.SAFETY_MARGIN_MM.toFixed(2) + " margin + " + S.MODEL_INWARD_P95_MM.toFixed(2) + " p95";
+  shellMesh.userData.meta = fill(L.envelopeMeta,
+    { margin: num(S.SAFETY_MARGIN_MM), p95: num(S.MODEL_INWARD_P95_MM) });
   implantGroup.add(shellMesh);
 
   // The screw's local frame is +z apical with the platform at z = 0. Point local +z along
@@ -636,7 +658,7 @@ function prepareModel(root, assets) {
     const s = structures[id];
     o.userData.label = prettyLabel(id);
     o.userData.swatch = (s && s.colour) || "#ffffff";
-    o.userData.meta = s && s.volume_cm3 != null ? s.volume_cm3.toFixed(2) + " cm³" : "";
+    o.userData.meta = s && s.volume_cm3 != null ? num(s.volume_cm3) + " cm³" : "";
 
     if (id === "canal") {
       // OPAQUE. A translucent canal inside translucent bone reads as a stain; solid, it
@@ -804,27 +826,28 @@ function applyVerdict(g) {
 
   if (!readout) return;
   readout.dataset.level = g.level;
-  readout.dataset.mm = fmt(g.mm);
+  readout.dataset.mm = g.mm == null ? "" : g.mm.toFixed(2);
   readout.dataset.depth = g.depth_mm.toFixed(3);
   const chip = readout.querySelector("[data-hero-level]");
   const val = readout.querySelector("[data-hero-mm]");
   const dep = readout.querySelector("[data-hero-depth]");
   const sub = readout.querySelector("[data-hero-sub]");
   // The verdict is a WORD, never colour alone — the app's own rule.
-  if (chip) chip.textContent = g.level === "no_verdict" ? "NOT GRADED" : g.level.toUpperCase();
+  if (chip) chip.textContent = L[g.level] || g.level.toUpperCase();
   if (val) val.textContent = g.mm == null ? "—" : fmt(g.mm);
-  if (dep) dep.textContent = g.depth_mm.toFixed(1);
+  if (dep) dep.textContent = num(g.depth_mm, 1);
+  const depLine = readout.querySelector("[data-hero-depth-line]");
+  if (depLine && !dep) depLine.textContent = fill(L.depth, { depth: num(g.depth_mm, 1) });
   if (sub) {
     sub.textContent = g.mm == null
-      ? "no canal at this site"
-      : fmt(g.mm) + " measured − " + S.MODEL_INWARD_P95_MM.toFixed(2) + " model error = " +
-        fmt(g.graded) + " against a " + S.SAFETY_MARGIN_MM.toFixed(2) + " mm margin";
+      ? L.noCanal
+      : fill(L.sub, { measured: fmt(g.mm), p95: num(S.MODEL_INWARD_P95_MM),
+                      graded: fmt(g.graded), margin: num(S.SAFETY_MARGIN_MM) });
   }
   // Announce the LEVEL only. Putting aria-live on the digits spams a screen reader sixty
   // times a second; the level changes three times in the whole scroll.
   if (liveEl && g.level !== lastLevel) {
-    liveEl.textContent = "Clearance to the nerve canal: " +
-      (g.level === "no_verdict" ? "not graded" : g.level) + ", " + fmt(g.mm) + " millimetres.";
+    liveEl.textContent = fill(L.live, { level: (L.spoken && L.spoken[g.level]) || g.level, mm: fmt(g.mm) });
   }
   lastLevel = g.level;
 }
@@ -884,7 +907,7 @@ function setHover(mesh) {
   if (hovered) {
     setGlow(hovered, true);
     if (tipEl) {
-      tipLabel.textContent = hovered.userData.label || "Structure";
+      tipLabel.textContent = hovered.userData.label || L.structure;
       tipMeta.textContent = hovered.userData.meta || "";
       tipDot.style.background = hovered.userData.swatch || "#fff";
       tipEl.classList.add("is-visible");

@@ -1,0 +1,11 @@
+---
+import Legal from '@dicomsegvr/landing-ui/Legal.astro';
+import { localeStaticPaths } from '@dicomsegvr/landing-ui/i18n';
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import { projects, legal } from '../../../content';
+export const getStaticPaths = localeStaticPaths;
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const page = legal['terms'][locale];
+---
+<Legal project={projects[locale]} path="/terms/" title={page.title} description={page.description} content={page.html} />

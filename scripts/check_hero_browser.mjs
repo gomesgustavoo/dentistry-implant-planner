@@ -26,6 +26,21 @@ import { fileURLToPath } from 'node:url';
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 // Validate what nginx serves, not the Astro source tree.
 const LANDING = path.resolve(process.env.LANDING_DIST || path.join(ROOT, 'landing/dist'));
+// HERO_LOCALE=es|pt-br checks the translated page: same geometry, its own words and
+// decimal comma.
+const LOCALE = process.env.HERO_LOCALE || 'en';
+const PAGE = LOCALE === 'en' ? '/index.html' : `/${LOCALE}/index.html`;
+const CHIPS = {
+  en: { clear: 'CLEAR', tight: 'TIGHT', breach: 'BREACH', no_verdict: 'NOT GRADED' },
+  es: { clear: 'SEGURO', tight: 'AJUSTADO', breach: 'INVADE', no_verdict: 'SIN GRADO' },
+  'pt-br': { clear: 'SEGURO', tight: 'JUSTO', breach: 'INVADE', no_verdict: 'SEM GRAU' },
+}[LOCALE];
+const DEC = LOCALE === 'en' ? '.' : ',';
+const SUB = {
+  en: /mm measured − 0\.46 mm error budget = .* against a 2\.00 mm margin/,
+  es: /mm medidos − 0,46 mm de presupuesto de error = .* frente a un margen de 2,00 mm/,
+  'pt-br': /mm medidos − 0,46 mm de orçamento de erro = .* contra uma margem de 2,00 mm/,
+}[LOCALE];
 const PORT_DEBUG = Number(process.env.HERO_DEBUG_PORT || 9337);
 const SHOT = process.argv.includes('--shot')
   ? process.argv[process.argv.indexOf('--shot') + 1] : null;
@@ -126,7 +141,7 @@ try {
   });
   await S('Runtime.enable');
   await S('Page.enable');
-  await S('Page.navigate', { url: `http://127.0.0.1:${port}/index.html` });
+  await S('Page.navigate', { url: `http://127.0.0.1:${port}${PAGE}` });
 
   const evalJs = async (expr) => {
     const r = await S('Runtime.evaluate', { expression: expr, awaitPromise: true, returnByValue: true });
@@ -192,12 +207,12 @@ try {
   })()`);
 
   const domAgrees = sweep.every((s) =>
-    s.domMm === s.clearance.toFixed(2) &&
-    s.domChip === (s.level === 'no_verdict' ? 'NOT GRADED' : s.level.toUpperCase()) &&
+    s.domMm === s.clearance.toFixed(2).replace('.', DEC) &&
+    s.domChip === CHIPS[s.level] &&
     s.domLevel === s.level);
   check('the readout on screen is the number the geometry produced', domAgrees,
     domAgrees ? `${sweep[0].domMm} mm -> ${sweep[sweep.length - 1].domMm} mm` :
-      JSON.stringify(sweep.find((s) => s.domMm !== s.clearance.toFixed(2))));
+      JSON.stringify(sweep.find((s) => s.domMm !== s.clearance.toFixed(2).replace('.', DEC))));
 
   const levels = [...new Set(sweep.map((s) => s.level))];
   const order = sweep.map((s) => s.level).filter((l, i, a) => l !== a[i - 1]);
@@ -210,7 +225,7 @@ try {
     [...new Set(sweep.map((s) => s.shell))].join(' '));
 
   check('the arithmetic is spelled out on screen',
-    /measured − 0\.46 model error = .* against a 2\.00 mm margin/.test(sweep[0].domSub),
+    SUB.test(sweep[0].domSub),
     sweep[0].domSub);
 
   // The static fallback must not be showing while the live one is.

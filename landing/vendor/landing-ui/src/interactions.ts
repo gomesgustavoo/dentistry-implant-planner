@@ -1,4 +1,9 @@
 const reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+// Rendered by Base.astro in the page's own language.
+const T: Record<string, string> = (() => {
+  try { return JSON.parse(document.getElementById('ui-strings')?.textContent || '{}'); } catch { return {}; }
+})();
+const say = (key: string, fallback: string) => T[key] || fallback;
 const nav = document.querySelector<HTMLElement>('.nav');
 const toggle = document.querySelector<HTMLButtonElement>('#navToggle');
 const menu = document.querySelector<HTMLElement>('#navMenu');
@@ -7,7 +12,7 @@ let menuOpen = false;
 function setMenu(open: boolean, restoreFocus = false) {
   menuOpen = open;
   toggle?.setAttribute('aria-expanded', String(open));
-  toggle?.setAttribute('aria-label', open ? 'Close menu' : 'Open menu');
+  toggle?.setAttribute('aria-label', open ? say('closeMenu', 'Close menu') : say('openMenu', 'Open menu'));
   menu?.classList.toggle('is-open', open);
   if (scrim) scrim.hidden = !open;
   // Keep the sticky header in its scroll container; don't lock <html> overflow.
@@ -117,7 +122,7 @@ document.querySelectorAll<HTMLElement>('[data-video-id]').forEach(screen => {
     const url = new URL(`https://www.youtube-nocookie.com/embed/${screen.dataset.videoId}`);
     url.search = new URLSearchParams({ start: screen.dataset.videoStart || '0', autoplay: '1', playsinline: '1', rel: '0' }).toString();
     iframe.src = url.href;
-    iframe.title = screen.dataset.videoTitle || 'Video demonstration';
+    iframe.title = screen.dataset.videoTitle || say('video', 'Video demonstration');
     iframe.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
     iframe.allowFullscreen = true;
     iframe.referrerPolicy = 'strict-origin-when-cross-origin';
@@ -133,12 +138,16 @@ document.querySelectorAll<HTMLDetailsElement>('.faq details').forEach(item => it
 const chart = document.querySelector('#archChart');
 const output = document.querySelector<HTMLElement>('#archReadout');
 let latched: HTMLButtonElement | null = null;
-const idle = 'Select a tooth to inspect the segmentation output.';
+const idle = say('toothIdle', 'Select a tooth to see what the segmentation found.');
 function describeTooth(button: HTMLButtonElement | null) {
   if (!output) return;
   if (!button) { output.textContent = idle; return; }
   const d = button.dataset;
-  output.textContent = button.classList.contains('tooth--absent') ? `FDI ${d.fdi} · No label produced here` : `FDI ${d.fdi} · ${d.vol || '—'} cm³ · ${d.comp || '—'} connected components`;
+  if (button.classList.contains('tooth--absent')) { output.textContent = `FDI ${d.fdi} · ${say('toothAbsent', 'No label produced here')}`; return; }
+  const n = Number(d.comp);
+  const unit = n === 1 ? say('component', 'connected component') : say('components', 'connected components');
+  const vol = d.vol ? Number(d.vol).toLocaleString(document.documentElement.lang, { minimumFractionDigits: 2, maximumFractionDigits: 2 }) : '—';
+  output.textContent = `FDI ${d.fdi} · ${vol} cm³ · ${d.comp || '—'} ${unit}`;
 }
 chart?.addEventListener('click', event => {
   const button = (event.target as Element).closest<HTMLButtonElement>('.tooth');

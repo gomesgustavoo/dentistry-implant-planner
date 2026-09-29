@@ -1,0 +1,504 @@
+<section id="engine">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Entrenado aquí</p>
+      <h2 class="display">Los modelos que entrené, y la evidencia</h2>
+      <p class="section-sub">El catálogo incluye siete modelos. Cinco son de terceros
+        y se identifican como tales, con lo que se ha medido que hace cada uno y si está instalado.
+        <b>Los otros dos los entrené yo</b>: la red que segmenta las 47 estructuras y una
+        segunda, diseñada para los tres conductos que un implante anterior debe salvar.</p>
+    </div>
+
+    <div class="grid grid--2 reveal">
+      <div class="panel">
+        <span class="card__kicker">La red base</span>
+        <h3 class="feature__h">nnU&#8209;Net con un cuello de botella U&#8209;Mamba2</h3>
+        <p class="engine__lede">Ajustada (fine&#8209;tuning) sobre ToothFairy3 con <b>512 casos</b> durante
+          <b>1000 épocas</b>, y evaluada en un <b>conjunto reservado de 20&nbsp;casos que nunca vio</b>,
+          con el mismo pipeline que sirve las predicciones.</p>
+        <ul class="metrics">
+          <li><span class="metrics__k">Dice del reto</span><span class="metrics__v num">0,8965</span></li>
+          <li><span class="metrics__k">Dice estricto</span><span class="metrics__v num">0,8292</span></li>
+          <li><span class="metrics__k">HD95</span><span class="metrics__v num">1,235 mm</span></li>
+          <li><span class="metrics__k">NSD</span><span class="metrics__v num">0,9736</span></li>
+          <li><span class="metrics__k">Conducto dentario inferior, Dice (izquierdo / derecho)</span><span class="metrics__v num">0,9008 / 0,9009</span></li>
+        </ul>
+        <p class="metrics__foot">Por encima de la entrada publicada de SegResNet (0,87) y a
+          <b>0,012</b> de los ganadores del reto ToothFairy3 (0,908), conseguido con una
+          <b>tarjeta de 12 GB y 0,36&times; su volumen de parche</b>.</p>
+      </div>
+
+      <div class="grid">
+        <article class="card">
+          <span class="card__kicker">El entrenamiento</span>
+          <h3>Limpio durante las 1000 épocas</h3>
+          <p>La pérdida de validación siguió a la de entrenamiento en todo momento: <b>sin sobreajuste</b> con
+            512 casos, y la media móvil del pseudo&#8209;Dice <b>seguía subiendo en la
+            época 1000</b>. No se había saturado, y los ganadores entrenaron 1500.
+            <code>checkpoint_final</code> superó a <code>checkpoint_best</code> en todas las métricas
+            (Dice del reto de 0,8887 frente a 0,8849, con el filtro de componentes anterior),
+            que es lo que cabe esperar de un programa poly de tasa de aprendizaje recorrido hasta el final.</p>
+        </article>
+        <article class="card">
+          <span class="card__kicker">Una segunda red, con motivo</span>
+          <h3>La red especialista en conductos anteriores</h3>
+          <p>El conducto dentario inferior (canal alveolar inferior) termina en el agujero mentoniano,
+            así que un implante por delante de él debe salvar <em>otros</em> tres conductos. Una red
+            entrenada solo con la región anterior de la mandíbula gana <b>+0,0505 / +0,0874 / +0,0172</b> de Dice en los
+            conductos incisivo izquierdo, incisivo derecho y lingual, lleva su volumen predicho
+            del <b>155–205&nbsp;%</b> de la anotación de referencia al <b>99–111&nbsp;%</b>, y supera al
+            modelo base en <b>40 casos externos</b> de PMCanalSeg con
+            <span class="num">p&nbsp;=&nbsp;7,6&nbsp;&times;&nbsp;10<sup>&minus;4</sup></span>.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="grid grid--2 reveal" style="margin-top:1.6rem">
+      <article class="card card--wide">
+        <span class="card__kicker">El hallazgo que más valió</span>
+        <h3>Una tabla de umbrales llena de unos sin que nadie lo advirtiera</h3>
+        <p>La eliminación de islas pequeñas funciona por clase: un fragmento se descarta cuando es más pequeño
+          de lo que esa estructura ha sido nunca legítimamente. Reconstruir esa tabla tomando el percentil 2 sobre
+          <em>todos</em> los componentes conexos de las anotaciones de entrenamiento dio un
+          umbral de <b>un vóxel</b> para todo — porque la anotación de referencia no está limpia:
+          solo la mandíbula tiene <b>17&nbsp;733 componentes en 512 casos</b>, unos 34
+          por caso donde la anatomía tiene uno.</p>
+        <p>Si en cambio se toma el componente más grande de cada caso, el rango va de <b>44 vóxeles</b> (conducto
+          lingual) a <b>881&nbsp;756</b> (mandíbula). La diferencia no es cosmética:</p>
+        <ul class="ab">
+          <li><span class="ab__k">Filtro inactivo</span><span class="ab__v num">0,8001 estricto &middot; 0,8565 reto</span></li>
+          <li class="ab__win"><span class="ab__k">Filtro reconstruido</span><span class="ab__v num">0,8292 estricto &middot; 0,8965 reto</span></li>
+        </ul>
+      </article>
+
+      <article class="card card--wide">
+        <span class="card__kicker">Publicado porque falló</span>
+        <h3>Un resultado negativo, con el umbral fijado de antemano</h3>
+        <p>Se evaluaron tres modelos de cabeza y cuello para una taxonomía ampliada de 42 estructuras
+          más allá del conjunto dental. En tres casos reservados, eso suma
+          <b>126 oportunidades de estructura</b>, y el criterio de plausibilidad se fijó
+          <em>antes</em> de medir nada. Solo <b>una</b> lo superó.</p>
+        <p>La lengua salió con <b>1,76 cm³</b> frente a los 70–100 cm³ anatómicos. Se encontró un masetero
+          y el otro no, dentro de un campo de visión que contenía ambos. La
+          orofaringe llegó en <b>155 fragmentos conexos</b>. Los tres modelos se distribuyen
+          <b>desactivados</b>, y la pasada ampliada es estructuralmente incapaz de modificar una distancia de seguridad:
+          solo pinta donde las etiquetas dentales están vacías, y una comprobación lanza un error si alguna vez
+          hace lo contrario.</p>
+      </article>
+    </div>
+
+    <div class="panel reveal ownership">
+      <h3>Lo que un conjunto reservado no puede decirle</h3>
+      <p>Lo digo antes de las cifras, porque determina lo que significan: este conjunto
+        reservado <b>no puede otorgar la titularidad</b> de una estructura ni a mí ni a nadie. Los
+        modelos de terceros se entrenaron con la misma versión pública de los datos, así que solo una
+        <em>pérdida</em> constituye evidencia. Medido así en 18 de los casos reservados,
+        TotalSegmentator no se ganó la titularidad de <b>nada</b>: cero vóxeles de conductos
+        accesorios en 18 de 18, &minus;0,078 de Dice en la pulpa, y &minus;0,014 y &minus;0,021
+        en los dos conductos dentarios inferiores.</p>
+    </div>
+  </div>
+</section>
+
+<section id="serving">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">Desplegado aquí</p>
+      <h2 class="display">Y funciona en producción, con una sola GPU</h2>
+      <p class="section-sub">Entrenar una red es la mitad del trabajo. Esta tiene una API
+        delante, una cola detrás, inicio de sesión único, aislamiento entre clientes y
+        cuotas, y lleva desde agosto de 2026 atendiendo cargas reales en internet
+        público.</p>
+    </div>
+
+    <div class="grid grid--2 reveal">
+      <div class="panel">
+        <ul class="metrics">
+          <li><span class="metrics__k">GPU por estudio, dos modelos</span><span class="metrics__v num">~98 s</span></li>
+          <li><span class="metrics__k">Red base</span><span class="metrics__v num">95,0 s</span></li>
+          <li><span class="metrics__k">Especialista en conductos</span><span class="metrics__v num">2,5 s</span></li>
+          <li><span class="metrics__k">Estructuras por pasada</span><span class="metrics__v num">47</span></li>
+          <li><span class="metrics__k">Clases de dientes, FDI</span><span class="metrics__v num">32</span></li>
+        </ul>
+        <p class="metrics__foot">Esos segundos se publican en el catálogo de modelos
+          <em>antes</em> de que usted suba un solo byte, junto a lo que se ha medido que hace cada modelo,
+          porque &ldquo;¿qué modelo debería segmentar mis dientes?&rdquo; es una pregunta que a un usuario
+          están a punto de hacerle, y el nombre de un modelo no la responde.</p>
+      </div>
+      <div class="grid">
+        <article class="card">
+          <span class="card__kicker">La infraestructura</span>
+          <h3>Tres servicios, una GPU, un bloqueo</h3>
+          <p>Un servicio FastAPI, un visor web y una interfaz estática se ejecutan como
+            despliegues independientes en <b>k3s</b> detrás de Cloudflare, con SSO de <b>Keycloak</b>,
+            aislamiento entre clientes aplicado en la capa de datos y cuotas por plan. La inferencia se ejecuta
+            en un worker del host que toma un <b>bloqueo consultivo (advisory lock) de Postgres</b> sobre la GPU,
+            de modo que un entrenamiento y una carga de un usuario no pueden coincidir en ella.</p>
+        </article>
+        <article class="card">
+          <span class="card__kicker">Exportaciones que se cargan</span>
+          <h3>En el software que ya existe</h3>
+          <p>Un <b>RTSTRUCT</b> cuyos nombres de ROI se limitan a 16 caracteres para que Varian
+            Eclipse los acepte, verificado en un ciclo de ida y vuelta con un lector independiente con un
+            Dice mediano de <span class="num">0,9920</span>. <b>NIfTI</b> en la rejilla que usted
+            subió, no en el marco canónico en el que trabajó la red: reexporte el mismo
+            estudio como LPS, RPI, RAS o PIR, y las etiquetas vuelven
+            <span class="num">100,000000&nbsp;%</span> idénticas. <b>STL</b> por
+            estructura en coordenadas del paciente, en milímetros.</p>
+        </article>
+      </div>
+    </div>
+
+    <div class="panel reveal ownership">
+      <h3>La misma geometría en dos lenguajes, igual hasta 1e&#8209;9</h3>
+      <p>El implante de la escena 3D de la página de inicio no es una ilustración del producto:
+        es la propia geometría de implante del producto, ejecutándose en su navegador. El
+        JavaScript que dibuja un implante en el visor y el Python que lo mide en
+        el servidor responden al mismo mapa, con una aserción de igualdad hasta <b>1e&#8209;9</b> en una
+        GPU real, y se demuestra que cada vértice dibujado queda dentro de la cápsula medida con una tolerancia de
+        <b>4&times;10<sup>&minus;6</sup> mm</b>. Un número que se puede ver vale menos que un
+        número en el que coinciden dos implementaciones independientes.</p>
+    </div>
+  </div>
+</section>
+
+<section id="budget">
+  <div class="container">
+    <div class="section-head reveal">
+      <p class="eyebrow">La cifra</p>
+      <h2 class="display">Un milímetro, menos el error medido del modelo</h2>
+      <p class="section-sub">Cualquier planificador puede poner una regla entre un implante y una línea
+        que alguien dibujó. Esa línea es una predicción, y una predicción tiene un error: el
+        que se midió en el conjunto reservado anterior. El error se publica, y se
+        resta de la distancia de seguridad antes de calificar nada como seguro.</p>
+    </div>
+    <div class="grid grid--2 budget">
+      <div class="panel reveal budget__sheet">
+        <ol class="budget__list">
+          <li>
+            <span class="budget__term">Distancia de seguridad medida</span>
+            <span class="budget__val num">3,43 mm</span>
+            <span class="budget__note">de la superficie del implante a la superficie del conducto, en milímetros</span>
+          </li>
+          <li class="budget__minus">
+            <span class="budget__term">p95 hacia dentro del conducto</span>
+            <span class="budget__val num">&minus; 0,46 mm</span>
+            <span class="budget__note">cuánto queda el conducto dibujado por dentro del real, percentil 95 en un conjunto reservado de 20&nbsp;casos</span>
+          </li>
+          <li class="budget__rule">
+            <span class="budget__term">Distancia de seguridad evaluada</span>
+            <span class="budget__val num">2,97 mm</span>
+            <span class="budget__note">la cifra a partir de la que se calcula el veredicto</span>
+          </li>
+          <li>
+            <span class="budget__term">Margen de seguridad al conducto</span>
+            <span class="budget__val num">2,00 mm</span>
+            <span class="budget__note">una distancia evaluada de hasta 0,50 mm por encima de este margen es <em>ajustada</em>, no segura</span>
+          </li>
+          <li class="budget__total" data-level="clear">
+            <span class="budget__term">Veredicto</span>
+            <span class="budget__val"><span class="readout__chip">SEGURO</span></span>
+            <span class="budget__note">0,97 mm de holgura</span>
+          </li>
+        </ol>
+        <p class="budget__foot">Estas son las cifras de la escena 3D de la página de inicio, con
+          el implante a nivel de la cresta. La misma aritmética se aplica a cada estructura, cada una con
+          su propio valor a priori: 1,11 mm para el conducto lingual, 0,34 mm para un diente.</p>
+      </div>
+      <div class="grid reveal">
+        <article class="card">
+          <span class="card__kicker">Citado, nunca restado</span>
+          <h3>5,10 mm en el peor punto</h3>
+          <p>Lo que se descuenta es el p95. La mayor excursión hacia dentro medida
+            en cualquier punto de ese conjunto reservado fue de <b>5,10 mm</b>. Se publica en lugar de
+            incorporarse al margen, porque una cifra tan grande es un motivo para revisar el
+            estudio, no para mover un umbral.</p>
+        </article>
+        <article class="card">
+          <span class="card__kicker">Una negativa es una respuesta</span>
+          <h3>Sin grado prevalece sobre ajustado</h3>
+          <p>Cuando una medición lleva una salvedad (el conducto dibujado a trozos cerca de la zona,
+            una distancia saturada, ningún conducto en el maxilar superior), no se emite ningún grado. <b>SIN GRADO</b> se ordena por encima de <b>AJUSTADO</b> en la pantalla a propósito:
+            es el estado que más necesita que alguien lo revise.</p>
+        </article>
+        <figure class="shot reveal">
+          <img src="/assets/shots/error-budget.jpg" width="1200" height="675" loading="lazy" decoding="async"
+               alt="La vista de planificación de ImplantPlan: un corte transversal con indicaciones de distancia de seguridad de 3,51 mm al conducto y un panel lateral que muestra el presupuesto de error, de 0,34 a 1,11 mm, descontado de las distancias de seguridad.">
+          <figcaption>El presupuesto de error en la aplicación, sobre un estudio reservado. A cada distancia de seguridad
+            del panel lateral ya se le ha descontado.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="depths">
+  <div class="container">
+<div class="section-head reveal">
+  <p class="eyebrow">Una zona, tres profundidades</p>
+  <h2 class="display">El mismo implante, a un milímetro de distancia</h2>
+  <p class="section-sub">Una brecha edéntula real en un estudio reservado: faltan el primer molar inferior izquierdo
+    y el segundo premolar (FDI 36 y 35), y la zona del 36 tiene
+    <b>11,9 mm</b> de hueso medidos por encima del conducto y <b>6,7 mm</b> de anchura crestal.
+    Un implante de 8 mm asentado a nivel de la cresta queda a <b>3,51 mm</b> del conducto dentario
+    inferior. Un milímetro más profundo, a <b>2,55 mm</b>. Medio milímetro más profundo aún, a
+    <b>2,07 mm</b>, y la planificación se rechaza.</p>
+</div>
+<figure class="reveal film">
+  <video class="film__video" src="/assets/verdict-loop.mp4" width="1280" height="720"
+         controls playsinline preload="none"
+         poster="/assets/shots/verdict-tight.jpg"
+         aria-label="La vista de planificación de ImplantPlan con tres profundidades de asentamiento: AJUSTADO a 2,55 mm, INVADE a 2,07 mm y SEGURO a 3,51 mm."></video>
+  <figcaption>Grabado en la aplicación en funcionamiento, sobre una GPU real. Las distancias de seguridad, los
+    veredictos y los rótulos se leen de la página, no se escriben en un
+    guion.</figcaption>
+</figure>
+<ul class="depths reveal">
+  <li data-level="tight">
+    <span class="readout__chip">AJUSTADO</span>
+    <p class="depths__val num">2,55<span class="readout__unit">mm</span></p>
+    <p class="depths__note">A menos de 0,50 mm por encima del margen. Sigue siendo una planificación, y la aplicación
+      lo indica.</p>
+  </li>
+  <li data-level="breach">
+    <span class="readout__chip">INVADE</span>
+    <p class="depths__val num">2,07<span class="readout__unit">mm</span></p>
+    <p class="depths__note">Rebasa el margen una vez restado el presupuesto de error. La
+      planificación se rechaza, no se suaviza.</p>
+  </li>
+  <li data-level="clear">
+    <span class="readout__chip">SEGURO</span>
+    <p class="depths__val num">3,51<span class="readout__unit">mm</span></p>
+    <p class="depths__note">De vuelta en la cresta. Un milímetro de profundidad lo separa
+      de ajustado.</p>
+  </li>
+</ul>
+  </div>
+</section>
+
+<section id="planning">
+  <div class="container">
+<div class="section-head reveal">
+  <p class="eyebrow">Lo que hace realmente la planificación</p>
+  <h2 class="display">Inicializado a partir del diente que sustituye</h2>
+  <p class="section-sub">El implante no se deja caer sobre la curva de la arcada con el mayor
+    tamaño que quepa. Se inicializa a partir del diente que sustituye y se asienta en el hueso que
+    se ha medido que está ahí.</p>
+</div>
+<div class="feature reveal">
+  <div class="feature__text">
+    <h3>Entre las corticales</h3>
+    <p>El diámetro depende del diente que sustituye la zona — 3,3 mm para un incisivo
+      lateral, 4,8 mm para un primer molar — y se reduce si el reborde alveolar medido no lo
+      admite. La plataforma se centra entre las corticales vestibular y lingual y no
+      sobre la spline de la arcada, porque ahí es donde está el hueso.</p>
+    <p>Después, un bucle de ajuste automático mide, reduce la longitud un tamaño del catálogo si
+      la distancia de seguridad al conducto no se califica como segura, y vuelve a medir. La ficha del implante indica
+      lo que ocurrió, por ejemplo que el implante se acortó dos tamaños hasta la mayor
+      longitud que resulta segura respecto al conducto, o admite que ninguna longitud lo consiguió.</p>
+  </div>
+  <figure class="shot">
+    <img src="/assets/shots/seeded-clear.jpg" width="1200" height="675" loading="lazy" decoding="async"
+         alt="Un implante inicializado en una zona mandibular posterior, con las filas de distancia de seguridad marcando SEGURO.">
+  </figure>
+</div>
+<div class="feature feature--flip reveal">
+  <div class="feature__text">
+    <h3>Tres ejes, y uno de ellos no cambia nada</h3>
+    <p>La inclinación vestíbulo-lingual se dibuja con su ángulo real en el corte transversal, y
+      la angulación mesiodistal con su ángulo real en la vista panorámica, acortada en el
+      corte exactamente por <span class="num">cos(yaw)</span>. Es exacto, porque la
+      proyección ortogonal de una cápsula es una cápsula.</p>
+    <p>El tercer eje es la rotación sobre el eje (clocking), y la aplicación indica claramente que no cambia <b>ninguna</b>
+      medición: el sólido medido es un cuerpo de revolución. Existe para que el
+      hexágono de conexión se represente donde lo engancharía la llave de inserción.</p>
+  </div>
+  <figure class="shot">
+    <img src="/assets/shots/angulation.jpg" width="1200" height="675" loading="lazy" decoding="async"
+         alt="Los controles de angulación de ImplantPlan, con los ángulos vestíbulo-lingual, mesiodistal y de rotación sobre el eje junto a las filas de distancia de seguridad.">
+  </figure>
+</div>
+<div class="feature reveal">
+  <div class="feature__text">
+    <h3>La envolvente es la superficie contra la que se calcula el veredicto</h3>
+    <p>No es un halo ni un resaltado. La capa translúcida que rodea el implante se dibuja
+      a <b>2,46 mm</b> en la mandíbula (el margen de 2,00 mm más el p95 hacia dentro del propio conducto,
+      0,46 mm), de modo que lo que usted ve en contacto es exactamente lo que comparó el
+      evaluador.</p>
+    <p>El implante en sí es titanio mecanizado en todos los estados. El veredicto nunca se muestra
+      en el metal, porque quien aprende a leer el color del implante ha
+      aprendido lo que no debe.</p>
+  </div>
+  <figure class="shot">
+    <img src="/assets/shots/safety-envelope.jpg" width="1200" height="675" loading="lazy" decoding="async"
+         alt="La vista 3D de ImplantPlan: un implante de titanio dentro de una envolvente de seguridad verde translúcida, por encima del conducto dentario inferior en rojo.">
+  </figure>
+</div>
+<div class="panel reveal density">
+  <h3>Densidad ósea, y lo que no es</h3>
+  <p>La densidad de la zona se expresa como un cociente: la media en la osteotomía
+    frente a la mediana del hueso esponjoso de este mismo estudio, ambas referidas a su aire. Eso
+    la hace invariante frente a transformaciones afines, de modo que resiste un tomógrafo que no está calibrado,
+    y si el estudio no contiene una población de referencia, no se genera ningún valor.
+    <b>Nunca es un valor Hounsfield ni una clase de Misch.</b> Los valores de gris de la tomografía computarizada de haz cónico (CBCT)
+    no son atenuación calibrada, así que nada que parezca una medición de densidad
+    lo es.</p>
+</div>
+  </div>
+</section>
+
+<section class="arch" id="arch">
+  <div class="container">
+    <div class="section-head reveal" style="text-align:center">
+      <p class="eyebrow" style="justify-content:center">Notación FDI</p>
+      <h2 class="display">Treinta y dos posiciones. Veintinueve encontradas.</h2>
+      <p class="section-sub" style="margin-inline:auto">Un resultado real en un estudio real: la
+        segmentación a partir de la que se construye la escena 3D de la página de inicio, producida por el anterior
+        pipeline de dos modelos (DentalSegmentator y ToothSeg) sobre la muestra pública de
+        CBCT de 3D Slicer. Seleccione un diente para ver lo que informó ese pipeline. Los contornos
+        discontinuos marcan las posiciones donde no encontró nada.</p>
+    </div>
+
+    <div class="arch__chart reveal" id="archChart" role="group" aria-label="Odontograma FDI">
+      <!-- ARCH:BEGIN -->
+          <div class="arch__row arch__row--upper">
+            <div class="arch__quad" aria-label="Cuadrante superior derecho, FDI 1x">
+              <button type="button" class="tooth tooth--absent" data-fdi="18" data-vol="" data-comp="" aria-label="18, no encontrado en este estudio"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">18</span></button>
+              <button type="button" class="tooth" style="--c:#80aed9" data-fdi="17" data-vol="0.74" data-comp="1" aria-label="17, segundo molar superior derecho, 0,74 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">17</span></button>
+              <button type="button" class="tooth" style="--c:#6ca4d8" data-fdi="16" data-vol="0.94" data-comp="1" aria-label="16, primer molar superior derecho, 0,94 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">16</span></button>
+              <button type="button" class="tooth" style="--c:#5699d7" data-fdi="15" data-vol="0.47" data-comp="1" aria-label="15, segundo premolar superior derecho, 0,47 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">15</span></button>
+              <button type="button" class="tooth" style="--c:#408fd8" data-fdi="14" data-vol="0.45" data-comp="1" aria-label="14, primer premolar superior derecho, 0,45 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">14</span></button>
+              <button type="button" class="tooth" style="--c:#2984d9" data-fdi="13" data-vol="0.65" data-comp="1" aria-label="13, canino superior derecho, 0,65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">13</span></button>
+              <button type="button" class="tooth" style="--c:#1f7acd" data-fdi="12" data-vol="0.39" data-comp="1" aria-label="12, incisivo lateral superior derecho, 0,39 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">12</span></button>
+              <button type="button" class="tooth" style="--c:#186ebf" data-fdi="11" data-vol="0.54" data-comp="1" aria-label="11, incisivo central superior derecho, 0,54 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">11</span></button>
+            </div>
+            <span class="arch__mid" aria-hidden="true"></span>
+            <div class="arch__quad" aria-label="Cuadrante superior izquierdo, FDI 2x">
+              <button type="button" class="tooth" style="--c:#18bf8d" data-fdi="21" data-vol="0.58" data-comp="1" aria-label="21, incisivo central superior izquierdo, 0,58 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">21</span></button>
+              <button type="button" class="tooth" style="--c:#1fcd99" data-fdi="22" data-vol="0.41" data-comp="1" aria-label="22, incisivo lateral superior izquierdo, 0,41 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">22</span></button>
+              <button type="button" class="tooth" style="--c:#29d9a4" data-fdi="23" data-vol="0.65" data-comp="1" aria-label="23, canino superior izquierdo, 0,65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">23</span></button>
+              <button type="button" class="tooth" style="--c:#40d8aa" data-fdi="24" data-vol="0.48" data-comp="1" aria-label="24, primer premolar superior izquierdo, 0,48 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">24</span></button>
+              <button type="button" class="tooth" style="--c:#56d7b1" data-fdi="25" data-vol="0.51" data-comp="1" aria-label="25, segundo premolar superior izquierdo, 0,51 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">25</span></button>
+              <button type="button" class="tooth" style="--c:#6cd8b7" data-fdi="26" data-vol="0.86" data-comp="1" aria-label="26, primer molar superior izquierdo, 0,86 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">26</span></button>
+              <button type="button" class="tooth" style="--c:#80d9be" data-fdi="27" data-vol="0.74" data-comp="1" aria-label="27, segundo molar superior izquierdo, 0,74 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">27</span></button>
+              <button type="button" class="tooth tooth--absent" data-fdi="28" data-vol="" data-comp="" aria-label="28, no encontrado en este estudio"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">28</span></button>
+            </div>
+          </div>
+          <div class="arch__row arch__row--lower">
+            <div class="arch__quad" aria-label="Cuadrante inferior derecho, FDI 4x">
+              <button type="button" class="tooth" style="--c:#db94b2" data-fdi="48" data-vol="0.90" data-comp="1" aria-label="48, tercer molar inferior derecho, 0,90 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">48</span></button>
+              <button type="button" class="tooth" style="--c:#d980a6" data-fdi="47" data-vol="1.04" data-comp="1" aria-label="47, segundo molar inferior derecho, 1,04 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">47</span></button>
+              <button type="button" class="tooth tooth--absent" data-fdi="46" data-vol="" data-comp="" aria-label="46, no encontrado en este estudio"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">46</span></button>
+              <button type="button" class="tooth" style="--c:#d7568c" data-fdi="45" data-vol="0.44" data-comp="1" aria-label="45, segundo premolar inferior derecho, 0,44 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">45</span></button>
+              <button type="button" class="tooth" style="--c:#d84080" data-fdi="44" data-vol="0.38" data-comp="1" aria-label="44, primer premolar inferior derecho, 0,38 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">44</span></button>
+              <button type="button" class="tooth" style="--c:#d92973" data-fdi="43" data-vol="0.65" data-comp="1" aria-label="43, canino inferior derecho, 0,65 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">43</span></button>
+              <button type="button" class="tooth" style="--c:#cd1f68" data-fdi="42" data-vol="0.32" data-comp="1" aria-label="42, incisivo lateral inferior derecho, 0,32 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">42</span></button>
+              <button type="button" class="tooth" style="--c:#bf185e" data-fdi="41" data-vol="0.28" data-comp="1" aria-label="41, incisivo central inferior derecho, 0,28 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">41</span></button>
+            </div>
+            <span class="arch__mid" aria-hidden="true"></span>
+            <div class="arch__quad" aria-label="Cuadrante inferior izquierdo, FDI 3x">
+              <button type="button" class="tooth" style="--c:#bf8618" data-fdi="31" data-vol="0.28" data-comp="1" aria-label="31, incisivo central inferior izquierdo, 0,28 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">31</span></button>
+              <button type="button" class="tooth" style="--c:#cd921f" data-fdi="32" data-vol="0.31" data-comp="1" aria-label="32, incisivo lateral inferior izquierdo, 0,31 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">32</span></button>
+              <button type="button" class="tooth" style="--c:#d99d29" data-fdi="33" data-vol="0.62" data-comp="1" aria-label="33, canino inferior izquierdo, 0,62 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">33</span></button>
+              <button type="button" class="tooth" style="--c:#d8a440" data-fdi="34" data-vol="0.37" data-comp="1" aria-label="34, primer premolar inferior izquierdo, 0,37 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">34</span></button>
+              <button type="button" class="tooth" style="--c:#d7ab56" data-fdi="35" data-vol="0.44" data-comp="1" aria-label="35, segundo premolar inferior izquierdo, 0,44 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">35</span></button>
+              <button type="button" class="tooth" style="--c:#d8b36c" data-fdi="36" data-vol="1.01" data-comp="1" aria-label="36, primer molar inferior izquierdo, 1,01 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">36</span></button>
+              <button type="button" class="tooth" style="--c:#d9bb80" data-fdi="37" data-vol="0.27" data-comp="1" aria-label="37, segundo molar inferior izquierdo, 0,27 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">37</span></button>
+              <button type="button" class="tooth" style="--c:#dbc394" data-fdi="38" data-vol="0.87" data-comp="1" aria-label="38, tercer molar inferior izquierdo, 0,87 cm³"><span class="tooth__glyph" aria-hidden="true"></span><span class="tooth__fdi">38</span></button>
+            </div>
+          </div>
+      <!-- ARCH:END -->
+    </div>
+
+    <p class="arch__legend reveal">
+      <span><i style="background:#6ca4d8"></i>Q1 superior derecho</span>
+      <span><i style="background:#4fc0a5"></i>Q2 superior izquierdo</span>
+      <span><i style="background:#d9a13f"></i>Q3 inferior izquierdo</span>
+      <span><i style="background:#e0568f"></i>Q4 inferior derecho</span>
+    </p>
+
+    <p class="arch__readout reveal" id="archReadout" aria-live="polite">
+      Seleccione un diente para ver lo que encontró la segmentación.
+    </p>
+
+    <p class="arch__foot reveal">El color varía por cuadrante y se aclara desde la línea media
+      hacia atrás, de modo que un diente mal numerado se percibe como una ruptura en la gradación y no simplemente como un
+      color distinto. No se generó ninguna etiqueta en el 18, el 28 ni el 46: el 46 es la brecha que ocupa el implante
+      de la página de inicio, y el 18 y el 28 son terceros molares superiores. El odontograma informa de
+      lo que se encontró en lugar de adivinar.</p>
+  </div>
+</section>
+
+<section id="limits">
+  <div class="container--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">Antes de confiar en él</p>
+      <h2 class="display">Límites de la investigación</h2>
+    </div>
+    <div class="limits__panel reveal">
+      <ul class="limits__list">
+        <li><b>Los recuentos no son exactitud.</b> &ldquo;Veintinueve de 32 dientes&rdquo; es
+          cuántas etiquetas <em>produjo</em> un modelo en un estudio sin anotación de referencia, no cuántas
+          acertó. La exactitud son el Dice y el HD95 del conjunto reservado indicados arriba, medidos
+          frente a la anotación de expertos.</li>
+        <li><b>Las comprobaciones miden coherencia, no corrección.</b> La simetría, la lateralidad
+          y el recuento de componentes detectan fallos groseros y no dicen nada sobre si el diente 26 es
+          realmente el 26. En el estudio de un paciente no hay anotación de referencia, así que nada de lo que aparece aquí es
+          una cifra de exactitud.</li>
+        <li><b>El mismo estudio procesado dos veces no es idéntico bit a bit.</b> Tres ejecuciones de un mismo archivo difieren en
+          <b>108–185 vóxeles de 42,8 millones</b> — el no determinismo habitual de la GPU, casi
+          todo en vóxeles aislados de un contorno de tejido blando. Ningún diente numerado difiere en
+          más de un vóxel, pero no cite estas cifras con cuatro cifras significativas.</li>
+        <li><b>Los valores de gris de la CBCT no son unidades Hounsfield calibradas.</b> Nada que parezca
+          una medición de densidad lo es.</li>
+        <li><b>No se repara nada.</b> Los hallazgos de calidad, como componentes adicionales, un diente
+          situado en la arcada equivocada o volúmenes contralaterales asimétricos, se informan. El mapa de
+          etiquetas exportado es exactamente lo que produjeron los modelos.</li>
+        <li><b>No se genera ninguna guía quirúrgica, y es una postura, no una carencia.</b>
+          Una guía de fresado es un dispositivo en contacto con el paciente que convierte una planificación en un orificio. Se
+          sabe que el contorno del conducto con el que mide este proyecto queda hasta <b>5,10 mm</b>
+          por dentro del real en su peor punto medido, y los valores de gris de la CBCT no son
+          atenuación calibrada. El proyecto publica la distancia de seguridad y su error, y
+          se detiene antes de cualquier cosa que perfore.</li>
+        <li><b>La escena 3D de la página de inicio mide una malla web, no su estudio.</b> Su
+          milímetro se calcula en su navegador a partir de una malla de visualización simplificada y cuantizada:
+          una ilustración del método, a aproximadamente una centésima de milímetro de un
+          recálculo exacto y verificada en ambos niveles de detalle. Representa la muestra pública de CBCT de 3D
+          Slicer segmentada por el anterior pipeline de dos modelos,
+          no por la red entrenada. La aplicación mide sobre la rejilla de
+          vóxeles.</li>
+        <li><b>Versión preliminar de investigación. No es un producto sanitario, no apto para uso diagnóstico.</b> Todo
+          resultado requiere la revisión de un profesional clínico cualificado.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section id="credits">
+  <div class="container--narrow">
+    <div class="section-head reveal">
+      <p class="eyebrow">Créditos</p>
+      <h2 class="display">Datos, modelos y licencias</h2>
+    </div>
+    <ul class="limits__list">
+      <li><b>ToothFairy3</b>: Bolelli F, et al., Universidad de Módena y Reggio Emilia
+        (<a href="https://ditto.ing.unimore.it/toothfairy3/" rel="noopener">ditto.ing.unimore.it/toothfairy3</a>).
+        Publicado bajo <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" rel="license noopener">CC BY&#8209;NC&#8209;SA 4.0</a>,
+        y los modelos entrenados aquí con él heredan esas condiciones: atribución,
+        uso no comercial y compartir igual. Los casos de ejemplo de la aplicación son
+        estudios de ToothFairy3; cada uno está etiquetado como reservado del entrenamiento o como caso
+        de entrenamiento.</li>
+      <li><b>U&#8209;Mamba2</b>: Wu J, et al., MICCAI 2025
+        (<a href="https://arxiv.org/abs/2509.12069" rel="noopener">arXiv:2509.12069</a>).
+        Basado en <b>nnU&#8209;Net</b>: Isensee F, et al., <em>Nature Methods</em>, 2021.</li>
+      <li><b>DentalSegmentator</b>: Dot G, et al., <em>Journal of Dentistry</em>, 2024, y
+        <b>ToothSeg</b>: van Nistelrooij N, et al., <em>IEEE JBHI</em>, 2025. Ambos
+        CC&nbsp;BY&nbsp;4.0. Produjeron la segmentación en la que se basa la escena 3D de la página de inicio
+        y la de todos los casos procesados antes del 25 de agosto de 2026; el servicio ya no
+        los ejecuta.</li>
+      <li>La escena 3D de la página de inicio se construye a partir de los <b>datos de muestra públicos de CBCT
+        de 3D Slicer</b>.</li>
+      <li>Ningún autor de los trabajos originales respalda este proyecto.</li>
+    </ul>
+  </div>
+</section>

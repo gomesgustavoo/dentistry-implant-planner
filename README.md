@@ -12,12 +12,21 @@
 
 </div>
 
-**One site, three depths.** The site is a real gap — a missing lower-left first molar,
-with 11.9 mm of bone measured above the canal and 6.7 mm of crestal width. An 8 mm fixture
-seated on the crest sits 3.51 mm off the inferior alveolar canal: `CLEAR`. A millimetre
-deeper it is `TIGHT` at 2.55. Half a millimetre deeper again it `BREACH`es at 2.07. Back
-to the crest and it is clear. Every one of those millimetres has the canal's own boundary
-error taken out of it first.
+**One site, three depths.** The site is a real gap on a held-out scan: the lower left
+first molar and second premolar (FDI 36 and 35) are both missing, and the 36 site has
+11.9 mm of bone measured above the canal and 6.7 mm of crestal width. An 8 mm implant
+seated at the crest sits 3.51 mm from the inferior alveolar canal: `CLEAR`. A millimeter
+deeper, it is `TIGHT` at 2.55 mm. Half a millimeter deeper again, it `BREACH`es at
+2.07 mm. Back at the crest, it is clear. Every one of those millimeters has the canal's
+own boundary error subtracted first.
+
+**A single missing tooth.** The example list also carries ToothFairy3F_058: one missing
+lower left first molar (FDI 36) with both neighbors standing, 0.3 mm isotropic, the
+training spacing. It is a training case, and it is labeled as one. The app's default seed
+there, a 4.8 × 10 mm implant 0.5 mm below the crest, measures 3.48 mm to the inferior
+alveolar canal (`CLEAR`, 3.02 mm after the 0.46 mm error budget) and 3.85 mm to the
+neighboring teeth. Seat it 1.5 mm below the crest and it is `TIGHT` at 2.61 mm; a
+4.8 × 11.5 mm implant at the same seat `BREACH`es at 2.16 mm.
 
 That is the whole product. Every planner draws the nerve. None of them tells you how
 wrong the nerve is.
@@ -30,7 +39,7 @@ refused when it should be.
 
 <video src="https://github.com/user-attachments/assets/5adc1249-2341-44c1-aa0f-0d757de2b4dd" controls muted></video>
 
-**Scan to structures** · 1:34 — one upload, a model catalogue you choose from before a byte
+**Scan to structures** · 1:34 — one upload, a model catalog you choose from before a byte
 is sent, about 98 seconds of GPU for the two models that run, and a report that publishes
 its own error.
 
@@ -55,7 +64,7 @@ what they are held to.
 
 ## The models are ours
 
-Seven models sit in the catalogue. Two of them we trained ourselves, here, on our own
+Seven models sit in the catalog. Two of them we trained ourselves, here, on our own
 GPUs.
 
 **The base model** is an nnU-Net with a U-Mamba2 bottleneck. It paints the whole dental
@@ -73,7 +82,7 @@ the left incisive, right incisive and lingual canals, pulls their predicted volu
 155–205% of ground truth down to **99–111%**, and beats the base model on 40 external
 PMCanalSeg cases at **p = 7.6 × 10⁻⁴**.
 
-The other five are third-party and are labelled as such in the picker, with what each one
+The other five are third-party and are labeled as such in the picker, with what each one
 is measured to do and whether it is installed at all.
 
 ## Why a number beats a picture
@@ -112,7 +121,7 @@ which is a fact about this site rather than a property of angulation.
 cortical plates**, not on the arch curve. The curve is fitted to crowns and interpolated
 across gaps, so at exactly the edentulous sites an implant goes it can sit to one side of
 the ridge underneath — and seating on it put a fixture's buccal wall against the outer
-cortex. `ridge.py` reports where the plates are and the platform is centred between them.
+cortex. `ridge.py` reports where the plates are and the platform is centered between them.
 
 The diameter comes from the tooth the site replaces — 3.3 mm at a lateral incisor, 4.8 mm
 at a first molar — narrowed if the measured ridge cannot take it. The length starts at the
@@ -121,9 +130,9 @@ at a first molar — narrowed if the measured ridge cannot take it. The length s
 would plan.
 
 Then the seed closes against the server's own answer: measure, and if the canal clearance
-is not clear, step down one catalogue length and measure again, up to three times. The
+is not clear, step down one catalog length and measure again, up to three times. The
 card says which happened — *shortened 2 sizes — the longest length that measures clear of
-the canal here* — or admits that no catalogue length did. Any deliberate edit ends the
+the canal here* — or admits that no catalog length did. Any deliberate edit ends the
 loop, so it can never fight the person using it.
 
 **Correct the mask, and every number is recomputed from the correction.** Labelmap tools
@@ -210,7 +219,7 @@ node web-auth/check-app.js                             # static wiring, palettes
 node web-auth/check-rail.mjs                           # 156 rendered states in real Chrome, 640-3440px
 node web-auth/check-rail.mjs --prove                   # every assertion proven to fail when broken
 node web-auth/check-rail.mjs --selftest                # the JS coordinate map against Python's vectors
-node viewer/check-bundle.mjs                           # the bundle kept every behaviour it had
+node viewer/check-bundle.mjs                           # the bundle kept every behavior it had
 node viewer/check-equivalence.mjs                      # browser vs Python geometry, on a real GPU
 scripts/make_preview_gif.sh                            # the README's GIF shows the three verdicts it claims
 ```
@@ -257,15 +266,14 @@ without a holdout no accuracy claim about the result is measurable.
 
 **Gustavo Formento** — the author of this service.
 
-- Email: <contact@example.org>
 - LinkedIn: [linkedin.com/in/gustavoogomesss](https://www.linkedin.com/in/gustavoogomesss/)
 - GitHub: [github.com/gomesgustavoo](https://github.com/gomesgustavoo)
 
-Open an issue for bugs; email for custom model work.
+Open an issue for bugs; for custom model work, get in touch on LinkedIn.
 
 ## Licensing
 
-No licence is granted on this code yet — all rights reserved until one is chosen.
+No license is granted on this code yet — all rights reserved until one is chosen.
 
 Separately: the segmentation weights derive from ToothFairy3 (**CC BY-NC-SA 4.0**), and
 the running service says so in its own footer. That constrains the *model*, not this

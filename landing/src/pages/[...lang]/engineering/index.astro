@@ -1,0 +1,10 @@
+---
+import Engineering from '@dicomsegvr/landing-ui/Engineering.astro';
+import { localeStaticPaths } from '@dicomsegvr/landing-ui/i18n';
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import { projects, engineering } from '../../../content';
+export const getStaticPaths = localeStaticPaths;
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+---
+<Engineering project={projects[locale]} content={engineering[locale]} />

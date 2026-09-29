@@ -1117,7 +1117,8 @@ const CONTACT = {
   // What I can state without asserting anything I have not verified. A professional
   // title on a public page is a claim about a person, not a nicety.
   role: 'The author of this service',
-  email: 'contact@example.org',
+  // No address on a public page: contact is LinkedIn and GitHub.
+  email: '',
   linkedin: 'https://www.linkedin.com/in/gustavoogomesss/',
   github: 'https://github.com/gomesgustavoo',
 };

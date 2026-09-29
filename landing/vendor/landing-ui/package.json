@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./*": "./src/*",
-    "./types": "./src/types.ts"
+    "./types": "./src/types.ts",
+    "./i18n": "./src/i18n.ts"
   },
   "files": [
     "src"

@@ -1,8 +1,10 @@
 ---
 import type { Project } from './types';
 import Readout from './Readout.astro';
+import { t } from './i18n';
 interface Props { project: Project }
 const { project: p } = Astro.props;
+const s = t(p.locale);
 ---
 <div class="filmstage" data-filmstage>
   <div class="stage-pin">
@@ -11,24 +13,24 @@ const { project: p } = Astro.props;
         <p class="eyebrow" data-entrance>{p.eyebrow}</p>
         <h1 data-entrance>{p.headline[0]}<br /><span>{p.headline[1]}</span></h1>
         <p class="hero__sub" data-entrance>{p.description}</p>
-        <div class="hero__actions" data-entrance><a class="button" href="#demo">Explore the project <span aria-hidden="true">↓</span></a><a class="text-link" href={p.primary.href}>Open app <span aria-hidden="true">↗</span></a></div>
-        <a class="hero__author" href="#creator" data-entrance><span class="author-mark" aria-hidden="true">GF</span>A personal project by <strong>Gustavo Formento</strong></a>
-        <p class="hero__research">Research and education · Not for diagnostic use</p>
+        <div class="hero__actions" data-entrance><a class="button" href="#demo">{s.hero.explore} <span aria-hidden="true">↓</span></a><a class="text-link" href={p.primary.href}>{s.hero.app} <span aria-hidden="true">↗</span></a></div>
+        <a class="hero__author" href="#creator" data-entrance><span class="author-mark" aria-hidden="true">GF</span>{s.hero.author} <strong>Gustavo Formento</strong></a>
+        <p class="hero__research">{s.hero.research}</p>
       </div>
       <div class="scene-column">
-        <div class="scene-label"><span class="status-dot" aria-hidden="true"></span><span>{p.sceneLabel}</span><span class="scene-label__right">Interactive 3D</span></div>
+        <div class="scene-label"><span class="status-dot" aria-hidden="true"></span><span>{p.sceneLabel}</span><span class="scene-label__right">{s.hero.interactive}</span></div>
         <div class="scene">
           <div class="filmstage__bg">
             <canvas class="filmstage__canvas" id="heroCanvas" aria-label={p.sceneDetail} role="img"></canvas>
             <img class="filmstage__poster" src={p.poster} alt={p.sceneDetail} width="1200" height="900" fetchpriority="high" />
           </div>
         </div>
-        {p.id === 'implantplan' ? <Readout /> : <div class="scene-detail"><span>From slices to spatial understanding</span><span>WebGL / Three.js</span></div>}
+        {p.id === 'implantplan' ? <Readout locale={p.locale} /> : p.sceneCaption && <div class="scene-detail"><span>{p.sceneCaption[0]}</span><span>{p.sceneCaption[1]}</span></div>}
         <div class="scene-progress"><span>{p.sceneHint}</span><div class="scene-progress__track"><span></span></div><span aria-hidden="true">↓</span></div>
       </div>
     </section>
-    <div class="hero__rail container"><span class="mono">Designed & engineered end to end</span><div>{p.skills.map(skill => <span>{skill}</span>)}</div></div>
+    <div class="hero__rail container"><span class="mono">{s.hero.rail}</span><div>{p.skills.map(skill => <span>{skill}</span>)}</div></div>
   </div>
 </div>
 <script is:inline type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.js","three/addons/":"/assets/vendor/three/jsm/"}}</script>
-<script is:inline type="module" src="/assets/hero3d.js?v=portfolio-1"></script>
+<script is:inline type="module" src="/assets/hero3d.js?v=i18n-1"></script>

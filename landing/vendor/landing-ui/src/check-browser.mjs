@@ -115,10 +115,32 @@ try {
     assert.ok(await page.locator('.research h2').count() >= 4);
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1), true);
     assert.ok(await page.locator('a[href="/#pricing"]').count());
-    for (const route of ['/privacy.html','/terms.html']) assert.equal((await page.request.get(url+route)).status(),200);
     await page.setViewportSize({width:390,height:844});
     assert.equal(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth + 1),true,'engineering page overflows on mobile');
     await page.screenshot({path:path.join(output,'engineering-390.png'),fullPage:true});
+  });
+  await record('every page exists in every language, in that language', async () => {
+    const project = await page.evaluate(() => document.body.dataset.project);
+    const pages = ['/', '/engineering/', '/privacy/', '/terms/', ...(project === 'dicomsegvr' ? ['/get-app/'] : [])];
+    // Interface phrases that must never survive into a translated page.
+    const english = ['Open the app', 'Explore the project', 'Back to top', 'Research and educational use only',
+      'Skip to content', 'Read the engineering notes', 'All prices in USD', 'Start here', 'Before you'];
+    for (const [prefix, lang] of [['', 'en'], ['/es', 'es'], ['/pt-br', 'pt-BR']]) {
+      for (const route of pages) {
+        const response = await page.goto(url + prefix + route);
+        assert.equal(response.status(), 200, `${prefix}${route}`);
+        assert.equal(await page.evaluate(() => document.documentElement.lang), lang, `${prefix}${route} lang`);
+        assert.equal(await page.locator('link[rel="alternate"][hreflang]').count(), 4, `${prefix}${route} hreflang`);
+        assert.equal(await page.locator('.lang a[aria-current]').getAttribute('hreflang'), lang, `${prefix}${route} switcher`);
+        if (lang !== 'en') {
+          const text = await page.evaluate(() => document.body.innerText);
+          for (const phrase of english) assert.ok(!text.includes(phrase), `${prefix}${route} still says "${phrase}"`);
+          const hrefs = await page.locator('a[href^="/"]:not(.lang a):not(.legal__translated a)').evaluateAll(els => els.map(e => e.getAttribute('href')));
+          const leaks = hrefs.filter(h => /^\/(engineering|privacy|terms|get-app)\//.test(h) || h === '/');
+          assert.equal(leaks.length, 0, `${prefix}${route} links out of its language: ${leaks.join(' ')}`);
+        }
+      }
+    }
   });
   await page.close();
   for (const mode of ['reduced','no-js','no-webgl','asset-failure']) {

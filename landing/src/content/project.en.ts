@@ -2,6 +2,7 @@ import type { Project } from '@dicomsegvr/landing-ui/types';
 
 export const project = {
   "id": "implantplan",
+  "locale": "en",
   "name": "ImplantPlan",
   "wordmark": [
     "Implant",
@@ -9,15 +10,15 @@ export const project = {
   ],
   "theme": "light",
   "url": "https://dentistry.dicomsegvr.com",
-  "title": "ImplantPlan — Explore the anatomy. Measure the clearance · Gustavo Formento",
-  "description": "A dental imaging research project combining AI segmentation, interactive 3D, and implant-clearance measurements that account for model error.",
+  "title": "ImplantPlan — Explore the anatomy, measure the clearance · Gustavo Formento",
+  "description": "A dental imaging research project that combines AI segmentation, interactive 3D, and implant clearance measurements that account for the model's own error.",
   "eyebrow": "Dental imaging / AI / Interactive 3D",
   "headline": [
     "Explore the anatomy.",
     "Measure the clearance."
   ],
   "primary": {
-    "label": "Open app",
+    "label": "Open the app",
     "href": "/app"
   },
   "trial": "30 segmentations over 14 days. No credit card required.",
@@ -28,10 +29,11 @@ export const project = {
   },
   "poster": "/assets/hero-implant.png",
   "socialImage": "/assets/og-image.a270e3f9.png",
+  "socialImageAlt": "ImplantPlan: a dental implant seated in a segmented mandible above the inferior alveolar canal",
   "favicon": "/assets/favicon-32.png",
   "touchIcon": "/assets/apple-touch-icon.b3503f63.png",
   "sceneLabel": "A measurement you can see",
-  "sceneDetail": "An implant seats into a segmented mandible. Scrolling reveals the canal and updates the clearance measurement.",
+  "sceneDetail": "An implant seats into a segmented mandible. As you scroll, the canal appears and the clearance measurement updates.",
   "sceneHint": "Scroll to seat the implant",
   "skills": [
     "Cornerstone3D",
@@ -42,24 +44,32 @@ export const project = {
   ],
   "demo": {
     "title": "Small movements. Visible consequences.",
-    "description": "Place a fixture, inspect the anatomy, and see how position changes the clearance. The interface shows the measurement and its uncertainty together.",
+    "description": "Place an implant, inspect the anatomy, and see how its position changes the clearance. Every measurement is shown together with its error budget.",
+    "video": {
+      "bar": "ImplantPlan / One real case, three seating depths",
+      "badge": "Research preview",
+      "src": "/assets/verdict-loop.mp4",
+      "poster": "/assets/shots/seeded-clear.jpg",
+      "label": "ImplantPlan at three seating depths: TIGHT at 2.55 mm, BREACH at 2.07 mm, and CLEAR at 3.51 mm",
+      "caption": "Recorded from the running app. As the implant moves deeper, the measured clearance and its grade change together."
+    },
     "steps": [
       {
         "category": "",
         "title": "Segment the scan",
-        "description": "A base network and canal specialist identify dental anatomy from a CBCT volume.",
+        "description": "A base network and a canal specialist segment the dental anatomy in a CBCT volume.",
         "technologies": []
       },
       {
         "category": "",
         "title": "Explore the result",
-        "description": "Review synchronized slices and 3D structures. Place and adjust a virtual implant.",
+        "description": "Review synchronized slices and 3D structures, then place and adjust a virtual implant.",
         "technologies": []
       },
       {
         "category": "",
-        "title": "Inspect the measurement",
-        "description": "Read the clearance after the model-error allowance. Export the geometry and research report.",
+        "title": "Read the measurement",
+        "description": "See each clearance after its error budget is deducted, then export the geometry and the research report.",
         "technologies": []
       }
     ]
@@ -68,7 +78,7 @@ export const project = {
     {
       "category": "Interaction",
       "title": "Anatomy across three planes.",
-      "description": "I connected Cornerstone3D and vtk.js in a browser workspace for synchronized slices, 3D inspection, contour editing, and implant placement.",
+      "description": "Cornerstone3D and vtk.js in one browser workspace, for synchronized slices, 3D inspection, contour editing, and implant placement.",
       "technologies": [
         "JavaScript",
         "Cornerstone3D",
@@ -78,7 +88,7 @@ export const project = {
     {
       "category": "Machine learning",
       "title": "Models with measured limits.",
-      "description": "I fine-tuned a U-Mamba2 base model and trained an anterior canal specialist. The base pipeline scored 0.8965 challenge Dice on a 20-case holdout.",
+      "description": "I fine-tuned a U-Mamba2 base model on ToothFairy3 and trained an anterior canal specialist. The base pipeline scores 0.8965 challenge Dice on a 20-case held-out set.",
       "technologies": [
         "PyTorch",
         "nnU-Net",
@@ -87,8 +97,8 @@ export const project = {
     },
     {
       "category": "Systems",
-      "title": "The number has a pipeline.",
-      "description": "Clearance accounts for structure-specific model error. Python geometry, GPU jobs, and browser readouts are checked against one another.",
+      "title": "A measurement you can audit.",
+      "description": "Each clearance is reduced by the measured error of the structure it is taken to. The Python geometry, the GPU jobs, and the browser readouts are checked against one another.",
       "technologies": [
         "FastAPI",
         "PostgreSQL",
@@ -103,15 +113,15 @@ export const project = {
       "price": "12.99",
       "allowance": "30 segmentations / month",
       "features": [
-        "47 structures and all export formats",
-        "RTSTRUCT, STL, NIfTI, browser viewer",
+        "All 47 structures and every export format",
+        "RTSTRUCT, STL, NIfTI, and the browser viewer",
         "Results available for 72 hours"
       ],
       "action": {
         "label": "Start free trial",
         "href": "/app"
       },
-      "note": "14-day trial · No card required"
+      "note": "14-day trial · No credit card required"
     },
     {
       "name": "Pro",
@@ -119,14 +129,13 @@ export const project = {
       "allowance": "60 segmentations / month",
       "features": [
         "Everything in Explorer",
-        "Priority GPU queue",
-        "Measurement report for every case"
+        "Twice the monthly volume"
       ],
       "action": {
         "label": "Choose Pro",
         "href": "/app?plan=clinician"
       },
-      "note": "Starts your 14-day trial first"
+      "note": "Starts with the 14-day trial"
     },
     {
       "name": "Enterprise",
@@ -134,41 +143,58 @@ export const project = {
       "allowance": "120 segmentations / month",
       "features": [
         "Everything in Pro",
-        "Shared case list across your account",
+        "Four times the Explorer volume",
         "Direct support"
       ],
       "action": {
         "label": "Choose Enterprise",
         "href": "/app?plan=enterprise"
       },
-      "note": "Contact me about higher volumes"
+      "note": "Need more? Contact me about higher volumes."
     }
   ],
-  "pricingNote": "The trial ends after 30 segmentations or 14 days, whichever comes first. Uploads are deleted when processing completes; results expire after 72 hours. Unused jobs do not roll over. Cancel from your account.",
+  "pricingNote": "The trial ends after 30 segmentations or 14 days, whichever comes first. Uploads are deleted as soon as processing completes, and results expire after 72 hours. Unused segmentations do not roll over. You can cancel from your account at any time.",
   "faq": [
     {
       "question": "What can I upload?",
-      "answer": "A DICOM series as a ZIP file, or a NIfTI volume (.nii or .nii.gz), up to 100 MB per upload. DICOM preserves the series references used by RTSTRUCT exports."
+      "answer": "A DICOM series as a ZIP file, or a NIfTI volume (.nii or .nii.gz), up to 100 MB per upload. Upload DICOM if you need RTSTRUCT exports, because they reference the original series."
+    },
+    {
+      "question": "Which scans work best?",
+      "answer": "Dental-field CBCT that covers the jaws. The model was trained on ToothFairy3, whose 512 volumes are all 0.3 mm isotropic with a median height of 51 mm. Whole-head scans are outside that distribution, and the results show it."
     },
     {
       "question": "What does the clearance account for?",
-      "answer": "The measured distance is reduced by the relevant structure’s measured inward boundary error before grading. The hero illustrates this using a mesh; the application measures on the volume grid. Research limitations are documented in the engineering notes."
+      "answer": "Before a clearance is graded, it is reduced by the error budget of the structure it is measured to: that structure's measured inward boundary error (p95) on the held-out set. The 3D scene on this page applies the same method to a display mesh; the application measures on the voxel grid. The limits are documented in the <a href=\"/engineering/#limits\">engineering notes</a>."
     },
     {
       "question": "Is ImplantPlan a clinical planning tool?",
-      "answer": "No. It is a research preview, not a medical device, and does not produce surgical guides. Its ToothFairy3-derived model is licensed CC BY-NC-SA 4.0 for non-commercial use."
+      "answer": "No. It is a research preview, not a medical device, and it does not produce surgical guides. Its segmentation model is derived from ToothFairy3, which is licensed under CC BY-NC-SA 4.0 for non-commercial use."
     },
     {
       "question": "What happens to my scan?",
-      "answer": "The source upload is deleted when the job completes. Results remain available for 72 hours. A failed job, or one cancelled before GPU processing, does not use a segmentation credit."
+      "answer": "The uploaded file is deleted as soon as the job completes, and the results remain available for 72 hours. A failed job, or one canceled before GPU processing starts, does not count against your segmentations."
     }
   ],
-  "engineeringIntro": "The models, geometry, evaluation results, and deployment decisions behind ImplantPlan. This notebook preserves the evidence and limitations behind the shorter project overview.",
+  "creatorBio": "ImplantPlan brings together my work in model training, medical-image visualization, and interaction design. It is a research project built to make the reasoning behind every measurement visible.",
+  "related": {
+    "eyebrow": "A related project",
+    "title": ["From the browser", "to virtual reality."],
+    "text": "DicomSegVR, my other project, explores a different way to interact with medical images."
+  },
+  "engineeringIntro": "The models, geometry, evaluation, and deployment decisions behind ImplantPlan, with the evidence and the limitations the overview leaves out.",
+  "license": {
+    "text": "The segmentation model is derived from the ToothFairy3 dataset, licensed under",
+    "name": "CC BY-NC-SA 4.0",
+    "href": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "credits": { "label": "Dataset and model credits", "href": "/engineering/#credits" }
+  },
   "media": {
     "videoId": "-DcNCL3ux3Y",
     "start": 25,
     "title": "Balanço Geral Florianópolis",
-    "caption": "My DicomSegVR demonstration appears in the opening of this report about RT Medical, where I work.",
-    "language": "Portuguese audio"
+    "caption": "My DicomSegVR demonstration opens this report about RT Medical, where I work.",
+    "language": "Portuguese audio",
+    "alt": "Still from the Balanço Geral Florianópolis television report"
   }
 } satisfies Project;

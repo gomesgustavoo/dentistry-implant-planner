@@ -64,7 +64,7 @@ BANNER = pathlib.Path(__file__).resolve().parent.parent / "marketing" / "brand" 
 TRIAL_HEAD = "Try it on your own scan."
 TRIAL_TERMS = "30 segmentations · 14 days · no card"
 CUSTOM_ASK = "Need a model trained on your own data?"
-CONTACT = "contact@example.org"
+CONTACT = "github.com/gomesgustavoo"
 
 # ONE line, not six. The card used to end on a five-line grey block -- the personal
 # disclaimer, the research notice and three credits -- which read as legal furniture and
