@@ -51,7 +51,7 @@ type Strings = typeof en;
 const en = {
   skip: 'Skip to content',
   nav: {
-    annotation: 'A personal project', home: (name: string) => `${name} home`,
+    home: (name: string) => `${name} home`,
     open: 'Open menu', close: 'Close menu', primary: 'Primary', language: 'Language',
     project: 'The project', engineering: 'Engineering', pricing: 'Pricing', creator: 'Creator',
     app: 'Open the app',
@@ -128,7 +128,7 @@ const en = {
 const es: Strings = {
   skip: 'Saltar al contenido',
   nav: {
-    annotation: 'Un proyecto personal', home: name => `Inicio de ${name}`,
+    home: name => `Inicio de ${name}`,
     open: 'Abrir menú', close: 'Cerrar menú', primary: 'Principal', language: 'Idioma',
     project: 'El proyecto', engineering: 'Ingeniería', pricing: 'Precios', creator: 'Autor',
     app: 'Abrir la aplicación',
@@ -205,7 +205,7 @@ const es: Strings = {
 const ptBR: Strings = {
   skip: 'Pular para o conteúdo',
   nav: {
-    annotation: 'Um projeto pessoal', home: name => `Início do ${name}`,
+    home: name => `Início do ${name}`,
     open: 'Abrir menu', close: 'Fechar menu', primary: 'Principal', language: 'Idioma',
     project: 'O projeto', engineering: 'Engenharia', pricing: 'Preços', creator: 'Autor',
     app: 'Abrir o aplicativo',

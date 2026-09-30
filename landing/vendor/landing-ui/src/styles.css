@@ -48,3 +48,11 @@
 @media(max-width:999px){.lang{padding-block:8px;gap:8px}.lang a{min-width:44px;min-height:44px;font-size:.8rem}}
 /* Legal pages reuse the engineering document styles. */
 .legal-page{max-width:880px;padding-block:56px 72px}.research.legal h1{font-size:clamp(2.4rem,4.4vw,3.6rem);margin-bottom:12px}.research.legal h2{font-size:1.35rem;margin-block:36px 10px;letter-spacing:-.02em}.legal__meta{font-family:var(--mono);font-size:.75rem!important}.legal__note,.legal__translated{padding:16px 18px;border:1px solid var(--border);border-radius:var(--radius);background:var(--surface);font-size:.86rem!important}.legal__translated{margin-bottom:28px}.research.legal .button{text-decoration:none;color:var(--accent-ink)}
+/* Section heads use the whole measure: the eyebrow sits above, the heading starts at the
+   left edge of the container, and on wide screens the description takes the column beside
+   it instead of the heading being pushed into the right two-thirds of the page. */
+.section-head{grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);column-gap:clamp(40px,6vw,120px);row-gap:0;align-items:end}
+.section-head>.eyebrow{grid-column:1/-1;margin:0 0 24px}
+.section-head>div{display:contents}
+.section-head h2+p{margin-top:0;padding-bottom:.4em}
+@media(max-width:999px){.section-head{grid-template-columns:1fr}.section-head h2+p{margin-top:18px;padding-bottom:0}}

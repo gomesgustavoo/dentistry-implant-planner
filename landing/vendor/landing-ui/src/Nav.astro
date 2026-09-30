@@ -11,7 +11,6 @@ const engineering = path === '/engineering/';
 <header class="nav" id="top">
   <div class="container nav__inner">
     <a class="brand" href={onHome ? '#top' : localePath(p.locale, '/')} aria-label={s.nav.home(p.name)}>{p.wordmark[0]}<span>{p.wordmark[1]}</span></a>
-    <span class="nav__divider" aria-hidden="true"></span><span class="nav__annotation">{s.nav.annotation}</span>
     <button class="nav__toggle" id="navToggle" aria-expanded="false" aria-controls="navMenu" aria-label={s.nav.open}><span></span><span></span></button>
     <nav class="nav__menu" id="navMenu" aria-label={s.nav.primary}>
       <a href={`${home}#demo`}>{s.nav.project}</a>
