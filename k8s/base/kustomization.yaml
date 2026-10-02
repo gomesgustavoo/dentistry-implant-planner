@@ -1,0 +1,11 @@
+# The deployable base. Values that belong to ONE deployment (hostnames, the identity
+# provider, Stripe price ids, the data hostPath) are placeholders here; set them in an
+# overlay of your own -- the hosted service keeps its overlay out of the repository
+# (k8s/overlays/, git-ignored). Ingress is per-deployment too: see ../ingress.example.yaml.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+resources:
+  - 10-config.yaml
+  - 20-api.yaml
+  - 21-web.yaml
+  - 22-landing.yaml

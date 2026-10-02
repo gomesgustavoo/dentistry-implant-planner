@@ -1,0 +1,11 @@
+# Secret scan configuration (gitleaks). Default rules, plus the one false positive this
+# repository is known to carry: the minified OIDC library inside the committed auth bundle.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "committed third-party bundles"
+paths = [
+  '''web/auth\.js''',
+  '''web/viewer\.js''',
+]

@@ -1,3 +1,5 @@
+# An example: the four routes the app needs on one hostname (traefik). Copy it into your
+# own overlay and set the host. The middlewares it names are traefik CRDs you define.
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
@@ -9,7 +11,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: dentistry.dicomsegvr.com
+  - host: implantplan.example.com
     http:
       paths:
       - backend:
@@ -32,7 +34,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: dentistry.dicomsegvr.com
+  - host: implantplan.example.com
     http:
       paths:
       - backend:
@@ -55,7 +57,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: dentistry.dicomsegvr.com
+  - host: implantplan.example.com
     http:
       paths:
       - backend:
@@ -78,7 +80,7 @@ metadata:
 spec:
   ingressClassName: traefik
   rules:
-  - host: dentistry.dicomsegvr.com
+  - host: implantplan.example.com
     http:
       paths:
       - backend:
@@ -87,34 +89,4 @@ spec:
             port:
               number: 80
         path: /
-        pathType: Prefix
-
----
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  annotations:
-    traefik.ingress.kubernetes.io/router.entrypoints: web
-    traefik.ingress.kubernetes.io/router.middlewares: dentistry-dentistry-auth@kubernetescrd,dentistry-dentistry-slash@kubernetescrd,dentistry-dentistry-strip@kubernetescrd
-  name: dentistry-path
-  namespace: dentistry
-spec:
-  ingressClassName: traefik
-  rules:
-  - host: voxtell.dicomsegvr.com
-    http:
-      paths:
-      - backend:
-          service:
-            name: dentistry-api
-            port:
-              number: 8000
-        path: /dentistry/v1
-        pathType: Prefix
-      - backend:
-          service:
-            name: dentistry-web
-            port:
-              number: 80
-        path: /dentistry
         pathType: Prefix

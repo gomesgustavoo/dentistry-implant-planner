@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Reinstall the first-party serving models from the training runs on /mnt/mldata.
+# Reinstall the first-party serving models from the training runs under $TF3_DATA.
 #
 # 2026-09-01: `models/` was destroyed with the project tree. The CHECKPOINTS were
 # not -- they live on the separate data disk, which the deletion never touched. So
@@ -7,7 +7,7 @@
 # (trainer rewritten, optimizer stripped) had to be rebuilt, which is what this does.
 set -euo pipefail
 cd "$(dirname "$0")/.."
-R=/mnt/mldata/tf3/nnUNet_results
+R="${TF3_DATA:?set TF3_DATA to the ToothFairy3 data root}/nnUNet_results"
 
 install() {  # <run-dir> <fold> <slug>
   echo "=== $3"

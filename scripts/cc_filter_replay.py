@@ -191,7 +191,7 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--base", type=Path, default=ROOT / "eval/base_board/base",
                     help="unfiltered predictions, on the plan grid")
-    ap.add_argument("--labels", type=Path, default=Path("/mnt/mldata/tf3/holdout/labels"))
+    ap.add_argument("--labels", type=Path, default=Path(__import__("os").environ.get("TF3_DATA", "tf3")) / "holdout/labels")
     ap.add_argument("--table", type=Path,
                     default=ROOT / "models/toothfairy3/cc_thresholds.json")
     ap.add_argument("--percentile", type=float, default=2.0)

@@ -44,7 +44,7 @@ export const ROOT = path.resolve(LANDING, '..');
 export const EDL_PATH = path.join(LANDING, 'media/edl.json');
 export const MANIFEST_PATH = path.join(LANDING, 'src/generated/media.json');
 export const MEDIA_DIR = path.join(LANDING, 'assets/media');
-export const WORK = process.env.MEDIA_WORK || '/mnt/mldata/implantplan-media-work';
+export const WORK = process.env.MEDIA_WORK || '.media-work';
 /** Written by make_vr_media.mjs each time it replaces media.json with something different. */
 export const PREVIOUS_PATH = path.join(WORK, 'media.previous.json');
 /** <name>.<sha8>.<ext>: the only shape a file under assets/media may have. */

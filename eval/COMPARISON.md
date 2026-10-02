@@ -3,7 +3,7 @@
 *Rebuilt 2026-09-01, after the project tree was destroyed and `eval/` was lost entirely.
 Every number below was re-measured on this box; none is transcribed from the record.*
 
-All rows: the 20-case ToothFairy3 holdout (`/mnt/mldata/tf3/holdout`, seed 42), scored by
+All rows: the 20-case ToothFairy3 holdout (`$TF3_DATA/holdout`, seed 42), scored by
 `scripts/eval_dice.py --space tf3-task1-raw-gt`, predicted by `scripts/tf3_predict.py` —
 which calls `worker.pipeline.segment_task1`, **the same function `worker/main.py` calls**,
 so the composition graded here is the composition the product runs.

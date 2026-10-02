@@ -192,11 +192,10 @@ class Settings(BaseSettings):
     RESULT_TTL_HOURS: int = 72
     UPLOAD_MAX_MB: int = 1024
 
-    # --- Identity (Keycloak, the existing `dicomsegvr` realm) ---------------
-    # ISSUER is the public host, because that is what lands in the token's `iss`
-    # (Keycloak is pinned with KC_HOSTNAME_STRICT). JWKS_URL is the in-cluster
-    # address, because the public host is not necessarily routable from inside the
-    # cluster. They are deliberately not the same string.
+    # --- Identity (any OpenID Connect provider; the hosted service uses Keycloak) --
+    # ISSUER is the public URL, because that is what lands in the token's `iss`.
+    # JWKS_URL may be an internal address, because the public host is not necessarily
+    # routable from where the API runs. They are deliberately separate settings.
     # Both empty by default: a deployment WITH accounts names its own provider, and
     # `REQUIRE_AUTH=true` with either one empty refuses to start (api/main.py).
     OIDC_ISSUER: str = ""
@@ -205,10 +204,9 @@ class Settings(BaseSettings):
     # mapper pointing here gets a 401 for a token that is otherwise perfectly valid.
     OIDC_AUDIENCE: str = "dentistry-api"
     JWT_LEEWAY_SECONDS: int = 30
-    # Off until SSO is verified in production. While false the API still validates
-    # and attributes any bearer token it is given, but does not demand one -- which
-    # is what lets the Keycloak rollout happen underneath the BasicAuth that is
-    # currently the only thing protecting uploaded CBCTs.
+    # False = no accounts: every request without a token is the shared `legacy`
+    # tenant (the self-hosted default). A bearer token, if sent, is still validated.
+    # True = every request needs a token from the configured OIDC provider.
     REQUIRE_AUTH: bool = False
     # The tenant that owns everything that existed before accounts did.
     LEGACY_TENANT_NAME: str = "legacy"
@@ -238,11 +236,8 @@ class Settings(BaseSettings):
     TRIAL_DAYS: int = 14
 
     # --- Stripe -------------------------------------------------------------
-    # The three prices are the LIVE DicomSegVR ones, shared between the two
-    # products; a Price's amount is immutable in Stripe so they cannot drift.
-    # Consequence worth knowing: an invoice for a dentistry subscription reads
-    # "DicomSegVR Explorer/Pro/Enterprise", because the Product name lives on the
-    # Price. Fixing that means three new Products, not a code change.
+    # Billing is optional: with no secret key, /v1/billing/* answers 503 and the UI
+    # offers no upgrade. The three price ids name the Stripe Prices for the paid plans.
     STRIPE_SECRET_KEY: str = ""
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_PRICE_EXPLORER: str = ""

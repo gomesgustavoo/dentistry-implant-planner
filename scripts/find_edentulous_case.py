@@ -180,7 +180,7 @@ def score(r: dict) -> tuple:
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("--preds", default="/mnt/mldata/tf3/edentulous-survey",
+    ap.add_argument("--preds", default=str(Path(__import__("os").environ.get("TF3_DATA", "tf3")) / "edentulous-survey"),
                     help="directory of PREDICTED Task-1 label maps")
     ap.add_argument("--top", type=int, default=6)
     a = ap.parse_args()

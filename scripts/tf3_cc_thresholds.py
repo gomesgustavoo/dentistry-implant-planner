@@ -46,7 +46,7 @@ def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--labels", type=Path,
-                    default=Path("/mnt/mldata/tf3/nnUNet_raw/Dataset119_ToothFairy3/labelsTr"))
+                    default=Path(__import__("os").environ.get("TF3_DATA", "tf3")) / "nnUNet_raw/Dataset119_ToothFairy3/labelsTr")
     ap.add_argument("--out", type=Path,
                     default=Path("models/toothfairy3/cc_thresholds.json"))
     ap.add_argument("--limit", type=int, default=0)

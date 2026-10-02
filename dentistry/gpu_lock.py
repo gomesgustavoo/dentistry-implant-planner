@@ -1,24 +1,20 @@
-"""Cross-service GPU mutex — the same lock DicomSegVR and VoxTell already share.
+"""Cross-service GPU mutex: one Postgres advisory lock that every GPU service on a
+host takes before it loads a model.
 
-This box has one RTX 3080 (12 GB). Three things now want it: `app/inference`
-(DicomSegVR's 25 nnU-Net models + TotalSegmentator), `voxtell/voxtell-worker`,
-and this service. The NVIDIA device plugin is configured for time-slicing
-(`47-nvidia-device-plugin.yaml`, `replicas: 2`), which partitions **compute, not
-VRAM** — so the only thing stopping two 3D models being resident at once is this
-mutex.
+Time-slicing a GPU between pods partitions **compute, not VRAM**, so when several
+services share one card (this worker, other inference services, a training run), the
+only thing stopping two 3-D models being resident at once is this mutex. A worker
+that has the GPU to itself skips it with `DENT_GPU_LOCK=off` (see `worker/tf3.py`).
 
-A Postgres **session-level advisory lock** is the right primitive, for the
-reasons the original copy spells out: it belongs to a connection, so a crash
-releases it with no stale-lock reaper to get wrong; `pg_advisory_lock` blocks and
-queues rather than failing, which is what a background job wants; and everything
-here already talks to this Postgres. Advisory locks are per-database, so the lock
-lives on a third, empty `gpulock` database that all three services connect to
-with nothing but CONNECT rights.
+A Postgres **session-level advisory lock** is the right primitive: it belongs to a
+connection, so a crash releases it with no stale-lock reaper to get wrong;
+`pg_advisory_lock` blocks and queues rather than failing, which is what a background
+job wants. Advisory locks are per-database, so the lock lives on its own empty
+database (`GPU_LOCK_DSN`) that every sharing service connects to with nothing but
+CONNECT rights.
 
-**This file is a deliberate third copy** of `dicomsegvr/worker/app/gpu_lock.py`
-and `voxtell-cloud/worker/gpu_lock.py` (separate repos, separate images). All
-three MUST agree on `GPU_LOCK_KEY`. Changing it here silently un-shares the lock
-and lets two models onto the card.
+Every service sharing the card MUST use the same `GPU_LOCK_KEY`. Changing it here
+silently un-shares the lock and lets two models onto the card.
 
 `chunked_lease` is the one addition: a long training run cannot hold the mutex
 for two days, and cannot poll with `pg_try_advisory_lock` either, because `try`
@@ -39,8 +35,7 @@ from sqlalchemy import create_engine, text
 
 log = logging.getLogger("dentistry.gpulock")
 
-# "vx_gpu" -- must match dicomsegvr/worker/app/settings.py::GPU_LOCK_KEY and
-# voxtell-cloud's worker. Do not change.
+# "vx_gpu" -- must match every other service that shares the GPU. Do not change.
 GPU_LOCK_KEY = 0x76785F677075
 
 _engine = None

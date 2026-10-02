@@ -57,3 +57,5 @@ marketing/video/implantplanVR-videos/implantplan-vr-text-upscale-compare.mp4
 
 # Impeccable design review captures (local only)
 /.impeccable/review/
+/.media-work/
+/k8s/overlays/

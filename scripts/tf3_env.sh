@@ -2,11 +2,10 @@
 #
 #   . scripts/tf3_env.sh
 #
-# Everything nnU-Net needs lives on the dedicated data disk (/dev/sdb, ext4, mounted
-# at /mnt/mldata), not on the root filesystem: buffered writes to / run at about
-# 7 MB/s on this box, and preprocessing writes tens of gigabytes.
-export DENTISTRY_ROOT=/home/tavulha/dentistry
-export TF3_DATA=/mnt/mldata/tf3
+# TF3_DATA is the ToothFairy3 data root (nnUNet_raw / _preprocessed / _results under
+# it). Put it on a fast disk with room: preprocessing writes tens of gigabytes.
+export DENTISTRY_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export TF3_DATA="${TF3_DATA:?set TF3_DATA to the ToothFairy3 data root}"
 export nnUNet_raw="$TF3_DATA/nnUNet_raw"
 export nnUNet_preprocessed="$TF3_DATA/nnUNet_preprocessed"
 export nnUNet_results="$TF3_DATA/nnUNet_results"

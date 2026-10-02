@@ -31,8 +31,8 @@
  * so "frame 0 of the hero" means the same source frame in both scripts.
  *
  * MACHINE. Bulk intermediates (lossless FFV1, ~25-40 MB per loop) go to $MEDIA_WORK, default
- * /mnt/mldata/implantplan-media-work: the root disk of this KVM guest writes buffered data at
- * about 7 MB/s and has OOM'd the k3s cluster before. Encodes run strictly one at a time at
+ * ./.media-work: point it at a fast data disk on a machine whose root disk is slow (a buffered
+ * write storm on a slow root disk can starve everything else on the box). Encodes run strictly one at a time at
  * nice 10, because parallel encoders exhaust RAM before they exhaust cores, and the cluster's
  * pods share this box.
  *

@@ -25,7 +25,7 @@ on an LPS-stored volume measured 0.0-0.3% containment of the accessory canals
 against the 100% the box was validated at over 512 training cases.
 
 **Take the GPU mutex per model, not once around the run.** The lease also
-serialises DicomSegVR and voxtell-worker, and `tf3.borrowed_gpu` parks the network
+serialises every other service sharing the GPU, and `tf3.borrowed_gpu` parks the network
 on the CPU and empties the cache BEFORE unlocking -- releasing the lock while still
 holding ~1.7 GB is what killed a training run at epoch 126.
 

@@ -179,8 +179,8 @@ def borrowed_gpu(predictor, enabled: bool = True, on_wait=None):
     on the next call.
 
     Per unit of work rather than per run, deliberately: this mutex also serialises
-    DicomSegVR's inference and voxtell-worker, and a long batch that held it would
-    stall both.
+    any other service sharing the GPU, and a long batch that held it would stall
+    them.
     """
     if not enabled:
         yield
