@@ -1103,7 +1103,10 @@ async function vrPage() {
           for (const x of p.sha) {
             // Grouped 4 x 16 for reading; the element may also hold a Copy button, so take the
             // 64-hex run rather than every hex-looking letter.
-            const shown = (x.text.replace(/[\s\u200b\u2009\u202f]+/g, '').match(/[0-9a-f]{64}/i)?.[0] ?? '').toLowerCase();
+            // The probed element can include the "SHA-256" label, whose digits run straight into
+            // the hash once whitespace is gone ("256b889..."), so test containment, not a match.
+            const flat = x.text.replace(/[\s\u200b\u2009\u202f]+/g, '').toLowerCase();
+            const shown = flat.includes(String(x.data).toLowerCase()) ? String(x.data).toLowerCase() : (flat.match(/[0-9a-f]{64}/)?.[0] ?? '');
             if (shown !== x.data || x.data !== apk.sha256) problems.push(`SHA text ${shown.slice(0, 16)}..., data-sha256 ${String(x.data).slice(0, 16)}..., apk.json ${apk.sha256.slice(0, 16)}... disagree`);
           }
           if (!p.downloads.some(d => d.href === apk.href && d.download === apk.file)) problems.push(`no a[href="${apk.href}"][download="${apk.file}"]`);

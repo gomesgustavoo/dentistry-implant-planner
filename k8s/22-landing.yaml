@@ -21,7 +21,7 @@ spec:
         app: dentistry-landing
     spec:
       containers:
-      - image: dentistry/landing:0.15.0
+      - image: dentistry/landing:0.15.1
         imagePullPolicy: IfNotPresent
         # 3s, not 1s. At 1s this probe killed a healthy container: the pod exited 0
         # ("Completed", not OOMKilled) after 19h up, while the host was saturated by
