@@ -247,6 +247,13 @@ STATES.push({
   snap: ['#settings'],
 });
 STATES.push({
+  name: 'settings-anonymous',
+  cfg: { signedIn: false, noBoot: false, anonymous: true },
+  hash: '#/settings',
+  body: `await ${sleep(1500)}; clearInterval(state.poll);`,
+  snap: ['#settings'],
+});
+STATES.push({
   name: 'contact',
   cfg: { signedIn: true, noBoot: false },
   hash: '#/contact',

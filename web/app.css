@@ -1710,6 +1710,7 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
    because a 3-D pane that collapses to 40 px is worse than one that is short. */
 .uploadplan { margin: .5rem 0 0; color: var(--muted); font-size: 13px; }
 .uploadplan b { color: var(--ink); }
+.shared-note { margin: .4rem 0 0; color: var(--muted); font-size: 12.5px; }
 .models {
   display: grid; gap: 1rem;
   /* MODEST. This was widened to clamp(320px, 26vw, 560px) when the pane started

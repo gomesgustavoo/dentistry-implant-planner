@@ -152,4 +152,8 @@ def me(
         "usage": {"basis": st.basis, "used": st.used, "limit": st.limit,
                   "remaining": st.remaining},
         "billingEnabled": settings.stripe_enabled,
+        # False on a deployment without accounts, where every request is the anonymous
+        # `legacy` tenant. The UI hides what only an account can use (profile, team,
+        # headsets, billing) and says once that the server is shared.
+        "authRequired": bool(settings.REQUIRE_AUTH),
     }

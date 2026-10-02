@@ -764,6 +764,24 @@ def _bootstrap_tenants(conn) -> None:
         log.info("adopted %d example and %d pre-accounts job(s)",
                  adopted_examples, adopted_legacy)
 
+    # A deployment WITHOUT accounts (DENT_REQUIRE_AUTH=false, the self-hosted default)
+    # runs every request as `legacy`, and `quota.load_state` refuses a tenant with no
+    # subscription row -- so without this, every upload and `/v1/me` answers 402
+    # no_subscription. Opt-in and empty by default, so the hosted service is untouched;
+    # only ever INSERTs, so an operator's own row for `legacy` is never overwritten.
+    plan = (getattr(settings, "LEGACY_PLAN", "") or "").strip()
+    if plan:
+        res = conn.execute(text(
+            "INSERT INTO subscriptions (id, tenant_id, plan_id, status) "
+            "SELECT gen_random_uuid(), CAST(:t AS uuid), p.id, :st FROM plans p "
+            "WHERE p.id = :p AND NOT EXISTS "
+            "  (SELECT 1 FROM subscriptions WHERE tenant_id = CAST(:t2 AS uuid))"
+        ), {"t": legacy, "t2": legacy, "p": plan, "st": ACTIVE})
+        if res.rowcount:
+            log.info("legacy tenant subscribed to plan %r (DENT_LEGACY_PLAN)", plan)
+        elif not conn.execute(text("SELECT 1 FROM plans WHERE id = :p"), {"p": plan}).first():
+            raise RuntimeError(f"DENT_LEGACY_PLAN={plan!r} names no plan")
+
 
 def system_tenant(session, kind: str) -> str | None:
     """`::text` deliberately -- see dentistry.auth.Caller. A raw query returns a

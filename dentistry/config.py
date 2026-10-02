@@ -212,6 +212,9 @@ class Settings(BaseSettings):
     REQUIRE_AUTH: bool = False
     # The tenant that owns everything that existed before accounts did.
     LEGACY_TENANT_NAME: str = "legacy"
+    # Self-hosted, no accounts: the plan the anonymous `legacy` tenant is given at
+    # start-up (e.g. "enterprise" = unlimited). Empty on the hosted service.
+    LEGACY_PLAN: str = ""
 
     @property
     def oidc_account_url(self) -> str:

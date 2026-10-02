@@ -13,7 +13,9 @@ function setSettingsNote(id, msg, kind) {
 function renderSettings() {
   const me = state.me;
   const ws = me && me.workspace;
-  $('settingsWho').textContent = me
+  $('settingsWho').textContent = noAccounts()
+    ? 'This server runs without accounts: every case on it is visible to anyone who can reach it.'
+    : me
     ? [displayName(me), ws && !ws.isPersonal ? ws.name : null, me.plan.name]
         .filter(Boolean).join(' \u00b7 ')
     : 'Loading your account\u2026';
@@ -36,6 +38,7 @@ function renderSettings() {
     </p>` : '';
 
   renderPlanPanel();
+  applyAccountMode();
 }
 
 function renderPlanPanel() {

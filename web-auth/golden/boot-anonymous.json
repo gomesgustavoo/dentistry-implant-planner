@@ -10,12 +10,7 @@
    "a[data-view=settings href=#/settings] Settings",
    "*[id=sysstrip title=The worker is idle]",
    "*[id=sysdot]",
-   "*[id=systext] idle",
-   "a[href=#/settings id=usageChip title=3 of 40 used this month]",
-   "*[id=usageFill]",
-   "*[id=usageText] 37 left",
-   "button[aria-expanded=false aria-haspopup=menu aria-label=Account id=acctBtn title=Dr Example type=button]",
-   "*[id=acctInitials] DE"
+   "*[id=systext] idle"
   ],
   "#home": [
    "*[id=home]",
@@ -39,6 +34,7 @@
    "* .zip",
    "*[id=uploadPlan] This upload will run: — about 98 s on the GPU, plus the derived views.",
    "* ToothFairy3 U-Mamba2 + Anterior canal specialist (incisive + lingual)",
+   "*[id=sharedNoteHome] This server runs without accounts: every case on it is visible to anyone who can reach it.",
    "*[id=examplesPanel]",
    "h2 Example cases",
    "* already segmented — open one to place an implant",

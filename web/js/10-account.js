@@ -78,6 +78,21 @@ function renderUsageChip() {
     : `${u.used} of ${u.limit} used ${u.basis === 'trial' ? 'in your trial' : 'this month'}`;
 }
 
+/** Whether this deployment runs without accounts: no identity provider configured in
+ *  web/config.js, or an API that says it requires none. Every request is then the one
+ *  anonymous workspace, so what only an account can use -- profile, team, headsets,
+ *  billing, the usage chip and the avatar -- is hidden rather than left loading. */
+function noAccounts() {
+  return !AUTH || !!(state.me && state.me.authRequired === false);
+}
+
+function applyAccountMode() {
+  const off = noAccounts();
+  ['acctBtn', 'usageChip', 'profilePanel', 'teamPanel', 'headsetPanel', 'planPanel']
+    .forEach((id) => { const el = $(id); if (el && off) el.hidden = true; });
+  ['sharedNoteHome'].forEach((id) => { const el = $(id); if (el) el.hidden = !off; });
+}
+
 /** The dropdown behind the avatar. Rebuilt on every open, from `state.me`. */
 function renderAccount() {
   renderUsageChip();
@@ -128,6 +143,7 @@ function renderAccount() {
       closeAccountMenu();
     };
   });
+  applyAccountMode();
 }
 
 /** The workspace list inside the account menu.

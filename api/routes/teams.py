@@ -78,6 +78,11 @@ def my_workspaces(
     caller: Caller = Depends(current_caller),
 ) -> dict:
     """Every workspace this user belongs to, with which one is active."""
+    if not caller.user_id:
+        # No accounts (DENT_REQUIRE_AUTH=false): one anonymous workspace and nothing to
+        # switch to. Without this the membership query casts '' to uuid and 500s.
+        return {"activeTenantId": caller.tenant_id, "personalTenantId": caller.tenant_id,
+                "tenants": []}
     rows = s.execute(text(
         "SELECT t.id::text, t.name, m.role, "
         "       (SELECT count(*) FROM tenant_members m2 WHERE m2.tenant_id = t.id) "
@@ -151,6 +156,8 @@ def list_members(
     caller: Caller = Depends(current_caller),
 ) -> dict:
     """Readable by any member: you are entitled to know who else can see your cases."""
+    if not caller.user_id:
+        return {"members": [], "pending": [], "yourRole": caller.role, "yourUserId": None}
     pending = []
     if caller.is_owner:
         # Only owners see the invite list -- it carries email addresses of people
