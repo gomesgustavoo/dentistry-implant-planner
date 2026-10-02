@@ -24,9 +24,9 @@ COPY --chmod=0755 docker/web-entrypoint.d/40-dentistry-config.sh /docker-entrypo
 # silently, because the build would still pass.
 RUN sed -i "s/?v=dev/?v=${VERSION}/g" /usr/share/nginx/html/index.html \
     && grep -q "app.css?v=${VERSION}" /usr/share/nginx/html/index.html \
-    && grep -q "wordmark.png?v=${VERSION}" /usr/share/nginx/html/index.html \
+    && grep -q "icon-64.png?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "qrcodegen.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "config.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "js/00-core.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "js/90-boot.js?v=${VERSION}" /usr/share/nginx/html/index.html \
-    && rm -f /usr/share/nginx/html/DESIGN.md
+    && rm -rf /usr/share/nginx/html/DESIGN.md /usr/share/nginx/html/.impeccable

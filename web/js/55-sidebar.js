@@ -245,7 +245,7 @@ function renderFindings(r) {
     ...(q.symmetry_violations === undefined ? [] : [(q.symmetry_violations.length
       ? ['Left/right volumes',
          q.symmetry_violations.map((v) => `${v.pair[0]}/${v.pair[1]} ${Math.round(v.difference * 100)}%`)
-           .join(', '), 'warn']
+           .join('\n'), 'warn']
       : ['Left/right volumes', 'matched', 'ok'])]),
     ['Canal components', q.canal_components ?? '—', q.canal_components === 2 ? 'ok' : 'warn'],
     ['Left/right check', lat == null ? 'not checked' : lat ? 'consistent' : 'FAILED',
@@ -434,7 +434,8 @@ function fragSummary(q) {
   const frags = q.tooth_fragments || [];
   if (!frags.length) return fdis.join(', ');
   const worst = frags.reduce((a, b) => (b.mm3 > a.mm3 ? b : a));
-  return `${fdis.join(', ')} · largest ${Math.round(worst.mm3)} mm³ on ${worst.fdi}`;
+  // Two lines (the cell is `white-space: pre-line`): which teeth, then the worst one.
+  return `${fdis.join(', ')}\nlargest ${Math.round(worst.mm3)} mm³ on ${worst.fdi}`;
 }
 
 /** What this scan is, and only what the file actually says.

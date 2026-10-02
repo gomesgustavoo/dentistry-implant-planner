@@ -2,7 +2,6 @@
  "snapshot": {
   ".topbar": [
    "a[aria-label=ImplantPlan href=#/cases id=brand]",
-   "img[alt=ImplantPlan]",
    "img[alt=ImplantPlan]"
   ],
   "#views": [

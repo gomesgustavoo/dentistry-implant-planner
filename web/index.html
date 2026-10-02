@@ -22,36 +22,54 @@
 <link rel="stylesheet" href="app.css?v=dev">
 </head>
 <body>
+<!-- THE ICON SET. Drawn once for this app on a 16-unit grid, one 1.6 stroke, round caps,
+     currentColor -- referenced with <use>, so every icon is the same weight everywhere.
+     It replaced Unicode glyphs (arrows, a gear, trigrams) whose weight and metrics
+     changed with whatever font the platform had. -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true" focusable="false">
+  <symbol id="i-back" viewBox="0 0 16 16"><path d="M13 8H3.5M7.5 4 3.5 8l4 4"/></symbol>
+  <symbol id="i-pen" viewBox="0 0 16 16"><path d="M10.6 2.9a1.6 1.6 0 0 1 2.3 2.3L5.5 12.6 2.5 13.5l.9-3z"/><path d="m9.5 4 2.5 2.5"/></symbol>
+  <symbol id="i-grid" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="9" y="2.5" width="4.5" height="4.5" rx="1"/><rect x="2.5" y="9" width="4.5" height="4.5" rx="1"/><rect x="9" y="9" width="4.5" height="4.5" rx="1"/></symbol>
+  <symbol id="i-focus" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="7.5" height="11" rx="1"/><path d="M12.5 3v2.4M12.5 6.8v2.4M12.5 10.6V13"/></symbol>
+  <symbol id="i-solo" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.4"/></symbol>
+  <symbol id="i-sliders" viewBox="0 0 16 16"><path d="M2.5 4.5h6M11.5 4.5h2M2.5 11.5h2M7.5 11.5h6"/><circle cx="10" cy="4.5" r="1.5"/><circle cx="6" cy="11.5" r="1.5"/></symbol>
+  <symbol id="i-panel-left" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.4"/><path d="M6.5 2.5v11"/></symbol>
+  <symbol id="i-panel-right" viewBox="0 0 16 16"><rect x="2.5" y="2.5" width="11" height="11" rx="1.4"/><path d="M9.5 2.5v11"/></symbol>
+  <symbol id="i-refresh" viewBox="0 0 16 16"><path d="M13 8a5 5 0 1 1-1.5-3.6"/><path d="M13 2.8v2.6h-2.6"/></symbol>
+  <symbol id="i-undo" viewBox="0 0 16 16"><path d="M5.5 3 2.8 5.7l2.7 2.7"/><path d="M3 5.7h6.2a3.8 3.8 0 0 1 0 7.6H6"/></symbol>
+  <symbol id="i-redo" viewBox="0 0 16 16"><path d="m10.5 3 2.7 2.7-2.7 2.7"/><path d="M13 5.7H6.8a3.8 3.8 0 0 0 0 7.6H10"/></symbol>
+  <symbol id="i-upload" viewBox="0 0 16 16"><path d="M8 10.5V2.8M4.8 5.8 8 2.6l3.2 3.2"/><path d="M2.8 10v2.2c0 .7.6 1.3 1.3 1.3h7.8c.7 0 1.3-.6 1.3-1.3V10"/></symbol>
+  <symbol id="t-brush" viewBox="0 0 16 16"><path d="M10.6 2.9a1.6 1.6 0 0 1 2.3 2.3L7 11.1 4.9 9z"/><path d="M4.9 9c-1.7 0-2.4 1.3-2.4 2.6 0 .8-.3 1.4-.7 1.9 2.4.3 5.2-.4 5.2-2.4"/></symbol>
+  <symbol id="t-brush3d" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><ellipse cx="8" cy="8" rx="5.5" ry="2.2"/><circle cx="8" cy="8" r="1.2"/></symbol>
+  <symbol id="t-circle" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/></symbol>
+  <symbol id="t-rect" viewBox="0 0 16 16"><rect x="2.5" y="3.5" width="11" height="9" rx="1"/></symbol>
+  <symbol id="t-sphere" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M4.3 6.2a5 5 0 0 1 3.2-2.7"/></symbol>
+  <symbol id="t-fill" viewBox="0 0 16 16"><path d="M7.2 2.5 2.7 7a1.4 1.4 0 0 0 0 2l3.3 3.3a1.4 1.4 0 0 0 2 0l4.5-4.5z"/><path d="M13.3 10.2s1 1.4 1 2.1a1 1 0 0 1-2 0c0-.7 1-2.1 1-2.1z"/></symbol>
+  <symbol id="t-erase" viewBox="0 0 16 16"><path d="m9.3 2.9 3.8 3.8a1.3 1.3 0 0 1 0 1.8L8.5 13H5.2L2.9 10.7a1.3 1.3 0 0 1 0-1.8z"/><path d="M6 6.2 10.8 11M8.5 13h5"/></symbol>
+  <symbol id="t-erase3d" viewBox="0 0 16 16"><circle cx="8" cy="8" r="5.5"/><path d="M5.2 5.2l5.6 5.6"/></symbol>
+</svg>
 
 <!-- ============================================================== the topbar
      ONE row, three zones: identity, context, account. The context zone swaps
      between the view tabs and the open case's title, so the bar never grows a
      second line and the case title never competes with navigation. -->
 <header class="topbar">
-  <!-- ONE image, not a mark beside a name. The identity's rule is "the name is the logo",
-       and its Never list names the exact thing this used to be: an icon beside a wordmark.
-       The 22px gradient tile that sat here carried no glyph at all.
-       TWO files, because `.brand-name` used to be hidden below 900px and the tile was
-       therefore the entire brand on a phone -- delete the tile naively and mobile goes
-       unbranded. The wordmark is 5.9:1 wide and stops fitting; the icon takes over. An
-       icon ALONE is not an icon BESIDE a wordmark, so the rule still holds. -->
+  <!-- The logomark, alone: the brand slot is the implant-in-bone tile with no wordmark
+       beside it or in place of it (DESIGN.md). One image at every width. -->
   <a class="brand" href="#/cases" id="brand" aria-label="ImplantPlan">
-    <img class="brand-word" src="assets/brand/wordmark.png?v=dev" alt="ImplantPlan"
-         width="669" height="114" decoding="async">
     <img class="brand-icon" src="assets/brand/icon-64.png?v=dev" alt="ImplantPlan"
          width="64" height="64" decoding="async">
   </a>
 
   <nav class="nav" id="nav" aria-label="Views">
     <a class="nav-item" data-view="cases" href="#/cases">Cases</a>
-    <a class="nav-item" data-view="contact" href="#/contact">Custom models</a>
     <a class="nav-item" data-view="settings" href="#/settings">Settings</a>
   </nav>
 
   <!-- Replaces the nav while a case is open. -->
   <div class="casebar" id="casebar" hidden>
     <button class="iconbtn" id="backHome" type="button" title="All cases  ( Esc )"
-            aria-label="Back to all cases">&#8592;</button>
+            aria-label="Back to all cases"><svg class="ic" aria-hidden="true"><use href="#i-back"/></svg></button>
     <span class="casebar-title" id="caseTitle">Case</span>
     <span class="casebar-sub" id="caseSub"></span>
     <!-- The view switch, IN THE HEADER.
@@ -73,16 +91,18 @@
              primary mouse button, and a viewer whose left button paints instead of
              windowing is a viewer somebody edits by accident. -->
         <button class="iconbtn" id="editBtn" type="button" aria-pressed="false"
-                title="Correct the segmentation mask  ( e )">&#9998;</button>
+                title="Correct the segmentation mask  ( e )"
+                aria-label="Correct the segmentation mask"><svg class="ic" aria-hidden="true"><use href="#i-pen"/></svg></button>
         <div class="seg" id="layoutPicker" role="group" aria-label="Pane layout">
-          <button class="segb on" data-layout="grid" type="button" title="Four panes  ( 0 )">&#9636;</button>
-          <button class="segb" data-layout="focus" type="button" title="One large, three small  ( 1-4 )">&#9647;</button>
-          <button class="segb" data-layout="solo" type="button" title="Single pane  ( f )">&#9723;</button>
+          <button class="segb on" data-layout="grid" type="button" title="Four panes  ( 0 )" aria-label="Four panes"><svg class="ic" aria-hidden="true"><use href="#i-grid"/></svg></button>
+          <button class="segb" data-layout="focus" type="button" title="One large, three small  ( 1-4 )" aria-label="One large, three small"><svg class="ic" aria-hidden="true"><use href="#i-focus"/></svg></button>
+          <button class="segb" data-layout="solo" type="button" title="Single pane  ( f )" aria-label="Single pane"><svg class="ic" aria-hidden="true"><use href="#i-solo"/></svg></button>
         </div>
 
         <div class="popwrap">
           <button class="iconbtn" id="displayBtn" type="button" aria-haspopup="dialog"
-                  aria-expanded="false" title="Display options  ( d )">&#9881;</button>
+                  aria-expanded="false" title="Display options  ( d )"
+                  aria-label="Display options"><svg class="ic" aria-hidden="true"><use href="#i-sliders"/></svg></button>
           <div class="pop" id="displayPop" hidden>
             <div class="pop-row">
               <span class="pop-label">3D</span>
@@ -113,10 +133,10 @@
   <div class="topbar-right">
     <button class="iconbtn" id="railToggle" type="button" hidden
             title="Collapse the side panel  ( [ )" aria-expanded="true"
-            aria-label="Toggle the side panel">&#9776;</button>
+            aria-label="Toggle the side panel"><svg class="ic" aria-hidden="true"><use href="#i-panel-left"/></svg></button>
     <button class="iconbtn" id="dockToggle" type="button" hidden
             title="Collapse the tools and structures panel  ( ] )" aria-expanded="true"
-            aria-label="Toggle the tools and structures panel">&#9707;</button>
+            aria-label="Toggle the tools and structures panel"><svg class="ic" aria-hidden="true"><use href="#i-panel-right"/></svg></button>
 
     <!-- Queue depth. Collapses to just the dot below 900px. -->
     <div class="sysstrip" id="sysstrip" title="Queue depth and worker state">
@@ -183,7 +203,7 @@
       <div class="drop" id="drop" tabindex="0" role="button" aria-label="Choose a file to segment">
         <input type="file" id="fileInput" accept=".nii,.nii.gz,.zip" hidden>
         <div class="drop-inner">
-          <span class="drop-icon" aria-hidden="true"></span>
+          <span class="drop-icon" aria-hidden="true"><svg class="ic" aria-hidden="true"><use href="#i-upload"/></svg></span>
           <span class="drop-title">Drop a CBCT here, or click to choose</span>
           <span class="drop-sub">NIfTI (<code>.nii</code>, <code>.nii.gz</code>) or a DICOM series as <code>.zip</code></span>
         </div>
@@ -193,6 +213,7 @@
       <!-- What the NEXT upload will actually run, from the picker below. A choice made
            in one panel and spent in another needs saying in the panel that spends it. -->
       <p class="uploadplan" id="uploadPlan"></p>
+      <a class="uploadplan-link" id="changeModels" href="#/cases">Change models</a>
       <!-- Only on a deployment without accounts. Said once, where scans are added. -->
       <p class="shared-note" id="sharedNoteHome" hidden>This server runs without accounts:
         every case on it is visible to anyone who can reach it.</p>
@@ -203,6 +224,23 @@
          never change, and with a 3-D pane beside it, it was the largest thing on the
          page -- so the finished segmentations somebody actually came to look at sat
          below the fold, under a control panel. Order by what the reader wants. -->
+    <section class="panel" id="jobsPanel">
+      <div class="panel-head">
+        <h2>Your cases</h2>
+        <div class="panel-tools">
+          <div class="seg" id="jobFilter" role="group" aria-label="Filter cases">
+            <button class="segb on" data-filter="all" type="button">All</button>
+            <button class="segb" data-filter="active" type="button">Active</button>
+            <button class="segb" data-filter="done" type="button">Done</button>
+            <button class="segb" data-filter="failed" type="button">Failed</button>
+          </div>
+          <button class="iconbtn" id="refreshJobs" type="button"
+                  title="Refresh" aria-label="Refresh the case list"><svg class="ic" aria-hidden="true"><use href="#i-refresh"/></svg></button>
+        </div>
+      </div>
+      <div class="jobs" id="jobs"><p class="empty">No cases yet.</p></div>
+    </section>
+
     <section class="panel" id="examplesPanel" hidden>
       <div class="panel-head">
         <h2>Example cases</h2>
@@ -253,23 +291,6 @@
       </p>
     </section>
 
-
-    <section class="panel" id="jobsPanel">
-      <div class="panel-head">
-        <h2>Your cases</h2>
-        <div class="panel-tools">
-          <div class="seg" id="jobFilter" role="group" aria-label="Filter cases">
-            <button class="segb on" data-filter="all" type="button">All</button>
-            <button class="segb" data-filter="active" type="button">Active</button>
-            <button class="segb" data-filter="done" type="button">Done</button>
-            <button class="segb" data-filter="failed" type="button">Failed</button>
-          </div>
-          <button class="iconbtn" id="refreshJobs" type="button"
-                  title="Refresh" aria-label="Refresh the case list">&#8635;</button>
-        </div>
-      </div>
-      <div class="jobs" id="jobs"><p class="empty">No cases yet.</p></div>
-    </section>
 
     <footer id="homeFoot">
       <p>
@@ -624,7 +645,7 @@
           </details>
           <button class="iconbtn" id="sideToggle" type="button"
                   aria-expanded="true" aria-label="Toggle the measurements panel"
-                  title="Collapse the measurements panel  ( ] )">&#9776;</button>
+                  title="Collapse the measurements panel  ( ] )"><svg class="ic" aria-hidden="true"><use href="#i-panel-right"/></svg></button>
         </div>
 
         <div class="plan-views">
@@ -733,9 +754,10 @@
             <span id="editSizeLabel">2.0 mm</span>
           </label>
           <button class="iconbtn" id="editUndo" type="button"
-                  title="Undo the last stroke  ( &#8984;Z )">&#8630;</button>
+                  title="Undo the last stroke  ( &#8984;Z )"
+                  aria-label="Undo the last stroke"><svg class="ic" aria-hidden="true"><use href="#i-undo"/></svg></button>
           <button class="iconbtn" id="editRedo" type="button"
-                  title="Redo  ( &#8984;&#8679;Z )">&#8631;</button>
+                  title="Redo  ( &#8984;&#8679;Z )" aria-label="Redo"><svg class="ic" aria-hidden="true"><use href="#i-redo"/></svg></button>
         </div>
         <!-- THE BUDGET, BEFORE THE STROKE. The error budget of the structure the brush
              is about to write into, widened by half a display voxel because the mask a

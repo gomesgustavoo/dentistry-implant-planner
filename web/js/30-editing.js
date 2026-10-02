@@ -153,10 +153,11 @@ function renderEditBar() {
     // ones remove -- and "erase" and "erase 3-D" sat between "brush 3-D" and "circle",
     // so the two destructive tools were the least conspicuous things in the panel.
     // Adding and removing are the only distinction that matters before a stroke.
-    const glyph = {
-      brush: '\u270E', brush3d: '\u25C9', circle: '\u25EF', rect: '\u25A2',
-      sphere: '\u2B24', fill: '\u25E9', erase: '\u232B', erase3d: '\u25CE',
-    };
+    // Drawn icons from the sprite in index.html, one per tool; a tool the sprite does
+    // not know falls back to the plain square rather than to a font glyph.
+    const glyph = (key) => `<svg class="ic" aria-hidden="true"><use href="#t-${
+      ['brush', 'brush3d', 'circle', 'rect', 'sphere', 'fill', 'erase', 'erase3d']
+        .includes(key) ? key : 'rect'}"/></svg>`;
     const short = {
       brush: 'Brush', brush3d: 'Brush 3-D', circle: 'Circle', rect: 'Rectangle',
       sphere: 'Sphere', fill: 'Fill', erase: 'Erase', erase3d: 'Erase 3-D',
@@ -165,7 +166,7 @@ function renderEditBar() {
     const btn = (t) => `
       <button class="etool ${e.tool === t.key ? 'on' : ''}" data-tool="${t.key}"
         type="button" title="${esc(t.hint)}">
-        <span class="etool-i" aria-hidden="true">${glyph[t.key] || '\u25A0'}</span>
+        <span class="etool-i" aria-hidden="true">${glyph(t.key)}</span>
         <span class="etool-l">${esc(short[t.key] || t.label)}</span>
       </button>`;
     const group = (name, keys, cls) => {

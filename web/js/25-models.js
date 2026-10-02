@@ -86,7 +86,9 @@ function renderModelPicker() {
     const owns = n === 0 ? 'nothing by default'
       : n > 6 ? `${n} structures &mdash; ${m.groups.join(', ')}`
       : m.structures.map((x) => structureName(x) || x).join(', ');
-    const modes = (m.modes || []).map((k) => `
+    const fixed = (m.modes || []).length < 2;
+    const modes = fixed ? `<span class="modelfixed" title="${esc(MODE_WHY[m.modes && m.modes[0]] || '')}">always runs</span>`
+      : (m.modes || []).map((k) => `
       <button type="button" class="segb ${mode === k ? 'on' : ''}"
         data-model="${esc(m.key)}" data-mode="${k}" ${off || m.modes.length < 2 ? 'disabled' : ''}
         title="${esc(MODE_WHY[k] || '')}">${MODE_LABEL[k] || k}</button>`).join('');
@@ -101,16 +103,17 @@ function renderModelPicker() {
       </header>
       <p class="modelowns">${owns}</p>
       <div class="modelrow">
-        <div class="seg modelmodes" role="group"
-             aria-label="How ${esc(m.name)} runs">${modes}</div>
+        ${fixed ? modes : `<div class="seg modelmodes" role="group"
+             aria-label="How ${esc(m.name)} runs">${modes}</div>`}
         <span class="modelcost">${m.seconds ? `~${Math.round(m.seconds)} s` : ''}</span>
       </div>
-      ${off ? `<p class="hint bad">${esc(m.reason || 'Not installed on this deployment.')}</p>` : ''}
+      ${off ? `<p class="hint">Not installed on this server.</p>` : ''}
       <details class="sidenote">
         <summary>What is measured about it</summary>
         <p class="finding-why">${esc(m.evidence || '')}</p>
         ${m.tradeoff ? `<p class="finding-why">${esc(m.tradeoff)}</p>` : ''}
         <p class="finding-why">Licence: ${esc(m.license || 'unstated')}.</p>
+        ${off && m.reason ? `<p class="finding-why">Why it is unavailable: ${esc(m.reason)}</p>` : ''}
       </details>
     </article>`;
   };
@@ -183,6 +186,15 @@ function uploadConfig() {
 }
 
 function wireModelsPanel() {
+  // From the upload line to the choice it summarises. A scroll, not a route: the hash
+  // belongs to the router, and `#modelsPanel` would be read as an unknown view.
+  const change = $('changeModels');
+  if (change) {
+    change.onclick = (e) => {
+      e.preventDefault();
+      $('modelsPanel').scrollIntoView({ behavior: 'smooth', block: 'start' });
+    };
+  }
   const reset = $('modelsReset');
   if (reset) {
     reset.onclick = () => { modelChoice = {}; renderModelPicker(); renderUploadPlan(); };
