@@ -1,0 +1,416 @@
+{
+    "count": 47,
+    "groups": [
+        {
+            "group": "Jaws",
+            "structures": [
+                {
+                    "index": 1,
+                    "id": "maxilla",
+                    "name": "Maxilla",
+                    "color": "#d9c9a3",
+                    "fdi": null,
+                    "fov_limited": true
+                },
+                {
+                    "index": 2,
+                    "id": "mandible",
+                    "name": "Mandible",
+                    "color": "#c2a878",
+                    "fdi": null,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Nerve canal",
+            "structures": [
+                {
+                    "index": 3,
+                    "id": "canal",
+                    "name": "Mandibular canal",
+                    "color": "#ff3b30",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 41,
+                    "id": "incisive_canal_left",
+                    "name": "Left mandibular incisive canal",
+                    "color": "#ff8f3b",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 42,
+                    "id": "incisive_canal_right",
+                    "name": "Right mandibular incisive canal",
+                    "color": "#e0722a",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 43,
+                    "id": "lingual_canal",
+                    "name": "Lingual canal",
+                    "color": "#ffd23b",
+                    "fdi": null,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Airway & sinuses",
+            "structures": [
+                {
+                    "index": 38,
+                    "id": "sinus_max_left",
+                    "name": "Left maxillary sinus",
+                    "color": "#4fb3bf",
+                    "fdi": null,
+                    "fov_limited": true
+                },
+                {
+                    "index": 39,
+                    "id": "sinus_max_right",
+                    "name": "Right maxillary sinus",
+                    "color": "#2e8b96",
+                    "fdi": null,
+                    "fov_limited": true
+                },
+                {
+                    "index": 40,
+                    "id": "pharynx",
+                    "name": "Pharynx",
+                    "color": "#b07fd6",
+                    "fdi": null,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Dental work",
+            "structures": [
+                {
+                    "index": 44,
+                    "id": "bridge",
+                    "name": "Bridge",
+                    "color": "#5b6b8c",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 45,
+                    "id": "crown",
+                    "name": "Crown",
+                    "color": "#d4af37",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 46,
+                    "id": "implant",
+                    "name": "Implant",
+                    "color": "#3f4a5a",
+                    "fdi": null,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Upper teeth",
+            "structures": [
+                {
+                    "index": 4,
+                    "id": "upper_teeth_unnumbered",
+                    "name": "Upper teeth (unnumbered)",
+                    "color": "#9aa3ad",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 6,
+                    "id": "tooth_11",
+                    "name": "Upper right central incisor (11)",
+                    "color": "#186ebf",
+                    "fdi": 11,
+                    "fov_limited": false
+                },
+                {
+                    "index": 7,
+                    "id": "tooth_12",
+                    "name": "Upper right lateral incisor (12)",
+                    "color": "#1f7acd",
+                    "fdi": 12,
+                    "fov_limited": false
+                },
+                {
+                    "index": 8,
+                    "id": "tooth_13",
+                    "name": "Upper right canine (13)",
+                    "color": "#2984d9",
+                    "fdi": 13,
+                    "fov_limited": false
+                },
+                {
+                    "index": 9,
+                    "id": "tooth_14",
+                    "name": "Upper right first premolar (14)",
+                    "color": "#408fd8",
+                    "fdi": 14,
+                    "fov_limited": false
+                },
+                {
+                    "index": 10,
+                    "id": "tooth_15",
+                    "name": "Upper right second premolar (15)",
+                    "color": "#5699d7",
+                    "fdi": 15,
+                    "fov_limited": false
+                },
+                {
+                    "index": 11,
+                    "id": "tooth_16",
+                    "name": "Upper right first molar (16)",
+                    "color": "#6ca4d8",
+                    "fdi": 16,
+                    "fov_limited": false
+                },
+                {
+                    "index": 12,
+                    "id": "tooth_17",
+                    "name": "Upper right second molar (17)",
+                    "color": "#80aed9",
+                    "fdi": 17,
+                    "fov_limited": false
+                },
+                {
+                    "index": 13,
+                    "id": "tooth_18",
+                    "name": "Upper right third molar (18)",
+                    "color": "#94b9db",
+                    "fdi": 18,
+                    "fov_limited": false
+                },
+                {
+                    "index": 14,
+                    "id": "tooth_21",
+                    "name": "Upper left central incisor (21)",
+                    "color": "#18bf8d",
+                    "fdi": 21,
+                    "fov_limited": false
+                },
+                {
+                    "index": 15,
+                    "id": "tooth_22",
+                    "name": "Upper left lateral incisor (22)",
+                    "color": "#1fcd99",
+                    "fdi": 22,
+                    "fov_limited": false
+                },
+                {
+                    "index": 16,
+                    "id": "tooth_23",
+                    "name": "Upper left canine (23)",
+                    "color": "#29d9a4",
+                    "fdi": 23,
+                    "fov_limited": false
+                },
+                {
+                    "index": 17,
+                    "id": "tooth_24",
+                    "name": "Upper left first premolar (24)",
+                    "color": "#40d8aa",
+                    "fdi": 24,
+                    "fov_limited": false
+                },
+                {
+                    "index": 18,
+                    "id": "tooth_25",
+                    "name": "Upper left second premolar (25)",
+                    "color": "#56d7b1",
+                    "fdi": 25,
+                    "fov_limited": false
+                },
+                {
+                    "index": 19,
+                    "id": "tooth_26",
+                    "name": "Upper left first molar (26)",
+                    "color": "#6cd8b7",
+                    "fdi": 26,
+                    "fov_limited": false
+                },
+                {
+                    "index": 20,
+                    "id": "tooth_27",
+                    "name": "Upper left second molar (27)",
+                    "color": "#80d9be",
+                    "fdi": 27,
+                    "fov_limited": false
+                },
+                {
+                    "index": 21,
+                    "id": "tooth_28",
+                    "name": "Upper left third molar (28)",
+                    "color": "#94dbc6",
+                    "fdi": 28,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Lower teeth",
+            "structures": [
+                {
+                    "index": 5,
+                    "id": "lower_teeth_unnumbered",
+                    "name": "Lower teeth (unnumbered)",
+                    "color": "#8b96a6",
+                    "fdi": null,
+                    "fov_limited": false
+                },
+                {
+                    "index": 22,
+                    "id": "tooth_31",
+                    "name": "Lower left central incisor (31)",
+                    "color": "#bf8618",
+                    "fdi": 31,
+                    "fov_limited": false
+                },
+                {
+                    "index": 23,
+                    "id": "tooth_32",
+                    "name": "Lower left lateral incisor (32)",
+                    "color": "#cd921f",
+                    "fdi": 32,
+                    "fov_limited": false
+                },
+                {
+                    "index": 24,
+                    "id": "tooth_33",
+                    "name": "Lower left canine (33)",
+                    "color": "#d99d29",
+                    "fdi": 33,
+                    "fov_limited": false
+                },
+                {
+                    "index": 25,
+                    "id": "tooth_34",
+                    "name": "Lower left first premolar (34)",
+                    "color": "#d8a440",
+                    "fdi": 34,
+                    "fov_limited": false
+                },
+                {
+                    "index": 26,
+                    "id": "tooth_35",
+                    "name": "Lower left second premolar (35)",
+                    "color": "#d7ab56",
+                    "fdi": 35,
+                    "fov_limited": false
+                },
+                {
+                    "index": 27,
+                    "id": "tooth_36",
+                    "name": "Lower left first molar (36)",
+                    "color": "#d8b36c",
+                    "fdi": 36,
+                    "fov_limited": false
+                },
+                {
+                    "index": 28,
+                    "id": "tooth_37",
+                    "name": "Lower left second molar (37)",
+                    "color": "#d9bb80",
+                    "fdi": 37,
+                    "fov_limited": false
+                },
+                {
+                    "index": 29,
+                    "id": "tooth_38",
+                    "name": "Lower left third molar (38)",
+                    "color": "#dbc394",
+                    "fdi": 38,
+                    "fov_limited": false
+                },
+                {
+                    "index": 30,
+                    "id": "tooth_41",
+                    "name": "Lower right central incisor (41)",
+                    "color": "#bf185e",
+                    "fdi": 41,
+                    "fov_limited": false
+                },
+                {
+                    "index": 31,
+                    "id": "tooth_42",
+                    "name": "Lower right lateral incisor (42)",
+                    "color": "#cd1f68",
+                    "fdi": 42,
+                    "fov_limited": false
+                },
+                {
+                    "index": 32,
+                    "id": "tooth_43",
+                    "name": "Lower right canine (43)",
+                    "color": "#d92973",
+                    "fdi": 43,
+                    "fov_limited": false
+                },
+                {
+                    "index": 33,
+                    "id": "tooth_44",
+                    "name": "Lower right first premolar (44)",
+                    "color": "#d84080",
+                    "fdi": 44,
+                    "fov_limited": false
+                },
+                {
+                    "index": 34,
+                    "id": "tooth_45",
+                    "name": "Lower right second premolar (45)",
+                    "color": "#d7568c",
+                    "fdi": 45,
+                    "fov_limited": false
+                },
+                {
+                    "index": 35,
+                    "id": "tooth_46",
+                    "name": "Lower right first molar (46)",
+                    "color": "#d86c99",
+                    "fdi": 46,
+                    "fov_limited": false
+                },
+                {
+                    "index": 36,
+                    "id": "tooth_47",
+                    "name": "Lower right second molar (47)",
+                    "color": "#d980a6",
+                    "fdi": 47,
+                    "fov_limited": false
+                },
+                {
+                    "index": 37,
+                    "id": "tooth_48",
+                    "name": "Lower right third molar (48)",
+                    "color": "#db94b2",
+                    "fdi": 48,
+                    "fov_limited": false
+                }
+            ]
+        },
+        {
+            "group": "Tooth pulp",
+            "structures": [
+                {
+                    "index": 47,
+                    "id": "pulp",
+                    "name": "Pulp",
+                    "color": "#ff5fa2",
+                    "fdi": null,
+                    "fov_limited": false
+                }
+            ]
+        }
+    ]
+}

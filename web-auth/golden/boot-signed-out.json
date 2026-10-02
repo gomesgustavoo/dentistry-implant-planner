@@ -1,0 +1,22 @@
+{
+ "snapshot": {
+  ".topbar": [
+   "a[aria-label=ImplantPlan href=#/cases id=brand]",
+   "img[alt=ImplantPlan]",
+   "img[alt=ImplantPlan]"
+  ],
+  "#views": [
+   "*[id=views]",
+   "*[id=signinGate]",
+   "h1 Sign in to segment a scan",
+   "* Your cases, your account. Uploads are deleted the moment a job finishes and results expire after 72 hours.",
+   "button[id=signinBtn type=button] Sign in",
+   "* No account yet? Signing in creates one, with a 14-day trial of 30 segmentations and no card.",
+   "a[href=/] Back to the site",
+   "*[id=printBanner]"
+  ]
+ },
+ "net": [],
+ "errors": [],
+ "signIn": []
+}

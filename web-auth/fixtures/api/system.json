@@ -1,0 +1,6 @@
+{
+    "queued": 0,
+    "running": 0,
+    "worker_last_seen": null,
+    "resultTtlHours": 72
+}

@@ -1,0 +1,104 @@
+{
+ "examples": [
+  {
+   "id": "e9d0c06b-0e97-4c00-a43c-d9ea0ba8200e",
+   "state": "done",
+   "stage": "done",
+   "progress": 1.0,
+   "filename": "ToothFairy3F_008_0000.nii.gz",
+   "input_kind": "nifti",
+   "is_example": true,
+   "results_expired": false,
+   "title": "Full dentition, both jaws (held out)",
+   "attribution": "ToothFairy3 (CC BY-NC-SA), held out of training",
+   "gpu_seconds": 34.2,
+   "created_at": "2026-09-02T22:38:47.348096Z",
+   "finished_at": "2026-09-04T02:20:12.075424Z",
+   "reports": {
+    "quality": {
+     "teeth_found": 32
+    }
+   }
+  },
+  {
+   "id": "4aaa5797-69a3-4a3d-b8d2-bb8192a9b0fd",
+   "state": "done",
+   "stage": "done",
+   "progress": 1.0,
+   "filename": "ToothFairy3F_041_0000.nii.gz",
+   "input_kind": "nifti",
+   "is_example": true,
+   "results_expired": false,
+   "title": "ToothFairy3 F_041 - held out of training",
+   "attribution": "ToothFairy3 (CC BY-NC-SA), held out of training",
+   "gpu_seconds": 23.7,
+   "created_at": "2026-09-02T22:44:16.043713Z",
+   "finished_at": "2026-09-04T02:25:28.711040Z",
+   "reports": {
+    "quality": {
+     "teeth_found": 30
+    }
+   }
+  },
+  {
+   "id": "ebaafc7d-ce56-467a-b0c2-c4a08fd4f2fc",
+   "state": "done",
+   "stage": "done",
+   "progress": 1.0,
+   "filename": "ToothFairy3F_043_0000.nii.gz",
+   "input_kind": "nifti",
+   "is_example": true,
+   "results_expired": false,
+   "title": "Small-field CBCT (held out)",
+   "attribution": "ToothFairy3 (CC BY-NC-SA), held out of training",
+   "gpu_seconds": 11.8,
+   "created_at": "2026-09-02T22:52:22.311804Z",
+   "finished_at": "2026-09-04T02:26:14.389083Z",
+   "reports": {
+    "quality": {
+     "teeth_found": 1
+    }
+   }
+  },
+  {
+   "id": "46a05d5c-f31d-4c3b-805e-e4b656d03972",
+   "state": "done",
+   "stage": "done",
+   "progress": 1.0,
+   "filename": "ToothFairy3P_421_0000.nii.gz",
+   "input_kind": "nifti",
+   "is_example": true,
+   "results_expired": false,
+   "title": "Lower left posterior \u2014 two-tooth gap (FDI 35, 36)",
+   "attribution": "ToothFairy3 (CC BY-NC-SA), held out of training",
+   "gpu_seconds": 9.1,
+   "created_at": "2026-09-09T04:04:04.985090Z",
+   "finished_at": "2026-09-09T04:06:40.004806Z",
+   "reports": {
+    "quality": {
+     "teeth_found": 22
+    }
+   }
+  },
+  {
+   "id": "25ab2735-1535-4020-b46d-1b9ddbe2852f",
+   "state": "done",
+   "stage": "done",
+   "progress": 1.0,
+   "filename": "ToothFairy3F_058.nii.gz",
+   "input_kind": "volume",
+   "is_example": true,
+   "results_expired": false,
+   "title": "ToothFairy3F_058 \u2014 single missing first molar (FDI 36)",
+   "attribution": "ToothFairy3 (CC BY-NC-SA 4.0), training case",
+   "gpu_seconds": 52.5,
+   "created_at": "2026-10-02T04:52:04.426605Z",
+   "finished_at": "2026-10-02T04:56:51.575930Z",
+   "reports": {
+    "quality": {
+     "teeth_found": 31
+    }
+   }
+  }
+ ]
+}

@@ -1,0 +1,45 @@
+{
+ "snapshot": {
+  "#contact": [
+   "*[id=contact]",
+   "h2 A model for your structures",
+   "* The taxonomy this service ships is 47 structures, and it is somebody else’s taxonomy — ToothFairy3’s, plus a specialist for the anterior canals. If the class you need is not in it, or your annotation protocol differs from theirs, the answer is a model trained on your data rather than a relabelling of this one.",
+   "h3 What that takes",
+   "li Below about 40 there is nothing to hold back for a holdout, and without a holdout no accuracy claim about the result is measurable — which is the one thing this service does that its competitors do not.",
+   "* Annotated cases.",
+   "li Where a structure starts and stops. Two annotators disagreeing by 1 mm is a 1 mm error budget you can never get back.",
+   "* One protocol, written down.",
+   "li The numbers on this site — strict Dice 0.8292, HD95 1.235 mm, challenge Dice 0.8965 — are 20 cases the model never saw.",
+   "* A held-out split you do not touch.",
+   "li The production model is an nnU-Net with a U-Mamba2 bottleneck; a fine-tune from these weights is days, not hours.",
+   "* Time on a GPU.",
+   "h3 What this is not",
+   "* Not a medical device, and not for diagnostic use. The segmentation weights here are ToothFairy3-derived and carry — research and non-commercial use only — so a model trained from them inherits that, and a commercially usable model has to start from data and weights that allow it. That is a licensing question before it is a technical one, and it is worth settling first.",
+   "* CC BY-NC-SA 4.0",
+   "h3 Get in touch",
+   "*[id=contactWho]",
+   "* Gustavo Formento",
+   "* The author of this service",
+   "*[id=contactLinks]",
+   "li",
+   "* LinkedIn",
+   "a[href=https://www.linkedin.com/in/gustavoogomesss/] linkedin.com/in/gustavoogomesss/",
+   "li",
+   "* Code",
+   "a[href=https://github.com/gomesgustavoo] github.com/gomesgustavoo",
+   "* Bring the structure list and roughly how many annotated cases you have. Those two decide whether the answer is a fine-tune, a new class on top of this taxonomy, or that there is not enough data yet — and the third answer is a real one.",
+   "a[href=#/cases] Back to cases"
+  ]
+ },
+ "net": [
+  "GET /v1/implants",
+  "GET /v1/structures",
+  "GET /v1/me",
+  "GET /v1/tenants",
+  "GET /v1/system",
+  "GET /v1/jobs?limit=50",
+  "GET /v1/examples"
+ ],
+ "errors": [],
+ "signIn": []
+}

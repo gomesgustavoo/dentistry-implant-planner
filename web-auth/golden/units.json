@@ -1,0 +1,395 @@
+{
+ "fmtBytes": [
+  {
+   "args": [
+    0
+   ],
+   "result": "0.0 MB"
+  },
+  {
+   "args": [
+    1500000
+   ],
+   "result": "1.5 MB"
+  },
+  {
+   "args": [
+    2300000000
+   ],
+   "result": "2.3 GB"
+  }
+ ],
+ "fmtSecs": [
+  {
+   "args": [
+    null
+   ],
+   "result": "—"
+  },
+  {
+   "args": [
+    12.4
+   ],
+   "result": "12 s"
+  },
+  {
+   "args": [
+    89.6
+   ],
+   "result": "90 s"
+  },
+  {
+   "args": [
+    90
+   ],
+   "result": "1.5 min"
+  },
+  {
+   "args": [
+    600
+   ],
+   "result": "10.0 min"
+  }
+ ],
+ "fmtDate": [
+  {
+   "args": [
+    "2026-09-30T10:00:00Z"
+   ],
+   "result": "Sep 30, 2026"
+  },
+  {
+   "args": [
+    "not a date"
+   ],
+   "result": "—"
+  }
+ ],
+ "fmtAgo": [
+  {
+   "args": [
+    "2026-10-01T11:59:30Z"
+   ],
+   "result": "just now"
+  },
+  {
+   "args": [
+    "2026-10-01T10:00:00Z"
+   ],
+   "result": "2 h ago"
+  },
+  {
+   "args": [
+    "2026-09-28T12:00:00Z"
+   ],
+   "result": "3 d ago"
+  }
+ ],
+ "fmtWhen": [
+  {
+   "args": [
+    "2026-09-30T10:00:00Z"
+   ],
+   "result": "Sep 30, 2026, 10:00 AM"
+  },
+  {
+   "args": [
+    "nope"
+   ],
+   "result": "nope"
+  }
+ ],
+ "esc": [
+  {
+   "args": [
+    "<a href=\"x\">&'</a>"
+   ],
+   "result": "&lt;a href=&quot;x&quot;&gt;&amp;&#39;&lt;/a&gt;"
+  },
+  {
+   "args": [
+    null
+   ],
+   "result": ""
+  },
+  {
+   "args": [
+    5
+   ],
+   "result": "5"
+  }
+ ],
+ "clearanceValueText": [
+  {
+   "args": [
+    null
+   ],
+   "result": "—"
+  },
+  {
+   "args": [
+    {
+     "numbers": {
+      "clearance_mm": 1.234
+     }
+    }
+   ],
+   "result": "1.23 mm"
+  },
+  {
+   "args": [
+    {
+     "numbers": {
+      "distance_mm": 3
+     }
+    }
+   ],
+   "result": "3.00 mm"
+  },
+  {
+   "args": [
+    {
+     "numbers": {
+      "at_least_mm": 9.71
+     }
+    }
+   ],
+   "result": "> 9.7 mm"
+  },
+  {
+   "args": [
+    {
+     "numbers": {}
+    }
+   ],
+   "result": "—"
+  }
+ ],
+ "verdictColour": [
+  {
+   "args": [
+    null
+   ],
+   "result": "#94a3b8"
+  },
+  {
+   "args": [
+    {
+     "level": "breach"
+    }
+   ],
+   "result": "#f87171"
+  },
+  {
+   "args": [
+    {
+     "level": "tight"
+    }
+   ],
+   "result": "#fbbf24"
+  },
+  {
+   "args": [
+    {
+     "level": "clear"
+    }
+   ],
+   "result": "#34d399"
+  },
+  {
+   "args": [
+    {
+     "level": "no_verdict"
+    }
+   ],
+   "result": "#94a3b8"
+  },
+  {
+   "args": [
+    {
+     "level": "clear"
+    },
+    true
+   ],
+   "result": "#94a3b8"
+  }
+ ],
+ "caseSubtitle": [
+  {
+   "args": [
+    {
+     "job": {
+      "attribution": "X"
+     },
+     "report": {
+      "input": {
+       "size_xyz": [
+        1,
+        2,
+        3
+       ],
+       "spacing_xyz": [
+        0.3,
+        0.3,
+        0.25
+       ]
+      }
+     }
+    }
+   ],
+   "result": "X · 1×2×3 · 0.30×0.30×0.25 mm"
+  },
+  {
+   "args": [
+    {
+     "job": {},
+     "report": {}
+    }
+   ],
+   "result": ""
+  }
+ ],
+ "structureName": [
+  {
+   "args": [
+    "mandible"
+   ],
+   "result": "Mandible"
+  },
+  {
+   "args": [
+    "canal"
+   ],
+   "result": "Mandibular canal"
+  },
+  {
+   "args": [
+    "nope"
+   ],
+   "result": "nope"
+  }
+ ],
+ "siteLine": [
+  {
+   "args": [
+    {
+     "sites": {
+      "36": {
+       "height_mm": 11.9,
+       "width_mm": 6.7,
+       "basis_height": "b",
+       "basis_width": "w"
+      }
+     }
+    },
+    {
+     "site_fdi": 36
+    }
+   ],
+   "result": "Bone at this site 11.9 h &middot; 6.7 w mm b w"
+  },
+  {
+   "args": [
+    {
+     "sites": {
+      "36": {
+       "reason": "no crest"
+      }
+     }
+    },
+    {
+     "site_fdi": 36
+    }
+   ],
+   "result": "Bone at this site no height mm no crest"
+  },
+  {
+   "args": [
+    {
+     "sites": {}
+    },
+    {
+     "site_fdi": null
+    }
+   ],
+   "result": ""
+  }
+ ],
+ "parseRoute": {
+  "(none)": {
+   "view": "cases"
+  },
+  "#/cases": {
+   "view": "cases"
+  },
+  "#/settings": {
+   "view": "settings"
+  },
+  "#/contact": {
+   "view": "contact"
+  },
+  "#/case/abc": {
+   "view": "case",
+   "jobId": "abc"
+  },
+  "#/case": {
+   "view": "cases"
+  },
+  "#/invite/t-1_x": {
+   "view": "invite",
+   "token": "t-1_x"
+  },
+  "#/invite/a/b": {
+   "view": "invite",
+   "token": "a/b"
+  },
+  "#/nope": {
+   "view": "cases"
+  },
+  "#settings": {
+   "view": "settings"
+  }
+ },
+ "pendingPlanFromUrl": {
+  "(none)": {
+   "result": null,
+   "left": ""
+  },
+  "?plan=clinician": {
+   "result": "clinician",
+   "left": ""
+  },
+  "?plan=enterprise": {
+   "result": "enterprise",
+   "left": ""
+  },
+  "?plan=bogus": {
+   "result": null,
+   "left": ""
+  },
+  "?plan=clinician&x=1": {
+   "result": "clinician",
+   "left": "?x=1"
+  }
+ },
+ "uploadConfig_default": null,
+ "modelMode": [
+  [
+   "toothfairy3",
+   "apply"
+  ],
+  [
+   "canal",
+   "apply"
+  ],
+  [
+   "toothseg-teeth",
+   "off"
+  ]
+ ],
+ "uploadConfig_changed": {
+  "toothfairy3": "apply",
+  "canal": "off",
+  "toothseg-teeth": "off"
+ }
+}

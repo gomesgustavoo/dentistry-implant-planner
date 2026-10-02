@@ -1,0 +1,216 @@
+{
+ "me": {
+  "user": {
+   "id": "00000000-0000-4000-8000-0000000000aa",
+   "email": "reader@example.org",
+   "username": "reader"
+  },
+  "profile": {
+   "displayName": "Dr Example",
+   "organisation": "Example Dental School",
+   "email": "reader@example.org",
+   "username": "reader",
+   "accountUrl": "https://auth.example.org/realms/x/account"
+  },
+  "tenantId": "00000000-0000-4000-8000-0000000000bb",
+  "workspace": {
+   "id": "00000000-0000-4000-8000-0000000000bb",
+   "name": "Dr Example",
+   "members": 1,
+   "role": "owner",
+   "isPersonal": true,
+   "personalTenantId": "00000000-0000-4000-8000-0000000000bb"
+  },
+  "plan": {
+   "id": "explorer",
+   "name": "Explorer",
+   "isTrial": false,
+   "jobQuota": 40
+  },
+  "subscription": {
+   "status": "active",
+   "trialEndsAt": null,
+   "currentPeriodEnd": "2026-10-30T00:00:00Z",
+   "cancelAtPeriodEnd": false
+  },
+  "usage": {
+   "basis": "month",
+   "used": 3,
+   "limit": 40,
+   "remaining": 37
+  },
+  "billingEnabled": false
+ },
+ "tenants": {
+  "activeTenantId": "00000000-0000-4000-8000-0000000000bb",
+  "personalTenantId": "00000000-0000-4000-8000-0000000000bb",
+  "tenants": [
+   {
+    "id": "00000000-0000-4000-8000-0000000000bb",
+    "name": "Dr Example",
+    "role": "owner",
+    "members": 1,
+    "isPersonal": true
+   }
+  ]
+ },
+ "members": {
+  "members": [
+   {
+    "userId": "00000000-0000-4000-8000-0000000000aa",
+    "email": "reader@example.org",
+    "displayName": "Dr Example",
+    "role": "owner",
+    "joinedAt": "2026-09-01T00:00:00Z"
+   }
+  ],
+  "pending": [],
+  "yourRole": "owner",
+  "yourUserId": "00000000-0000-4000-8000-0000000000aa"
+ },
+ "plans": {
+  "plans": [
+   {
+    "id": "trial",
+    "name": "Trial",
+    "priceMonthly": 0,
+    "jobQuota": 30,
+    "isTrial": true
+   },
+   {
+    "id": "explorer",
+    "name": "Explorer",
+    "priceMonthly": 49,
+    "jobQuota": 40,
+    "isTrial": false
+   },
+   {
+    "id": "clinician",
+    "name": "Pro",
+    "priceMonthly": 99,
+    "jobQuota": 100,
+    "isTrial": false
+   },
+   {
+    "id": "enterprise",
+    "name": "Enterprise",
+    "priceMonthly": 299,
+    "jobQuota": null,
+    "isTrial": false
+   }
+  ]
+ },
+ "usage": {
+  "months": [
+   {
+    "month": "2026-09-01",
+    "jobs": 3,
+    "gpuSeconds": 124.5
+   }
+  ]
+ },
+ "devices": {
+  "devices": []
+ },
+ "jobs": {
+  "total": 4,
+  "jobs": [
+   {
+    "id": "00000000-0000-4000-8000-000000000001",
+    "state": "done",
+    "stage": "done",
+    "progress": 1,
+    "filename": "patient_a.nii.gz",
+    "input_kind": "nifti",
+    "is_example": false,
+    "results_expired": false,
+    "title": null,
+    "attribution": null,
+    "bytes_in": 52428800,
+    "created_at": "2026-09-30T10:00:00Z",
+    "started_at": "2026-09-30T10:01:00Z",
+    "finished_at": "2026-09-30T10:03:00Z",
+    "gpu_seconds": 41.5,
+    "wait_seconds": 0,
+    "attempts": 1,
+    "error": null,
+    "submitted_by": null,
+    "options": null,
+    "reports": {
+     "quality": {
+      "teeth_found": 28
+     }
+    }
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000002",
+    "state": "running",
+    "stage": "segmenting",
+    "progress": 0.45,
+    "filename": "scan_2.nii.gz",
+    "input_kind": "nifti",
+    "is_example": false,
+    "results_expired": false,
+    "title": null,
+    "attribution": null,
+    "bytes_in": 52428800,
+    "created_at": "2026-09-30T10:00:00Z",
+    "started_at": "2026-09-30T10:01:00Z",
+    "finished_at": null,
+    "gpu_seconds": null,
+    "wait_seconds": 0,
+    "attempts": 1,
+    "error": null,
+    "submitted_by": null,
+    "options": null,
+    "reports": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000003",
+    "state": "queued",
+    "stage": "queued",
+    "progress": 0,
+    "filename": "scan_3.nii.gz",
+    "input_kind": "nifti",
+    "is_example": false,
+    "results_expired": false,
+    "title": null,
+    "attribution": null,
+    "bytes_in": 52428800,
+    "created_at": "2026-09-30T10:00:00Z",
+    "started_at": null,
+    "finished_at": null,
+    "gpu_seconds": null,
+    "wait_seconds": 0,
+    "attempts": 1,
+    "error": null,
+    "submitted_by": null,
+    "options": null,
+    "reports": null
+   },
+   {
+    "id": "00000000-0000-4000-8000-000000000004",
+    "state": "failed",
+    "stage": "failed",
+    "progress": 0,
+    "filename": "scan_4.nii.gz",
+    "input_kind": "nifti",
+    "is_example": false,
+    "results_expired": false,
+    "title": null,
+    "attribution": null,
+    "bytes_in": 52428800,
+    "created_at": "2026-09-30T10:00:00Z",
+    "started_at": "2026-09-30T10:01:00Z",
+    "finished_at": "2026-09-30T10:03:00Z",
+    "gpu_seconds": null,
+    "wait_seconds": 0,
+    "attempts": 1,
+    "error": "The scan is not a dental CBCT: no mandible was found.",
+    "submitted_by": null,
+    "options": null,
+    "reports": null
+   }
+  ]
+ }
+}
