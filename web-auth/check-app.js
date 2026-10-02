@@ -26,12 +26,16 @@
  * plan tab writing its hint into the billing panel.
  */
 // ESM, because web-auth/package.json declares "type": "module" for the esbuild build.
-import { readFileSync } from 'node:fs';
+import { readFileSync, readdirSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const ROOT = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
-const src = readFileSync(path.join(ROOT, 'web/app.js'), 'utf8');
+// The app is ordered classic scripts under web/js/, sharing one global scope. Every
+// check below reads them as the one program they are at runtime: concatenated, in order.
+const JS_DIR = path.join(ROOT, 'web/js');
+const JS_FILES = readdirSync(JS_DIR).filter((f) => f.endsWith('.js')).sort();
+const src = JS_FILES.map((f) => readFileSync(path.join(JS_DIR, f), 'utf8')).join('');
 const html = readFileSync(path.join(ROOT, 'web/index.html'), 'utf8');
 const css = readFileSync(path.join(ROOT, 'web/app.css'), 'utf8');
 const implantsJs = readFileSync(path.join(ROOT, 'viewer/src/implants.js'), 'utf8');
@@ -145,6 +149,25 @@ if (strayRenders.length) {
      + '        (this file\'s own rule: every render* belongs in the list, so a new '
      + 'one cannot be added unwired)');
 } else pass(`every render* function in app.js is in REQUIRED`);
+
+// the script list ------------------------------------------------------------
+// Load order is the program's order, and a file missing from a page is a set of
+// functions that are simply undefined there -- the "called and never declared" failure,
+// one page at a time. Both pages must load exactly web/js/*, sorted, each in strict mode.
+{
+  const selftest = readFileSync(path.join(ROOT, 'web/selftest.html'), 'utf8');
+  const listed = (page) => [...page.matchAll(/<script src="js\/([^"?]+)/g)].map((m) => m[1]);
+  for (const [name, page] of [['index.html', html], ['selftest.html', selftest]]) {
+    const got = listed(page);
+    if (JSON.stringify(got) !== JSON.stringify(JS_FILES)) {
+      fail(`${name} loads [${got.join(', ')}] but web/js/ holds [${JS_FILES.join(', ')}]`);
+    } else pass(`${name} loads all ${JS_FILES.length} web/js files in order`);
+  }
+  const sloppy = JS_FILES.filter((f) => !/^(\/\*[\s\S]*?\*\/\s*)?'use strict';/.test(
+    readFileSync(path.join(JS_DIR, f), 'utf8')));
+  if (sloppy.length) fail(`not in strict mode (the single file was): ${sloppy.join(', ')}`);
+  else pass('every web/js file is in strict mode, as the single app.js was');
+}
 
 // ids ---------------------------------------------------------------------
 const htmlIds = [...html.matchAll(/\bid="([A-Za-z0-9_-]+)"/g)].map((m) => m[1]);

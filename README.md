@@ -206,6 +206,7 @@ Nothing here is asserted by comment if it can be asserted by a check.
 ```bash
 ./venv/bin/python -m pytest tests/test_phantom.py -q   # geometry and safety, numpy-free API included
 node web-auth/check-app.js                             # static wiring, palettes, CSS contracts
+node web-auth/golden.mjs                               # golden master: panel text, requests, helpers (--update, --prove)
 node web-auth/check-rail.mjs                           # 156 rendered states in real Chrome, 640-3440px
 node web-auth/check-rail.mjs --prove                   # every assertion proven to fail when broken
 node web-auth/check-rail.mjs --selftest                # the JS coordinate map against Python's vectors

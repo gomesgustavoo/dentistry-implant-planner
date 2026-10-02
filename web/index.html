@@ -783,6 +783,28 @@
      and nothing else; app.js's drawQr() renders the pairing code with it. If it fails to
      load the pairing panel still works -- the typed code carries the same secret. -->
 <script src="qrcodegen.js?v=dev"></script>
-<script src="app.js?v=dev"></script>
+<!-- The app, as ordered classic scripts sharing one global scope (no modules, no build
+     step). Order is load-bearing: a file may use anything declared in an earlier one at
+     load time. web-auth/check-app.js asserts this list is exactly web/js/*, sorted. -->
+<script src="js/00-core.js?v=dev"></script>
+<script src="js/10-account.js?v=dev"></script>
+<script src="js/15-teams.js?v=dev"></script>
+<script src="js/20-router.js?v=dev"></script>
+<script src="js/25-models.js?v=dev"></script>
+<script src="js/27-contact.js?v=dev"></script>
+<script src="js/30-editing.js?v=dev"></script>
+<script src="js/35-settings.js?v=dev"></script>
+<script src="js/40-headsets.js?v=dev"></script>
+<script src="js/45-upload-jobs.js?v=dev"></script>
+<script src="js/50-viewer.js?v=dev"></script>
+<script src="js/52-arch-chart.js?v=dev"></script>
+<script src="js/55-sidebar.js?v=dev"></script>
+<script src="js/60-plan-views.js?v=dev"></script>
+<script src="js/62-plan-ruler.js?v=dev"></script>
+<script src="js/64-plan-implants.js?v=dev"></script>
+<script src="js/66-plan-tools.js?v=dev"></script>
+<script src="js/68-plan-persistence.js?v=dev"></script>
+<script src="js/80-shell.js?v=dev"></script>
+<script src="js/90-boot.js?v=dev"></script>
 </body>
 </html>
