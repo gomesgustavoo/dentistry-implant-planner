@@ -2205,5 +2205,30 @@ def test_ridge_cortical_crest_is_unchanged_by_the_fallback():
     assert z is None and kind is None and "no cortical crest" in why
 
 
+
+def test_gpu_lock_is_off_only_when_said_so(monkeypatch):
+    """A worker that asked for the GPU mutex and has no DSN must refuse, unless the
+    deployment states it has the GPU to itself (DENT_GPU_LOCK=off, the compose stack)."""
+    from dentistry.config import settings
+    from worker import tf3
+
+    class _P:
+        network = None
+
+    monkeypatch.delenv("GPU_LOCK_DSN", raising=False)
+    monkeypatch.setattr(settings, "GPU_LOCK", "required")
+    try:
+        with tf3.borrowed_gpu(_P(), True):
+            pass
+    except RuntimeError as exc:
+        assert "GPU_LOCK_DSN" in str(exc)
+    else:
+        raise AssertionError("borrowed_gpu ran without a lock it was told to require")
+    monkeypatch.setattr(settings, "GPU_LOCK", "off")
+    ran = []
+    with tf3.borrowed_gpu(_P(), True):
+        ran.append(1)
+    assert ran == [1]
+
 if __name__ == "__main__":
     raise SystemExit(main())

@@ -1,0 +1,90 @@
+# ImplantPlan, self-hosted: Postgres, the API, the GPU worker and the web app on one
+# machine, with no accounts and nothing sent anywhere. See docs/self-hosting.md.
+#
+#   cp .env.example .env                                  # then set POSTGRES_PASSWORD
+#   docker compose build
+#   docker compose run --rm worker python scripts/fetch_models.py --toothseg
+#   docker compose up -d                                  # http://127.0.0.1:8080
+#
+# Every port is bound to 127.0.0.1: without accounts, anyone who can reach the app can
+# see every case on it. Put it behind your own VPN or reverse proxy to share it.
+name: implantplan
+
+x-dent-env: &dent-env
+  DENT_DB_HOST: db
+  DENT_DB_PORT: "5432"
+  DENT_DB_NAME: dentistry
+  DENT_DB_USER: dentistry
+  DENT_DB_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+  DENT_DATA_DIR: /data
+  DENT_REQUIRE_AUTH: "false"
+  DENT_LEGACY_PLAN: enterprise
+  DENT_RESULT_TTL_HOURS: ${DENT_RESULT_TTL_HOURS:-72}
+  DENT_UPLOAD_MAX_MB: ${DENT_UPLOAD_MAX_MB:-1024}
+  DENT_PUBLIC_BASE_URL: http://127.0.0.1:${WEB_PORT:-8080}
+
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: dentistry
+      POSTGRES_USER: dentistry
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?set POSTGRES_PASSWORD in .env}
+    volumes:
+      - db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U dentistry -d dentistry"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+    restart: unless-stopped
+
+  api:
+    build: { context: ., dockerfile: Dockerfile.api }
+    image: implantplan/api:local
+    environment: *dent-env
+    volumes:
+      - data:/data
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+  worker:
+    build: { context: ., dockerfile: Dockerfile.worker }
+    image: implantplan/worker:local
+    environment:
+      <<: *dent-env
+      DENT_MODEL_STORE: /models
+      # This machine's GPU belongs to this worker. To share it with other services
+      # that take the same Postgres advisory lock, set GPU_LOCK_DSN instead and
+      # remove this line (docs/self-hosting.md, "Sharing the GPU").
+      DENT_GPU_LOCK: ${DENT_GPU_LOCK:-off}
+      GPU_LOCK_DSN: ${GPU_LOCK_DSN:-}
+      DENT_TF3_CANAL_SPECIALIST_DIR: canal_specialist
+      DENT_TF3_TOOTHSEG_DIR: ${DENT_TF3_TOOTHSEG_DIR:-toothseg_semantic}
+      DENT_TF3_TOOTHSEG_FOLD: "5"
+    volumes:
+      - data:/data
+      - ./models:/models
+      - triton-cache:/cache/triton
+    gpus: all
+    shm_size: 2gb
+    depends_on:
+      db: { condition: service_healthy }
+    restart: unless-stopped
+
+  web:
+    build: { context: ., dockerfile: Dockerfile.web }
+    image: implantplan/web:local
+    # No DENT_WEB_OIDC_* here: the app runs without accounts (web/config.js).
+    volumes:
+      - ./docker/web-local.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "127.0.0.1:${WEB_PORT:-8080}:80"
+    depends_on: [api]
+    restart: unless-stopped
+
+volumes:
+  db:
+  data:
+  triton-cache:

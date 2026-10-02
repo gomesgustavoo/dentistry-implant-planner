@@ -13,10 +13,9 @@ class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="DENT_", extra="ignore")
 
     # --- Postgres -----------------------------------------------------------
-    # The API pod reaches postgres by cluster DNS; the host worker cannot (no
-    # cluster resolver) and the platform Service is headless, so it is given the
-    # plain-ClusterIP Service address instead. Same DB either way.
-    DB_HOST: str = "postgres.platform.svc.cluster.local"
+    # Every deployment states its own host (the k8s ConfigMap, the worker's env file,
+    # compose.yaml); the default is only for a developer running both halves locally.
+    DB_HOST: str = "localhost"
     DB_PORT: int = 5432
     DB_NAME: str = "dentistry"
     DB_USER: str = "dentistry"
@@ -30,7 +29,9 @@ class Settings(BaseSettings):
     DATA_DIR: str = "/data"
 
     # --- Model store --------------------------------------------------------
-    MODEL_STORE: str = "/home/tavulha/dentistry/models"
+    # Relative to the working directory: the repo root for a host worker, `/models` in
+    # the worker image (compose sets it). See scripts/fetch_models.py.
+    MODEL_STORE: str = "models"
     # The retired three-model stack's weights. These directories were destroyed with
     # the project tree on 2026-09-01 and are NOT re-fetched: nothing has run this arm
     # since the ToothFairy3 model shipped. Kept named so `PIPELINE="three-model"` fails
@@ -196,11 +197,10 @@ class Settings(BaseSettings):
     # (Keycloak is pinned with KC_HOSTNAME_STRICT). JWKS_URL is the in-cluster
     # address, because the public host is not necessarily routable from inside the
     # cluster. They are deliberately not the same string.
-    OIDC_ISSUER: str = "https://auth.dicomsegvr.com/realms/dicomsegvr"
-    OIDC_JWKS_URL: str = (
-        "http://keycloak.platform.svc.cluster.local:8080"
-        "/realms/dicomsegvr/protocol/openid-connect/certs"
-    )
+    # Both empty by default: a deployment WITH accounts names its own provider, and
+    # `REQUIRE_AUTH=true` with either one empty refuses to start (api/main.py).
+    OIDC_ISSUER: str = ""
+    OIDC_JWKS_URL: str = ""
     # The resource server's own client id. A front-end client without an audience
     # mapper pointing here gets a 401 for a token that is otherwise perfectly valid.
     OIDC_AUDIENCE: str = "dentistry-api"
@@ -215,6 +215,13 @@ class Settings(BaseSettings):
     # Self-hosted, no accounts: the plan the anonymous `legacy` tenant is given at
     # start-up (e.g. "enterprise" = unlimited). Empty on the hosted service.
     LEGACY_PLAN: str = ""
+
+    # --- The GPU mutex ------------------------------------------------------
+    # `required`: every inference holds the cross-service advisory lock named by
+    # GPU_LOCK_DSN, and a missing DSN is an ERROR, never a silent no-op (that exact
+    # degradation once OOM'd a run against a live trainer). `off`: this worker has
+    # the GPU to itself -- the self-hosted stack -- and says so once in its log.
+    GPU_LOCK: str = "required"
 
     @property
     def oidc_account_url(self) -> str:
@@ -246,7 +253,7 @@ class Settings(BaseSettings):
     # Checkout Session we open is stamped with this, and the webhook ignores anything
     # that is not ours.
     STRIPE_PRODUCT_TAG: str = "dentistry"
-    PUBLIC_BASE_URL: str = "https://dentistry.dicomsegvr.com"
+    PUBLIC_BASE_URL: str = "http://localhost:8080"
 
     @property
     def stripe_enabled(self) -> bool:

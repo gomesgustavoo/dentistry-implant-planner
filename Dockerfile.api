@@ -38,6 +38,9 @@ RUN python -c "import sys; sys.path.insert(0, '/srv'); from api.main import app;
     print('api import OK:', len(routes), 'routes')" \
     && python -c "import numpy, fast_simplification; print('lod child deps OK')"
 
+# Owned by uid 1000 so a fresh named volume mounted here (compose.yaml) is writable.
+RUN mkdir -p /data && chown 1000:1000 /data
+
 ARG VERSION=dev
 ENV DENT_VERSION=${VERSION}
 USER app

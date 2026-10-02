@@ -37,6 +37,8 @@ import numpy as np
 from dentistry import toothfairy3 as TF3
 
 log = logging.getLogger(__name__)
+# One warning per process when the GPU mutex is deliberately off (DENT_GPU_LOCK=off).
+_SOLE_USE_WARNED = False
 
 # nnU-Net 2.8.1 allocates the sliding-window accumulator as torch.half
 # unconditionally, so the budget arithmetic is in 2-byte units. Checked against
@@ -185,19 +187,33 @@ def borrowed_gpu(predictor, enabled: bool = True, on_wait=None):
         return
     import os
 
+    from dentistry.config import settings as _settings
+
+    sole_use = False
     if not os.environ.get("GPU_LOCK_DSN"):
         # A borrower that ASKED for the lock must not silently run without it. That
         # exact degradation OOM'd a prediction against the live trainer on
         # 2026-08-29: launched from a shell that never exported the DSN, the lock
         # no-opped, and the "locked" run went straight into an 11.2 GiB epoch.
-        raise RuntimeError(
-            "borrowed_gpu(enabled=True) but GPU_LOCK_DSN is unset -- source "
-            "scripts/tf3_env.sh (or export the key from .worker.env) and retry")
+        # So "no DSN" is an error UNLESS the deployment says, in words, that this
+        # worker has the GPU to itself (DENT_GPU_LOCK=off -- the self-hosted stack).
+        if (getattr(_settings, "GPU_LOCK", "required") or "required").lower() != "off":
+            raise RuntimeError(
+                "borrowed_gpu(enabled=True) but GPU_LOCK_DSN is unset -- set it, or "
+                "DENT_GPU_LOCK=off if this worker has the GPU to itself")
+        sole_use = True
+        global _SOLE_USE_WARNED
+        if not _SOLE_USE_WARNED:
+            log.warning("GPU mutex OFF (DENT_GPU_LOCK=off): this worker assumes sole use "
+                        "of the GPU")
+            _SOLE_USE_WARNED = True
     import torch
 
     from dentistry import gpu_lock
 
-    with gpu_lock.gpu_lock(on_wait=on_wait or (lambda: log.info("waiting for the GPU ..."))):
+    held = contextlib.nullcontext() if sole_use else gpu_lock.gpu_lock(
+        on_wait=on_wait or (lambda: log.info("waiting for the GPU ...")))
+    with held:
         try:
             yield
         finally:

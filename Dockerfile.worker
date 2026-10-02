@@ -1,0 +1,59 @@
+# The GPU worker: segmentation, meshes, RTSTRUCT and the planning pack.
+#
+# The hosted service runs this as a host systemd unit (python -m worker.main from the
+# repo's venv); this image is the same code for the self-hosted stack (compose.yaml).
+#
+# No CUDA base image on purpose. The torch cu130 wheels carry their own CUDA runtime,
+# the selective scan in U-Mamba2 is a Triton kernel JIT-compiled at run time (it needs a
+# C compiler and the Python headers, not nvcc), and the driver comes from the host
+# through the NVIDIA container runtime (`gpus: all`). That keeps the image to the
+# wheels plus a compiler.
+#
+# Needs an NVIDIA GPU with >= 12 GB and a driver new enough for CUDA 13 (>= 580).
+FROM python:3.12-slim-bookworm
+
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PIP_NO_CACHE_DIR=1 \
+    PIP_DISABLE_PIP_VERSION_CHECK=1 \
+    TRITON_CACHE_DIR=/cache/triton \
+    PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True \
+    NVIDIA_VISIBLE_DEVICES=all \
+    NVIDIA_DRIVER_CAPABILITIES=compute,utility \
+    PATH=/venv/bin:$PATH
+
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends gcc libc6-dev curl ca-certificates \
+    && rm -rf /var/lib/apt/lists/* \
+    && python -m venv /venv
+
+# Heaviest layer first, so a code change never re-downloads ~5 GB of CUDA wheels.
+RUN pip install torch==2.13.0 --index-url https://download.pytorch.org/whl/cu130
+
+WORKDIR /app
+COPY requirements-api.txt requirements-worker.txt ./
+RUN pip install -r requirements-api.txt -r requirements-worker.txt
+
+# mamba-ssm without its nvcc-built v1 extensions: only Mamba2Simple is used, and its
+# scan is Triton. The patch makes the package importable without them.
+COPY scripts/patch_mamba_ssm.py scripts/patch_mamba_ssm.py
+RUN MAMBA_SKIP_CUDA_BUILD=TRUE MAMBA_FORCE_BUILD=FALSE \
+        pip install --no-build-isolation mamba-ssm==2.3.2.post1 \
+    && python scripts/patch_mamba_ssm.py
+
+COPY dentistry/ dentistry/
+COPY worker/ worker/
+COPY scripts/ scripts/
+
+# uid 1000, like the API image, so files in the shared data volume belong to both.
+RUN useradd -u 1000 -m app \
+    && mkdir -p /data /models /cache/triton \
+    && chown -R 1000:1000 /data /models /cache
+
+USER 1000
+ENV DENT_DATA_DIR=/data DENT_MODEL_STORE=/models
+
+# Import smoke test: torch, nnU-Net and the U-Mamba2 network load without a GPU.
+RUN python -c "import torch, nnunetv2, worker.nets.umamba2, worker.pipeline; print('worker imports ok, torch', torch.__version__)"
+
+CMD ["python", "-m", "worker.main"]

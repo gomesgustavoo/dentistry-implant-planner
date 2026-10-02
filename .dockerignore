@@ -1,3 +1,5 @@
+# worker/ and scripts/ are IN the context: Dockerfile.worker copies them. They are small,
+# and the API and web images copy only the directories they name.
 venv/
 venv-umamba/
 __pycache__/
@@ -6,8 +8,6 @@ data/
 models/
 eval/
 tests/
-scripts/
-worker/
 training/
 vendor/
 k8s/

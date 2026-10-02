@@ -110,6 +110,9 @@ def init_jwks() -> None:
     """Warm the cache at startup. Failure is tolerated: the lazy refetch on the
     first request recovers, and refusing to start because Keycloak is briefly
     unreachable would take the whole API down with it."""
+    if not settings.OIDC_JWKS_URL:
+        log.info("JWKS: no identity provider configured")
+        return
     try:
         jwks.refresh()
     except Exception as exc:  # noqa: BLE001

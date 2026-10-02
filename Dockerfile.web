@@ -13,7 +13,8 @@ ARG VERSION=dev
 COPY web/ /usr/share/nginx/html/
 COPY docker/web-default.conf /etc/nginx/conf.d/default.conf
 # Rewrites config.js from the environment at start (accounts, CDN upload cap).
-COPY --chmod=0755 docker/web-entrypoint.d/40-dentistry-config.sh /docker-entrypoint.d/40-dentistry-config.sh
+COPY docker/web-entrypoint.d/40-dentistry-config.sh /docker-entrypoint.d/40-dentistry-config.sh
+RUN chmod 0755 /docker-entrypoint.d/40-dentistry-config.sh
 
 # index.html references its assets as `app.css?v=dev`; the tag is rewritten at build
 # time so a redeploy cannot leave a browser holding last version's JS. The grep is

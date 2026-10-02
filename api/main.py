@@ -73,6 +73,9 @@ def _migrate_storage() -> None:
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    if settings.REQUIRE_AUTH and not (settings.OIDC_ISSUER and settings.OIDC_JWKS_URL):
+        # Refuse rather than start an API that rejects every token it is shown.
+        raise RuntimeError("DENT_REQUIRE_AUTH=true needs DENT_OIDC_ISSUER and DENT_OIDC_JWKS_URL")
     db.init_db()
     auth.init_jwks()
     _migrate_storage()
@@ -80,9 +83,9 @@ async def lifespan(app: FastAPI):
         log.info("auth: REQUIRED (bearer token, aud=%s)", settings.OIDC_AUDIENCE)
     else:
         log.warning(
-            "auth: OPTIONAL — an unauthenticated request is attributed to the "
-            "'legacy' tenant. Set DENT_REQUIRE_AUTH=true once SSO is verified, and "
-            "do not remove the BasicAuth middleware until you have."
+            "auth: OPTIONAL — an unauthenticated request is attributed to the shared "
+            "'legacy' tenant, so anyone who can reach this API sees every case. Keep it "
+            "on a private network, or set DENT_REQUIRE_AUTH=true with an OIDC provider."
         )
     log.info("billing: %s", "configured" if settings.stripe_enabled else "NOT configured")
     log.info("api ready; data dir %s", settings.DATA_DIR)
