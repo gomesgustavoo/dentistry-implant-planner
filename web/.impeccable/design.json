@@ -1,0 +1,663 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-02T07:07:54Z",
+  "title": "Design System: ImplantPlan web app",
+  "extensions": {
+    "colorMeta": {
+      "primary": {
+        "role": "primary",
+        "displayName": "Control Violet",
+        "tonalRamp": [
+          "oklch(15% 0.25 293)",
+          "oklch(26% 0.25 293)",
+          "oklch(37% 0.25 293)",
+          "oklch(48% 0.25 293)",
+          "oklch(59% 0.25 293)",
+          "oklch(70% 0.25 293)",
+          "oklch(82% 0.25 293)",
+          "oklch(95% 0.25 293)"
+        ]
+      },
+      "primary-deep": {
+        "role": "primary",
+        "displayName": "Pressed Violet",
+        "tonalRamp": [
+          "oklch(15% 0.25 293)",
+          "oklch(26% 0.25 293)",
+          "oklch(37% 0.25 293)",
+          "oklch(48% 0.25 293)",
+          "oklch(59% 0.25 293)",
+          "oklch(70% 0.25 293)",
+          "oklch(82% 0.25 293)",
+          "oklch(95% 0.25 293)"
+        ]
+      },
+      "accent-gfx": {
+        "role": "primary",
+        "displayName": "Graphics Violet",
+        "tonalRamp": [
+          "oklch(15% 0.22 293)",
+          "oklch(26% 0.22 293)",
+          "oklch(37% 0.22 293)",
+          "oklch(48% 0.22 293)",
+          "oklch(59% 0.22 293)",
+          "oklch(70% 0.22 293)",
+          "oklch(82% 0.22 293)",
+          "oklch(95% 0.22 293)"
+        ]
+      },
+      "accent-wash": {
+        "role": "primary",
+        "displayName": "Violet Wash",
+        "tonalRamp": [
+          "oklch(15% 0.05 293)",
+          "oklch(26% 0.05 293)",
+          "oklch(37% 0.05 293)",
+          "oklch(48% 0.05 293)",
+          "oklch(59% 0.05 293)",
+          "oklch(70% 0.05 293)",
+          "oklch(82% 0.05 293)",
+          "oklch(95% 0.05 293)"
+        ]
+      },
+      "ground": {
+        "role": "neutral",
+        "displayName": "Bench",
+        "tonalRamp": [
+          "oklch(15% 0.006 270)",
+          "oklch(26% 0.006 270)",
+          "oklch(37% 0.006 270)",
+          "oklch(48% 0.006 270)",
+          "oklch(59% 0.006 270)",
+          "oklch(70% 0.006 270)",
+          "oklch(82% 0.006 270)",
+          "oklch(95% 0.006 270)"
+        ]
+      },
+      "surface": {
+        "role": "neutral",
+        "displayName": "Panel White",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(82% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "surface-2": {
+        "role": "neutral",
+        "displayName": "Well",
+        "tonalRamp": [
+          "oklch(15% 0.008 270)",
+          "oklch(26% 0.008 270)",
+          "oklch(37% 0.008 270)",
+          "oklch(48% 0.008 270)",
+          "oklch(59% 0.008 270)",
+          "oklch(70% 0.008 270)",
+          "oklch(82% 0.008 270)",
+          "oklch(95% 0.008 270)"
+        ]
+      },
+      "surface-3": {
+        "role": "neutral",
+        "displayName": "Track",
+        "tonalRamp": [
+          "oklch(15% 0.01 280)",
+          "oklch(26% 0.01 280)",
+          "oklch(37% 0.01 280)",
+          "oklch(48% 0.01 280)",
+          "oklch(59% 0.01 280)",
+          "oklch(70% 0.01 280)",
+          "oklch(82% 0.01 280)",
+          "oklch(95% 0.01 280)"
+        ]
+      },
+      "border": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "rgb(15 21 32 / .10)",
+        "tonalRamp": [
+          "oklch(15% 0.02 260)",
+          "oklch(26% 0.02 260)",
+          "oklch(37% 0.02 260)",
+          "oklch(48% 0.02 260)",
+          "oklch(59% 0.02 260)",
+          "oklch(70% 0.02 260)",
+          "oklch(82% 0.02 260)",
+          "oklch(95% 0.02 260)"
+        ]
+      },
+      "border-2": {
+        "role": "neutral",
+        "displayName": "Control Edge",
+        "canonical": "rgb(15 21 32 / .16)",
+        "tonalRamp": [
+          "oklch(15% 0.02 260)",
+          "oklch(26% 0.02 260)",
+          "oklch(37% 0.02 260)",
+          "oklch(48% 0.02 260)",
+          "oklch(59% 0.02 260)",
+          "oklch(70% 0.02 260)",
+          "oklch(82% 0.02 260)",
+          "oklch(95% 0.02 260)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Deep Ink",
+        "tonalRamp": [
+          "oklch(15% 0.02 260)",
+          "oklch(26% 0.02 260)",
+          "oklch(37% 0.02 260)",
+          "oklch(48% 0.02 260)",
+          "oklch(59% 0.02 260)",
+          "oklch(70% 0.02 260)",
+          "oklch(82% 0.02 260)",
+          "oklch(95% 0.02 260)"
+        ]
+      },
+      "muted": {
+        "role": "neutral",
+        "displayName": "Slate",
+        "tonalRamp": [
+          "oklch(15% 0.03 262)",
+          "oklch(26% 0.03 262)",
+          "oklch(37% 0.03 262)",
+          "oklch(48% 0.03 262)",
+          "oklch(59% 0.03 262)",
+          "oklch(70% 0.03 262)",
+          "oklch(82% 0.03 262)",
+          "oklch(95% 0.03 262)"
+        ]
+      },
+      "bar-neutral": {
+        "role": "neutral",
+        "displayName": "Unrated Fill",
+        "tonalRamp": [
+          "oklch(15% 0.015 270)",
+          "oklch(26% 0.015 270)",
+          "oklch(37% 0.015 270)",
+          "oklch(48% 0.015 270)",
+          "oklch(59% 0.015 270)",
+          "oklch(70% 0.015 270)",
+          "oklch(82% 0.015 270)",
+          "oklch(95% 0.015 270)"
+        ]
+      },
+      "ok": {
+        "role": "semantic",
+        "displayName": "CLEAR ink",
+        "tonalRamp": [
+          "oklch(15% 0.11 163)",
+          "oklch(26% 0.11 163)",
+          "oklch(37% 0.11 163)",
+          "oklch(48% 0.11 163)",
+          "oklch(59% 0.11 163)",
+          "oklch(70% 0.11 163)",
+          "oklch(82% 0.11 163)",
+          "oklch(95% 0.11 163)"
+        ]
+      },
+      "ok-fill": {
+        "role": "semantic",
+        "displayName": "CLEAR fill",
+        "tonalRamp": [
+          "oklch(15% 0.15 163)",
+          "oklch(26% 0.15 163)",
+          "oklch(37% 0.15 163)",
+          "oklch(48% 0.15 163)",
+          "oklch(59% 0.15 163)",
+          "oklch(70% 0.15 163)",
+          "oklch(82% 0.15 163)",
+          "oklch(95% 0.15 163)"
+        ]
+      },
+      "warn": {
+        "role": "semantic",
+        "displayName": "TIGHT ink",
+        "tonalRamp": [
+          "oklch(15% 0.11 65)",
+          "oklch(26% 0.11 65)",
+          "oklch(37% 0.11 65)",
+          "oklch(48% 0.11 65)",
+          "oklch(59% 0.11 65)",
+          "oklch(70% 0.11 65)",
+          "oklch(82% 0.11 65)",
+          "oklch(95% 0.11 65)"
+        ]
+      },
+      "warn-fill": {
+        "role": "semantic",
+        "displayName": "TIGHT fill",
+        "tonalRamp": [
+          "oklch(15% 0.16 85)",
+          "oklch(26% 0.16 85)",
+          "oklch(37% 0.16 85)",
+          "oklch(48% 0.16 85)",
+          "oklch(59% 0.16 85)",
+          "oklch(70% 0.16 85)",
+          "oklch(82% 0.16 85)",
+          "oklch(95% 0.16 85)"
+        ]
+      },
+      "bad": {
+        "role": "semantic",
+        "displayName": "BREACH ink",
+        "tonalRamp": [
+          "oklch(15% 0.19 27)",
+          "oklch(26% 0.19 27)",
+          "oklch(37% 0.19 27)",
+          "oklch(48% 0.19 27)",
+          "oklch(59% 0.19 27)",
+          "oklch(70% 0.19 27)",
+          "oklch(82% 0.19 27)",
+          "oklch(95% 0.19 27)"
+        ]
+      },
+      "bad-fill": {
+        "role": "semantic",
+        "displayName": "BREACH fill",
+        "tonalRamp": [
+          "oklch(15% 0.16 22)",
+          "oklch(26% 0.16 22)",
+          "oklch(37% 0.16 22)",
+          "oklch(48% 0.16 22)",
+          "oklch(59% 0.16 22)",
+          "oklch(70% 0.16 22)",
+          "oklch(82% 0.16 22)",
+          "oklch(95% 0.16 22)"
+        ]
+      },
+      "screen": {
+        "role": "screen",
+        "displayName": "Screen Black",
+        "tonalRamp": [
+          "oklch(15% 0 0)",
+          "oklch(26% 0 0)",
+          "oklch(37% 0 0)",
+          "oklch(48% 0 0)",
+          "oklch(59% 0 0)",
+          "oklch(70% 0 0)",
+          "oklch(82% 0 0)",
+          "oklch(95% 0 0)"
+        ]
+      },
+      "screen-3d": {
+        "role": "screen",
+        "displayName": "3-D Screen",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-surface": {
+        "role": "screen",
+        "displayName": "Screen Surface",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-surface-2": {
+        "role": "screen",
+        "displayName": "Screen Surface-2",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-surface-3": {
+        "role": "screen",
+        "displayName": "Screen Surface-3",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-border": {
+        "role": "screen",
+        "displayName": "Screen Border",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-border-2": {
+        "role": "screen",
+        "displayName": "Screen Border-2",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-ink": {
+        "role": "screen",
+        "displayName": "Screen Ink",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      },
+      "screen-muted": {
+        "role": "screen",
+        "displayName": "Screen Muted",
+        "tonalRamp": [
+          "#0a0e13",
+          "#131a25",
+          "#1b2230",
+          "#222b3b",
+          "#2e3a4d",
+          "#5b6b85",
+          "#93a1b8",
+          "#f4f7fa"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Display",
+        "purpose": "The catalogue and settings page titles only (settings at 1.75rem/1.1)."
+      },
+      "headline": {
+        "displayName": "Headline",
+        "purpose": "Panel headings on the catalogue and settings pages."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "The case name in the top bar; card and job names."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "All UI copy; 15.5px at 2200px, 16px at 2560px."
+      },
+      "label": {
+        "displayName": "Section label",
+        "purpose": "Uppercase slate dock/card section headings and pane captions."
+      },
+      "readout": {
+        "displayName": "Readout",
+        "purpose": "Every measured value: millimetres, volumes, coordinates; tabular figures."
+      }
+    },
+    "shadows": [
+      {
+        "name": "lift-1",
+        "value": "0 1px 2px rgb(15 21 32 / .05)",
+        "purpose": "Rest: panels, cards, dock sections, buttons."
+      },
+      {
+        "name": "shadow",
+        "value": "0 0 0 1px rgb(15 21 32 / .10), 0 18px 40px -18px rgb(76 29 149 / .28), 0 6px 14px -8px rgb(15 21 32 / .18)",
+        "purpose": "Float: menus and popovers (with a 16px backdrop blur)."
+      },
+      {
+        "name": "frame-shadow",
+        "value": "0 0 0 1px rgb(15 21 32 / .55), 0 14px 30px -20px rgb(15 21 32 / .55)",
+        "purpose": "Every imaging screen; the focused pane adds a 2px #8b5cf6 ring."
+      },
+      {
+        "name": "hover-lift",
+        "value": "0 12px 24px -18px rgb(76 29 149 / .45)",
+        "purpose": "Example and openable job cards on hover, with a 1px rise."
+      },
+      {
+        "name": "focus-ring",
+        "value": "0 0 0 2px #ffffff, 0 0 0 4px color-mix(in srgb, #7c3aed 70%, transparent)",
+        "purpose": "Every keyboard-reachable element."
+      }
+    ],
+    "motion": [
+      {
+        "name": "ease-out",
+        "value": "cubic-bezier(.23, 1, .32, 1)",
+        "purpose": "All state transitions."
+      },
+      {
+        "name": "dur-1",
+        "value": "120ms",
+        "purpose": "Controls: buttons, icon buttons."
+      },
+      {
+        "name": "dur-2",
+        "value": "180ms",
+        "purpose": "Cards, dropzone, bars, pane labels."
+      },
+      {
+        "name": "reduced-motion",
+        "value": "0s",
+        "purpose": "Every transition and animation under prefers-reduced-motion."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "stack-hero",
+        "value": "860px"
+      },
+      {
+        "name": "stack-workspace",
+        "value": "1000px"
+      },
+      {
+        "name": "hide-provenance",
+        "value": "1240px"
+      },
+      {
+        "name": "dense-1",
+        "value": "1900px"
+      },
+      {
+        "name": "dense-2",
+        "value": "2200px"
+      },
+      {
+        "name": "dense-3",
+        "value": "2560px"
+      }
+    ],
+    "layout": {
+      "rail": "clamp(300px, 18vw, 480px)",
+      "dock": "clamp(300px, 20vw, 460px)",
+      "topbar": "48px",
+      "page": "min(1720px, 94vw)",
+      "pageNarrow": "820px",
+      "planSide": "clamp(20rem, 22vw, 34rem)",
+      "siteBar": "clamp(112px, 15vh, 150px)"
+    }
+  },
+  "components": [
+    {
+      "name": "Default Button",
+      "kind": "button",
+      "refersTo": "button",
+      "description": "White, edged, quiet; the everyday action.",
+      "html": "<button class=\"ds-btn\">Open case</button>",
+      "css": ".ds-btn{display:inline-flex;align-items:center;gap:.4rem;padding:.55rem .95rem;border-radius:8px;border:1px solid rgb(15 21 32 / .16);background:#fff;color:#0f1520;font:550 .82rem/1 Geist,system-ui,sans-serif;cursor:pointer;box-shadow:0 1px 2px rgb(15 21 32 / .05);transition:background 120ms cubic-bezier(.23,1,.32,1),border-color 120ms cubic-bezier(.23,1,.32,1),transform 120ms cubic-bezier(.23,1,.32,1)}.ds-btn:hover{background:#f2f3f8;border-color:color-mix(in srgb,#7c3aed 45%,rgb(15 21 32 / .16))}.ds-btn:active{transform:translateY(1px)}.ds-btn:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px color-mix(in srgb,#7c3aed 70%,transparent)}"
+    },
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The one solid violet action per view.",
+      "html": "<button class=\"ds-btn-primary\">Save plan</button>",
+      "css": ".ds-btn-primary{display:inline-flex;align-items:center;padding:.55rem .95rem;border-radius:8px;border:1px solid transparent;background:#7c3aed;color:#fff;font:600 .82rem/1 Geist,system-ui,sans-serif;cursor:pointer;box-shadow:0 8px 18px -12px rgb(76 29 149 / .8);transition:background 120ms cubic-bezier(.23,1,.32,1),transform 120ms cubic-bezier(.23,1,.32,1)}.ds-btn-primary:hover{background:#6d28d9}.ds-btn-primary:active{transform:translateY(1px)}.ds-btn-primary:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px color-mix(in srgb,#7c3aed 70%,transparent)}"
+    },
+    {
+      "name": "Quiet Button",
+      "kind": "button",
+      "refersTo": "button-quiet",
+      "description": "Borderless slate text for secondary actions.",
+      "html": "<button class=\"ds-btn-quiet\">Cancel</button>",
+      "css": ".ds-btn-quiet{padding:.55rem .95rem;border-radius:8px;border:1px solid transparent;background:none;color:#5b6577;font:550 .82rem/1 Geist,system-ui,sans-serif;cursor:pointer;transition:color 120ms cubic-bezier(.23,1,.32,1),background 120ms cubic-bezier(.23,1,.32,1)}.ds-btn-quiet:hover{color:#0f1520;background:#f2f3f8}.ds-btn-quiet:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px color-mix(in srgb,#7c3aed 70%,transparent)}"
+    },
+    {
+      "name": "Segmented Control",
+      "kind": "chip",
+      "refersTo": "segmented",
+      "description": "Mutually exclusive modes: layouts, model modes, jaw tabs.",
+      "html": "<div class=\"ds-seg\"><button class=\"ds-segb on\">2x2</button><button class=\"ds-segb\">Focus</button><button class=\"ds-segb\">Solo</button></div>",
+      "css": ".ds-seg{display:inline-flex;background:#f2f3f8;border:1px solid rgb(15 21 32 / .10);border-radius:999px;padding:2px}.ds-segb{font:400 .74rem/1.3 Geist,system-ui,sans-serif;padding:.25rem .6rem;border:0;border-radius:999px;background:none;color:#5b6577;cursor:pointer}.ds-segb:hover{color:#0f1520}.ds-segb.on{background:#fff;color:#0f1520;font-weight:600;box-shadow:0 1px 2px rgb(15 21 32 / .12),0 0 0 1px rgb(15 21 32 / .10)}.ds-segb:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px color-mix(in srgb,#7c3aed 70%,transparent)}"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Settings and plan-name inputs.",
+      "html": "<label class=\"ds-field\"><span>Display name</span><input placeholder=\"Dr. Silva\"></label>",
+      "css": ".ds-field{display:grid;gap:.3rem;font-family:Geist,system-ui,sans-serif}.ds-field>span{font-size:.76rem;color:#5b6577}.ds-field input{font:inherit;font-size:.88rem;color:#0f1520;background:#fff;border:1px solid rgb(15 21 32 / .16);border-radius:8px;padding:.5rem .65rem}.ds-field input::placeholder{color:#5b6577}.ds-field input:focus{outline:none;border-color:#7c3aed;box-shadow:0 0 0 3px color-mix(in srgb,#7c3aed 18%,transparent)}"
+    },
+    {
+      "name": "View Tabs",
+      "kind": "nav",
+      "refersTo": "nav-item",
+      "description": "Underline tabs in the translucent 48 px top bar.",
+      "html": "<nav class=\"ds-nav\"><a class=\"ds-nav-item on\" href=\"#\">Cases</a><a class=\"ds-nav-item\" href=\"#\">Settings</a><a class=\"ds-nav-item\" href=\"#\">Custom model</a></nav>",
+      "css": ".ds-nav{display:flex;gap:.2rem;height:48px;padding:0 1rem;align-items:center;border-bottom:1px solid rgb(15 21 32 / .10);background:color-mix(in srgb,#fff 82%,transparent);backdrop-filter:blur(10px);font-family:Geist,system-ui,sans-serif}.ds-nav-item{display:inline-flex;align-items:center;height:100%;padding:0 .7rem;font-size:.84rem;color:#5b6577;text-decoration:none;border-bottom:2px solid transparent;margin-bottom:-1px}.ds-nav-item:hover{color:#0f1520}.ds-nav-item.on{color:#0f1520;border-bottom-color:#7c3aed}.ds-nav-item:focus-visible{outline:none;box-shadow:0 0 0 2px #fff,0 0 0 4px color-mix(in srgb,#7c3aed 70%,transparent)}"
+    },
+    {
+      "name": "Card",
+      "kind": "card",
+      "refersTo": "card",
+      "description": "White panel with hairline and rest shadow; uppercase slate section label.",
+      "html": "<section class=\"ds-card\"><h3>About this scan</h3><dl class=\"ds-kv\"><dt>Voxel</dt><dd>0.30 mm</dd><dt>Structures</dt><dd>41</dd></dl></section>",
+      "css": ".ds-card{background:#fff;border:1px solid rgb(15 21 32 / .10);box-shadow:0 1px 2px rgb(15 21 32 / .05);border-radius:12px;padding:.9rem;font:400 15px/1.55 Geist,system-ui,sans-serif;color:#0f1520;max-width:300px}.ds-card h3{margin:0 0 .6rem;font-size:.84rem;text-transform:uppercase;letter-spacing:.05em;color:#5b6577}.ds-kv{display:grid;grid-template-columns:auto 1fr;gap:.18rem .6rem;margin:0;font-size:.76rem}.ds-kv dt{color:#5b6577;display:flex;align-items:baseline}.ds-kv dt::after{content:'';flex:1 1 .8rem;margin:0 0 .28em .45rem;border-bottom:1px dotted color-mix(in srgb,#5b6577 45%,transparent)}.ds-kv dd{margin:0;text-align:right;font:400 .72rem 'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}"
+    },
+    {
+      "name": "Verdict Chips",
+      "kind": "chip",
+      "refersTo": "verdict-clear",
+      "description": "Verdicts as words on tinted pills; no verdict is dashed slate.",
+      "html": "<span class=\"ds-vchip ds-v-clear\">Clear</span> <span class=\"ds-vchip ds-v-tight\">Tight</span> <span class=\"ds-vchip ds-v-breach\">Breach</span> <span class=\"ds-vchip ds-v-none\">No verdict</span>",
+      "css": ".ds-vchip{display:inline-flex;align-items:center;white-space:nowrap;font:650 .66rem/1.4 Geist,system-ui,sans-serif;letter-spacing:.04em;text-transform:uppercase;padding:.12rem .4rem;border-radius:999px}.ds-v-clear{background:color-mix(in srgb,#34d399 16%,transparent);color:#047857;border:1px solid color-mix(in srgb,#34d399 40%,transparent)}.ds-v-tight{background:color-mix(in srgb,#fbbf24 16%,transparent);color:#8a5304;border:1px solid color-mix(in srgb,#fbbf24 40%,transparent)}.ds-v-breach{background:color-mix(in srgb,#f87171 18%,transparent);color:#b91c1c;border:1px solid color-mix(in srgb,#f87171 50%,transparent)}.ds-v-none{background:transparent;color:#5b6577;border:1px dashed rgb(15 21 32 / .16)}"
+    },
+    {
+      "name": "Clearance Row with Depth Gauge",
+      "kind": "custom",
+      "refersTo": "clearance-readout",
+      "description": "Signature: verdict word, label, verdict-coloured leader, mono millimetres, then the depth-gauge bar with error-budget hatch and margin marker.",
+      "html": "<div class=\"ds-crow\"><span class=\"ds-chip\">Tight</span><span class=\"ds-lab\">Mandibular canal</span><span class=\"ds-lead\"></span><span class=\"ds-mm\">1.6 mm</span><div class=\"ds-cbar\"><div class=\"ds-fill\" style=\"width:38%\"></div><div class=\"ds-hatch\" style=\"left:30%;width:14%\"></div><div class=\"ds-rule\" style=\"left:48%\"></div></div></div>",
+      "css": ".ds-crow{display:grid;grid-template-columns:auto max-content minmax(.75rem,1fr) auto;grid-template-areas:'chip label lead mm' 'bar bar bar bar';gap:.1rem .45rem;align-items:center;padding:.35rem .25rem;border-radius:6px;font:400 .74rem/1.4 Geist,system-ui,sans-serif;max-width:320px;background:#fff}.ds-crow:hover{background:#f2f3f8}.ds-chip{grid-area:chip;font-weight:650;font-size:.66rem;letter-spacing:.04em;text-transform:uppercase;padding:.12rem .4rem;border-radius:999px;background:color-mix(in srgb,#fbbf24 16%,transparent);color:#8a5304;border:1px solid color-mix(in srgb,#fbbf24 40%,transparent)}.ds-lab{grid-area:label;color:#5b6577}.ds-lead{grid-area:lead;border-top:1px solid #fbbf24}.ds-mm{grid-area:mm;color:#0f1520;font:600 .78rem/1.2 'Geist Mono',ui-monospace,monospace;font-variant-numeric:tabular-nums}.ds-cbar{grid-area:bar;position:relative;height:6px;margin:.35rem 0 .2rem;background:#eaeaf1;border-radius:3px;box-shadow:inset 0 0 0 1px rgb(15 21 32 / .10)}.ds-fill{position:absolute;left:0;top:0;bottom:0;border-radius:3px;background:#fbbf24}.ds-hatch{position:absolute;top:0;bottom:0;opacity:.8;background:repeating-linear-gradient(45deg,color-mix(in srgb,#0f1520 55%,transparent) 0 1.5px,transparent 1.5px 4px)}.ds-rule{position:absolute;top:-5px;bottom:-5px;width:2px;margin-left:-1px;border-radius:1px;background:#0f1520;box-shadow:0 0 0 2px #fff}"
+    },
+    {
+      "name": "Imaging Screen",
+      "kind": "custom",
+      "refersTo": "imaging-screen",
+      "description": "A dark screen set into the light bench, with its own scoped palette for captions.",
+      "html": "<div class=\"ds-screen\"><span class=\"ds-pane-label\">Axial</span><span class=\"ds-xs-meta\">z 112 / 240 &middot; 0.30 mm</span></div>",
+      "css": ".ds-screen{position:relative;width:280px;height:180px;background:#000;border-radius:8px;overflow:hidden;box-shadow:0 0 0 1px rgb(15 21 32 / .55),0 14px 30px -20px rgb(15 21 32 / .55);font-family:Geist,system-ui,sans-serif}.ds-screen:hover .ds-pane-label{opacity:1}.ds-pane-label{position:absolute;top:.35rem;left:.5rem;font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#93a1b8;opacity:.7;transition:opacity 180ms cubic-bezier(.23,1,.32,1)}.ds-xs-meta{position:absolute;right:6px;bottom:4px;font-size:.68rem;color:#93a1b8;font-variant-numeric:tabular-nums;text-shadow:0 1px 2px #000}"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Instrument Bench in Daylight",
+    "overview": "ImplantPlan is read at a clinical workstation under office light, beside the practice's own CBCT software. The chrome is therefore light and quiet: a near-white bench, white panels with hairline edges, deep-ink text and one violet. The only thing that wants a dark surround is the scan, so every CBCT slice, panoramic, cross-section and 3-D view is a dark **screen** set into the bench with a hairline edge and a soft offset frame shadow. It reads as a display, not as a hole in the page.\n\nEvery number a screen produces comes out to the chrome as a measured readout: a label, a hairline leader, and a tabular mono value. The clearance bar is drawn as a depth gauge, so the reader sees the margin and the thresholds, not only the number. The palette is the landing page's, which is the product's published identity. Technology cues come from ImplantPlan VR (leader lines, the depth gauge, the perspective measuring grid under the dropzone, translucent floating surfaces), not its panels.\n\nThe workspace is dense and fills the monitor: a findings rail, the imaging stage and a tools dock. Hierarchy comes from small uppercase section labels and tone steps rather than from large type. Large display type appears twice in the whole app.",
+    "keyCharacteristics": [
+      "Light chrome, dark imaging screens; the screens own their palette.",
+      "One violet for controls (`primary`), a brighter violet for graphics only (`accent-gfx`).",
+      "Verdict colours are reserved for verdicts and job state, and every verdict is a word.",
+      "Readouts are leader-lined and tabular mono.",
+      "Depth is a hairline plus a soft offset shadow, violet-tinted where something lifts.",
+      "Motion is short and decelerating, and disappears under reduced motion."
+    ],
+    "rules": [
+      {
+        "name": "The Screen Owns Its Palette Rule",
+        "body": "Every imaging container (slice panes, the panoramic, the cross-section, the 3-D wraps, the models canvas, the stage overlay, and anything marked as a screen) re-declares the dark palette and `color-scheme: dark` in one scoped block, so everything drawn on it inherits dark values whatever the chrome says. A light veil over a scan, or slate captions on black, is the chrome damaging the picture.",
+        "section": "colors"
+      },
+      {
+        "name": "The Two Violets Rule",
+        "body": "Control Violet is for things you press and read; Graphics Violet is for things you look at. Graphics Violet is never text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Verdict Monopoly Rule",
+        "body": "Green, amber and red mean CLEAR, TIGHT, BREACH (and done, running, failed for jobs). A QA notice that is not a verdict carries amber only on its list marker, never as text.",
+        "section": "colors"
+      },
+      {
+        "name": "The Catalogue Colour Rule",
+        "body": "Structure colours (teeth, canals, jaws) are never declared in CSS. They come from the server catalogue as inline styles, so nothing can prune them.",
+        "section": "colors"
+      },
+      {
+        "name": "The Tabular Rule",
+        "body": "Every measurement is read against another one, so every numeric readout is tabular figures, in Geist Mono.",
+        "section": "typography"
+      },
+      {
+        "name": "The Two Titles Rule",
+        "body": "Archivo Display sets the catalogue and settings page titles and nothing else.",
+        "section": "typography"
+      },
+      {
+        "name": "The Translucent Float Rule",
+        "body": "Things that float above the page (the top bar, menus) are translucent surface over a backdrop blur. Things in the page are opaque.",
+        "section": "elevation"
+      }
+    ],
+    "dos": [
+      "**Do** write every verdict as a word (CLEAR, TIGHT, BREACH, or no verdict). Never rely on colour alone.",
+      "**Do** load every authenticated image through a blob URL. An `<img src>` cannot carry the bearer token.",
+      "**Do** put every scan inside a dark screen and let the scoped screen palette style anything drawn on it.",
+      "**Do** use the ink verdict variant for text and the fill variant for bars, dots, leaders and tints.",
+      "**Do** set every measured value in Geist Mono with tabular figures, joined to its label by a leader.",
+      "**Do** keep the primary button to one per view.",
+      "**Do** restate the whole grid template for every collapsed workspace state and remove the track rather than zeroing it."
+    ],
+    "donts": [
+      "**Don't** put an icon beside a wordmark, or a wordmark at all, in the brand slot. The brand is the implant-in-bone logomark alone.",
+      "**Don't** let any element other than `#views` be a second in-flow child of `body`.",
+      "**Don't** animate the MPR grid template. Cornerstone must resize after the boxes settle.",
+      "**Don't** use Graphics Violet (`accent-gfx`) for text.",
+      "**Don't** use green, amber or red for anything that is not a verdict or a job state.",
+      "**Don't** draw an ungraded structure as a paler green. No verdict is dashed and slate.",
+      "**Don't** quote absolute HU or bone-density classes in any readout; grey values are not calibrated.",
+      "**Don't** declare structure colours in CSS."
+    ]
+  }
+}
