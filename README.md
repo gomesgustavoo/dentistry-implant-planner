@@ -273,10 +273,10 @@ Open an issue for bugs; for custom model work, get in touch on LinkedIn.
 
 ## Licensing
 
-No license is granted on this code yet — all rights reserved until one is chosen.
+The code in this repository is released under the [MIT License](LICENSE).
 
-Separately: the segmentation weights derive from ToothFairy3 (**CC BY-NC-SA 4.0**), and
-the running service says so in its own footer. That constrains the *model*, not this
-source. The three head/neck models are Apache-2.0 (wasserth/TotalSegmentator) and carry no
+The MIT grant covers the source only. The segmentation weights derive from ToothFairy3
+(**CC BY-NC-SA 4.0**), are not in this repository, and are not covered by it; the running
+service says so in its own footer. That constrains the *model*, not this source. The three head/neck models are Apache-2.0 (wasserth/TotalSegmentator) and carry no
 such restriction. The films in `marketing/` are recordings of a held-out ToothFairy3 case;
 their end cards carry the credit.
