@@ -2,8 +2,12 @@
 
 The whole stack runs on one machine with an NVIDIA GPU: Postgres, the API, the GPU
 worker and the web app, started by `compose.yaml`. It needs no accounts and no cloud
-service, and no scan leaves the machine. The only network access is the one-time model
-download (or a mirror of it, below).
+service, and no scan leaves the machine.
+
+**Model weights are the one thing you bring.** The base network and the anterior canal
+specialist are first-party checkpoints that are **not distributed** with this project
+(see [Model weights](#model-weights)). Everything else, including the public ToothSeg
+specialist, is installed by the commands below.
 
 ## What you need
 
@@ -25,19 +29,44 @@ git clone https://github.com/gomesgustavoo/dentistry-implant-planner.git
 cd dentistry-implant-planner
 cp .env.example .env            # set POSTGRES_PASSWORD to a long random string
 docker compose build            # the worker image is large (CUDA wheels): first build takes a while
-docker compose run --rm worker python scripts/fetch_models.py --toothseg
+# put your model directories in ./models (see "Model weights"), then:
+docker compose run --rm worker python scripts/fetch_models.py --toothseg --verify
 docker compose up -d
 ```
 
 Open **http://127.0.0.1:8080**. There is no sign-in page. The catalogue says *"This
 server runs without accounts"*, which is accurate: see [Security](#security) below.
 
-`fetch_models.py` downloads the two first-party networks (the ToothFairy3 U-Mamba2 base
-model and the anterior canal specialist) and, with `--toothseg`, the optional ToothSeg
-teeth specialist from Zenodo. Every file is checked against the SHA-256 pinned in
-`scripts/models.manifest.json`. A mismatch deletes the file and fails, so a partial or
-substituted checkpoint is never installed. Run it again at any time: files that are
-already present and verified are skipped.
+`fetch_models.py --toothseg` installs the optional ToothSeg teeth specialist from Zenodo,
+checked against the SHA-256 pinned in `scripts/models.manifest.json`; `--verify` reports
+whether the worker will find each model. A failed hash deletes the file and fails, so a
+partial or substituted checkpoint is never installed.
+
+## Model weights
+
+The worker needs a **base model** and can use two specialists:
+
+| Directory under `./models` | Network | Status |
+|---|---|---|
+| `toothfairy3/` | nnU-Net (ResEnc L) with a U-Mamba2 bottleneck, ToothFairy3 Task-1 taxonomy | **required**, not distributed |
+| `canal_specialist/` | nnU-Net ResEnc M, anterior mandible: incisive and lingual canals | optional, not distributed |
+| `toothseg_semantic/` | ToothSeg (MIC-DKFZ), 32 teeth | optional, public: `fetch_models.py --toothseg` |
+
+The two first-party checkpoints are not published with this project. A self-hosted
+worker therefore needs checkpoints you are entitled to use, in nnU-Net's layout:
+
+```
+models/toothfairy3/        dataset.json  plans.json  cc_thresholds.json  fold_all/checkpoint_final.pth
+models/canal_specialist/   dataset.json  plans.json  fold_all/checkpoint_final.pth
+```
+
+The architecture the worker loads them into is in this repository
+(`worker/nets/umamba2.py`, `worker/tf3.py`), so a model you train on the ToothFairy3
+Task-1 labels with that bottleneck drops in. `scripts/tf3_install_model.py` installs a
+trained nnU-Net run into this layout, and `scripts/tf3_cc_thresholds.py` derives
+`cc_thresholds.json` from the training labels. Without the base model the API and the
+web app still run, and finished results can still be opened, but new scans cannot be
+segmented.
 
 Check the worker found its models:
 
@@ -82,25 +111,25 @@ GPU_LOCK_DSN=postgresql+psycopg://gpulock:...@host:5432/gpulock
 
 With `required`, a missing DSN is an error rather than a silent run without the lock.
 
-## Offline and mirrored weights
+## Moving your weights between machines
 
-The manifest's hashes, not the host, make a download trustworthy. Any server holding the
-same paths works:
+Stage them once with a hash manifest, serve the directory from any web server you control,
+and install them elsewhere with every file verified:
 
 ```bash
-IMPLANTPLAN_WEIGHTS_URL=https://files.my-clinic.lan/implantplan-weights \
-  docker compose run --rm -e IMPLANTPLAN_WEIGHTS_URL worker python scripts/fetch_models.py
+python scripts/package_weights.py --out /srv/implantplan-weights      # on the machine that has them
+docker compose run --rm worker python scripts/fetch_models.py \
+  --mirror https://files.my-clinic.lan/implantplan-weights --manifest manifest.json
 ```
 
-Or copy a model store from another machine into `./models` and run `fetch_models.py` to
-verify it.
+Or copy `./models` across directly and run `fetch_models.py --verify`.
 
 ## Updating
 
 ```bash
 git pull
 docker compose build
-docker compose run --rm worker python scripts/fetch_models.py
+docker compose run --rm worker python scripts/fetch_models.py --verify
 docker compose up -d
 ```
 
@@ -131,7 +160,7 @@ that apply to you. See also [`SECURITY.md`](../SECURITY.md).
 |---|---|
 | `could not select device driver "" with capabilities: [[gpu]]` | The NVIDIA Container Toolkit is not configured for Docker. |
 | Worker exits with `GPU_LOCK_DSN is unset` | `DENT_GPU_LOCK=required` without a DSN; set one, or `off`. |
-| A model shows *Not installed on this server* | Run `fetch_models.py`; the worker re-reports its inventory on restart (`docker compose restart worker`). |
+| A model shows *Not installed on this server* | Put its directory in `./models` (`fetch_models.py --verify` names what is missing); the worker re-reports its inventory on restart (`docker compose restart worker`). |
 | CUDA out of memory | Less than 12 GB free on the GPU, often another process holding it (`nvidia-smi`). |
 | Upload rejected as too large | Raise `DENT_UPLOAD_MAX_MB`. |
 

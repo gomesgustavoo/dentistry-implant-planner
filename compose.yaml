@@ -3,7 +3,8 @@
 #
 #   cp .env.example .env                                  # then set POSTGRES_PASSWORD
 #   docker compose build
-#   docker compose run --rm worker python scripts/fetch_models.py --toothseg
+#   # put your model checkpoints in ./models (docs/self-hosting.md, "Model weights")
+#   docker compose run --rm worker python scripts/fetch_models.py --toothseg --verify
 #   docker compose up -d                                  # http://127.0.0.1:8080
 #
 # Every port is bound to 127.0.0.1: without accounts, anyone who can reach the app can

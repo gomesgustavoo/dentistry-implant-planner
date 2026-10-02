@@ -1,21 +1,20 @@
 #!/usr/bin/env python3
-"""Stage the first-party weights for publication, and pin them in the manifest.
+"""Stage your own first-party weights for a PRIVATE mirror, with a hash manifest.
 
-    python scripts/package_weights.py --out /path/to/staging --repo <owner>/<name>
+    python scripts/package_weights.py --out /srv/implantplan-weights
 
-Copies `models/toothfairy3` and `models/canal_specialist` into a staging directory
-laid out exactly as the model store expects (so `fetch_models.py` can drop them in
-place), with two changes and nothing else:
+The ToothFairy3 U-Mamba2 and canal specialist checkpoints are not distributed with this
+project. This moves YOUR copies between your own machines: it copies
+`models/toothfairy3` and `models/canal_specialist` into a directory laid out exactly as
+the model store expects, strips the absolute training path from `PROVENANCE.json`
+(keeping the dataset and trainer identifier), writes a licence note, and writes
+`manifest.json` with the SHA-256 and size of every file. Serve the directory from any
+web server you control, then on the other machine:
 
-* `PROVENANCE.json` loses the absolute training path (`source_dir` kept as its last
-  two components: the dataset and the trainer/plans identifier, which is what a reader
-  needs to reproduce it), and
-* a model card `README.md` is written at the root, carrying the licence.
+    python scripts/fetch_models.py --mirror https://your-server/implantplan-weights \
+        --manifest manifest.json
 
-Then it writes `scripts/models.manifest.json` with the SHA-256 and size of every
-staged file. Upload the staging directory to the named Hugging Face model repository
-(the user's own account; this script never uploads anything), then set `revision` in
-the manifest to the commit the upload produced.
+It never uploads anything.
 """
 from __future__ import annotations
 
@@ -30,12 +29,7 @@ MODELS = ("toothfairy3", "canal_specialist")
 FILES = ("dataset.json", "plans.json", "PROVENANCE.json", "fold_all/checkpoint_final.pth")
 EXTRA = {"toothfairy3": ("cc_thresholds.json",)}
 
-CARD = """---
-license: cc-by-nc-sa-4.0
-tags: [medical-imaging, cbct, dental, segmentation, nnunet, implant-planning]
----
-
-# ImplantPlan segmentation weights
+CARD = """# ImplantPlan segmentation weights
 
 The two networks the ImplantPlan worker runs on a dental cone-beam CT
 (code: https://github.com/gomesgustavoo/dentistry-implant-planner, MIT).
@@ -67,11 +61,10 @@ calibrated Hounsfield units.
 - U-Mamba2 — Wu et al., MICCAI 2025.
 - nnU-Net — Isensee et al., Nature Methods 2021.
 
-## Use
+## Distribution
 
-    python scripts/fetch_models.py      # from the ImplantPlan repository
-
-`scripts/models.manifest.json` there pins the SHA-256 of every file in this repository.
+Not for redistribution outside the licence above. This directory is a private mirror
+for moving the weights between your own machines.
 """
 
 
@@ -86,7 +79,6 @@ def sha256(path: Path) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
     ap.add_argument("--out", type=Path, required=True)
-    ap.add_argument("--repo", required=True, help="Hugging Face model repo, owner/name")
     ap.add_argument("--store", type=Path, default=ROOT / "models")
     args = ap.parse_args()
     out = args.out.resolve()
@@ -109,13 +101,8 @@ def main() -> int:
             print(f"  {model}/{rel}  {entries[-1]['bytes']:>12,}  {entries[-1]['sha256'][:16]}")
     (out / "README.md").write_text(CARD)
 
-    manifest_path = Path(__file__).resolve().parent / "models.manifest.json"
-    manifest = json.loads(manifest_path.read_text()) if manifest_path.exists() else {}
-    manifest["huggingface"] = {"repo": args.repo,
-                               "revision": manifest.get("huggingface", {}).get("revision", "main"),
-                               "license": "CC-BY-NC-SA-4.0", "files": entries}
-    manifest_path.write_text(json.dumps(manifest, indent=1) + "\n")
-    print(f"\nstaged {len(entries)} files in {out}\nmanifest: {manifest_path}")
+    (out / "manifest.json").write_text(json.dumps({"files": entries}, indent=1) + "\n")
+    print(f"\nstaged {len(entries)} files in {out}\nmanifest: {out / 'manifest.json'}")
     return 0
 
 

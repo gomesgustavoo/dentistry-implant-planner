@@ -24,6 +24,6 @@ node web-auth/check-rail.mjs        # --prove: every assertion is shown to fail 
 ## Licences
 
 - Code: MIT (`LICENSE`).
-- First-party model weights: CC BY-NC-SA 4.0, derived from the ToothFairy3 dataset. They
-  are not in this repository; `scripts/fetch_models.py` downloads them.
+- First-party model weights: derived from the ToothFairy3 dataset (CC BY-NC-SA 4.0) and
+  not distributed with this project.
 - By contributing you agree your contribution is released under the MIT licence.

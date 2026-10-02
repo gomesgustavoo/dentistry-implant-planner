@@ -1,4 +1,5 @@
 {
+ "_comment": "Public third-party weights only. The first-party ToothFairy3 U-Mamba2 and canal specialist checkpoints are NOT distributed; see docs/self-hosting.md, 'Model weights'.",
  "toothseg": {
   "url": "https://zenodo.org/records/14893540/files/ToothSeg.zip?download=1",
   "file": "ToothSeg.zip",
@@ -7,57 +8,5 @@
   "license": "CC-BY-4.0",
   "install_as": "toothseg_semantic",
   "fold": "5"
- },
- "huggingface": {
-  "repo": "gomesgustavoo/implantplan-weights",
-  "revision": "main",
-  "license": "CC-BY-NC-SA-4.0",
-  "files": [
-   {
-    "path": "toothfairy3/dataset.json",
-    "sha256": "77dfd9597a3322bef0ed0e13c883b853b330310fe7585d2cadc3362d765f753e",
-    "bytes": 2235
-   },
-   {
-    "path": "toothfairy3/plans.json",
-    "sha256": "158ad8c0a1fadd6850a741da15b9469cb30b28cc3c1be0986380b500a317a870",
-    "bytes": 19446
-   },
-   {
-    "path": "toothfairy3/PROVENANCE.json",
-    "sha256": "271bbeee048a19824c4a3412293c313b8f8e334f615ca528ba9582356c26bbbe",
-    "bytes": 488
-   },
-   {
-    "path": "toothfairy3/fold_all/checkpoint_final.pth",
-    "sha256": "1d8f119bcd99446e28113e68e204cadb78c2ad49bc10dc8f409082b8ab4fdb95",
-    "bytes": 571990907
-   },
-   {
-    "path": "toothfairy3/cc_thresholds.json",
-    "sha256": "e1a3c6ac4562d73178c6537baacd8f2745edc996602dfcab6463cb4eaaf69841",
-    "bytes": 4445
-   },
-   {
-    "path": "canal_specialist/dataset.json",
-    "sha256": "61638f7a5175751e07f35ef25dd839b170ddd14d2715fa8cbc2c6c7ff858ceb7",
-    "bytes": 544
-   },
-   {
-    "path": "canal_specialist/plans.json",
-    "sha256": "9a38139a847d8b0a4b44fd7dbdef24c3fbb30a28fd4c21004c42430df372271b",
-    "bytes": 10630
-   },
-   {
-    "path": "canal_specialist/PROVENANCE.json",
-    "sha256": "42e1514127de21edd88bf9bdc798680dfaff0631f34105c8cac60f2343443f1a",
-    "bytes": 396
-   },
-   {
-    "path": "canal_specialist/fold_all/checkpoint_final.pth",
-    "sha256": "4f378a5c4e86ca846dc14bf4ccd51d013f53fd7fb2ac5855b95cda3e92efbf02",
-    "bytes": 408147565
-   }
-  ]
  }
 }
