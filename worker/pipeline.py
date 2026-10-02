@@ -101,7 +101,7 @@ def segment_task1(image, settings, *, rep=None, use_lock=True, board=None,
     t0 = time.monotonic()
     wait0 = time.monotonic()
     wait_seconds = 0.0
-    with tf3.borrowed_gpu(predictor, True, on_wait=lambda: rep(0.18, "Waiting for the GPU")):
+    with tf3.borrowed_gpu(predictor, use_lock, on_wait=lambda: rep(0.18, "Waiting for the GPU")):
         wait_seconds = round(time.monotonic() - wait0, 1)
         rep(0.20, "Segmenting jaws, teeth, canals and sinuses")
         seg_t1, srep = tf3.segment(predictor, pre, n_classes, settings.MAX_LOGIT_GIB)
@@ -174,6 +174,10 @@ def segment_task1(image, settings, *, rep=None, use_lock=True, board=None,
                                f"{M.BY_KEY[k].dir_setting} is unset or its files are "
                                "missing"}
                     for k, mode in M.board_keys(config) if k not in ran],
+                # A job queued before a model was retired may still name it. It is
+                # dropped, and the drop is stated rather than silent.
+                "retired": [{"key": k, "mode": str(v), "reason": M.RETIRED[k]}
+                            for k, v in config.items() if k in M.RETIRED],
             }
     board_runs = []
     base_keep = seg_case.copy() if keep_base else None

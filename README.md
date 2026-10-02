@@ -156,37 +156,27 @@ have is **refused before the upload is written** rather than quietly downgraded.
 **Take it away in a format your software reads.** Label map, RTSTRUCT, per-structure STL,
 and the plan as a printed sheet.
 
-## The anatomy beyond the teeth, and why it ships off
+## The CT-trained models, and why they are gone
 
-The taxonomy has room for **89** structures: the 47 dental ones, plus 42 in a second id
-space — muscles of mastication, tongue, pharyngeal divisions, nasal cavities, palate,
-salivary glands, orbit, neck cartilages, great vessels — drawn by three Apache-2.0
-TotalSegmentator head/neck models.
-
-**All three ship `off`, because they were measured and they do not transfer.** They are
-trained on CT in Hounsfield units; cone-beam CT has neither calibrated Hounsfield units
-nor usable soft-tissue contrast. Across three holdout cases and 126 structure
-opportunities, **one** survived the plausibility gate: the tongue came out at 1.76 cm³
-against an anatomical 70–100, one masseter was found and the other was not inside a field
-of view containing both, and the oropharynx arrived in 155 connected pieces.
-
-What ships is the machinery, and it is worth having on its own — a **second composition
-space that cannot reach the first** (the extended pass paints only where the merged label
-is 0, so switching a soft-tissue model on is structurally incapable of moving a clearance
-or a verdict); a **per-case transfer probe** that passes at 0.85 and 0.82 and catches a
-total failure at 0.12; and a **per-structure plausibility gate** on volume, connectedness
-and symmetry, which caught the failure the probe missed and tells "cut by a 123 mm field
-of view" apart from "present, in frame, and wrong". See
-[`eval/extended.md`](eval/extended.md) — the threshold was committed before the numbers
-were measured.
+Four TotalSegmentator models were tried and removed on 2026-10-02: the teeth model
+(Dataset113) and three head/neck models that would have added 42 structures beyond the
+dental set. All four are trained on CT in Hounsfield units; cone-beam CT has neither
+calibrated Hounsfield units nor usable soft-tissue contrast, and the measurements agree.
+Dataset113 took ownership of nothing on 18 of 18 held-out cases. Across 126 head/neck
+structure opportunities **one** survived a plausibility gate committed before anything was
+measured: the tongue came out at 1.76 cm³ against an anatomical 70–100, and the oropharynx
+arrived in 155 connected pieces. A model measured not to work is not a choice worth
+offering, so the menu now holds only CBCT-trained networks. A stored job that still names
+one is refused with the reason (or, if it asked for it `off`, replayed without it), and
+merged ids 48–89 stay reserved so an old labelmap can never be relabelled.
 
 ## Layout
 
 | | |
 |---|---|
 | `api/` | FastAPI. Jobs, files, plans, measurement. Deliberately **numpy-free** — a subprocess test asserts it. |
-| `worker/` | The GPU pipeline, a host systemd unit rather than a pod. Segmentation, the extended pass, meshes, RTSTRUCT, panoramic + cross-sections, the measurement pack. |
-| `dentistry/` | The domain: label taxonomy, extended space, arch fitting, ridge measurement, implant geometry, clearance metrics, the safety grader. |
+| `worker/` | The GPU pipeline, a host systemd unit rather than a pod. Segmentation, meshes, RTSTRUCT, panoramic + cross-sections, the measurement pack. |
+| `dentistry/` | The domain: label taxonomy, arch fitting, ridge measurement, implant geometry, clearance metrics, the safety grader. |
 | `web/` | The app. Vanilla JS, no build step. |
 | `viewer/` | Cornerstone3D + vtk.js, bundled by esbuild into `web/viewer.js`. |
 | `web-auth/` | OIDC bundle, and the two headless gates. |
@@ -239,8 +229,8 @@ screen.
 
 - **Model weights** (~2.8 GB). The base model is fine-tuned from
   [ToothFairy3](https://toothfairy3.grand-challenge.org/), which is **CC BY-NC-SA 4.0**,
-  so anything derived from it is research and non-commercial use only. The three head/neck
-  models are Apache-2.0 and are fetched by `scripts/prepare_models.py`.
+  so anything derived from it is research and non-commercial use only. ToothSeg (Apache-2.0)
+  is installed by `scripts/prepare_models.py` from its Zenodo release.
 - **Patient volumes and job results.**
 - **Evaluation dumps** (~1 GB of per-case `.npy`). The metrics and the write-ups that cite
   them are committed.
@@ -277,6 +267,6 @@ The code in this repository is released under the [MIT License](LICENSE).
 
 The MIT grant covers the source only. The segmentation weights derive from ToothFairy3
 (**CC BY-NC-SA 4.0**), are not in this repository, and are not covered by it; the running
-service says so in its own footer. That constrains the *model*, not this source. The three head/neck models are Apache-2.0 (wasserth/TotalSegmentator) and carry no
-such restriction. The films in `marketing/` are recordings of a held-out ToothFairy3 case;
+service says so in its own footer. That constrains the *model*, not this source. ToothSeg is Apache-2.0
+(MIC-DKFZ/ToothSeg) and carries no such restriction. The films in `marketing/` are recordings of a held-out ToothFairy3 case;
 their end cards carry the credit.

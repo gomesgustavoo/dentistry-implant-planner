@@ -873,7 +873,9 @@ def model_menu_checks() -> bool:
 
     inv = {"models": {"toothfairy3": {"installed": True}, "canal": {"installed": True},
                       "toothseg-teeth": {"installed": False, "reason": "not set"},
-                      "totalseg": {"installed": False, "reason": "not set"}}}
+                      # An inventory written by a worker from before the retirement
+                      # still names a CT-trained model. It must be ignored, not served.
+                      "totalseg": {"installed": True}}}
     cfg = M.resolve_config(None, inv)
     ok &= check("a model this worker does not have defaults to off, not to its own default",
                 cfg["toothseg-teeth"] == "off" and cfg["canal"] == "apply", str(cfg))
@@ -889,10 +891,34 @@ def model_menu_checks() -> bool:
                 _raises(M.resolve_config, {"toothfairy3": "off"}, inv,
                         exc=M.ConfigRefused))
     ok &= check("the board runs the specialists in CATALOGUE order, not request order",
-                M.board_keys({"toothfairy3": "apply", "totalseg": "shadow",
-                              "canal": "apply", "toothseg-teeth": "shadow"})
-                == [("canal", "apply"), ("toothseg-teeth", "shadow"),
-                    ("totalseg", "shadow")])
+                M.board_keys({"toothseg-teeth": "shadow", "toothfairy3": "apply",
+                              "canal": "apply"})
+                == [("canal", "apply"), ("toothseg-teeth", "shadow")])
+
+    # --- the retired CT-trained models ------------------------------------------
+    ok &= check("the menu holds only CBCT-trained models",
+                [m.key for m in M.CATALOGUE] == ["toothfairy3", "canal", "toothseg-teeth"]
+                and not set(M.BY_KEY) & set(M.RETIRED))
+    ok &= check("asking for a retired model in any live mode is REFUSED with its reason",
+                all(_raises(M.resolve_config, {k: "shadow"}, inv, exc=M.ConfigRefused)
+                    for k in M.RETIRED))
+    ok &= check("...and an old request that had it OFF replays instead of crashing",
+                "totalseg" not in M.resolve_config({"totalseg": "off",
+                                                    "head-muscles": "off"}, inv))
+    ok &= check("the board ignores a retired key in a stored job's options",
+                M.board_keys({"toothfairy3": "apply", "canal": "apply",
+                              "toothseg-teeth": "off", "totalseg": "shadow",
+                              "head-muscles": "apply"})
+                == [("canal", "apply")])
+    menu = M.describe_all(inv)
+    ok &= check("GET /v1/models never offers a retired model the inventory still names",
+                [m["key"] for m in menu["models"]] == ["toothfairy3", "canal",
+                                                       "toothseg-teeth"]
+                and "totalseg" not in menu["defaults"])
+    ok &= check("the taxonomy is the 47 ToothFairy3 structures, none in the retired range",
+                L.N_STRUCTURES == 47
+                and not any(s.index in L.RETIRED_INDICES for s in L.STRUCTURES),
+                str(L.N_STRUCTURES))
 
     # --- the edit penalty -------------------------------------------------------
     edits = [{"fields": ["canal"], "quantisation_mm": 0.6}]
@@ -1216,37 +1242,6 @@ def foreign_model_checks() -> bool:
                 _raises(X.toothseg_semantic_to_task1_lut, shifted),
                 "derivation by name still succeeds -- the point is that the model is "
                 "then NOT the one that was measured")
-
-    # 5. TotalSegmentator's 32-to-1 pulp fold is asserted, not assumed. A PARTIAL fold
-    #    would silently drop pulp on some teeth and nothing downstream would notice.
-    # Their real naming: snake_case, with a `_fdiNNN` suffix that is the RAW ToothFairy3
-    # id, not an FDI number. Reading it as FDI collapsed 111..142 onto four values and
-    # the guard caught it on the first install -- so the fixture uses the real shape.
-    raw_of = {v: k for k, v in TF.TASK1_MAPPING.items() if v and v != 46}
-    ts = {"background": 0}
-    for t1 in range(1, 46):
-        stem = TF.TASK1_LABELS[t1].lower().replace(" ", "_")
-        raw = raw_of.get(t1)
-        ts[f"{stem}_fdi{raw}" if raw and raw > 100 else stem] = t1
-    pulp_raw = sorted(k for k, v in TF.TASK1_MAPPING.items() if v == 46)
-    for j, raw in enumerate(pulp_raw):
-        ts[f"tooth_pulp_fdi{raw}"] = 46 + j
-    tsl = X.totalseg_to_task1_lut(ts)
-    ok &= check("totalseg maps 1-45 through by raw id AND by name, agreeing",
-                all(int(tsl[i]) == i for i in range(1, 46)),
-                "the two derivations are cross-checked; a disagreement raises")
-    ok &= check("totalseg folds 32 per-tooth pulp classes onto Task-1 46",
-                sum(1 for v in tsl if int(v) == 46) == 32,
-                f"{sum(1 for v in tsl if int(v) == 46)} of 32")
-    partial = {k: v for k, v in ts.items() if not k.endswith(f"fdi{pulp_raw[-1]}")}
-    ok &= check("a partial pulp fold is caught",
-                _raises(X.totalseg_to_task1_lut, partial))
-    # The check that only a two-way derivation can make: an id that moved while its
-    # name stayed put. One derivation alone would absorb this without a word.
-    ok &= check("a label whose name and id disagree is caught",
-                _raises(X.totalseg_to_task1_lut,
-                        {**ts, "lower_jawbone_fdi2": 1}),
-                "raw id 2 is the upper jawbone; the name says lower")
 
     # 6. assert_owns_only -- the guard that still bites when the ROI is everything.
     from worker import board as B

@@ -215,10 +215,6 @@ def _from_catalogue(entry, settings, mode: str | None = None):
     if not name:
         return None
     owns = entry.owns_task1
-    if entry.key == "totalseg":
-        # The one entry whose ownership is CONFIGURED, and it defaults to nothing
-        # because the measurement says it should own nothing. See its `evidence`.
-        owns = tuple(getattr(settings, "TF3_TOTALSEG_OWNS", ()) or ())
     return Specialist(
         name=entry.name,
         model_dir=Path(settings.MODEL_STORE) / name,
@@ -239,8 +235,7 @@ def _from_catalogue(entry, settings, mode: str | None = None):
 
 def _mode_from_settings(entry, settings) -> str:
     """The mode a deployment-wide setting asks for, or the catalogue default."""
-    attr = {"toothseg-teeth": "TF3_TOOTHSEG_MODE",
-            "totalseg": "TF3_TOTALSEG_MODE"}.get(entry.key)
+    attr = {"toothseg-teeth": "TF3_TOOTHSEG_MODE"}.get(entry.key)
     if attr:
         return (getattr(settings, attr, "") or entry.default_mode)
     return entry.default_mode

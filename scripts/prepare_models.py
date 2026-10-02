@@ -39,64 +39,9 @@ from dentistry import crosswalk  # noqa: E402
 # Everything about a third-party model that is OUR decision, kept beside the evidence
 # rather than passed on a command line where it would be retyped differently each time.
 KNOWN = {
-    "totalseg-tf3": {
-        "zip": "Dataset113_ToothFairy3.zip",
-        "slug": "totalsegmentator_teeth",
-        "label_rule": "totalseg",
-        "license": "Apache-2.0",
-        "source": "https://github.com/wasserth/TotalSegmentator (v2.5.0-weights)",
-        "note": ("Ids 1-45 are ToothFairy3 Task-1 ids; pulp is 32 per-tooth classes "
-                 "where the challenge merges to one. Measured on our holdout before the "
-                 "2026-09-01 deletion: strict 0.8014, and it took ownership of NOTHING "
-                 "-- zero accessory-canal voxels in 18/18 cases."),
-    },
-    "totalseg-craniofacial": {
-        "zip": "Dataset115_mandible.zip",
-        "slug": "totalseg_craniofacial",
-        "label_rule": None,          # its own space; scored, never composed
-        "license": "Apache-2.0",
-        "source": "https://github.com/wasserth/TotalSegmentator (v2.5.0-weights)",
-        "note": ("Carries `sinus_maxillary`, the one structure ToothFairy3 cannot teach. "
-                 "Pre-committed gate was an anatomical sinus on three clinical scans; it "
-                 "passed on one, and its mandible Dice was 0.8247-0.8534 against our "
-                 "0.9891. Not adopted."),
-    },
-    # --- the extended space (merged ids 48+), Apache-2.0 ------------------------
-    # `label_rule: None` for all three: they do not map into ToothFairy3 Task-1 ids at
-    # all. `dentistry/extended.py::label_map` is their crosswalk, resolved by anatomical
-    # name at load time by `worker/extended_board._lut_for`, which raises on a name that
-    # stops resolving exactly as `crosswalk._lut_from_names` does.
-    "head-muscles": {
-        "zip": "Dataset777_head_muscles_492subj.zip",
-        "slug": "head_muscles",
-        "label_rule": None,
-        "license": "Apache-2.0",
-        "source": "https://github.com/wasserth/TotalSegmentator (v2.3.0-weights)",
-        "note": ("The four muscles of mastication bilaterally, the digastrics and the "
-                 "TONGUE. 492 annotated CT subjects. Trained on CT and served on CBCT "
-                 "through the intensity calibration, gated per case by the craniofacial "
-                 "transfer probe -- see eval/extended.md."),
-    },
-    "head-glands": {
-        "zip": "Dataset775_head_glands_cavities_492subj.zip",
-        "slug": "head_glands_cavities",
-        "label_rule": None,
-        "license": "Apache-2.0",
-        "source": "https://github.com/wasserth/TotalSegmentator (v2.3.0-weights)",
-        "note": ("The three pharyngeal divisions, both nasal cavities, the hard and soft "
-                 "palate, the parotid and submandibular glands, the globes, lenses and "
-                 "optic nerves. 492 annotated CT subjects. CT-trained; gated."),
-    },
-    "headneck-bones": {
-        "zip": "Dataset776_headneck_bones_vessels_492subj.zip",
-        "slug": "headneck_bones_vessels",
-        "label_rule": None,
-        "license": "Apache-2.0",
-        "source": "https://github.com/wasserth/TotalSegmentator (v2.3.0-weights)",
-        "note": ("Hyoid, thyroid and cricoid cartilage, laryngeal airway, zygomatic "
-                 "arches, styloid processes, internal carotids and jugulars. 492 "
-                 "annotated CT subjects. CT-trained; gated."),
-    },
+    # The CT-trained TotalSegmentator entries (Dataset113 teeth, Dataset115
+    # craniofacial, Dataset775/776/777 head/neck) were removed on 2026-10-02: every one
+    # was measured on dental CBCT and none transfers. See `dentistry/models.RETIRED`.
     "toothseg-semantic": {
         "zip": "ToothSeg.zip",
         "slug": "toothseg_semantic",

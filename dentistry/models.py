@@ -91,28 +91,12 @@ class ModelEntry:
     #: What the reader gives up by turning it off, or takes on by turning it on.
     tradeoff: str = ""
     groups: tuple = ()              # the UI's coarse grouping of what it owns
-    #: Which composition space this model writes in.
-    #:
-    #: `task1`    -- ToothFairy3 Task-1 ids 1-46, fused by `worker/board.py`. Two models
-    #:               can claim the same structure there and one has to win, which is what
-    #:               `owns_task1` and `assert_owns_only` exist to arbitrate.
-    #: `extended` -- merged ids 48+, composed by `worker/extended_board.py`, which may
-    #:               only paint into BACKGROUND. Nothing in that space can overwrite a
-    #:               structure that carries a measurement, so `owns_task1` is empty for
-    #:               these and ownership never arises. See `dentistry/extended.py`.
-    space: str = "task1"
 
     def structures(self) -> list:
         """The merged structure ids this model is authoritative for. Numpy-free."""
         from dentistry import crosswalk
         from dentistry import labels as L
 
-        if self.space == "extended":
-            # Extended models do not OWN anything -- nothing else draws these structures,
-            # and the pass that composes them may only paint background. So "what it is
-            # authoritative for" is simply everything it draws.
-            from dentistry import extended as EX
-            return [e.id for e in EX.for_model(self.key)]
         lut = crosswalk.task1_to_merged_map()
         out = []
         for t1 in self.owns_task1:
@@ -129,15 +113,6 @@ class ModelEntry:
             "name": self.name,
             "role": self.role,
             "origin": self.origin,
-            # The picker groups by this: a Task-1 specialist competes for structures the
-            # base model also draws, an extended one adds structures nothing else draws
-            # and cannot overwrite anything. Those are different questions and the UI
-            # should not put them in one list.
-            "space": self.space,
-            # True for the extended space, and it is the load-bearing caveat: these are
-            # CT-trained models read on CBCT, gated per case, carrying no error budget
-            # and therefore forbidden as measurement targets.
-            "unmeasured": self.space == "extended",
             "license": self.license,
             "owns_task1": list(self.owns_task1),
             "structures": self.structures(),
@@ -238,150 +213,32 @@ TOOTHSEG = ModelEntry(
     groups=("teeth",),
 )
 
-TOTALSEG = ModelEntry(
-    key="totalseg",
-    name="TotalSegmentator teeth (Dataset113)",
-    role="specialist",
-    # Ownership is CONFIGURED for this one and defaults to nothing, because the
-    # measurement says it should own nothing. See `evidence`.
-    owns_task1=(),
-    origin="third-party",
-    license="Apache-2.0 (wasserth/TotalSegmentator)",
-    dir_setting="TF3_TOTALSEG_DIR",
-    fold_setting="TF3_TOTALSEG_FOLD",
-    checkpoint_setting="TF3_TOTALSEG_CHECKPOINT",
-    label_rule="totalseg",
-    roi="full",
-    engine="blocked",
-    default_mode="shadow",
-    order=30,
-    seconds=180.0,
-    evidence=("Measured on 18 cases and it took ownership of NOTHING: zero "
-              "accessory-canal voxels in 18 of 18, pulp -0.078 Dice, the two inferior "
-              "alveolar canals -0.014 and -0.021. Leakage could only have helped it, so "
-              "those losses are real."),
-    tradeoff=("Kept on the menu so that measurement can be reproduced, not because it "
-              "is expected to win. It runs over the whole volume through the z-tiler "
-              "and costs about three minutes."),
-    groups=("teeth",),
-)
-
-
-# --- the extended space: structures nothing else in this catalogue draws ------------
+# --- retired: the CT-trained TotalSegmentator family ------------------------------
 #
-# Three TotalSegmentator head/neck tasks, Apache-2.0, 492 training subjects each. They
-# compose in MERGED ids 48+ through `worker/extended_board.py`, which may only paint into
-# background -- so `owns_task1` is empty and stays empty, and switching any of these on
-# cannot move a clearance, a verdict or an error budget.
+# Four entries used to follow here: TotalSegmentator teeth (Dataset113) and three
+# head/neck tasks (Dataset775/776/777) composed into merged ids 48+. All four are
+# trained on CT in Hounsfield units and all four were MEASURED on dental CBCT and
+# failed -- Dataset113 took ownership of nothing on 18 of 18 cases, and across 126
+# head/neck structure-opportunities exactly one survived a plausibility gate. They
+# were withdrawn on 2026-10-02 rather than left on a menu where they could only ever
+# be the wrong choice. The measurements are archived under eval/.
 #
-# ALL THREE DEFAULT TO `off`, and that is not timidity. They are trained on CT in
-# Hounsfield units and the input here is CBCT; whether they transfer is measured per case
-# by a probe, and the standard path should not pay two minutes of GPU for anatomy most
-# implant plans do not need. A reader who wants the tongue asks for the tongue.
-_EXT_LICENSE = "Apache-2.0 (wasserth/TotalSegmentator, v2.3.0-weights)"
-_EXT_TRADEOFF_TAIL = (
-    "Trained on CT in Hounsfield units and run here on CBCT. MEASURED on three holdout "
-    "CBCTs and it does not transfer: across 126 structure-opportunities exactly ONE "
-    "survived the plausibility gate. Cone-beam CT images dense bone well and soft tissue "
-    "badly -- scatter, and no calibrated Hounsfield units -- which is what a CT-trained "
-    "soft-tissue network depends on. Left on the menu so the measurement is reproducible "
-    "and so a wider field of view can be tried, NOT because it is expected to draw "
-    "anything. Nothing here carries an error budget, so nothing here may be measured "
-    "from. See eval/extended.md.")
+# A job row may still name one of them in `jobs.options`, so the keys are remembered:
+# asking for one in any mode but `off` is refused with this reason, and `off` is
+# accepted and dropped, so an old request replays rather than crashing.
+RETIRED = {
+    "totalseg": "TotalSegmentator teeth (Dataset113) was retired on 2026-10-02: it is "
+                "CT-trained and measured to own nothing on dental CBCT",
+    "head-muscles": "the CT-trained head-muscle model was retired on 2026-10-02: it "
+                    "does not transfer to CBCT",
+    "head-glands": "the CT-trained airway/gland model was retired on 2026-10-02: it "
+                   "does not transfer to CBCT",
+    "headneck-bones": "the CT-trained neck bone/vessel model was retired on "
+                      "2026-10-02: it does not transfer to CBCT",
+}
 
-HEAD_MUSCLES = ModelEntry(
-    key="head-muscles",
-    name="Head muscles + tongue",
-    role="specialist",
-    owns_task1=(),
-    origin="third-party",
-    license=_EXT_LICENSE,
-    dir_setting="TF3_HEAD_MUSCLES_DIR",
-    fold_setting="TF3_HEAD_MUSCLES_FOLD",
-    checkpoint_setting="TF3_HEAD_MUSCLES_CHECKPOINT",
-    label_rule="extended",
-    roi="full",
-    engine="blocked",
-    space="extended",
-    default_mode="off",
-    order=60,
-    seconds=45.0,
-    evidence=("Dataset777_head_muscles_492subj: the four muscles of mastication "
-              "bilaterally, the digastrics, and the tongue. 492 annotated CT subjects, "
-              "NoMirroring. MEASURED on dental CBCT and it fails: the tongue came out at "
-              "1.76 and 2.71 cm3 against an anatomical 70-100, one masseter was found and "
-              "the other was not inside a field of view containing both, and every muscle "
-              "was one to two orders of magnitude too small. Zero of eleven survived the "
-              "gate on any case."),
-    tradeoff=("The tongue is what makes the oral cavity and the soft palate legible in "
-              "3-D; the masticatory muscles are context, not targets. " + _EXT_TRADEOFF_TAIL),
-    groups=("muscles",),
-)
 
-HEAD_GLANDS = ModelEntry(
-    key="head-glands",
-    name="Airway, palate, glands and orbit",
-    role="specialist",
-    owns_task1=(),
-    origin="third-party",
-    license=_EXT_LICENSE,
-    dir_setting="TF3_HEAD_GLANDS_DIR",
-    fold_setting="TF3_HEAD_GLANDS_FOLD",
-    checkpoint_setting="TF3_HEAD_GLANDS_CHECKPOINT",
-    label_rule="extended",
-    roi="full",
-    engine="blocked",
-    space="extended",
-    default_mode="off",
-    order=61,
-    seconds=45.0,
-    evidence=("Dataset775_head_glands_cavities_492subj: the three pharyngeal divisions, "
-              "both nasal cavities, the hard and soft palate, the salivary glands, the "
-              "globes, lenses and optic nerves. 492 annotated CT subjects, NoMirroring. "
-              "MEASURED on dental CBCT: the orbit and the glands fall outside a 123 mm "
-              "field of view entirely, the oropharynx arrived in 155 connected pieces, "
-              "and the nasal cavities and hard palate were cut by the scan edge on every "
-              "case. Zero of nineteen survived the gate."),
-    tradeoff=("The hard palate is the one structure here a maxillary implant can run "
-              "into, and it is drawn but NOT measured -- see below. Its three pharyngeal "
-              "divisions overlap the single ToothFairy3 pharynx, and because this pass "
-              "only paints background, ToothFairy3 wins every voxel they disagree on. "
-              + _EXT_TRADEOFF_TAIL),
-    groups=("airway", "glands"),
-)
-
-HEADNECK_BONES = ModelEntry(
-    key="headneck-bones",
-    name="Neck bones, cartilage and great vessels",
-    role="specialist",
-    owns_task1=(),
-    origin="third-party",
-    license=_EXT_LICENSE,
-    dir_setting="TF3_HEADNECK_BONES_DIR",
-    fold_setting="TF3_HEADNECK_BONES_FOLD",
-    checkpoint_setting="TF3_HEADNECK_BONES_CHECKPOINT",
-    label_rule="extended",
-    roi="full",
-    engine="blocked",
-    space="extended",
-    default_mode="off",
-    order=62,
-    seconds=45.0,
-    evidence=("Dataset776_headneck_bones_vessels_492subj: the hyoid, the thyroid and "
-              "cricoid cartilages, the laryngeal airway, both zygomatic arches and "
-              "styloid processes, and the internal carotids and jugulars. 492 annotated "
-              "CT subjects, NoMirroring. MEASURED on dental CBCT: almost everything it "
-              "draws sits below or behind a dental field of view, and what was in frame "
-              "came out cut or a tenth of its size. Zero of twelve survived the gate."),
-    tradeoff=("The carotid and the jugular sit deep to the mandibular ramus, which is "
-              "why a posterior block matters -- they are drawn as context and carry no "
-              "clearance. Most dental CBCT fields of view cut the larynx and the "
-              "cartilages off entirely, and a structure cut by the scan edge is reported "
-              "as absent rather than as small. " + _EXT_TRADEOFF_TAIL),
-    groups=("bones", "vessels"),
-)
-
-CATALOGUE = (BASE, CANAL, TOOTHSEG, TOTALSEG, HEAD_MUSCLES, HEAD_GLANDS, HEADNECK_BONES)
+CATALOGUE = (BASE, CANAL, TOOTHSEG)
 BY_KEY = {m.key: m for m in CATALOGUE}
 SPECIALIST_KEYS = tuple(m.key for m in CATALOGUE if m.role == "specialist")
 
@@ -493,6 +350,10 @@ def resolve_config(requested: dict | None, inventory: dict | None) -> dict:
     """
     req = dict(requested or {})
     fallback = default_config(inventory)
+    for k in [k for k in req if k in RETIRED]:
+        if str(req[k]) != "off":
+            raise ConfigRefused(RETIRED[k])
+        del req[k]
     unknown = [k for k in req if k not in BY_KEY]
     if unknown:
         raise ConfigRefused(
@@ -526,22 +387,7 @@ def board_keys(config: dict | None) -> list:
     cfg = config or default_config()   # no inventory here: the worker has the truth
     picked = [(m.order, m.key, str(cfg.get(m.key, m.default_mode)))
               for m in CATALOGUE
-              if m.role == "specialist" and m.space == "task1"]
-    return [(k, mode) for _o, k, mode in sorted(picked) if mode != "off"]
-
-
-def extended_keys(config: dict | None) -> list:
-    """The EXTENDED-space models to run, in application order, with their modes.
-
-    Separate from `board_keys` because the two passes are separate: `worker/board.py`
-    fuses Task-1 ids and would try to build a `Specialist` (with an ROI box, an ownership
-    tuple and a `crosswalk` label rule) out of a model that has none of those. Splitting
-    the lists is what keeps a soft-tissue model from being handed to the arbitration
-    machinery that exists to settle disputes it cannot have.
-    """
-    cfg = config or default_config()
-    picked = [(m.order, m.key, str(cfg.get(m.key, m.default_mode)))
-              for m in CATALOGUE if m.space == "extended"]
+              if m.role == "specialist"]
     return [(k, mode) for _o, k, mode in sorted(picked) if mode != "off"]
 
 

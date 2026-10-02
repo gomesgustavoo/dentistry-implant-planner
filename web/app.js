@@ -910,13 +910,6 @@ function renderModelPicker() {
       || 'No models are published by this deployment.')}</p>`;
     return;
   }
-  // TWO SECTIONS, because they answer different questions. A Task-1 specialist competes
-  // for structures the base model also draws, so choosing it is a judgement about which
-  // model is right. An extended model adds anatomy nothing else draws and structurally
-  // cannot overwrite anything, so choosing it is a judgement about whether the anatomy is
-  // worth two minutes of GPU. Putting both in one list invites reading the second as the
-  // first, which would make a CT-trained soft-tissue model look like a rival to the
-  // segmentation the measurements come from.
   const card = (m) => {
     const mode = modelMode(m);
     const off = !m.installed;
@@ -940,10 +933,6 @@ function renderModelPicker() {
         >${m.role === 'base' ? 'base' : 'specialist'}${m.origin === 'third-party' ? ' &middot; third-party' : ''}</span>
       </header>
       <p class="modelowns">${owns}</p>
-      ${m.unmeasured ? `<p class="modelcaveat" title="These are CT-trained models read on
-        a CBCT. Whether that transferred is measured on your scan before anything is
-        drawn, and none of these structures carries an error budget.">context only
-        &mdash; gated on your scan, and never measured from</p>` : ''}
       <div class="modelrow">
         <div class="seg modelmodes" role="group"
              aria-label="How ${esc(m.name)} runs">${modes}</div>
@@ -959,18 +948,7 @@ function renderModelPicker() {
     </article>`;
   };
 
-  const models = menu.models || [];
-  const core = models.filter((m) => m.space !== 'extended');
-  const ext = models.filter((m) => m.space === 'extended');
-  box.innerHTML = core.map(card).join('')
-    + (ext.length ? `<div class="modelsection">
-        <h3>More anatomy</h3>
-        <p class="hint">Structures outside the dental taxonomy, drawn by CT-trained
-          models read on your CBCT. They are added <b>beside</b> the segmentation and can
-          never overwrite it, so turning one on cannot change a single clearance. Off by
-          default; each costs about a minute.</p>
-      </div>` : '')
-    + ext.map(card).join('');
+  box.innerHTML = (menu.models || []).map(card).join('');
 
   // The reader has to be told when the list itself is second-hand.
   const hint = $('modelsHint');

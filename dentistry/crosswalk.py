@@ -323,74 +323,6 @@ def canal_roi_to_task1_lut(labels: dict):
                            drop=frozenset({"Inferior Alveolar Canal"}))
 
 
-def totalseg_to_task1_lut(labels: dict):
-    """TotalSegmentator `Dataset113_ToothFairy3`.
-
-    Their labels carry a `_fdiNNN` suffix, and NNN is the **raw ToothFairy3 id** rather
-    than an FDI number -- `..._pulp_fdi111` is raw 111, not tooth 11. (An earlier version
-    of this rule read it as FDI, took the first two digits of 111..142, and collapsed 32
-    pulp classes onto 4 distinct numbers. The guard caught it on the first install, which
-    is the whole reason the guard exists.)
-
-    That suffix is a gift: it gives a SECOND, independent derivation. Every label is
-    resolved both ways -- by raw id through `TASK1_MAPPING`, and by anatomical name with
-    the suffix stripped -- and the two must agree. Two derivations agreeing is a much
-    stronger statement than either alone, and it is what would catch an upstream that
-    renamed a structure while keeping its id, or renumbered one while keeping its name.
-
-    Pulp is the one real divergence: they keep 32 per-tooth classes where the challenge,
-    and therefore we, merge to one. That many-to-one fold is asserted at exactly 32,
-    because a PARTIAL fold would silently drop pulp on some teeth and nothing downstream
-    would notice.
-    """
-    import re
-
-    import numpy as np
-
-    by_name = _task1_by_name()
-    ids = [int(v) for v in labels.values()]
-    lut = np.zeros(max(ids) + 1, dtype=np.uint8)
-    unresolved, disagree, pulp = [], [], 0
-
-    for name, sid in labels.items():
-        sid = int(sid)
-        if sid == 0:
-            continue
-        m = re.search(r"_fdi(\d+)$", str(name))
-        raw = int(m.group(1)) if m else None
-        stem = re.sub(r"_fdi\d+$", "", str(name))
-
-        by_raw = tf3.TASK1_MAPPING.get(raw) if raw is not None else None
-        # Pulp names carry the tooth's own anatomy ("upper_right_central_incisor_pulp"),
-        # which resolves to that TOOTH by name; the raw id is what says it is pulp.
-        is_pulp = stem.endswith("pulp")
-        guess = 46 if is_pulp else by_name.get(_norm(stem))
-
-        if by_raw is None and guess is None:
-            unresolved.append(name)
-            continue
-        t1 = by_raw if by_raw is not None else guess
-        if by_raw is not None and guess is not None and by_raw != guess:
-            disagree.append((name, by_raw, guess))
-        lut[sid] = t1
-        pulp += int(t1 == 46)
-
-    if unresolved:
-        raise ForeignLabelMismatch(
-            f"totalseg: {len(unresolved)} label(s) resolve neither by raw ToothFairy3 id "
-            f"nor by name -> {unresolved[:6]}")
-    if disagree:
-        raise ForeignLabelMismatch(
-            f"totalseg: {len(disagree)} label(s) where the raw id and the anatomical name "
-            f"disagree -> {disagree[:4]}. One of the two moved upstream; this model is "
-            f"not the one that was measured.")
-    if pulp != 32:
-        raise ForeignLabelMismatch(
-            f"totalseg: expected 32 per-tooth pulp classes folding onto Task-1 46, "
-            f"found {pulp}. A partial fold drops pulp on some teeth silently.")
-    return lut
-
-
 def toothseg_semantic_to_task1_lut(labels: dict):
     """MIC-DKFZ ToothSeg semantic: the 32 teeth, at our own 0.3 mm.
 
@@ -443,14 +375,8 @@ def toothseg_semantic_to_task1_lut(labels: dict):
 LABEL_RULES = {
     "task1-identity": task1_identity_lut,
     "canal-roi": canal_roi_to_task1_lut,
-    "totalseg": totalseg_to_task1_lut,
     "toothseg": toothseg_semantic_to_task1_lut,
 }
-
-
-def assert_totalseg_alignment(labels: dict) -> None:
-    """Raise unless TotalSegmentator still means what it meant when we measured it."""
-    totalseg_to_task1_lut(labels)
 
 
 def assert_toothseg_alignment(labels: dict) -> None:

@@ -130,13 +130,6 @@ GROUP_ORDER = [GROUP_JAWS, GROUP_CANAL, GROUP_SINUS, GROUP_WORK,
                GROUP_UPPER, GROUP_LOWER, GROUP_PULP]
 
 
-def _group_order() -> list[str]:
-    """The dental groups, then the extended ones. Imported late to keep the module
-    graph one-way: `extended` names no label group, so it cannot import this back."""
-    from dentistry import extended as _ext
-    return GROUP_ORDER + list(_ext.GROUP_ORDER)
-
-
 def _tooth_color(fdi: int) -> str:
     """Colour teeth by quadrant hue, lightening from the midline backwards.
 
@@ -238,20 +231,6 @@ def _build() -> list[Structure]:
         Structure(47, "pulp", "Pulp", GROUP_PULP, "#ff5fa2", "toothfairy3"),
     ]
 
-    # --- the extended taxonomy, indices 48+ -------------------------------
-    # Structures outside the dental space entirely -- muscles, the airway above the
-    # pharynx, the orbit, the glands, the great vessels of the neck -- drawn by
-    # CT-trained TotalSegmentator head/neck models and composed by a SECOND pass that
-    # may only paint into background. See `dentistry/extended.py` for why they are not
-    # ToothFairy3 classes and what the invariant buys.
-    #
-    # Appended here rather than kept in a parallel list because every artifact writer in
-    # the worker iterates `L.STRUCTURES` -- meshes, contours, the volume pack, the
-    # structure set, the quality assessment. A second list would need each of them
-    # taught about it, and the one that was forgotten would be the bug.
-    from dentistry import extended as _ext
-    out += [Structure(e.index, e.id, e.name, e.group, e.color, e.model)
-            for e in _ext.EXTENDED]
     return out
 
 
@@ -260,6 +239,12 @@ BY_INDEX: dict[int, Structure] = {s.index: s for s in STRUCTURES}
 BY_ID: dict[str, Structure] = {s.id: s for s in STRUCTURES}
 BY_FDI: dict[int, Structure] = {s.fdi: s for s in STRUCTURES if s.fdi is not None}
 N_STRUCTURES = len(STRUCTURES)
+
+#: Merged indices 48-89 belonged to the retired CT-trained head/neck taxonomy. A result
+#: written before 2026-10-02 may still carry them in its labelmap, and its report names
+#: them, so they are NEVER to be reassigned: a new structure at index 48 would silently
+#: relabel every surviving voxel of an old tongue as itself.
+RETIRED_INDICES = range(48, 90)
 
 # Merged-volume indices, named so callers never hard-code an integer.
 MERGED_MAXILLA = BY_ID["maxilla"].index
@@ -350,7 +335,7 @@ def grouped() -> list[dict]:
                 for s in buckets[g]
             ],
         }
-        for g in _group_order()
+        for g in GROUP_ORDER
         if g in buckets
     ]
 
