@@ -22,17 +22,21 @@
  */
 import { UserManager, WebStorageStateStore } from 'oidc-client-ts';
 
-/** The app is served under /app, and Keycloak's registered redirect URI ends there.
+/** Where the app is mounted, which is where the provider's registered redirect URI ends.
+ *  Under `/app` on the hosted service; otherwise the directory of the current page.
  *  Derived from the current path rather than hardcoded so a preview host still works. */
 function appRoot() {
   const p = window.location.pathname;
   const i = p.indexOf('/app');
-  return window.location.origin + (i >= 0 ? p.slice(0, i + 4) : '/app');
+  return window.location.origin + (i >= 0 ? p.slice(0, i + 4) : p.replace(/\/[^/]*$/, ''));
 }
 
+// The provider is NOT compiled in. `authority` and `client_id` arrive through
+// `init(overrides)` from the deployment's web/config.js, so one bundle serves the hosted
+// service, a self-hosted provider, or no provider at all.
 const settings = {
-  authority: 'https://auth.dicomsegvr.com/realms/dicomsegvr',
-  client_id: 'dentistry-console',
+  authority: '',
+  client_id: '',
   redirect_uri: appRoot() + '/',
   post_logout_redirect_uri: window.location.origin + '/',
   response_type: 'code',                 // authorization code + PKCE; no implicit flow
@@ -67,6 +71,9 @@ function mgr() {
  */
 export async function init(overrides) {
   if (overrides) Object.assign(settings, overrides);
+  if (!settings.authority || !settings.client_id) {
+    throw new Error('DentistryAuth: no OpenID Connect provider configured (web/config.js oidc)');
+  }
   const m = mgr();
   const q = new URLSearchParams(window.location.search);
   if (q.has('code') && q.has('state')) {

@@ -126,6 +126,9 @@ const PRELUDE = (cfg) => `(() => {
   const CFG = ${JSON.stringify(cfg)};
   window.__GOLDEN = { signedIn: CFG.signedIn, net: [], errors: [], signInCalls: [], signOutCalls: 0 };
   if (CFG.noBoot) window.DENTISTRY_NO_BOOT = true;
+  // Accounts on unless the state says otherwise: the hosted deployment's configuration.
+  if (!CFG.anonymous) window.DENTISTRY_CONFIG = { oidc: { authority: 'https://idp.invalid/realms/x',
+    client_id: 'x' }, edgeBodyLimitMB: 100 };
   window.addEventListener('error', (e) => window.__GOLDEN.errors.push('error: ' + (e.message || e.type)));
   window.addEventListener('unhandledrejection',
     (e) => window.__GOLDEN.errors.push('rejection: ' + String((e.reason && e.reason.message) || e.reason)));
@@ -219,6 +222,14 @@ STATES.push({
   hash: '',
   body: `await ${sleep(800)};`,
   snap: ['.topbar', '#views'],
+});
+// The cold load of a self-hosted deployment: no provider configured, no accounts.
+STATES.push({
+  name: 'boot-anonymous',
+  cfg: { signedIn: false, noBoot: false, anonymous: true },
+  hash: '#/cases',
+  body: `await ${sleep(1500)}; clearInterval(state.poll);`,
+  snap: ['.topbar', '#home'],
 });
 // The cold load, signed in, landing on the catalogue.
 STATES.push({

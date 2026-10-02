@@ -28,6 +28,15 @@ spec:
       - image: dentistry/web:0.30.1
         imagePullPolicy: IfNotPresent
         name: web
+        # Read by docker/web-entrypoint.d/40-dentistry-config.sh into config.js. Must ship
+        # WITH an image >= 0.31.0: older images ignore them and carry the values compiled in.
+        env:
+        - name: DENT_WEB_OIDC_AUTHORITY
+          value: https://auth.dicomsegvr.com/realms/dicomsegvr
+        - name: DENT_WEB_OIDC_CLIENT_ID
+          value: dentistry-console
+        - name: DENT_WEB_EDGE_LIMIT_MB
+          value: "100"
         ports:
         - containerPort: 80
           name: http

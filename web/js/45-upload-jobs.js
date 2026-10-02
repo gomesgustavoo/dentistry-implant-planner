@@ -17,7 +17,7 @@ async function upload(file) {
   if (file.size > EDGE_BODY_LIMIT) {
     setNotice(
       `${file.name} is ${fmtBytes(file.size)}. Uploads through this hostname are capped at ` +
-      `100 MB by the CDN, so this one cannot get through yet — chunked upload is a ` +
+      `${EDGE_BODY_LIMIT_MB} MB by the CDN, so this one cannot get through yet — chunked upload is a ` +
       `pending item. Try a cropped or downsampled volume.`, 'err');
     return;
   }

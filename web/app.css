@@ -1395,6 +1395,12 @@ footer#homeFoot p { margin: 0; font-size: .72rem; color: var(--muted); }
 
 /* ------------------------------------------------------------------- gate */
 .gate { min-height: 70vh; display: grid; place-items: center; padding: 2rem 1rem; }
+/* The sign-in hand-off: the mark and one line, centred in the window. */
+.splash { min-height: calc(100vh - var(--topbar-h)); display: grid; place-content: center;
+  justify-items: center; gap: .9rem; padding: 2rem 1rem; text-align: center; }
+.splash__mark { width: 56px; height: 56px; border-radius: 14px; }
+.splash__text { margin: 0; color: var(--muted); font-size: .92rem; }
+.splash__fallback { margin: 0; color: var(--muted); font-size: .8rem; }
 .gate__panel {
   max-width: 30rem; text-align: center;
   padding: clamp(1.5rem, 5vw, 2.6rem);

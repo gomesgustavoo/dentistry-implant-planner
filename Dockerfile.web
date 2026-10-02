@@ -12,6 +12,8 @@ ARG VERSION=dev
 
 COPY web/ /usr/share/nginx/html/
 COPY docker/web-default.conf /etc/nginx/conf.d/default.conf
+# Rewrites config.js from the environment at start (accounts, CDN upload cap).
+COPY --chmod=0755 docker/web-entrypoint.d/40-dentistry-config.sh /docker-entrypoint.d/40-dentistry-config.sh
 
 # index.html references its assets as `app.css?v=dev`; the tag is rewritten at build
 # time so a redeploy cannot leave a browser holding last version's JS. The grep is
@@ -24,6 +26,7 @@ RUN sed -i "s/?v=dev/?v=${VERSION}/g" /usr/share/nginx/html/index.html \
     && grep -q "app.css?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "wordmark.png?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "qrcodegen.js?v=${VERSION}" /usr/share/nginx/html/index.html \
+    && grep -q "config.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "js/00-core.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && grep -q "js/90-boot.js?v=${VERSION}" /usr/share/nginx/html/index.html \
     && rm -f /usr/share/nginx/html/DESIGN.md

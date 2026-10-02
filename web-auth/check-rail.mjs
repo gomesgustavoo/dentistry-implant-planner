@@ -700,7 +700,7 @@ const BOOT_PROBE = `(async () => {
     threw, errors,
     // boot() ends in route(), which reveals a screen. A blank page with no error is
     // the other way this fails, and it is the way it actually failed.
-    visible: ['home', 'workspace', 'settings', 'signinGate'].filter((id) => {
+    visible: ['home', 'workspace', 'settings', 'authSplash'].filter((id) => {
       const e = document.getElementById(id);
       return e && !e.hidden;
     }),
@@ -880,7 +880,11 @@ async function run(breakage) {
     await c.send('Page.enable', {}, sessionId);
     await c.send('Runtime.enable', {}, sessionId);
     await c.send('Page.addScriptToEvaluateOnNewDocument',
-      { source: 'window.DENTISTRY_NO_BOOT = true;' }, sessionId);
+      // Accounts ON, as in production: AUTH is only constructed when the deployment
+      // names a provider (web/config.js), and every probe below assumes a signed-in app.
+      { source: 'window.DENTISTRY_NO_BOOT = true; window.DENTISTRY_CONFIG = '
+          + '{ oidc: { authority: "https://idp.invalid/realms/x", client_id: "x" }, edgeBodyLimitMB: 100 };' },
+      sessionId);
 
     // The boot path first: if it is broken, nothing below means anything to a user.
     await c.send('Emulation.setDeviceMetricsOverride',

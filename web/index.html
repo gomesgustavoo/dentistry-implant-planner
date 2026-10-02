@@ -146,17 +146,16 @@
      -- the account strip -- and stretched it to fill the window. -->
 <div id="views">
 
-  <!-- Pre-auth. Not an error state: the landing page is the public face of this
-       service and this is the application behind it. -->
-  <section class="gate" id="signinGate" hidden>
-    <div class="gate__panel">
-      <h1>Sign in to segment a scan</h1>
-      <p>Your cases, your account. Uploads are deleted the moment a job finishes and
-        results expire after 72 hours.</p>
-      <button class="btn btn--primary" id="signinBtn" type="button">Sign in</button>
-      <p class="gate__foot">No account yet? Signing in creates one, with a 14-day
-        trial of 30 segmentations and no card. <a href="/">Back to the site</a></p>
-    </div>
+  <!-- The hand-off to the identity provider. There is no sign-in page: arriving
+       signed out sends the browser straight to the provider, which comes back to the
+       catalogue. This is the only thing on screen for that moment, and the link appears
+       only if the redirect has visibly not happened. -->
+  <section class="splash" id="authSplash" hidden>
+    <img class="splash__mark" src="assets/brand/icon-64.png?v=dev" alt="" width="64" height="64">
+    <p class="splash__text" role="status" aria-live="polite">Signing you in&hellip;</p>
+    <p class="splash__fallback" id="authFallback" hidden>Taking longer than expected.
+      <button class="link" id="authRetry" type="button">Continue to sign in</button>
+      &middot; <a href="/">Back to the site</a></p>
   </section>
 
   <!-- Landing spot for an invite link. Its own view rather than a modal: the URL
@@ -776,6 +775,7 @@
 <!-- auth.js before app.js: app.js reads window.DentistryAuth at module top level.
      Built by `npm --prefix web-auth run build`, committed like viewer.js because
      the web image has no build step. -->
+<script src="config.js?v=dev"></script>
 <script src="auth.js?v=dev"></script>
 <script src="viewer.js?v=dev"></script>
 <!-- Vendored, never a CDN: Project Nayuki's QR Code generator v1.8.0 (MIT), byte-identical

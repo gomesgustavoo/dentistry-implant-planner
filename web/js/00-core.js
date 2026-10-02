@@ -22,10 +22,14 @@ const BASE = (() => {
 const API = BASE + '/v1';
 const $ = (id) => document.getElementById(id);
 
-// Cloudflare caps a request body at 100 MB, so an upload above that dies at the
-// edge with a bare 413 that says nothing about why. Checked here so the message
-// names the real limit instead.
-const EDGE_BODY_LIMIT = 100 * 1024 * 1024;
+// The deployment's own settings (web/config.js, rewritten by the container at start).
+const CFG = window.DENTISTRY_CONFIG || {};
+
+// A CDN in front of the app may cap a request body (Cloudflare: 100 MB), and an upload
+// above that dies at the edge with a bare 413 that says nothing about why. Checked here
+// so the message names the real limit instead. No CDN configured, no cap.
+const EDGE_BODY_LIMIT_MB = Number(CFG.edgeBodyLimitMB) || 0;
+const EDGE_BODY_LIMIT = EDGE_BODY_LIMIT_MB ? EDGE_BODY_LIMIT_MB * 1024 * 1024 : Infinity;
 
 const state = {
   jobs: [],
@@ -53,7 +57,9 @@ const state = {
 };
 
 /* ------------------------------------------------------------------ utils */
-const AUTH = window.DentistryAuth || null;
+// Accounts are on only when the deployment names an OpenID Connect provider. Without
+// one the app runs anonymously against an API that does not require a token.
+const AUTH = (CFG.oidc && window.DentistryAuth) || null;
 
 /** Merge the bearer token into a fetch init, if we have one. */
 /** Jobs whose bytes have changed under a URL that promised they would not.
@@ -105,7 +111,7 @@ async function api(path, opts) {
   if (res.status === 401 && AUTH && AUTH.isSignedIn()) {
     res = await fetch(API + path, await authed(init));
   }
-  if (res.status === 401 && AUTH) { AUTH.signIn(location.pathname); throw new Error('Signing in'); }
+  if (res.status === 401 && AUTH) { AUTH.signIn(location.pathname + location.hash); throw new Error('Signing in'); }
   if (!res.ok) {
     let body = null;
     try { body = await res.json(); } catch (_) {}
