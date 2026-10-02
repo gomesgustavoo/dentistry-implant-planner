@@ -170,6 +170,22 @@ offering, so the menu now holds only CBCT-trained networks. A stored job that st
 one is refused with the reason (or, if it asked for it `off`, replayed without it), and
 merged ids 48–89 stay reserved so an old labelmap can never be relabelled.
 
+## Run it locally
+
+The whole stack (Postgres, the API, the GPU worker and the web app) runs on one machine
+with an NVIDIA GPU (≥ 12 GB). It needs no accounts and no cloud, and no scan leaves the
+machine:
+
+```bash
+cp .env.example .env            # set POSTGRES_PASSWORD
+docker compose build
+docker compose run --rm worker python scripts/fetch_models.py --toothseg
+docker compose up -d            # http://127.0.0.1:8080
+```
+
+[`docs/self-hosting.md`](docs/self-hosting.md) covers requirements, settings, sharing the
+GPU, offline weights, updating, and why a server without accounts must stay private.
+
 ## Layout
 
 | | |
@@ -228,18 +244,20 @@ screen.
 
 ## What is not in this repository
 
-- **Model weights** (~2.8 GB). The base model is fine-tuned from
+- **Model weights** (~1 GB). The base model is fine-tuned from
   [ToothFairy3](https://toothfairy3.grand-challenge.org/), which is **CC BY-NC-SA 4.0**,
-  so anything derived from it is research and non-commercial use only. ToothSeg (Apache-2.0)
-  is installed by `scripts/prepare_models.py` from its Zenodo release.
+  so anything derived from it is research and non-commercial use only.
+  `scripts/fetch_models.py` downloads them (and, with `--toothseg`, ToothSeg from its
+  Zenodo release), verifying every file against `scripts/models.manifest.json`.
 - **Patient volumes and job results.**
 - **Evaluation dumps** (~1 GB of per-case `.npy`). The metrics and the write-ups that cite
   them are committed.
 - **Harness fixtures derived from a CBCT** — two JPEGs and their manifests. Regenerate
   with `scripts/make_web_fixtures.py <results-dir>`; without them `check-rail.mjs` cannot
   render a section.
-- **Secrets.** `.worker.env` is git-ignored; the k8s manifests reference a cluster Secret
-  by name and carry no values.
+- **Secrets and deployment values.** `.env` and `.worker.env` are git-ignored; the k8s
+  base references a cluster Secret by name, and a deployment's hostnames, provider and
+  price ids live in its own git-ignored overlay (`k8s/README.md`).
 - **The documentation tour.** `scripts/record_tour.sh` regenerates it in three commands.
   The cut is not committed for the same reason the fixtures are not.
 
