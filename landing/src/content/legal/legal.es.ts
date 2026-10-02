@@ -7,11 +7,11 @@ export const legal = {
     description: 'Cómo trata ImplantPlan los estudios CBCT que usted sube, cuánto tiempo se conservan los resultados y quién trata sus datos.',
     html: `
 <h1>Política de privacidad</h1>
-<p class="legal__meta">Última actualización: 29 de septiembre de 2026 · dentistry.dicomsegvr.com</p>
+<p class="legal__meta">Última actualización: 2 de octubre de 2026 · dentistry.dicomsegvr.com</p>
 ${note(' Si trata datos de pacientes sujetos al RGPD, a la LGPD o a la HIPAA, haga que su propio asesor lo revise y formalice el acuerdo adecuado antes de subir nada.')}
 
 <h2>1. Qué tratamos</h2>
-<p>Dos cosas: las <strong>imágenes que usted sube</strong> (una CBCT dental, como archivo ZIP de DICOM o como volumen NIfTI) y los <strong>datos de la cuenta</strong> que aporta su inicio de sesión, que son un identificador, una dirección de correo electrónico y un nombre de usuario. Los pagos los gestiona íntegramente Stripe; nosotros solo almacenamos una referencia de cliente, nunca los datos de la tarjeta.</p>
+<p>Las <strong>imágenes que usted sube</strong> (una CBCT dental, como archivo ZIP de DICOM o como volumen NIfTI) y los <strong>datos de la cuenta</strong> que aporta su inicio de sesión, que son un identificador, una dirección de correo electrónico y un nombre de usuario. Los pagos los gestiona íntegramente Stripe; nosotros solo almacenamos una referencia de cliente, nunca los datos de la tarjeta.</p>
 
 <h2>2. No desidentificamos las imágenes por usted</h2>
 <p>Una serie DICOM contiene identificadores del paciente en sus cabeceras. Solo leemos la geometría que necesitamos y no indexamos, buscamos ni compartimos esas cabeceras, pero tampoco las eliminamos. No dé por hecho que un estudio que suba ha sido anonimizado. <strong>Desidentifíquelo antes de subirlo si sus obligaciones lo exigen.</strong></p>
@@ -28,7 +28,10 @@ ${note(' Si trata datos de pacientes sujetos al RGPD, a la LGPD o a la HIPAA, ha
 <p>Cada caso se almacena bajo su propia cuenta, y cada solicitud se verifica frente a la cuenta propietaria. Una solicitud del caso de otra cuenta se responde como si el caso no existiera.</p>
 
 <h2>5. Sin rastreadores</h2>
-<p>No hay analítica ni píxeles publicitarios, y las fuentes se alojan en nuestros propios servidores. En la entrega de este sitio intervienen dos terceros: Cloudflare, que lo sirve y puede añadir un pequeño script que protege las direcciones de correo electrónico de los robots de spam, y YouTube, cuyo reproductor de vídeo se carga desde youtube-nocookie.com solo cuando usted pulsa reproducir (la imagen de vista previa anterior procede de i.ytimg.com). El inicio de sesión usa nuestro propio servicio de identidad; su token de sesión reside en la pestaña del navegador y se descarta al cerrarla.</p>
+<p>No hay analítica ni píxeles publicitarios, y las fuentes se alojan en nuestros propios servidores. En la entrega de este sitio intervienen dos terceros: Cloudflare, que lo sirve y puede añadir un pequeño script que protege las direcciones de correo electrónico de los robots de spam, y YouTube, cuyo reproductor de vídeo se carga desde youtube-nocookie.com solo cuando usted pulsa reproducir (la imagen de vista previa anterior procede de i.ytimg.com). El inicio de sesión usa nuestro propio servicio de identidad; en un navegador, su token de sesión reside en la pestaña y se descarta al cerrarla.</p>
+
+<h2>5a. Visores vinculados</h2>
+<p>Si vincula un visor con ImplantPlan VR a su cuenta, el visor conserva un token de dispositivo propio. Solo almacenamos un hash de ese token, junto con la etiqueta del visor, quién lo vinculó, el espacio de trabajo al que pertenece y cuándo se vinculó y se usó por última vez. El token caduca 90 días después de la vinculación, o tras 30 días sin uso, lo que ocurra primero, y puede revocarlo en cualquier momento en Settings, Headsets. El código de vinculación que muestra el panel es válido durante 5 minutos y funciona una sola vez.</p>
 
 <h2>6. Encargados del tratamiento</h2>
 <ul>
@@ -54,11 +57,11 @@ ${note(' Si trata datos de pacientes sujetos al RGPD, a la LGPD o a la HIPAA, ha
     description: 'Las condiciones de uso de ImplantPlan, una versión preliminar de investigación para la segmentación de CBCT dental y la medición de la distancia de seguridad del implante.',
     html: `
 <h1>Condiciones del servicio</h1>
-<p class="legal__meta">Última actualización: 29 de septiembre de 2026 · dentistry.dicomsegvr.com</p>
+<p class="legal__meta">Última actualización: 2 de octubre de 2026 · dentistry.dicomsegvr.com</p>
 ${note(' Haga que su propio asesor lo revise antes de basarse en él.')}
 
 <h2>1. Qué es este servicio</h2>
-<p>ImplantPlan segmenta automáticamente tomografías computarizadas de haz cónico (CBCT) dentales y devuelve las estructuras anatómicas como archivos RTSTRUCT, STL y NIfTI. También ofrece un visor web y herramientas de planificación de implantes que miden la distancia de seguridad entre un implante virtual y la anatomía segmentada.</p>
+<p>ImplantPlan segmenta automáticamente tomografías computarizadas de haz cónico (CBCT) dentales y devuelve las estructuras anatómicas como archivos RTSTRUCT, STL y NIfTI. También ofrece un visor web y herramientas de planificación de implantes que miden la distancia de seguridad entre un implante virtual y la anatomía segmentada. ImplantPlan VR, una aplicación para Meta Quest 3, Quest 3S y Quest Pro, abre los mismos casos en un visor una vez vinculado a su cuenta.</p>
 
 <h2>2. Qué no es</h2>
 <p>Es una <strong>versión preliminar de investigación</strong>. <strong>No es un producto sanitario</strong>, no cuenta con autorización regulatoria de ninguna autoridad y <strong>no es apto para uso diagnóstico</strong>. No genera guías quirúrgicas. Su resultado es un punto de partida para un profesional clínico cualificado, nunca un sustituto de este. Los valores de gris de la CBCT no son unidades Hounsfield calibradas, por lo que nada de lo que produce es una medición de densidad. Usted es responsable de revisar cada resultado antes de que informe cualquier decisión clínica.</p>
@@ -71,11 +74,11 @@ ${note(' Haga que su propio asesor lo revise antes de basarse en él.')}
 <li>Usted tiene derecho a subir las imágenes que sube, y cuenta con cualquier consentimiento que estas requieran.</li>
 <li>Usted desidentifica las imágenes cuando sus obligaciones lo exigen.</li>
 <li>Usted no intenta acceder a los datos de otra cuenta ni eludir los límites de uso.</li>
-<li>Usted no comparte sus credenciales de inicio de sesión.</li>
+<li>Usted no comparte sus credenciales de inicio de sesión y revoca cualquier visor vinculado que ya no controle.</li>
 </ul>
 
 <h2>5. Planes y facturación</h2>
-<p>La prueba le ofrece 30 segmentaciones en 14 días, lo que se agote primero, sin tarjeta de crédito. Los planes de pago son mensuales, se facturan por adelantado a través de Stripe e incluyen un número determinado de segmentaciones por mes natural. Las segmentaciones no utilizadas no se acumulan para el mes siguiente. Una segmentación es un estudio procesado por el pipeline completo; una nueva ejecución vuelve a contar, mientras que un trabajo fallido, o uno que usted cancele antes de que llegue a la GPU, no cuenta. Puede cancelar en cualquier momento desde la página de su cuenta, y el acceso se mantiene hasta el final del periodo pagado. Los meses parciales no se prorratean.</p>
+<p>La prueba le ofrece 30 segmentaciones en 14 días, lo que se agote primero, sin tarjeta de crédito. Los planes de pago son mensuales, se facturan por adelantado a través de Stripe e incluyen un número determinado de segmentaciones por mes natural; el plan Enterprise no tiene un límite fijo y está sujeto a un uso razonable, porque todos los trabajos comparten una GPU. El ajuste de un modelo con sus propios estudios se acuerda por separado antes de empezar. Las segmentaciones no utilizadas no se acumulan para el mes siguiente. Una segmentación es un estudio procesado por el pipeline completo; una nueva ejecución vuelve a contar, mientras que un trabajo fallido, o uno que usted cancele antes de que llegue a la GPU, no cuenta. Puede cancelar en cualquier momento desde la página de su cuenta, y el acceso se mantiene hasta el final del periodo pagado. Los meses parciales no se prorratean.</p>
 
 <h2>6. Disponibilidad</h2>
 <p>La segmentación se ejecuta en una sola GPU, por lo que los trabajos esperan en una cola. No ofrecemos ninguna garantía de disponibilidad y podemos interrumpir el servicio por mantenimiento. Los resultados caducan a las 72 horas, así que descargue lo que necesite.</p>

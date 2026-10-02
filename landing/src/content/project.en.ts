@@ -112,7 +112,7 @@ export const project = {
     {
       "name": "Explorer",
       "price": "12.99",
-      "allowance": "30 segmentations / month",
+      "allowance": "40 segmentations / month",
       "features": [
         "All 47 structures and every export format",
         "RTSTRUCT, STL, NIfTI, and the browser viewer",
@@ -127,10 +127,11 @@ export const project = {
     {
       "name": "Pro",
       "price": "49.99",
-      "allowance": "60 segmentations / month",
+      "allowance": "100 segmentations / month",
       "features": [
         "Everything in Explorer",
-        "Twice the monthly volume"
+        "Two and a half times the Explorer volume",
+        "An AI-written planning report for every scan, in development: dental status, bone quality and quantity, and the anatomical risks at each site, trained on the ToothFairy4 clinical-report dataset"
       ],
       "action": {
         "label": "Choose Pro",
@@ -141,20 +142,21 @@ export const project = {
     {
       "name": "Enterprise",
       "price": "199.99",
-      "allowance": "120 segmentations / month",
+      "allowance": "Unlimited segmentations",
       "features": [
         "Everything in Pro",
-        "Four times the Explorer volume",
+        "Unlimited segmentations under fair use",
+        "The segmentation model fine-tuned on your own labelled scans, on request",
         "Direct support"
       ],
       "action": {
         "label": "Choose Enterprise",
         "href": "/app?plan=enterprise"
       },
-      "note": "Need more? Contact me about higher volumes."
+      "note": "Fine-tuning is scoped with you before it starts."
     }
   ],
-  "pricingNote": "The trial ends after 30 segmentations or 14 days, whichever comes first. Uploads are deleted as soon as processing completes, and results expire after 72 hours. Unused segmentations do not roll over. You can cancel from your account at any time.",
+  "pricingNote": "The trial ends after 30 segmentations or 14 days, whichever comes first. Uploads are deleted as soon as processing completes, and results expire after 72 hours. Unused segmentations do not roll over. You can cancel from your account at any time. Unlimited means fair use: every job shares one GPU, about 98 s per scan, and runs in order.",
   "faq": [
     {
       "question": "What can I upload?",
@@ -170,7 +172,7 @@ export const project = {
     },
     {
       "question": "Is ImplantPlan a clinical planning tool?",
-      "answer": "No. It is a research preview, not a medical device, and it does not produce surgical guides. Its segmentation model is derived from ToothFairy3, which is licensed under CC BY-NC-SA 4.0 for non-commercial use."
+      "answer": "No. It is a research preview, not a medical device, and it does not produce surgical guides. The dataset and model credits are in the <a href=\"/engineering/#credits\">engineering notes</a>."
     },
     {
       "question": "What happens to my scan?",
@@ -185,9 +187,9 @@ export const project = {
   },
   "engineeringIntro": "The models, geometry, evaluation, and deployment decisions behind ImplantPlan, with the evidence and the limitations the overview leaves out.",
   "license": {
-    "text": "The segmentation model is derived from the ToothFairy3 dataset, licensed under",
-    "name": "CC BY-NC-SA 4.0",
-    "href": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "text": "",
+    "name": "",
+    "href": "",
     "credits": { "label": "Dataset and model credits", "href": "/engineering/#credits" }
   },
   "media": {

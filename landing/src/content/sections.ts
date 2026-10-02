@@ -38,7 +38,8 @@ const en = {
       },
     },
     stack: 'Built with PyTorch, nnU-Net with a U-Mamba2 bottleneck, FastAPI, PostgreSQL, k3s, Cornerstone3D, vtk.js and three.js.',
-    licence: 'Code: {mit}. Model weights: {cc}, trained on ToothFairy3.',
+    licence: 'Code: {mit}. Model weights: trained on ToothFairy3, see the {credits}.',
+    credits: 'dataset and model credits',
   },
   pricing: {
     title: 'Try it on your own scan.',
@@ -90,7 +91,8 @@ const es = {
       },
     },
     stack: 'Construido con PyTorch, nnU-Net con un cuello de botella U-Mamba2, FastAPI, PostgreSQL, k3s, Cornerstone3D, vtk.js y three.js.',
-    licence: 'Código: {mit}. Pesos del modelo: {cc}, entrenados con ToothFairy3.',
+    licence: 'Código: {mit}. Pesos del modelo: entrenados con ToothFairy3, consulte los {credits}.',
+    credits: 'créditos del conjunto de datos y del modelo',
   },
   pricing: {
     title: 'Pruébelo con su propio estudio.',
@@ -140,7 +142,8 @@ const ptBR = {
       },
     },
     stack: 'Construído com PyTorch, nnU-Net com bottleneck U-Mamba2, FastAPI, PostgreSQL, k3s, Cornerstone3D, vtk.js e three.js.',
-    licence: 'Código: {mit}. Pesos do modelo: {cc}, treinados no ToothFairy3.',
+    licence: 'Código: {mit}. Pesos do modelo: treinados no ToothFairy3, veja os {credits}.',
+    credits: 'créditos do conjunto de dados e do modelo',
   },
   pricing: {
     title: 'Experimente com o seu próprio exame.',

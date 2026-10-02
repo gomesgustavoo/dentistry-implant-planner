@@ -415,9 +415,11 @@ class UsageEvent(Base):
 # would otherwise hand out 60 jobs instead of 30).
 PLAN_SEED: list[dict] = [
     {"id": "trial",      "name": "Trial",      "price_monthly": "0.00",   "job_quota": 30,  "is_trial": True},
-    {"id": "explorer",   "name": "Explorer",   "price_monthly": "12.99",  "job_quota": 30,  "is_trial": False},
-    {"id": "clinician",  "name": "Pro",        "price_monthly": "49.99",  "job_quota": 60,  "is_trial": False},
-    {"id": "enterprise", "name": "Enterprise", "price_monthly": "199.99", "job_quota": 120, "is_trial": False},
+    {"id": "explorer",   "name": "Explorer",   "price_monthly": "12.99",  "job_quota": 40,   "is_trial": False},
+    {"id": "clinician",  "name": "Pro",        "price_monthly": "49.99",  "job_quota": 100,  "is_trial": False},
+    # None is unlimited (quota.py, and the dashboard renders it as an infinity sign). It is
+    # fair use, not a promise of capacity: every job still queues for the one GPU.
+    {"id": "enterprise", "name": "Enterprise", "price_monthly": "199.99", "job_quota": None, "is_trial": False},
 ]
 
 

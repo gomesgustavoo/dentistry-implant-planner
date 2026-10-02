@@ -1,1 +1,8 @@
-{ "available": false }
+{
+  "available": true,
+  "version": "1.0.0",
+  "file": "ImplantPlanVR-1.0.0.apk",
+  "href": "/download/ImplantPlanVR-1.0.0-b8891059.apk",
+  "bytes": 116668387,
+  "sha256": "b88910592bb9337fc7197e39512a0054c1f7f621639d8ce557480c3a19ff7586"
+}

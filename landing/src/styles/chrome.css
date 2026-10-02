@@ -72,6 +72,8 @@ body[data-project=implantplan] :is(.footer__top>a:not(.brand), .footer__bottom, 
 body[data-project=implantplan] .footer a:not(.brand){min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
 body[data-project=implantplan] .license{line-height:1.6}
 body[data-project=implantplan] .footer .license a{display:inline;min-height:0;min-width:0;padding-block:12px}
+/* Alone on its line (the credits link, with no licence badge before it) it is a standalone target. */
+body[data-project=implantplan] .footer .license a:only-child{display:inline-flex;align-items:center;min-height:44px;padding-block:0}
 body[data-project=implantplan] .footer{padding-bottom:max(36px, env(safe-area-inset-bottom))}
 
 /* Buttons: 15 px label (shared is 13.9), never wrap. Hover motion only with a real pointer. */

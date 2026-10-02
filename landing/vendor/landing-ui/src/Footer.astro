@@ -8,5 +8,7 @@ const s = t(p.locale);
 <footer class="footer container">
   <div class="footer__top"><a class="brand" href={localePath(p.locale, '/')}>{p.wordmark[0]}<span>{p.wordmark[1]}</span></a><a href={p.sibling.href}>{s.footer.also} {p.sibling.label} <span aria-hidden="true">↗</span></a><a href="#top">{s.footer.top} ↑</a></div>
   <div class="footer__bottom"><p>© {new Date().getFullYear()} Gustavo Formento · {s.footer.notice}</p><nav aria-label={s.footer.legal}><a href={localePath(p.locale, '/privacy/')}>{s.footer.privacy}</a><a href={localePath(p.locale, '/terms/')}>{s.footer.terms}</a><a href="mailto:support@dicomsegvr.com">{s.footer.support}</a></nav></div>
-  {p.license && <p class="license">{p.license.text} <a href={p.license.href} rel="license">{p.license.name}</a> · <a href={p.license.credits.href}>{p.license.credits.label}</a></p>}
+  {/* A project can keep its credits link without naming the licence in the footer: an empty
+      `text` leaves only the credits link, where the dataset licence is stated in full. */}
+  {p.license && <p class="license">{p.license.text && <>{p.license.text} <a href={p.license.href} rel="license">{p.license.name}</a> · </>}<a href={p.license.credits.href}>{p.license.credits.label}</a></p>}
 </footer>

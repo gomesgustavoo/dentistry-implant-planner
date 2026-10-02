@@ -112,7 +112,7 @@ export const project = {
     {
       "name": "Explorer",
       "price": "12.99",
-      "allowance": "30 segmentaciones / mes",
+      "allowance": "40 segmentaciones / mes",
       "features": [
         "Las 47 estructuras y todos los formatos de exportación",
         "RTSTRUCT, STL, NIfTI y el visor web",
@@ -127,10 +127,11 @@ export const project = {
     {
       "name": "Pro",
       "price": "49.99",
-      "allowance": "60 segmentaciones / mes",
+      "allowance": "100 segmentaciones / mes",
       "features": [
-        "Todo lo incluido en Explorer",
-        "El doble de volumen mensual"
+        "Todo lo de Explorer",
+        "Dos veces y media el volumen de Explorer",
+        "Un informe de planificación redactado por IA para cada estudio, en desarrollo: estado dental, calidad y cantidad ósea y los riesgos anatómicos de cada sitio, entrenado con el conjunto de informes clínicos ToothFairy4"
       ],
       "action": {
         "label": "Elegir Pro",
@@ -141,20 +142,21 @@ export const project = {
     {
       "name": "Enterprise",
       "price": "199.99",
-      "allowance": "120 segmentaciones / mes",
+      "allowance": "Segmentaciones ilimitadas",
       "features": [
-        "Todo lo incluido en Pro",
-        "Cuatro veces el volumen de Explorer",
+        "Todo lo de Pro",
+        "Segmentaciones ilimitadas con uso razonable",
+        "El modelo de segmentación ajustado con sus propios estudios etiquetados, bajo solicitud",
         "Soporte directo"
       ],
       "action": {
         "label": "Elegir Enterprise",
         "href": "/app?plan=enterprise"
       },
-      "note": "¿Necesita más? Póngase en contacto conmigo para volúmenes superiores."
+      "note": "El ajuste se define con usted antes de empezar."
     }
   ],
-  "pricingNote": "La prueba termina tras 30 segmentaciones o 14 días, lo que ocurra primero. Los archivos subidos se eliminan en cuanto termina el procesamiento, y los resultados caducan a las 72 horas. Las segmentaciones no utilizadas no se acumulan para el mes siguiente. Puede cancelar desde su cuenta en cualquier momento.",
+  "pricingNote": "La prueba termina tras 30 segmentaciones o 14 días, lo que ocurra primero. Los archivos subidos se eliminan en cuanto termina el procesamiento, y los resultados caducan a las 72 horas. Las segmentaciones no utilizadas no se acumulan para el mes siguiente. Puede cancelar desde su cuenta en cualquier momento. Ilimitado significa uso razonable: todos los trabajos comparten una GPU, unos 98 s por estudio, y se procesan en orden.",
   "faq": [
     {
       "question": "¿Qué puedo subir?",
@@ -170,7 +172,7 @@ export const project = {
     },
     {
       "question": "¿Es ImplantPlan una herramienta de planificación clínica?",
-      "answer": "No. Es una versión preliminar de investigación, no es un producto sanitario y no genera guías quirúrgicas. Su modelo de segmentación deriva de ToothFairy3, que se distribuye bajo licencia CC BY-NC-SA 4.0 para uso no comercial."
+      "answer": "No. Es una versión preliminar de investigación, no es un producto sanitario y no genera guías quirúrgicas. Los créditos del conjunto de datos y del modelo están en las <a href=\"/es/engineering/#credits\">notas de ingeniería</a>."
     },
     {
       "question": "¿Qué ocurre con mi estudio?",
@@ -185,9 +187,9 @@ export const project = {
   },
   "engineeringIntro": "Los modelos, la geometría, la evaluación y las decisiones de despliegue detrás de ImplantPlan, con la evidencia y las limitaciones que la presentación general deja fuera.",
   "license": {
-    "text": "El modelo de segmentación deriva del conjunto de datos ToothFairy3, distribuido bajo licencia",
-    "name": "CC BY-NC-SA 4.0",
-    "href": "https://creativecommons.org/licenses/by-nc-sa/4.0/",
+    "text": "",
+    "name": "",
+    "href": "",
     "credits": { "label": "Créditos del conjunto de datos y del modelo", "href": "/es/engineering/#credits" }
   },
   "media": {

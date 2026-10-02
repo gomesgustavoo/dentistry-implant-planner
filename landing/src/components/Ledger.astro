@@ -78,8 +78,9 @@ const rows = [
 ] as const;
 
 const mit = 'https://github.com/gomesgustavoo/dentistry-implant-planner/blob/main/LICENSE';
-const cc = p.license?.href ?? 'https://creativecommons.org/licenses/by-nc-sa/4.0/';
-const ccName = p.license?.name ?? 'CC BY-NC-SA 4.0';
+// The dataset licence is named once, in full, on the credits section of the engineering
+// notes; the landing links there instead of carrying the badge.
+const credits = localePath(l, '/engineering/#credits');
 ---
 <section id="engineering" class="ledger ip-section ip-section--tint" aria-labelledby="ledger-title">
   {/* Old deep links (/#problem and friends) predate this layout; the four that still have a
@@ -100,9 +101,9 @@ const ccName = p.license?.name ?? 'CC BY-NC-SA 4.0';
       ))}
     </div>
     <p class="ledger__stack">{s.stack}</p>
-    <p class="ledger__licence">{parts(s.licence, { mit: 'MIT', cc: ccName }).map(part =>
+    <p class="ledger__licence">{parts(s.licence, { mit: 'MIT', credits: s.credits }).map(part =>
       part.key === 'mit' ? <a class="ledger__inline" href={mit} rel="license">{part.text}</a>
-      : part.key === 'cc' ? <a class="ledger__inline" href={cc} rel="license">{part.text}</a>
+      : part.key === 'credits' ? <a class="ledger__inline" href={credits}>{part.text}</a>
       : part.text)}</p>
     <div class="ip-links">
       <a class="text-link" href={localePath(l, '/engineering/')}>{shared.notes}<Icon name="arrow-right" size={16} /></a>
