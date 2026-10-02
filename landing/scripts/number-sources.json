@@ -1,0 +1,42 @@
+{
+  "$comment": [
+    "Every unit-bearing number the English home page renders, and the line it comes out of.",
+    "scripts/check-implantplan.mjs (check 14) scans the rendered text of / plus its aria-label, alt and title",
+    "attributes with the `regex` below, skipping the live readout (it moves with the scroll), prices, clock times,",
+    "the SHA-256 and the film transcript (verbatim film text). Each match must equal an entry's `text`",
+    "(whitespace collapsed, a decimal comma read as a point), and each entry's `file` (repo-relative) at `line`",
+    "must contain `pattern` literally. With `digits`, the last number in `pattern` rounded to that many places",
+    "must equal the rendered number: 0.5354 is what the page shows as 0.54, so a re-bake that moves the crossing",
+    "fails here instead of leaving the page quoting the old figure.",
+    "`line: null` means the source file is being written in this release and the line is not frozen yet: the",
+    "check searches the whole file, passes if the pattern is there, and prints the line to pin.",
+    "Adding a row is a claim that the figure is measured. If no file in the repo holds it, cut the figure."
+  ],
+  "page": "/",
+  "regex": "(?<![\\p{L}\\p{N}_.,])(?:\\d[\\d.,]*\\s?(?:mm|%|s|GB|MB|°)(?![\\p{L}\\p{N}])|0\\.\\d{3,})",
+  "entries": [
+    { "text": "4.8 mm", "file": "landing/assets/hero3d.js", "line": 82, "pattern": "DIAMETER_MM = 4.8", "digits": 1, "note": "implant diameter in the scene" },
+    { "text": "16 mm", "file": "landing/assets/hero3d.js", "line": 83, "pattern": "LENGTH_MM = 16.0", "digits": 0, "note": "implant length; rendered as '4.8 × 16 mm'" },
+    { "text": "0 mm", "file": "landing/assets/hero3d.js", "line": 85, "pattern": "platform depth below the crest", "note": "origin of the depth gauge: the platform at the crest" },
+    { "text": "2.0 mm", "file": "landing/assets/hero3d.js", "line": 89, "pattern": "DEPTH_MAX_MM = 2.0", "digits": 1, "note": "end of the depth gauge track" },
+    { "text": "0.54 mm", "file": "landing/assets/arch.assets.json", "line": 28, "pattern": "\"tight_mm\": 0.5354", "digits": 2, "note": "TIGHT crossing, the gauge's first tick" },
+    { "text": "1.07 mm", "file": "landing/assets/arch.assets.json", "line": 29, "pattern": "\"breach_mm\": 1.0713", "digits": 2, "note": "BREACH crossing, the gauge's second tick" },
+    { "text": "0.0 mm", "file": "landing/vendor/landing-ui/src/Readout.astro", "line": 17, "pattern": "decimal(locale, 0, 1)", "note": "the readout's static depth line (crest)" },
+    { "text": "3.43 mm", "file": "landing/vendor/landing-ui/src/Readout.astro", "line": 15, "pattern": "decimal(locale, 3.43)", "note": "measured clearance at the crest, static readout" },
+    { "text": "2.97 mm", "file": "landing/vendor/landing-ui/src/Readout.astro", "line": 9, "pattern": "decimal(locale, 2.97)", "note": "graded clearance at the crest, static readout" },
+    { "text": "3.51 mm", "file": "landing/vendor/landing-ui/src/Readout.astro", "line": 22, "pattern": "decimal(locale, 3.51)", "note": "the app's saved example in the no-WebGL fallback readout" },
+    { "text": "0.46 mm", "file": "landing/src/content/engineering.en.html", "line": 326, "pattern": "0.46 mm inward p95", "note": "canal inward boundary error at p95; the Ledger reads the same value from assets/safety-constants.*.js" },
+    { "text": "2.00 mm", "file": "landing/src/content/engineering.en.html", "line": 325, "pattern": "the 2.00 mm margin", "note": "safety margin" },
+    { "text": "2.46 mm", "file": "landing/src/content/engineering.en.html", "line": 325, "pattern": "<b>2.46 mm</b>", "note": "envelope = 2.00 + 0.46, baked when the page is built (hero3d.js:17-18)" },
+    { "text": "0.8965", "file": "landing/src/content/engineering.en.html", "line": 20, "pattern": "0.8965", "note": "challenge Dice on the 20-case held-out set (README.md:74)" },
+    { "text": "0.012", "file": "README.md", "line": 76, "pattern": "within 0.012 of the challenge winners" },
+    { "text": "12 GB", "file": "landing/src/content/engineering.en.html", "line": 28, "pattern": "12 GB card" },
+    { "text": "98 s", "file": "landing/src/content/engineering.en.html", "line": 117, "pattern": "~98 s", "note": "GPU time per scan, two models; rendered '~98 s'" },
+    { "text": "7.77 mm", "file": "landing/media/edl.json", "line": 24, "pattern": "7.77 mm canal CLEAR", "note": "hero loop footage label: raw3 212.5 s zoom-read, also film 2:15; the EDL declares it as loops[0].label after the hero sheet sign-off" },
+    { "text": "4.3 mm", "file": "landing/src/content/film.ts", "line": 136, "pattern": "Widen it from 4.3 to 6.0 mm", "note": "film caption 1:35, carried verbatim by the transcript" },
+    { "text": "6.0 mm", "file": "landing/src/content/film.ts", "line": 136, "pattern": "Widen it from 4.3 to 6.0 mm", "note": "film caption 1:35, carried verbatim by the transcript" },
+    { "text": "14 mm", "file": "landing/src/content/film.ts", "line": 135, "pattern": "Lengthen it to 14 mm", "note": "film caption 1:31, carried verbatim by the transcript" },
+    { "text": "100 MB", "file": "web/app.js", "line": 24, "pattern": "100 MB", "note": "upload limit in the kept FAQ answer (project.en.ts faq[0]); the app enforces it as EDGE_BODY_LIMIT at :27" },
+    { "text": "0.3 mm", "file": "scripts/tf3_cc_thresholds.py", "line": 25, "pattern": "0.3 mm isotropic", "note": "ToothFairy3 voxel size in the kept FAQ answer (project.en.ts faq[1])" }
+  ]
+}

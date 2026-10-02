@@ -1,4 +1,5 @@
 import type { Project } from '@dicomsegvr/landing-ui/types';
+import { media } from '../lib/media';
 
 export const project = {
   "id": "implantplan",
@@ -10,8 +11,8 @@ export const project = {
   ],
   "theme": "light",
   "url": "https://dentistry.dicomsegvr.com",
-  "title": "ImplantPlan — Explore a anatomia, meça a distância de segurança · Gustavo Formento",
-  "description": "Um projeto de pesquisa em imagem odontológica que combina segmentação por IA, 3D interativo e medições da distância de segurança do implante que levam em conta o próprio erro do modelo.",
+  "title": "ImplantPlan: planeje um implante dentário com as próprias mãos · Gustavo Formento",
+  "description": "Planejamento de implantes em exames de CBCT reais, no navegador e no Meta Quest. Cada distância de segurança é classificada depois de subtraído o erro medido do próprio modelo.",
   "eyebrow": "Imagem odontológica / IA / 3D interativo",
   "headline": [
     "Explore a anatomia.",
@@ -28,8 +29,8 @@ export const project = {
     "href": "https://dicomsegvr.com"
   },
   "poster": "/assets/hero-implant.png",
-  "socialImage": "/assets/og-image.a270e3f9.png",
-  "socialImageAlt": "ImplantPlan: um implante dentário instalado em uma mandíbula segmentada, acima do canal mandibular",
+  "socialImage": media.og.src,
+  "socialImageAlt": "“Plan a dental implant with your hands.” Duas mãos no ImplantPlan VR seguram uma mandíbula translúcida, com as distâncias de segurança do implante indicadas sobre ela.",
   "favicon": "/assets/favicon-32.png",
   "touchIcon": "/assets/apple-touch-icon.b3503f63.png",
   "sceneLabel": "Uma medição que você pode ver",
@@ -161,7 +162,7 @@ export const project = {
     },
     {
       "question": "Quais exames funcionam melhor?",
-      "answer": "CBCT de campo odontológico que abranja os maxilares. O modelo foi treinado no ToothFairy3, cujos 512 volumes são todos isotrópicos de 0,3 mm, com altura mediana de 51 mm. Exames de cabeça inteira estão fora dessa distribuição, e os resultados deixam isso evidente."
+      "answer": "CBCT de campo odontológico que abranja os maxilares. O modelo foi treinado no ToothFairy3, cujos 512 volumes são todos exames de campo odontológico isotrópicos de 0,3 mm. Exames de cabeça inteira estão fora dessa distribuição, e os resultados deixam isso evidente."
     },
     {
       "question": "O que a distância de segurança leva em conta?",
@@ -196,5 +197,12 @@ export const project = {
     "caption": "A minha demonstração do DicomSegVR abre esta reportagem sobre a RT Medical, onde trabalho.",
     "language": "Áudio em português",
     "alt": "Imagem da reportagem de televisão do Balanço Geral Florianópolis"
-  }
+  },
+  "nav": [
+    { "label": "O vídeo", "href": "#demo" },
+    { "label": "ImplantPlan VR", "href": "/vr/" },
+    { "label": "Engenharia", "href": "/engineering/" },
+    { "label": "Preços", "href": "#pricing" }
+  ],
+  "operatingSystem": "Web, Meta Quest"
 } satisfies Project;

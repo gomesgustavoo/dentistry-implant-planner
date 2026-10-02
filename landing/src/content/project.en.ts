@@ -1,4 +1,5 @@
 import type { Project } from '@dicomsegvr/landing-ui/types';
+import { media } from '../lib/media';
 
 export const project = {
   "id": "implantplan",
@@ -10,8 +11,8 @@ export const project = {
   ],
   "theme": "light",
   "url": "https://dentistry.dicomsegvr.com",
-  "title": "ImplantPlan — Explore the anatomy, measure the clearance · Gustavo Formento",
-  "description": "A dental imaging research project that combines AI segmentation, interactive 3D, and implant clearance measurements that account for the model's own error.",
+  "title": "ImplantPlan: plan a dental implant with your hands · Gustavo Formento",
+  "description": "Implant planning on real CBCT scans, in the browser and on Meta Quest. Every clearance is graded after the model's own measured error is subtracted.",
   "eyebrow": "Dental imaging / AI / Interactive 3D",
   "headline": [
     "Explore the anatomy.",
@@ -28,8 +29,8 @@ export const project = {
     "href": "https://dicomsegvr.com"
   },
   "poster": "/assets/hero-implant.png",
-  "socialImage": "/assets/og-image.a270e3f9.png",
-  "socialImageAlt": "ImplantPlan: a dental implant seated in a segmented mandible above the inferior alveolar canal",
+  "socialImage": media.og.src,
+  "socialImageAlt": "“Plan a dental implant with your hands.” Two hands in ImplantPlan VR hold a translucent jaw, with the implant's clearances labelled on it.",
   "favicon": "/assets/favicon-32.png",
   "touchIcon": "/assets/apple-touch-icon.b3503f63.png",
   "sceneLabel": "A measurement you can see",
@@ -161,7 +162,7 @@ export const project = {
     },
     {
       "question": "Which scans work best?",
-      "answer": "Dental-field CBCT that covers the jaws. The model was trained on ToothFairy3, whose 512 volumes are all 0.3 mm isotropic with a median height of 51 mm. Whole-head scans are outside that distribution, and the results show it."
+      "answer": "Dental-field CBCT that covers the jaws. The model was trained on ToothFairy3, whose 512 volumes are all 0.3 mm isotropic dental-field scans. Whole-head scans are outside that distribution, and the results show it."
     },
     {
       "question": "What does the clearance account for?",
@@ -196,5 +197,12 @@ export const project = {
     "caption": "My DicomSegVR demonstration opens this report about RT Medical, where I work.",
     "language": "Portuguese audio",
     "alt": "Still from the Balanço Geral Florianópolis television report"
-  }
+  },
+  "nav": [
+    { "label": "The film", "href": "#demo" },
+    { "label": "ImplantPlan VR", "href": "/vr/" },
+    { "label": "Engineering", "href": "/engineering/" },
+    { "label": "Pricing", "href": "#pricing" }
+  ],
+  "operatingSystem": "Web, Meta Quest"
 } satisfies Project;

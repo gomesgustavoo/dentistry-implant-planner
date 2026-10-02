@@ -1,0 +1,128 @@
+---
+/* Pricing as three compact rows instead of three towers (the towers were 1,685 px tall on a
+ * phone, and a three-tower pricing grid is one of the templated tells the rulebook lists).
+ *
+ * The plans, prices and allowances come from `project.<l>.ts` untouched; this component only
+ * formats them. Prices take the locale's decimal mark ($12,99 in ES/PT, like every other
+ * figure on the page); the currency is stated once in the lead (`t().landing.usd`), so the
+ * symbol stays a plain "$" and the price never needs more width than its column has.
+ *
+ * Contracts: each row is `article.plan[data-reveal]` containing an `a` (the shared motion
+ * check focuses `.plan a` and expects the row released to opacity 1); `.plan__allowance`,
+ * `.plan__note` and `.pricing-note` are in the shared contrast sweep. `.plans` is avoided on
+ * purpose: the shared sheet styles it as a three-column grid.
+ *
+ * Layouts. Below 768: name and allowance left, price right, then features, then the action,
+ * about 200 px a row. 768-1279: the same two lines with the action in a third column. 1280
+ * and up: one line per plan on the 12-column grid (1-3 / 4-5 / 6-9 / 10-12). The wide row
+ * starts at 1280, not 1024, because at 1024 the Spanish trial button (nowrap) is wider than
+ * three columns and "$199,99 / mes" wider than two.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { LOCALE_META, decimal, t } from '@dicomsegvr/landing-ui/i18n';
+import { sections } from '../content/sections';
+import Icon from './Icon.astro';
+
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const l = p.locale;
+const s = sections[l].pricing;
+const shared = t(l).landing;
+const lang = LOCALE_META[l].html;
+
+function price(raw: string): string {
+  const value = Number(raw);
+  if (!Number.isFinite(value)) throw new Error(`Pricing: plan price "${raw}" in project.${l}.ts is not a number`);
+  return `$${decimal(l, value, 2)}`;
+}
+// "30 segmentations / month" may wrap on a phone; let it break before the slash, never after.
+const allowance = (text: string) => text.replace(/ \/ /g, ' /\u00a0');
+// Pro and Enterprise read as one sentence ("Everything in Pro, four times the Explorer volume,
+// and direct support."): the items after the first lose their sentence capital ("Twice",
+// Portuguese "O dobro") but keep an acronym's ("RTSTRUCT"), and the locale supplies its own
+// "and". A feature that opens with a product name would be lowercased too; none does today.
+const list = new Intl.ListFormat(lang, { style: 'long', type: 'conjunction' });
+const inline = (features: string[]) => `${list.format(features.map((f, i) =>
+  i > 0 && /^\p{Lu}(?:\p{Ll}|\s)/u.test(f) ? f[0].toLocaleLowerCase(lang) + f.slice(1) : f))}.`;
+---
+<section id="pricing" class="pricing ip-section" aria-labelledby="pricing-title">
+  <div class="container">
+    <header class="ip-head">
+      <h2 class="ip-h2" id="pricing-title">{s.title}</h2>
+      <p class="ip-lead">{p.trial} {shared.usd}</p>
+    </header>
+    <div class="plan-rows">
+      {p.plans.map((plan, i) => (
+        <article class:list={['plan', { 'plan--tint': i === 0 }]} data-reveal aria-labelledby={`pricing-plan-${i}`}>
+          <div class="plan__head">
+            <h3 class="plan__name" id={`pricing-plan-${i}`}>{plan.name}</h3>
+            <p class="plan__allowance">{allowance(plan.allowance)}</p>
+          </div>
+          <p class="plan__price"><span class="plan__amount">{price(plan.price)}</span> <span class="plan__per">{shared.month}</span></p>
+          {i === 0
+            ? <ul class="plan__features">{plan.features.map(f => <li><span class="plan__tick"><Icon name="check" size={16} /></span><span>{f}</span></li>)}</ul>
+            : <p class="plan__features plan__features--inline">{inline(plan.features)}</p>}
+          <div class="plan__act">
+            <a class:list={['button', { 'button--secondary': i !== 0 }]} href={plan.action.href}>{plan.action.label}</a>
+            {/* The first plan's note restates the lead (trial length, no card), so it is left
+                out rather than said twice; the others add something the lead does not. */}
+            {i !== 0 && plan.note && <p class="plan__note">{plan.note}</p>}
+          </div>
+        </article>
+      ))}
+    </div>
+    <p class="pricing-note">{p.pricingNote}</p>
+  </div>
+</section>
+
+<style>
+  /* Every rule below is one class + the scope attribute, which outranks the shared single-class
+     `.plan*` rules (and their 1190/999/650 px overrides) whatever order the sheets load in.
+     Properties the shared sheet sets and this layout does not want are reset explicitly. */
+  .plan-rows{display:grid;gap:12px}
+  .plan{display:grid;grid-template-columns:minmax(0,1fr) auto;grid-template-areas:"head price" "feat feat" "act act";column-gap:16px;row-gap:12px;align-items:start;padding:18px 16px;border:0;border-radius:10px;background:none;min-width:0}
+  .plan--tint{background:var(--wash);box-shadow:0 0 0 1px rgb(124 58 237 / .14)}
+  /* Hairline between the two untinted rows only; the tinted row carries its own edge. */
+  .plan:not(.plan--tint) + .plan{border-top:1px solid var(--hair);border-radius:0}
+
+  .plan__head{grid-area:head;min-width:0}
+  .plan__name{margin:0;font-size:var(--fs-18);line-height:1.3;font-weight:600;letter-spacing:-.01em}
+  .plan__allowance{margin:2px 0 0;font-size:var(--fs-14);line-height:1.5;color:var(--muted)}
+
+  .plan__price{grid-area:price;justify-self:end;margin:0;white-space:nowrap;font-size:clamp(1.375rem, .95rem + .85vw, 1.75rem);line-height:1.2;font-weight:600;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+  .plan__amount{margin:0;font-size:inherit;letter-spacing:inherit;color:var(--text)}
+  .plan__per{margin:0;font-size:var(--fs-15);font-weight:400;letter-spacing:0;color:var(--muted);white-space:nowrap}
+
+  .plan__features{grid-area:feat;margin:0;padding:0;border:0;list-style:none;font-size:var(--fs-15);line-height:1.55;color:var(--muted);flex:none;max-width:60ch}
+  .plan__features li{display:flex;gap:8px;align-items:baseline;padding:0;position:static}
+  .plan__features li::before{content:none}
+  .plan__features li + li{margin-top:6px}
+  .plan__tick{display:inline-flex;flex:none;align-self:center;color:var(--accent-gfx)}
+
+  .plan__act{grid-area:act;display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px}
+  .plan__act .button{flex:none}
+  .plan__note{margin:0;max-width:30ch;font-size:var(--fs-14);line-height:1.5;text-align:left;color:var(--muted)}
+
+  .pricing-note{margin:24px 0 0;max-width:72ch;font-size:var(--fs-14);line-height:1.6;text-align:left;color:var(--muted)}
+
+  /* Two lines a plan, the action in its own column so the button never wraps. Each row is
+     its own grid, so the price and action tracks are fixed widths, not `auto`: with `auto`
+     every row sized them to its own content and the three prices sat at three different x.
+     10rem holds "$199.99 / month" at this size; 15.5rem the widest trial button (ES/PT).
+     Rows bleed into the gutter by their padding so their text lines up with the heading. */
+  @media (min-width:768px){
+    .plan-rows{margin-inline:-24px}
+    .plan{grid-template-columns:minmax(0,1fr) 10rem 15.5rem;grid-template-areas:"head price act" "feat feat act";column-gap:32px;padding:24px}
+    .plan__price{justify-self:start}
+    .plan__act{flex-direction:column;align-items:flex-start;flex-wrap:nowrap;gap:10px}
+    .plan__note{max-width:none}
+  }
+  /* One line a plan on the page grid. */
+  @media (min-width:1280px){
+    .plan{grid-template-columns:repeat(12,minmax(0,1fr));grid-template-areas:none;column-gap:24px;padding:28px 24px}
+    .plan__head{grid-area:auto;grid-column:1 / 4}
+    .plan__price{grid-area:auto;grid-column:4 / 6;justify-self:start}
+    .plan__features{grid-area:auto;grid-column:6 / 10}
+    .plan__act{grid-area:auto;grid-column:10 / 13}
+  }
+</style>

@@ -1,0 +1,269 @@
+---
+/* section#demo: the VR story, then the door to /vr/.
+ *
+ * 1. Three static chapter rows, Place. / Inspect. / Cut.: the film's own caption at that
+ *    moment, one sentence, a clean still from the raw capture, and a deep link that opens the
+ *    player there (media.film.links). Each caption sits over footage that shows that action:
+ *    place = raw2 102.4 s (implant placed, canal CLEAR, read 1:1), inspect = raw3 97.5 s
+ *    (6.0 x 8.0 mm BREACH, inside the 96.73-100.07 s BREACH hold, never a flicker window),
+ *    cut = raw3 187.5 s (sagittal slice with the segmentation outlines).
+ * 2. The whole film: card, seven-chapter index, and the on-screen text as a transcript.
+ * 3. The ImplantPlan VR card (full-bleed band) with version and size only when the APK exists.
+ *
+ * The word animation is the only motion here (reveal.ts): per-character spans are built now,
+ * at build time, so the h3 carries its name in aria-label and the spans are aria-hidden.
+ * Every trigger is a real link to the H.264 file, so the section works with no JS at all.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { LOCALE_META, decimal, localePath, t as ui } from '@dicomsegvr/landing-ui/i18n';
+import Icon from './Icon.astro';
+import { apk } from '../lib/apk';
+import { clock, media, still } from '../lib/media';
+import { vr } from '../content/vr';
+import { film, filmFigures, transcript } from '../content/film';
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const locale = p.locale;
+const s = vr[locale];
+const fs = film[locale];
+const verdict = ui(locale).hero3d;
+const lang = LOCALE_META[locale].html;
+
+const f = media.film;
+const length = clock(f.duration);
+const at = (t: number) => (t > 0 ? `${f.h264.src}#t=${t}` : f.h264.src);
+if (f.links.length < 3) throw new Error(`media.json film.links needs the 3 chapter-row times, has ${f.links.length}`);
+if (f.chapters.length !== fs.chapters.length) throw new Error(`media.json has ${f.chapters.length} chapters, content/film.ts names ${fs.chapters.length}`);
+const [placeAt, inspectAt, cutAt] = f.links;
+const chapters = fs.chapters.map((title, i) => ({ title, t: f.chapters[i] }));
+
+const srcset = (id: string, kind: 'avif' | 'webp') => {
+  const e = still(id).sizes;
+  return `${e['640'][kind].src} ${e['640'][kind].width}w, ${e['1280'][kind].src} ${e['1280'][kind].width}w`;
+};
+const big = (id: string) => still(id).sizes['1280'].webp;
+// Rendered widths: rows 8 of 12 columns (868 px at 1440), card and VR media 6 (645 px).
+const ROW_SIZES = '(min-width: 1024px) min(61vw, 960px), calc(100vw - 40px)';
+const HALF_SIZES = '(min-width: 1024px) min(46vw, 720px), calc(100vw - 40px)';
+
+const widenTo = decimal(locale, filmFigures.widenTo, 1);
+const rows = [
+  { id: 'place', t: placeAt, word: s.rows.place.word, body: s.rows.place.body, alt: s.rows.place.alt(verdict.clear) },
+  { id: 'inspect', t: inspectAt, word: s.rows.inspect.word, body: s.rows.inspect.body, alt: s.rows.inspect.alt(widenTo, verdict.breach) },
+  { id: 'cut', t: cutAt, word: s.rows.cut.word, body: s.rows.cut.body, alt: s.rows.cut.alt },
+];
+const timeOf = (entry: (typeof transcript)[number]) => (entry.kind === 'chapter' ? f.chapters[entry.chapter] : entry.t);
+/** 68 -> "PT1M8S", the <time datetime> form of an offset into the film. */
+const iso = (t: number) => `PT${Math.floor(t / 60) ? `${Math.floor(t / 60)}M` : ''}${+(t % 60).toFixed(3)}S`;
+---
+<section id="demo" class="vr ip-section" aria-labelledby="vrTitle" style={`--word-fit:${s.wordFit}`}>
+  <div class="container">
+    <div class="ip-head">
+      <h2 id="vrTitle" class="ip-h2">{s.title}</h2>
+      <p class="ip-lead">{s.lead}</p>
+    </div>
+
+    <div class="vr__rows">
+      {rows.map(row => (
+        <article class="chapter" data-chapter-reveal data-flip-scope aria-labelledby={`chapter-${row.id}`}>
+          <h3 id={`chapter-${row.id}`} class="chapter__word" aria-label={row.word}>
+            <span class="chapter__line" aria-hidden="true">{Array.from(row.word).map((ch, i) => <span class="ch" style={`--i:${i}`}>{ch}</span>)}</span>
+          </h3>
+          {row.id === 'inspect' ? (
+            <p class="chapter__caption">
+              {s.rows.inspect.caption(decimal(locale, filmFigures.widenFrom, 1), widenTo)}{' '}
+              <span class="chip" data-state="clear">{verdict.clear}</span>, {s.rows.inspect.then}{' '}
+              <span class="chip" data-state="tight">{verdict.tight}</span>, {s.rows.inspect.then}{' '}
+              <span class="chip" data-state="breach">{verdict.breach}</span>.
+            </p>
+          ) : (
+            <p class="chapter__caption">{row.id === 'place' ? s.rows.place.caption : s.rows.cut.caption}</p>
+          )}
+          <p class="chapter__body">{row.body}</p>
+          <picture class="chapter__still ip-frame" data-flip-origin>
+            <source type="image/avif" srcset={srcset(row.id, 'avif')} sizes={ROW_SIZES} />
+            <source type="image/webp" srcset={srcset(row.id, 'webp')} sizes={ROW_SIZES} />
+            <img src={big(row.id).src} width={big(row.id).width} height={big(row.id).height} alt={row.alt} loading="lazy" decoding="async" />
+          </picture>
+          <a class="chapter__link" href={at(row.t)} data-film-open data-t={row.t}>
+            <span class="chapter__link-icon" aria-hidden="true"><Icon name="play" size={18} /></span><span>{s.watchPart}</span><time class="chapter__link-time ip-mono" datetime={iso(row.t)}>{clock(row.t)}</time>
+          </a>
+        </article>
+      ))}
+    </div>
+
+    <div class="film" data-flip-scope>
+      <h3 class="film__title">{s.film.title}</h3>
+      <p class="film__meta">{s.film.meta(length, chapters.length)}</p>
+      <a class="film-card" href={f.h264.src} data-film-open aria-label={s.film.card(length)}>
+        <picture class="film-card__media ip-frame" data-flip-origin>
+          <source type="image/avif" srcset={srcset('film', 'avif')} sizes={HALF_SIZES} />
+          <source type="image/webp" srcset={srcset('film', 'webp')} sizes={HALF_SIZES} />
+          <img src={big('film').src} width={big('film').width} height={big('film').height} alt="" loading="lazy" decoding="async" />
+        </picture>
+        <span class="film-card__play" aria-hidden="true"><Icon name="play" weight="fill" size={24} /></span>
+      </a>
+      <ol class="film-index" aria-label={s.film.index}>
+        {chapters.map(c => (
+          <li>
+            <a href={at(c.t)} data-film-open data-t={c.t}><time class="film-index__time ip-mono" datetime={iso(c.t)}>{clock(c.t)}</time><span class="film-index__title">{c.title}</span></a>
+          </li>
+        ))}
+      </ol>
+      <details class="transcript">
+        <summary><span>{fs.transcriptSummary}</span><span class="transcript__caret" aria-hidden="true"><Icon name="caret-right" size={18} /></span></summary>
+        <p class="transcript__note">{fs.transcriptNote}</p>
+        <ol class="transcript__list" lang="en">
+          {transcript.map(entry => (
+            <li class:list={['transcript__row', { 'transcript__row--chapter': entry.kind === 'chapter', 'transcript__row--card': entry.kind === 'card' }]}>
+              <time class="transcript__time ip-mono" datetime={iso(timeOf(entry))}>{clock(timeOf(entry))}</time>
+              {entry.kind === 'card' ? (
+                <div><p class="transcript__label" lang={lang}>{fs.endCardLabel}</p>{entry.lines.map(line => <p>{line}</p>)}</div>
+              ) : (
+                <p>{entry.kind === 'chapter' ? film.en.chapters[entry.chapter] : entry.text}</p>
+              )}
+            </li>
+          ))}
+        </ol>
+      </details>
+    </div>
+  </div>
+
+  <div id="get-vr" class="vr-card">
+    <div class="container vr-card__inner">
+      <div class="vr-card__copy">
+        <h3 class="vr-card__title">{s.card.title}</h3>
+        <p class="vr-card__text">{s.card.text}</p>
+        {apk.available
+          ? <p class="vr-card__facts ip-mono" data-apk-facts>{s.card.version(apk.version, decimal(locale, apk.bytes / 1e6, 1))}</p>
+          : <p class="vr-card__soon">{s.card.soon}</p>}
+        <a class="button vr-card__button" href={localePath(locale, '/vr/')}>{apk.available ? s.card.button : s.card.buttonSoon}<Icon name="arrow-right" size={18} /></a>
+      </div>
+      <picture class="vr-card__media ip-frame">
+        <source type="image/avif" srcset={srcset('welcome', 'avif')} sizes={HALF_SIZES} />
+        <source type="image/webp" srcset={srcset('welcome', 'webp')} sizes={HALF_SIZES} />
+        <img src={big('welcome').src} width={big('welcome').width} height={big('welcome').height} alt={s.card.alt} loading="lazy" decoding="async" />
+      </picture>
+    </div>
+  </div>
+</section>
+
+<script>import '../scripts/reveal';</script>
+
+<style>
+  .vr{padding-bottom:0}
+  .vr__rows{display:grid;row-gap:clamp(64px, 8vw, 128px)}
+
+  /* ---- chapter rows ---------------------------------------------------------------------- */
+  .chapter{display:grid;grid-template-columns:minmax(0,1fr);container-type:inline-size;--ch-step:24ms}
+  .chapter__word{margin:0 0 16px;font-family:var(--display);font-weight:700;font-size:var(--fs-word);line-height:1;letter-spacing:-.03em;color:var(--text);text-wrap:balance}
+  /* Sized to the column so this locale's longest word (--word-fit, in em) always fits; the
+     0.3 em is slack for the fallback font before Archivo arrives. */
+  @supports (width:1cqi){
+    .chapter__word{font-size:min(var(--fs-word), calc(100cqi / (var(--word-fit, 4) + .3)))}
+    @media (min-width:1024px){
+      /* the copy column is 4 of 12 columns: (W - 11 x 24) / 3 + 3 x 24 = W/3 - 16 px */
+      .chapter__word{font-size:min(var(--fs-word), calc((33.333cqi - 16px) / (var(--word-fit, 4) + .3)))}
+    }
+  }
+  /* The clip box for the rise: padded so ascenders and descenders are never cut at rest,
+     and pulled back by the same amount so it takes no space. */
+  .chapter__line{display:block;white-space:nowrap;padding-block:.08em .12em;margin-block:-.08em -.12em}
+  .ch{display:inline-block}
+  .chapter__caption{margin:0;max-width:34ch;font-size:var(--fs-18);line-height:1.55;font-weight:550;color:var(--text);text-wrap:pretty}
+  .chapter__caption .chip{vertical-align:.08em}
+  .chapter__body{margin:10px 0 0;max-width:40ch;font-size:var(--fs-16);line-height:1.6;color:var(--muted);text-wrap:pretty}
+  .chapter__still{display:block;margin-top:24px;aspect-ratio:16 / 9}
+  .chapter__still img,.film-card__media img,.vr-card__media img{width:100%;height:100%;object-fit:cover}
+  .chapter__link{justify-self:start;display:inline-flex;align-items:center;gap:10px;min-height:44px;margin-top:12px;color:var(--accent);font-size:var(--fs-15);font-weight:600;text-decoration:underline;text-decoration-color:transparent;text-underline-offset:4px}
+  .chapter__link-icon{display:inline-flex}
+  .chapter__link-time{font-size:var(--fs-14);font-weight:500;color:var(--muted)}
+
+  @media (min-width:1024px){
+    .chapter{grid-template-columns:repeat(12,minmax(0,1fr));grid-template-rows:1fr auto auto auto auto 1fr;column-gap:24px}
+    /* explicit lists, not `.chapter > *`: scoped attribute selectors would out-rank the still's own rule */
+    .chapter__word,.chapter__caption,.chapter__body,.chapter__link{grid-column:1 / 5}
+    .chapter__word{grid-row:2}
+    .chapter__caption{grid-row:3}
+    .chapter__body{grid-row:4}
+    .chapter__link{grid-row:5;margin-top:20px}
+    .chapter__still{grid-column:5 / 13;grid-row:1 / 7;align-self:center;margin-top:0}
+  }
+
+  /* Reveal (reveal.ts arms rows below the fold). Hidden states exist only here: with .is-armed
+     and with motion allowed. Without the script, or under reduced motion, nothing hides. */
+  @media (prefers-reduced-motion:no-preference){
+    .chapter.is-armed .chapter__line{overflow:hidden;overflow:clip}
+    .chapter.is-armed .ch{transform:translateY(105%)}
+    .chapter.is-armed.is-in .ch{transform:none;transition:transform var(--dur-media) var(--ease-out-expo) calc(var(--i, 0) * var(--ch-step))}
+    .chapter.is-armed .chapter__still{clip-path:inset(0 0 100% 0 round 10px)}
+    /* ends 48 px outside the box so the frame's ring and soft shadow are not clipped away */
+    .chapter.is-armed.is-in .chapter__still{clip-path:inset(-48px round 10px);transition:clip-path var(--dur-media) var(--ease-in-out) 60ms}
+  }
+  @media (prefers-reduced-motion:no-preference) and (max-width:767px){
+    .chapter{--ch-step:18ms}
+    .chapter.is-armed .chapter__still{clip-path:none;opacity:0;transform:translateY(12px)}
+    .chapter.is-armed.is-in .chapter__still{clip-path:none;opacity:1;transform:none;transition:opacity var(--dur-media) var(--ease-out) 60ms, transform var(--dur-media) var(--ease-out) 60ms}
+  }
+
+  /* ---- the whole film ------------------------------------------------------------------------ */
+  .film{display:grid;grid-template-columns:minmax(0,1fr);margin-top:clamp(80px, 9vw, 152px);padding-top:clamp(40px, 4vw, 64px);border-top:1px solid var(--hair)}
+  .film__title{margin:0;font-size:var(--fs-28);line-height:1.15;letter-spacing:-.025em;font-weight:600;text-wrap:balance}
+  .film__meta{margin:8px 0 0;font-size:var(--fs-15);color:var(--muted)}
+  .film-card{position:relative;display:block;margin-top:24px;border-radius:10px}
+  .film-card__media{display:block;aspect-ratio:16 / 9}
+  .film-card__play{position:absolute;left:50%;top:50%;display:grid;place-items:center;width:56px;height:56px;margin:-28px 0 0 -28px;padding-left:3px;border-radius:50%;background:var(--accent);color:#fff;box-shadow:0 10px 28px -12px rgb(76 29 149 / .6)}
+  .film-card:active .film-card__play{transform:scale(.96);transition:transform var(--dur-press) var(--ease-out)}
+  .film-index{list-style:none;margin:28px 0 0;padding:0;border-top:1px solid var(--hair)}
+  .film-index a{display:grid;grid-template-columns:3.5rem minmax(0,1fr);align-items:center;column-gap:12px;min-height:48px;padding-block:8px;border-bottom:1px solid var(--hair);color:var(--text);font-size:var(--fs-16);line-height:1.35}
+  .film-index__time{font-size:var(--fs-14);color:var(--muted)}
+
+  @media (hover:hover) and (pointer:fine){
+    .chapter__link{transition:text-decoration-color var(--dur-hover) ease}
+    .chapter__link:hover{text-decoration-color:currentColor}
+    .film-card__play{transition:transform var(--dur-hover) var(--ease-out)}
+    .film-card:hover .film-card__play{transform:scale(1.06)}
+    .film-index__title{transition:color var(--dur-hover) ease}
+    .film-index a:hover .film-index__title{color:var(--accent)}
+  }
+
+  /* The film's on-screen text, in English (lang="en"); the note says so in the page's language. */
+  .transcript{margin-top:16px}
+  .transcript summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;list-style:none;font-size:var(--fs-15);font-weight:600;color:var(--text);cursor:pointer}
+  .transcript summary::-webkit-details-marker{display:none}
+  .transcript__caret{display:inline-flex;color:var(--muted);transition:transform var(--dur-state) var(--ease-out)}
+  .transcript[open] .transcript__caret{transform:rotate(90deg)}
+  .transcript__note{margin:4px 0 16px;font-size:var(--fs-14);line-height:1.6;color:var(--muted)}
+  .transcript__list{list-style:none;margin:0;padding:0 0 8px;display:grid;row-gap:12px}
+  .transcript__row{display:grid;grid-template-columns:3.5rem minmax(0,1fr);column-gap:12px;font-size:var(--fs-15);line-height:1.55;color:var(--text)}
+  .transcript__row p{margin:0}
+  .transcript__time{padding-top:.1em;font-size:var(--fs-14);color:var(--muted)}
+  .transcript__row--chapter{margin-top:8px}
+  .transcript__row--chapter p{font-weight:650}
+  .transcript__row--card div{display:grid;row-gap:4px}
+  .transcript__label{font-size:var(--fs-14);color:var(--muted)}
+
+  @media (min-width:1024px){
+    .film{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;align-items:start}
+    .film__title,.film__meta,.film-index,.transcript{grid-column:1 / 6}
+    .film__title{grid-row:1}
+    .film__meta{grid-row:2}
+    .film-index{grid-row:3}
+    .transcript{grid-row:4}
+    .film-card{grid-column:7 / 13;grid-row:1 / 6;margin-top:0}
+  }
+
+  /* ---- ImplantPlan VR card (full-bleed band) ------------------------------------------------- */
+  .vr-card{margin-top:clamp(80px, 9vw, 152px);padding-block:clamp(56px, 6vw, 104px);background:var(--bg-elev);border-top:1px solid var(--hair)}
+  .vr-card__inner{display:grid;row-gap:32px}
+  .vr-card__title{margin:0;font-family:var(--display);font-weight:700;font-size:clamp(1.75rem, 1.2rem + 1.6vw, 2.5rem);line-height:1.05;letter-spacing:-.03em;text-wrap:balance}
+  .vr-card__text{margin:14px 0 0;max-width:44ch;font-size:var(--fs-18);line-height:1.6;color:var(--muted);text-wrap:pretty}
+  .vr-card__facts,.vr-card__soon{margin:14px 0 0;font-size:var(--fs-14);color:var(--muted)}
+  .vr-card__button{margin-top:24px}
+  .vr-card__media{display:block;aspect-ratio:16 / 9}
+  @media (min-width:1024px){
+    .vr-card__inner{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;align-items:center}
+    .vr-card__copy{grid-column:1 / 6}
+    .vr-card__media{grid-column:7 / 13}
+  }
+</style>

@@ -7,8 +7,13 @@ WORKDIR /site
 COPY landing/package.json landing/package-lock.json ./
 COPY landing/vendor/ ./vendor/
 RUN npm ci
+# landing/download/ comes in with this COPY (it is gitignored, not dockerignored): that is
+# how a dropped ImplantPlan VR APK reaches the build. No APK is a valid, deployable state.
 COPY landing/ ./
-RUN npm run build
+# verify-dist runs here because the runtime stage has no node. It fails the image when a
+# URL in the HTML is missing from dist, a hashed name does not match its bytes, or the APK
+# in dist is not the one the /vr/ page describes (see the script's header).
+RUN npm run build && node scripts/verify-dist.mjs
 
 FROM nginx:1.27.5-alpine
 

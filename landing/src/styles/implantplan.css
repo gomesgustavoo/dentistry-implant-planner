@@ -1,0 +1,21 @@
+/* ImplantPlan landing (/ and /vr/) layout primitives. Component styles are scoped in each
+ * component; only what several sections share lives here. Light page, one deliberate dark
+ * surface (the film dialog). No eyebrows, no section numbers (report-skills §2 items 4-5). */
+body[data-project=implantplan] main{display:block}
+.ip-section{padding-block:clamp(64px, 6vw + 24px, 128px);border-top:1px solid var(--hair)}
+.ip-section--tint{background:var(--bg-elev)}
+.ip-h2{font-family:var(--ds-font-sans);font-size:var(--fs-h2);line-height:1.06;letter-spacing:-.035em;font-weight:600;text-wrap:balance;max-width:22ch}
+.ip-lead{margin-top:18px;font-size:var(--fs-18);line-height:1.6;color:var(--muted);max-width:56ch;text-wrap:pretty}
+.ip-head{margin-bottom:clamp(32px, 4vw, 56px)}
+.ip-note{font-size:var(--fs-14);line-height:1.6;color:var(--muted);max-width:68ch}
+.ip-mono{font-family:var(--mono);font-variant-numeric:tabular-nums}
+.ip-links{display:flex;flex-wrap:wrap;gap:8px 28px;margin-top:28px}
+/* 12-column grid at >=1024; single column below. */
+.ip-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+@media (min-width:1024px){.ip-grid{grid-template-columns:repeat(12,minmax(0,1fr))}}
+/* Cross-document transition between / and /vr/: a root crossfade only (named elements that
+   start off-screen swoop in from below; critic P1-6). Off under reduced motion. */
+@view-transition{navigation:auto}
+::view-transition-old(root){animation-duration:160ms}
+::view-transition-new(root){animation-duration:240ms}
+@media (prefers-reduced-motion:reduce){@view-transition{navigation:none}}

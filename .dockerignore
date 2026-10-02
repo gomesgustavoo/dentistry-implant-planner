@@ -31,3 +31,8 @@ landing/dist/
 landing/.astro/
 landing/.generated-public/
 landing/artifacts/
+
+# Marketing films and raw captures (615 MB) are never part of an image; the landing's
+# web renditions live under landing/assets/media/.
+marketing/
+landing/.media-work/

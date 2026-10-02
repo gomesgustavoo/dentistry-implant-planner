@@ -1,0 +1,85 @@
+---
+/* Platform depth below the crest, on the scene's own 0..DEPTH_MAX_MM scrub, with a tick where
+ * the grade changes. It replaces the old scroll-progress bar: that bar showed how far the page
+ * had scrolled, which is not a quantity anyone plans with; this shows the one the verdict
+ * depends on (src/scripts/gauge.ts drives it from the depth hero3d.js measured).
+ *
+ * The ticks are not typed. They are site.crossings in arch.assets.json, written by
+ * scripts/measure_hero_site.mjs when it located the depths at which this fixture, at this
+ * site, first grades TIGHT and then BREACH. The track length is passed in by Instrument.astro,
+ * which reads DEPTH_MAX_MM out of hero3d.js. Change either file and the gauge follows.
+ *
+ * role="img" makes the drawing one accessible object with a sentence for a name; the moving
+ * value is not repeated here because the readout's live region already announces each change
+ * of grade, and a second announcement per frame would drown it.
+ */
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import { decimal, t } from '@dicomsegvr/landing-ui/i18n';
+import arch from '../../assets/arch.assets.json';
+import { intro, fill } from '../content/intro';
+interface Props { locale: Locale; max: number }
+const { locale, max } = Astro.props;
+const words = t(locale).hero3d;
+const s = intro[locale].gauge;
+const { tight_mm, breach_mm } = arch.site.crossings;
+if (!(tight_mm > 0 && tight_mm < breach_mm && breach_mm < max)) {
+  throw new Error(`arch.assets.json crossings (${tight_mm}, ${breach_mm}) do not fit on a 0..${max} mm gauge`);
+}
+const ticks = [
+  { state: 'tight', word: words.tight, mm: tight_mm },
+  { state: 'breach', word: words.breach, mm: breach_mm },
+];
+const at = (mm: number) => (mm / max).toFixed(4);
+// Each spoken verdict opens a sentence in the name ("... 2.0 mm. Tight from 0.54 mm, ...").
+const sentence = (word: string) => word.charAt(0).toLocaleUpperCase(locale) + word.slice(1);
+const name = fill(s.aria, {
+  max: decimal(locale, max, 1),
+  tight: sentence(words.spoken.tight), tightMm: decimal(locale, tight_mm),
+  breach: words.spoken.breach, breachMm: decimal(locale, breach_mm),
+});
+---
+<div class="gauge" data-gauge data-max={max} role="img" aria-label={name}
+  style={`--t:${at(tight_mm)};--b:${at(breach_mm)}`}>
+  <p class="gauge__label">{s.label}</p>
+  <div class="gauge__ruler">
+    <div class="gauge__track">
+      <span class="gauge__zones"></span>
+      <span class="gauge__fill"></span>
+      <span class="gauge__marker"></span>
+    </div>
+    {ticks.map((tick, i) => (
+      <span class="gauge__tick" data-state={tick.state} style={`--at:${at(tick.mm)};--row:${ticks.length - 1 - i}`}>
+        <span class="gauge__word">{tick.word}</span> {decimal(locale, tick.mm)} mm
+      </span>
+    ))}
+  </div>
+</div>
+
+<script>import '../scripts/gauge';</script>
+
+<style>
+  /* Two label rows under the track, each tick dropping a leader line to its own: at phone
+     widths the crossings are about 80 px apart, and "AJUSTADO 0,54 mm" alone is wider. The
+     rightmost tick takes the top row, so every leader passes only rows whose label starts to
+     its right: no line ever crosses a word. */
+  .gauge{--row-h:20px;--track-h:6px;--gap:8px;display:grid;gap:10px;margin:0}
+  .gauge__label{font-size:var(--fs-14, .875rem);line-height:20px;color:var(--muted);max-width:none}
+  .gauge__ruler{position:relative;block-size:calc(var(--track-h) + var(--gap) + 2 * var(--row-h));margin-inline:1px}
+  .gauge__track{position:absolute;inset-inline:0;inset-block-start:0;block-size:var(--track-h)}
+  /* The three grade zones, as tints: the word on each tick carries the meaning, not the hue. */
+  .gauge__zones{position:absolute;inset:0;border-radius:3px;background:linear-gradient(90deg,
+    rgb(52 211 153 / .42) 0 calc(var(--t) * 100%),
+    rgb(251 191 36 / .5) calc(var(--t) * 100%) calc(var(--b) * 100%),
+    rgb(248 113 113 / .5) calc(var(--b) * 100%) 100%)}
+  /* The depth already travelled: a dark 2 px rule along the track's middle, scaled from 0. */
+  .gauge__fill{position:absolute;inset-inline:0;inset-block-start:calc(50% - 1px);block-size:2px;border-radius:1px;background:var(--text);transform-origin:0 50%;transform:scaleX(0)}
+  .gauge__marker{position:absolute;inset-inline-start:-1.5px;inset-block-start:calc(50% - 8px);inline-size:3px;block-size:16px;border-radius:2px;background:var(--text);box-shadow:0 0 0 2px var(--surface, #fff)}
+  .gauge__tick{position:absolute;inset-inline-start:calc(var(--at) * 100%);inset-block-start:calc(var(--track-h) + var(--gap) + var(--row) * var(--row-h));padding-inline-start:7px;font-family:var(--mono);font-size:var(--fs-14, .875rem);line-height:var(--row-h);white-space:nowrap;color:var(--muted);font-variant-numeric:tabular-nums}
+  /* Leader: from 3 px above the track down to the middle of this tick's own label row. */
+  .gauge__tick::before{content:'';position:absolute;inset-inline-start:0;inline-size:1px;background:currentColor;
+    inset-block-start:calc(-1 * (var(--row) * var(--row-h) + var(--gap) + var(--track-h) + 3px));
+    inset-block-end:calc(var(--row-h) / 2)}
+  .gauge__tick[data-state=tight]{color:#8a5304}
+  .gauge__tick[data-state=breach]{color:#b91c1c}
+  .gauge__word{font-weight:600;letter-spacing:.04em}
+</style>

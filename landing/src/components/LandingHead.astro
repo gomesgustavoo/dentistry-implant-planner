@@ -1,0 +1,22 @@
+---
+/* Rendered into Base's <slot name="head"/>, which sits right after the viewport meta.
+ *
+ * ORDER MATTERS HERE. An import map only governs module scripts that come after it, and a
+ * module that starts loading before it makes the browser ignore it for good. hero3d.js and
+ * its three.js addons all import the bare specifier "three", so this is the first script on
+ * the page. It points at the minified r169 build; the unminified three.module.js stays in
+ * assets/vendor/three because scripts/check_hero.mjs imports it directly.
+ *
+ * The two preloads are the LCP image: the hero loop's poster, one per breakpoint, matching
+ * the <source media> split in LoopFrame.astro exactly (767/768). `type="image/avif"` makes a
+ * browser without AVIF skip the preload instead of fetching bytes it cannot decode; it then
+ * finds the WebP through the <picture> as usual.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { heroLoop } from '../lib/media';
+interface Props { project: Project }
+const poster = heroLoop().poster;
+---
+<script is:inline type="importmap">{"imports":{"three":"/assets/vendor/three/three.module.min.js","three/addons/":"/assets/vendor/three/jsm/"}}</script>
+<link rel="preload" as="image" type="image/avif" href={poster['4x5'].avif.src} media="(max-width:767px)" fetchpriority="high" />
+<link rel="preload" as="image" type="image/avif" href={poster['16x9'].avif.src} media="(min-width:768px)" fetchpriority="high" />

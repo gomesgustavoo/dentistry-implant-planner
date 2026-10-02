@@ -1053,18 +1053,24 @@ async function init() {
     clearTimeout(guard);
     stage.classList.add("filmstage--live");
 
-    console.info("[hero3d] FDI " + SITE_FDI + " · " + DIAMETER_MM.toFixed(1) + " x " +
-      LENGTH_MM.toFixed(0) + " mm · envelope " + G.SHELL_MARGIN_MM.mandible.toFixed(2) +
-      " mm (" + S.SAFETY_MARGIN_MM.toFixed(2) + " margin + " +
-      S.MODEL_INWARD_P95_MM.toFixed(2) + " p95) · " + (canalPts.length / 3) +
-      " canal samples · " + (useMobile ? "mobile" : "desktop") + " mesh");
+    // The build summary is for whoever is debugging the page, not for every visitor's console.
+    if (/[?&]debug\b/.test(location.search)) {
+      console.info("[hero3d] FDI " + SITE_FDI + " · " + DIAMETER_MM.toFixed(1) + " x " +
+        LENGTH_MM.toFixed(0) + " mm · envelope " + G.SHELL_MARGIN_MM.mandible.toFixed(2) +
+        " mm (" + S.SAFETY_MARGIN_MM.toFixed(2) + " margin + " +
+        S.MODEL_INWARD_P95_MM.toFixed(2) + " p95) · " + (canalPts.length / 3) +
+        " canal samples · " + (useMobile ? "mobile" : "desktop") + " mesh");
+    }
 
     window.addEventListener("scroll", wake, { passive: true });
     window.addEventListener("resize", onResize, { passive: true });
     document.addEventListener("visibilitychange", () => {
       if (document.hidden) cancel(); else wake();
     });
-    window.addEventListener("pagehide", dispose);
+    // A page entering the back/forward cache comes back with this module still running and
+    // no init(), so it must keep its renderer: Back from /vr/ would otherwise restore a
+    // disposed, frozen stage. Only a page that is really being unloaded lets go of the GPU.
+    window.addEventListener("pagehide", (e) => { if (!e.persisted) dispose(); });
 
     if ("IntersectionObserver" in window) {
       new IntersectionObserver((entries) => {

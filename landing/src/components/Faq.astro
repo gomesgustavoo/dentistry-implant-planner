@@ -1,0 +1,79 @@
+---
+/* Questions as an open definition list. The accordion is gone: seven short answers read
+ * faster than seven clicks, nothing is hidden from find-in-page, and an accordion FAQ is one
+ * of the templated tells (rulebook §2 item 11). The heading is this component's own string,
+ * which also retires the shared one that rendered as "youget".
+ *
+ * The five existing answers come from `project.<l>.ts` as trusted HTML whose links are
+ * already localized there. The two headset answers are built here, so their one link goes
+ * through `localePath` like every other internal link (the shared check fails a Spanish page
+ * that links to an English route).
+ *
+ * Class names avoid `.faq`: interactions.ts closes sibling `.faq details`, and the shared
+ * sheet styles `.faq summary`.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { localePath, t } from '@dicomsegvr/landing-ui/i18n';
+import { parts, sections } from '../content/sections';
+import Icon from './Icon.astro';
+
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const l = p.locale;
+const s = sections[l].faq;
+
+// Our own strings, but they are pasted into HTML, so escape them like any other text.
+const esc = (text: string) => text.replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
+const vrLink = (label: string) => `<a href="${localePath(l, '/vr/')}">${esc(label)}</a>`;
+const headset = { question: s.headset.question, answer: esc(s.headset.answer) };
+const phone = {
+  question: s.phone.question,
+  answer: parts(s.phone.answer, { vr: s.phone.vr }).map(part => part.key === 'vr' ? vrLink(part.text) : esc(part.text)).join(''),
+};
+// Upload questions first (the heading promises them), then the two a visitor arriving from
+// the headset film asks, then what the clearance means and what happens to the data.
+type Item = { question: string; answer: string };
+const [upload, scans, ...rest] = p.faq;
+const items = [upload, scans, headset, phone, ...rest].filter((item): item is Item => Boolean(item));
+---
+<section id="faq" class="qa ip-section" aria-labelledby="faq-title">
+  <div class="container qa__grid">
+    <div class="qa__head">
+      <h2 class="ip-h2" id="faq-title">{s.title}</h2>
+      <a class="text-link qa__deeper" href={localePath(l, '/engineering/')}>{t(l).landing.deeper}<Icon name="arrow-right" size={16} /></a>
+    </div>
+    <dl class="faq-list">
+      {items.map(item => (
+        <div class="faq-list__item">
+          <dt>{item.question}</dt>
+          <dd set:html={item.answer} />
+        </div>
+      ))}
+    </dl>
+  </div>
+</section>
+
+<style>
+  .qa__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:clamp(32px, 4vw, 56px)}
+  .qa__deeper{margin-top:20px}
+
+  .faq-list{display:grid;gap:clamp(28px, 1.5vw + 20px, 40px);margin:0;max-width:68ch}
+  .faq-list dt{font-size:var(--fs-18);line-height:1.4;font-weight:600;letter-spacing:-.01em;color:var(--text);text-wrap:balance}
+  .faq-list dd{margin:8px 0 0;font-size:var(--fs-16);line-height:1.6;color:var(--muted);text-wrap:pretty}
+  /* Links arrive inside set:html, so they carry no scope attribute. They get the same 44 px
+     hit area as every other target: padding grows the box, the negative margin keeps the
+     line box where it was (1.6 x 16 px = 25.6 px line + 2 x 10 px = 45.6 px). */
+  .faq-list dd :global(a){display:inline-block;padding:10px 6px;margin:-10px -6px;color:var(--text);text-decoration:underline;text-decoration-color:color-mix(in srgb, currentColor 35%, transparent)}
+  @media (hover:hover) and (pointer:fine){
+    .faq-list dd :global(a){transition:text-decoration-color var(--dur-hover) ease}
+    .faq-list dd :global(a:hover){text-decoration-color:currentColor}
+  }
+
+  /* 1024 and up: heading in columns 1-4, held in view while the answers scroll past (sticky,
+     not animated), answers in 5-11. */
+  @media (min-width:1024px){
+    .qa__grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px}
+    .qa__head{grid-column:1 / 5;align-self:start;position:sticky;top:calc(var(--nav-h) + 32px)}
+    .faq-list{grid-column:5 / 12}
+  }
+</style>

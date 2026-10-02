@@ -1,0 +1,106 @@
+---
+/* The hero loop: a poster that is the page's LCP image, a muted 3.3 s clip that fades in over
+ * it when (and only when) every condition in src/scripts/loop.ts holds, and one pause toggle.
+ *
+ * WHY THE VIDEO HAS NO <source> CHILDREN. `<source media>` inside <video> is honoured only by
+ * recent Chromium, and even there it is evaluated once: rotate a phone across 767 px and the
+ * <picture> swaps its poster while the video keeps the wrong crop. So the markup carries every
+ * rendition as data and loop.ts assigns `src` itself, from the same media query the poster
+ * uses, and only when it is about to play. Until then the element has no src at all, which is
+ * what makes "reduced motion / Save-Data download zero video bytes" true rather than hoped.
+ *
+ * The poster is frame 0 of the H.264 rendition (make_vr_media.mjs), so the 200 ms fade on
+ * `playing` is a dissolve between two identical pictures, not a cut.
+ *
+ * The caption goes in the default slot; Intro owns its wording. The figure's layout size is
+ * set by the parent through --loop-h / --loop-w / --loop-ar so this component never has to
+ * know which section it sits in.
+ */
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import Icon from './Icon.astro';
+import { heroLoop, sourceType, type Asset } from '../lib/media';
+import { intro } from '../content/intro';
+interface Props {
+  locale: Locale;
+  /** Extra class for the figcaption, so the section that owns the wording can name it. */
+  captionClass?: string;
+}
+const { locale, captionClass } = Astro.props;
+const s = intro[locale].loop;
+const loop = heroLoop();
+const poster = loop.poster;
+const rendition = (a: Asset) => ({
+  src: a.src, type: sourceType(a), width: a.width, height: a.height, bytes: a.bytes,
+  duration: a.duration ?? loop.duration,
+});
+const sources = JSON.stringify({
+  '4x5': { av1: rendition(loop.video['4x5'].av1), h264: rendition(loop.video['4x5'].h264) },
+  '16x9': { av1: rendition(loop.video['16x9'].av1), h264: rendition(loop.video['16x9'].h264) },
+});
+const hasCaption = Astro.slots.has('default');
+---
+<figure class="loop" data-loop data-sources={sources}>
+  <div class="loop__frame ip-frame">
+    <picture class="loop__poster">
+      <source media="(max-width:767px)" type="image/avif" srcset={poster['4x5'].avif.src} width={poster['4x5'].avif.width} height={poster['4x5'].avif.height} />
+      <source media="(max-width:767px)" type="image/webp" srcset={poster['4x5'].webp.src} width={poster['4x5'].webp.width} height={poster['4x5'].webp.height} />
+      <source type="image/avif" srcset={poster['16x9'].avif.src} width={poster['16x9'].avif.width} height={poster['16x9'].avif.height} />
+      <img src={poster['16x9'].webp.src} width={poster['16x9'].webp.width} height={poster['16x9'].webp.height} alt={s.alt} fetchpriority="high" decoding="async" />
+    </picture>
+    <video class="loop__video" muted playsinline loop preload="none" disablepictureinpicture disableRemotePlayback aria-hidden="true" tabindex="-1"></video>
+    <button class="loop__toggle" type="button" data-action="play" data-label-pause={s.pause} data-label-play={s.play} hidden>
+      <span class="loop__disc">
+        <span class="loop__icon loop__icon--pause"><Icon name="pause" weight="fill" size={16} /></span>
+        <span class="loop__icon loop__icon--play"><Icon name="play" weight="fill" size={16} /></span>
+      </span>
+      <span class="loop__label">{s.play}</span>
+    </button>
+  </div>
+  {hasCaption && <figcaption class:list={['loop__caption', captionClass]}><slot /></figcaption>}
+</figure>
+
+<script>import '../scripts/loop';</script>
+
+<style>
+  .loop{margin:0;min-width:0}
+  /* The frame reserves its box before any byte arrives (CLS 0): either an explicit block size
+     from the parent (phones, where the height is what has to fit) or an aspect ratio. */
+  .loop__frame{position:relative;inline-size:var(--loop-w, 100%);block-size:var(--loop-h, auto);aspect-ratio:var(--loop-ar, 16 / 9);max-inline-size:100%}
+  .loop__poster,.loop__poster img,.loop__video{position:absolute;inset:0;inline-size:100%;block-size:100%}
+  /* The jaw and the hands sit in the lower half of the 4:5 crop (about 55-90% of its height);
+     the sky above them is what a short phone box should give up. The 16:9 box is uncropped. */
+  .loop__poster img,.loop__video{object-fit:cover;object-position:var(--loop-focus, 50% 78%)}
+  /* Hidden until it has painted a frame of the current rendition; loop.ts sets data-shown from
+     requestVideoFrameCallback where it exists, so iOS never flashes black between the two. */
+  /* Half a pixel inside the poster on every side. Chrome reports a later LCP candidate only
+     when it is strictly larger, and the poster's image area rounds ~150 px2 below the video's
+     box, so an identical first frame was replacing the 70 ms poster as the LCP element. The
+     poster underneath is the same frame; a 0.5 px rim of it is invisible. */
+  .loop__video{inset:.5px;inline-size:calc(100% - 1px);block-size:calc(100% - 1px);opacity:0;transition:opacity var(--dur-state, 200ms) linear;pointer-events:none}
+  .loop[data-shown] .loop__video{opacity:1}
+
+  /* 44 x 44 hit area around a 32 px disc, inset from the corner so a thumb on the edge of the
+     screen does not land on it by accident. Hidden until loop.ts has wired it. */
+  .loop__toggle{position:absolute;right:6px;bottom:6px;display:inline-flex;align-items:center;gap:0;min-inline-size:44px;block-size:44px;padding:6px;border:0;border-radius:22px;background:none;color:#fff;font:inherit;font-size:var(--fs-14, .875rem);line-height:1;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .loop__toggle[hidden]{display:none}
+  .loop__disc{display:grid;place-items:center;inline-size:32px;block-size:32px;flex:none;border-radius:50%;background:rgb(15 21 32 / .56)}
+  .loop__icon{display:none;line-height:0}
+  .loop__toggle[data-action=pause] .loop__icon--pause,.loop__toggle[data-action=play] .loop__icon--play{display:block}
+  /* Phosphor's play glyph is optically left-heavy; nudge it to the disc's visual centre. */
+  .loop__icon--play{translate:1px 0}
+  .loop__toggle:focus-visible{outline:2px solid #fff;outline-offset:0;box-shadow:0 0 0 4px #7c3aed}
+  /* The label is the button's accessible name in every state. It is only SHOWN when autoplay
+     was refused (LinkedIn's WebView, Low Power Mode): then the poster looks exactly like a
+     paused clip and a bare icon is too easy to miss. */
+  .loop__label{position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  .loop[data-state=blocked] .loop__toggle{gap:8px;padding-inline:6px 14px;background:rgb(15 21 32 / .72)}
+  .loop[data-state=blocked] .loop__disc{background:none;inline-size:20px}
+  .loop[data-state=blocked] .loop__label{position:static;inline-size:auto;block-size:auto;overflow:visible;clip-path:none;font-weight:550}
+  @media (prefers-reduced-motion:no-preference){
+    .loop__toggle:active .loop__disc{scale:.96;transition:scale var(--dur-press, 120ms) var(--ease-out, ease-out)}
+  }
+
+  .loop__caption{margin-top:var(--loop-cap-gap, 10px);font-size:var(--fs-14, .875rem);line-height:22px;color:var(--muted);max-width:none;text-wrap:pretty}
+  /* Inline chip on a 22 px line: 18 + 2 + 2 keeps the line box from growing. */
+  .loop__caption :global(.chip){line-height:18px;vertical-align:1px}
+</style>

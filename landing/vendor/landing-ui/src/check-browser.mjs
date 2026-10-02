@@ -8,7 +8,7 @@ import { checkMotion } from './check-motion.mjs';
 const root = process.cwd();
 const output = path.join(root, 'artifacts');
 await mkdir(output, { recursive: true });
-const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.svg': 'image/svg+xml' };
+const MIME = { '.html': 'text/html', '.css': 'text/css', '.js': 'application/javascript', '.json': 'application/json', '.glb': 'model/gltf-binary', '.woff2': 'font/woff2', '.png': 'image/png', '.jpg': 'image/jpeg', '.mp4': 'video/mp4', '.svg': 'image/svg+xml', '.avif': 'image/avif', '.webp': 'image/webp', '.vtt': 'text/vtt', '.apk': 'application/vnd.android.package-archive', '.webm': 'video/webm' };
 const server = createServer(async (req, res) => {
   try {
     let name = path.resolve(root, 'dist', '.' + new URL(req.url, 'http://localhost').pathname);

@@ -1,0 +1,145 @@
+---
+/* The ledger: four figures the page leans on, each sentence carrying its number and a link to
+ * the section of the engineering notes that measured it.
+ *
+ * NO FIGURE HERE IS TYPED. The two thresholds come out of the same generated file the 3D
+ * scene grades against (`assets/safety-constants.<hash>.js`, baked from
+ * `dentistry/plan_safety.py` and named by `assets/arch.assets.json`), so "2.46 mm is the
+ * envelope in the scene above" is the scene's own sum, not a copy of it. The model figures
+ * are read out of the English engineering notes, which is where they are sourced and argued.
+ * If either file stops saying what a pattern expects, the build throws and names the figure:
+ * a sentence must not keep quoting a number its evidence no longer shows.
+ *
+ * Rows are `article.highlight[data-reveal]` because the shared motion check
+ * (vendor/landing-ui/src/check-motion.mjs) follows the first `.highlight` on the page and the
+ * shared WAAPI reveal (interactions.ts) arms every `[data-reveal]` below the fold. They are
+ * prose rows, not cards: the shared card surface, border and ungated hover lift are undone
+ * below, at a specificity that wins regardless of stylesheet order.
+ *
+ * The section stays `position:relative` for the legacy anchor aliases. That is safe here and
+ * only here: it is not an ancestor of `[data-filmstage]`, whose offsetTop must be page-relative.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { decimal, localePath, t } from '@dicomsegvr/landing-ui/i18n';
+import arch from '../../assets/arch.assets.json';
+import notes from '../content/engineering.en.html?raw';
+import { parts, sections } from '../content/sections';
+import Icon from './Icon.astro';
+
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const l = p.locale;
+const s = sections[l].ledger;
+const shared = t(l).landing;
+
+// --- the planner's constants, from the file the scene itself loads --------------------------
+const baked = import.meta.glob('../../assets/safety-constants.*.js', { query: '?raw', import: 'default', eager: true }) as Record<string, string>;
+const safetyFile = Object.entries(baked).find(([file]) => file.endsWith(`/${arch.safety}`))?.[1];
+if (!safetyFile) throw new Error(`Ledger: assets/arch.assets.json names "${arch.safety}", which is not in landing/assets/`);
+function constant(name: string): number {
+  const match = safetyFile!.match(new RegExp(`export const ${name} = (\\d+(?:\\.\\d+)?);`));
+  if (!match) throw new Error(`Ledger: ${name} is missing from assets/${arch.safety}`);
+  return Number(match[1]);
+}
+const margin = constant('SAFETY_MARGIN_MM');
+const p95 = constant('MODEL_INWARD_P95_MM');
+
+// --- the model figures, from the engineering notes ------------------------------------------
+function figure(what: string, pattern: RegExp): string {
+  const match = notes.match(pattern);
+  if (!match) throw new Error(`Ledger: the ${what} is no longer where src/content/engineering.en.html had it (${pattern}); re-source the sentence before shipping it`);
+  return match[1];
+}
+const dice = figure('challenge Dice', /Challenge Dice<\/span>\s*<span class="metrics__v num">(\d+\.\d+)<\/span>/);
+const scans = figure('held-out set size', /scored on a <b>(\d+)&#8209;case held&#8209;out set it never saw<\/b>/);
+const gap = figure('gap to the challenge winners', /within\s+<b>(\d+\.\d+)<\/b>\s+of the ToothFairy3 challenge winners/);
+const card = figure('training card memory', /<b>(\d+) GB card\b/);
+const gpu = figure('GPU time per scan', /GPU per scan, two models<\/span>\s*<span class="metrics__v num">~(\d+) s<\/span>/);
+
+// Keep the source's own precision (0.8965 stays four places, 0.012 three) in the locale's
+// decimal mark. A no-break space keeps every number on the same line as its unit.
+const places = (source: string) => source.split('.')[1]?.length ?? 0;
+const localized = (source: string) => decimal(l, Number(source), places(source));
+const mm = (value: number) => `${decimal(l, value, 2)}\u00a0mm`;
+const values: Record<string, string> = {
+  dice: localized(dice), scans, gap: localized(gap), card,
+  p95: mm(p95), margin: mm(margin),
+  // Rounded to the hundredth the scene draws it at, so float noise in the sum cannot leak.
+  envelope: mm(Math.round((margin + p95) * 100) / 100),
+  gpu: `~${gpu}\u00a0s`,
+};
+
+// Row order, its legacy anchor, the figure the sentence is about, and where it is measured.
+const rows = [
+  { key: 'dice', id: 'engine', lead: 'dice', href: '/engineering/#engine' },
+  { key: 'budget', id: 'budget', lead: 'p95', href: '/engineering/#budget' },
+  { key: 'envelope', id: 'planning', lead: 'envelope', href: '/engineering/#planning' },
+  { key: 'serving', id: 'serving', lead: 'gpu', href: '/engineering/#serving' },
+] as const;
+
+const mit = 'https://github.com/gomesgustavoo/dentistry-implant-planner/blob/main/LICENSE';
+const cc = p.license?.href ?? 'https://creativecommons.org/licenses/by-nc-sa/4.0/';
+const ccName = p.license?.name ?? 'CC BY-NC-SA 4.0';
+---
+<section id="engineering" class="ledger ip-section ip-section--tint" aria-labelledby="ledger-title">
+  {/* Old deep links (/#problem and friends) predate this layout; the four that still have a
+      matching row land on it below, the rest land on the section. */}
+  <span class="ledger__alias" id="problem"></span><span class="ledger__alias" id="depths"></span><span class="ledger__alias" id="arch"></span>
+  <div class="container">
+    <header class="ip-head">
+      <h2 class="ip-h2" id="ledger-title">{s.title}</h2>
+    </header>
+    <div class="ledger__rows">
+      {rows.map(row => (
+        <article class="highlight ledger__row" id={row.id} data-reveal>
+          <p>{parts(s.rows[row.key].text, values).map(part => part.key === row.lead
+            ? <span class="ledger__fig">{part.text}</span>
+            : part.text)}</p>
+          <a class="text-link ledger__src" href={localePath(l, row.href)}>{s.rows[row.key].link}<Icon name="arrow-right" size={16} /></a>
+        </article>
+      ))}
+    </div>
+    <p class="ledger__stack">{s.stack}</p>
+    <p class="ledger__licence">{parts(s.licence, { mit: 'MIT', cc: ccName }).map(part =>
+      part.key === 'mit' ? <a class="ledger__inline" href={mit} rel="license">{part.text}</a>
+      : part.key === 'cc' ? <a class="ledger__inline" href={cc} rel="license">{part.text}</a>
+      : part.text)}</p>
+    <div class="ip-links">
+      <a class="text-link" href={localePath(l, '/engineering/')}>{shared.notes}<Icon name="arrow-right" size={16} /></a>
+      {p.repo && <a class="text-link" href={p.repo}>{shared.source}<Icon name="arrow-up-right" size={16} /></a>}
+    </div>
+  </div>
+</section>
+
+<style>
+  .ledger{position:relative}
+  .ledger__alias{position:absolute;top:0;scroll-margin-top:var(--nav-h)}
+
+  .ledger__rows{display:grid;gap:clamp(28px, 1.2vw + 20px, 40px)}
+  /* Undo the shared card: surface, border, radius, padding, and its hover lift (which is not
+     gated on a fine pointer). `transform` is cleared, never `translate`: the shared reveal
+     animates the individual `translate` property and must keep working. */
+  .ledger .highlight{display:grid;grid-template-columns:minmax(0,1fr);row-gap:2px;padding:0;background:none;border:0;border-radius:0;transform:none;transition:none;scroll-margin-top:var(--nav-h)}
+  .ledger .highlight p{margin:0;max-width:62ch;font-size:var(--fs-18);line-height:1.6;color:var(--text);text-wrap:pretty}
+  .ledger__fig{font-family:var(--mono);font-size:var(--fs-18);font-weight:600;font-variant-numeric:tabular-nums;letter-spacing:-.01em;white-space:nowrap}
+  .ledger__src{justify-self:start}
+
+  .ledger__stack,.ledger__licence{margin-top:16px;max-width:72ch;font-size:var(--fs-15);line-height:24px;color:var(--muted)}
+  .ledger__stack{margin-top:clamp(40px, 3vw + 24px, 64px)}
+  /* Inline links in running text still get a 44 px hit area: padding grows the box, the equal
+     negative margin keeps the line box (and the text) exactly where it was. */
+  .ledger__inline{display:inline-block;padding:10px;margin:-10px;color:var(--text);text-decoration:underline;text-decoration-color:color-mix(in srgb, currentColor 35%, transparent)}
+
+  @media (hover:hover) and (pointer:fine){
+    .ledger__inline{transition:text-decoration-color var(--dur-hover) ease}
+    .ledger__inline:hover{text-decoration-color:currentColor}
+  }
+
+  /* 1024 and up: the sentence takes columns 1-8 and its source link sits in 9-12 on the
+     sentence's first baseline, so the eye runs claim -> evidence along one line. */
+  @media (min-width:1024px){
+    .ledger .highlight{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px;align-items:baseline}
+    .ledger .highlight p{grid-column:1 / 9;max-width:66ch}
+    .ledger__src{grid-column:9 / 13}
+  }
+</style>

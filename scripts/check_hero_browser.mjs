@@ -228,17 +228,21 @@ try {
     SUB.test(sweep[0].domSub),
     sweep[0].domSub);
 
-  // The static fallback must not be showing while the live one is.
+  // The static fallback must not be showing while the live one is. "Showing" is what matters,
+  // not how it is hidden: the landing keeps both cards in one grid cell and swaps them by
+  // visibility, so the readout area is always as tall as the taller card and booting the
+  // scene never shifts the page. display:none and visibility:hidden both count as hidden.
   const vis = await evalJs(`(() => {
     const st = document.querySelector('[data-filmstage]');
+    const shown = (el) => { const cs = getComputedStyle(el);
+      return cs.display !== 'none' && cs.visibility === 'visible' && Number(cs.opacity) > 0; };
     const live = document.querySelector('.hero__live');
     const fb = document.querySelector('.hero__fallback');
-    return { live: getComputedStyle(live).display, fallback: getComputedStyle(fb).display,
-             cls: st.className };
+    return { live: shown(live), fallback: shown(fb), cls: st.className };
   })()`);
   check('the live readout replaced the static fallback',
-    vis.live !== 'none' && vis.fallback === 'none',
-    `live ${vis.live}, fallback ${vis.fallback}, stage "${vis.cls}"`);
+    vis.live && !vis.fallback,
+    `live ${vis.live ? 'shown' : 'hidden'}, fallback ${vis.fallback ? 'shown' : 'hidden'}, stage "${vis.cls}"`);
 
   // Reduced motion still has to render and still has to carry a verdict.
   await S('Emulation.setEmulatedMedia', { features: [{ name: 'prefers-reduced-motion', value: 'reduce' }] });

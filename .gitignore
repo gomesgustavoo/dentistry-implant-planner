@@ -45,3 +45,12 @@ web-auth/fixtures/assets/
 docs/tour-raw.mp4
 docs/tour-body.mp4
 docs/tour.mp4
+
+# ImplantPlan VR source footage. The raw Quest captures (440 MB) and the full-size
+# finished films stay on disk only; the 720p readme cut, the posters and the hashed web
+# renditions under landing/ ARE committed. scripts/make_vr_media.mjs regenerates every
+# web rendition from raw/ through landing/media/edl.json.
+marketing/video/implantplanVR-videos/raw/
+marketing/video/implantplanVR-videos/implantplan-vr-film-web.mp4
+marketing/video/implantplanVR-videos/implantplan-vr-linkedin-16x9-enhanced.mp4
+marketing/video/implantplanVR-videos/implantplan-vr-text-upscale-compare.mp4

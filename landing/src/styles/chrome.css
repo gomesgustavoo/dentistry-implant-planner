@@ -1,0 +1,96 @@
+/* ImplantPlan chrome, loaded by every ImplantPlan page (landing, /vr/, engineering, legal).
+ *
+ * The shared UI (vendor/landing-ui) is consumed by dicomsegvr.com too, so nothing here edits
+ * it: every rule is scoped by body[data-project=implantplan], which out-specifies the shared
+ * single-class rules regardless of bundle order. Two floors are enforced here and checked by
+ * scripts/check-implantplan.mjs: no visible text under 14 px, no control under 44 px.
+ */
+@font-face{font-family:'Archivo Display';src:url('../assets/archivo-display.woff2') format('woff2');font-weight:700;font-display:swap}
+
+body[data-project=implantplan]{
+  /* easing tokens (report-skills §1.4) */
+  --ease-out:cubic-bezier(.23,1,.32,1);
+  --ease-in-out:cubic-bezier(.77,0,.175,1);
+  --ease-drawer:cubic-bezier(.32,.72,0,1);
+  --ease-out-expo:cubic-bezier(.16,1,.3,1);
+  /* durations; phones run at 0.8x */
+  --dur-scale:1;
+  --dur-press:calc(120ms * var(--dur-scale));
+  --dur-hover:calc(160ms * var(--dur-scale));
+  --dur-state:calc(200ms * var(--dur-scale));
+  --dur-sheet:calc(380ms * var(--dur-scale));
+  --dur-overlay:calc(420ms * var(--dur-scale));
+  --dur-media:calc(600ms * var(--dur-scale));
+  /* colour: graphics violet is NOT a text colour (4.10:1); text accent is --accent (#7c3aed) */
+  --accent-gfx:#8b5cf6;
+  --hair:rgb(15 21 32 / .10);
+  --chip-clear:#34d399; --chip-tight:#fbbf24; --chip-breach:#f87171; --chip-none:#94a3b8; --chip-ink:#0a0e13;
+  --frame-shadow:0 0 0 1px var(--hair), 0 18px 40px -24px rgb(76 29 149 / .22);
+  /* type scale: ten sizes, nothing under 14 px */
+  --fs-14:.875rem; --fs-15:.9375rem; --fs-16:1rem; --fs-18:1.125rem; --fs-22:1.375rem; --fs-28:1.75rem;
+  --fs-h2:clamp(1.875rem, 1.2rem + 1.9vw, 3rem);
+  /* Display words (the film's Place. Inspect. Cut.) stay near the H1, never 1.5x above it. */
+  --fs-word:clamp(2.75rem, 1.6rem + 3.4vw, 4.5rem);
+  --display:'Archivo Display', Archivo, Geist, system-ui, sans-serif;
+  --gutter-safe:max(var(--gutter), env(safe-area-inset-left), env(safe-area-inset-right));
+  accent-color:var(--accent);
+  caret-color:var(--accent);
+}
+@media (max-width:767px){body[data-project=implantplan]{--dur-scale:.8}}
+
+body[data-project=implantplan] ::selection{background:#ede4ff;color:var(--text)}
+body[data-project=implantplan] :focus-visible{outline:2px solid var(--accent-gfx);outline-offset:3px}
+body[data-project=implantplan] .container{width:min(calc(100% - var(--gutter-safe) * 2), var(--maxw))}
+/* The engineering notes nest containers (main.container > .research .container); the shared
+   sheet flattens the inner ones to 100%, and the safe-area rule above must not undo that. */
+body[data-project=implantplan] .research .container{width:100%}
+body[data-project=implantplan] a{text-underline-offset:4px}
+
+/* Wordmark: one Archivo 700 instance, 44 px tall hit area. */
+body[data-project=implantplan] .brand{font-family:var(--display);font-weight:700;font-size:var(--fs-22);min-height:44px;display:inline-flex;align-items:center}
+
+/* Nav: 44 px targets, no text under 14 px. */
+body[data-project=implantplan] .nav__menu>a:not(.button){font-size:var(--fs-14)}
+body[data-project=implantplan] .nav .button--small{font-size:var(--fs-14);min-height:44px}
+body[data-project=implantplan] .lang a{min-width:44px;min-height:44px;font-size:var(--fs-14)}
+/* A frosted bar, not a see-through one: at 95 % opacity body text ghosted behind the wordmark
+   on every scrolled screen. Static backdrop-filter on a 64 px bar is cheap; with reduced
+   transparency (or no support) it is simply opaque. */
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)){
+  body[data-project=implantplan] .nav{background:rgb(251 251 253 / .82);-webkit-backdrop-filter:saturate(1.4) blur(14px);backdrop-filter:saturate(1.4) blur(14px)}
+}
+@media (prefers-reduced-transparency: reduce){
+  body[data-project=implantplan] .nav{background:var(--bg);-webkit-backdrop-filter:none;backdrop-filter:none}
+}
+/* viewport-fit=cover: the open phone menu must clear the notch in landscape too. */
+@media (max-width:999px){body[data-project=implantplan] .nav__menu{padding-inline:var(--gutter-safe)}}
+/* Glyph arrows in the shared markup are aria-hidden decoration; the menu reads cleaner without. */
+body[data-project=implantplan] .nav .button--small>span[aria-hidden]{display:none}
+
+/* Footer: the shared sizes go down to 9.8 px. */
+body[data-project=implantplan] :is(.footer__top>a:not(.brand), .footer__bottom, .footer__bottom p, .license){font-size:var(--fs-14)}
+body[data-project=implantplan] .footer a:not(.brand){min-height:44px;min-width:44px;display:inline-flex;align-items:center;justify-content:center}
+body[data-project=implantplan] .license{line-height:1.6}
+body[data-project=implantplan] .footer .license a{display:inline;min-height:0;min-width:0;padding-block:12px}
+body[data-project=implantplan] .footer{padding-bottom:max(36px, env(safe-area-inset-bottom))}
+
+/* Buttons: 15 px label (shared is 13.9), never wrap. Hover motion only with a real pointer. */
+body[data-project=implantplan] .button{font-size:var(--fs-15);white-space:nowrap;gap:.75rem}
+body[data-project=implantplan] .text-link{font-size:var(--fs-15);min-height:44px}
+body[data-project=implantplan] .button:hover{transform:none;box-shadow:none}
+@media (hover:hover) and (pointer:fine){
+  body[data-project=implantplan] .button{transition:transform var(--dur-hover) ease, box-shadow var(--dur-hover) ease, background var(--dur-hover) ease}
+  body[data-project=implantplan] .button:hover{transform:translateY(-1px);box-shadow:0 10px 24px -14px var(--accent)}
+}
+body[data-project=implantplan] .button:active{transform:scale(.97);transition-duration:var(--dur-press)}
+
+/* Verdict chips are fills with dark ink; the word carries the meaning, never colour alone. */
+body[data-project=implantplan] .chip{display:inline-block;padding:1px 7px;border-radius:4px;font-family:var(--mono);font-size:var(--fs-14);letter-spacing:.04em;line-height:1.5;color:var(--chip-ink);background:var(--chip-clear);border:1px solid #0b7a53;white-space:nowrap}
+body[data-project=implantplan] .chip[data-state=tight]{background:var(--chip-tight);border-color:#a16207}
+body[data-project=implantplan] .chip[data-state=breach]{background:var(--chip-breach);border-color:#dc2626}
+body[data-project=implantplan] .chip[data-state=no_verdict]{background:var(--chip-none);border-color:#64748b}
+
+/* Media frame: VR panels are near-white, so footage needs an edge to read against the page. */
+body[data-project=implantplan] .ip-frame{border-radius:10px;box-shadow:var(--frame-shadow);overflow:hidden;background:#e9e4ee}
+
+/* Reduced motion: the shared sheet kills every transition; nothing here re-enables motion. */

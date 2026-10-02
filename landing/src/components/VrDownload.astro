@@ -1,0 +1,353 @@
+---
+/* The body of /vr/: what ImplantPlan VR is, the build's own facts, the download, the
+ * install steps and pairing.
+ *
+ * Two states, both shippable (owner decision, 2026-10-01):
+ *   - apk.available: version, size and SHA-256 come straight from src/generated/apk.json
+ *     (scripts/apk-manifest.mjs read them off the file), the button links the hashed URL
+ *     and the root carries data-sha256, which scripts/verify-dist.mjs compares with the
+ *     bytes in dist.
+ *   - coming soon: none of those exist on the page, not even as placeholders. The
+ *     requirements and steps stay, because they are true either way.
+ *
+ * DOM order is the phone order (390 is stacked, nothing reordered); at >=1024 the first
+ * column becomes a sticky card. The download comes before the facts so that it is above the
+ * fold at 1440x900 (the card is ~920 px tall), and its label already carries the size; the
+ * version and SHA-256 follow as the details you check afterwards. The phone panel has a
+ * FIXED place right after the download and is shown with a plain display toggle under
+ * (pointer:coarse) and (max-width:767px): the LinkedIn visitor is on a phone, and an APK is
+ * the one thing a phone cannot use.
+ * Everything that needs JS (copy, share, email, the headset note) ships `hidden` and
+ * src/scripts/vr-page.ts reveals it, so no-JS readers never see a dead control.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { LOCALE_META, decimal, localePath, t } from '@dicomsegvr/landing-ui/i18n';
+import Icon from './Icon.astro';
+import { apk } from '../lib/apk';
+import { still } from '../lib/media';
+import { vrpage, PAIR_CODE_MINUTES, PAIR_UI, META_DEV_MODE } from '../content/vrpage';
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const locale = p.locale;
+const s = vrpage[locale];
+const ui = t(locale);
+
+/** The available variant of the manifest, or undefined: one narrowing for the whole template. */
+const build = apk.available ? apk : undefined;
+const pageUrl = new URL(localePath(locale, '/vr/'), p.url).href;
+// Printed for someone to type on a computer: no scheme, no trailing slash (nginx 301s it).
+const shortHost = new URL(p.url).host;
+const shortPath = localePath(locale, '/vr');
+
+const mb = build ? decimal(locale, build.bytes / 1e6, 1) : '';
+const exactBytes = build ? s.facts.bytes(new Intl.NumberFormat(LOCALE_META[locale].html).format(build.bytes)) : '';
+const shaGroups = build ? (build.sha256.match(/.{16}/g) ?? []) : [];
+const fileName = build ? build.file : s.install.genericFile;
+const adb = `adb install -r ${fileName}`;
+// PowerShell prints the hash in upper case; lower-casing it makes it read like the page.
+const verify = build ? [
+  { os: 'macOS', cmd: `shasum -a 256 ${build.file}` },
+  { os: 'Linux', cmd: `sha256sum ${build.file}` },
+  { os: s.verify.windows, cmd: `(Get-FileHash .\\${build.file} -Algorithm SHA256).Hash.ToLower()` },
+] : [];
+
+const trial = p.plans[0].action;
+const mailto = `mailto:?subject=${encodeURIComponent(s.phone.mailSubject)}&body=${encodeURIComponent(s.phone.mailBody(pageUrl))}`;
+const [pairBefore, pairAfter = ''] = s.pair.open.split('{path}');
+
+const img = still('welcome');
+const SIZES = '(min-width: 1024px) 38vw, calc(100vw - 40px)';
+const srcset = (f: 'avif' | 'webp') => `${img.sizes['640'][f].src} 640w, ${img.sizes['1280'][f].src} 1280w`;
+
+const ld = {
+  '@context': 'https://schema.org',
+  '@type': 'SoftwareApplication',
+  name: 'ImplantPlan VR',
+  description: s.lead,
+  url: pageUrl,
+  image: new URL(img.sizes['1280'].webp.src, p.url).href,
+  inLanguage: LOCALE_META[locale].html,
+  applicationCategory: 'EducationalApplication',
+  operatingSystem: 'Meta Horizon OS',
+  author: { '@type': 'Person', name: 'Gustavo Formento', sameAs: ['https://github.com/gomesgustavoo', 'https://www.linkedin.com/in/gustavoogomesss/'] },
+  // Only facts the file itself supplied; in the coming-soon state there is nothing to download.
+  ...(build ? { softwareVersion: build.version, fileSize: `${(build.bytes / 1e6).toFixed(1)} MB`, downloadUrl: new URL(build.href, p.url).href } : {}),
+};
+---
+<div class="vr container" data-vr data-sha256={build?.sha256} data-url={pageUrl}>
+  <div class="vr__card" data-vr-card>
+    <header class="vr-head">
+      <div class="vr-media ip-frame">
+        <picture>
+          <source type="image/avif" srcset={srcset('avif')} sizes={SIZES} />
+          <source type="image/webp" srcset={srcset('webp')} sizes={SIZES} />
+          <img src={img.sizes['1280'].webp.src} width={img.sizes['1280'].webp.width} height={img.sizes['1280'].webp.height} alt={s.mediaAlt} decoding="async" fetchpriority="high" />
+        </picture>
+      </div>
+      <h1 class="vr-head__title">{s.h1}</h1>
+      <p class="vr-head__lead">{s.lead}</p>
+    </header>
+
+    <div class="vr-get">
+      {build ? <>
+        <a class="button vr-get__button" href={build.href} download={build.file} data-apk-download>
+          <Icon name="download-simple" size={20} />
+          <span class="vr-get__desk">{s.download.button(mb)}</span>
+          <span class="vr-get__phone">{s.download.phoneButton(mb)}</span>
+        </a>
+        <p class="vr-get__note">{s.download.phoneNote}</p>
+      </> : <p class="vr-get__soon">{s.download.soon}</p>}
+    </div>
+
+    <section class="vr-phone" aria-labelledby="vrPhoneTitle">
+      <h2 class="vr-phone__title" id="vrPhoneTitle">{s.phone.title}</h2>
+      <p class="vr-phone__text">{s.phone.text}</p>
+      <div class="vr-phone__actions">
+        <button class="vr-phone__action" type="button" data-share data-title={s.title} data-url={pageUrl} hidden>
+          <Icon name="share-network" size={22} />{s.phone.share}
+        </button>
+        <a class="vr-phone__action" href={mailto} data-js-only hidden>
+          <Icon name="envelope-simple" size={22} />{s.phone.email}
+        </a>
+        <button class="vr-phone__action vr-copy vr-copy--row" type="button" data-copy={pageUrl} data-copy-target="vrShortUrl" data-done={s.phone.copied} hidden>
+          <span class="vr-copy__state" data-copy-idle><Icon name="link-simple" size={22} />{s.phone.copyLink}</span>
+          <span class="vr-copy__state" data-copy-done aria-hidden="true"><Icon name="check" size={22} />{s.phone.copied}</span>
+        </button>
+      </div>
+      <p class="vr-phone__url" id="vrShortUrl" translate="no">{shortHost}<wbr />{shortPath}</p>
+      {build && <div class="vr-phone__next">
+        <p>{s.phone.step1}</p>
+        <a class="text-link" href="#step-1">{s.phone.step1Link}</a>
+      </div>}
+      <div class="vr-phone__next">
+        <p>{s.phone.account}</p>
+        <a class="button" href={trial.href}>{trial.label}</a>
+      </div>
+    </section>
+
+    <p class="vr-quest" data-quest-note hidden>
+      {s.quest} <span class="vr-quest__url" translate="no">{shortHost}<wbr />{shortPath}</span>
+    </p>
+
+    <dl class="vr-facts">
+      {build && <>
+        <div class="vr-facts__row">
+          <dt>{s.facts.version}</dt>
+          <dd class="ip-mono">{build.version}</dd>
+        </div>
+        <div class="vr-facts__row">
+          <dt>{s.facts.size}</dt>
+          <dd><data class="ip-mono" value={String(build.bytes)} title={exactBytes}>{mb}&nbsp;MB</data></dd>
+        </div>
+        <div class="vr-facts__row vr-facts__row--wide">
+          <dt>{s.facts.sha}</dt>
+          <dd class="vr-sha">
+            <code class="sha" id="vrSha">{shaGroups.map(g => <span>{g}</span>)}</code>
+            <button class="vr-copy" type="button" data-copy={build.sha256} data-copy-target="vrSha" data-done={s.copy.done} aria-label={s.copy.sha} hidden>
+              <span class="vr-copy__state" data-copy-idle><Icon name="copy" size={18} />{s.copy.idle}</span>
+              <span class="vr-copy__state" data-copy-done aria-hidden="true"><Icon name="check" size={18} />{s.copy.done}</span>
+            </button>
+          </dd>
+        </div>
+      </>}
+      <div class="vr-facts__row vr-facts__row--wide">
+        <dt>{s.facts.headsets}</dt>
+        <dd>{s.facts.headsetsValue}<span class="vr-facts__no">{s.facts.notSupported}</span></dd>
+      </div>
+      <div class="vr-facts__row vr-facts__row--wide">
+        <dt>{s.facts.need}</dt>
+        <dd>{s.facts.needValue}</dd>
+      </div>
+    </dl>
+  </div>
+
+  <div class="vr__steps">
+    <section class="vr-section" aria-labelledby="vrInstall">
+      <h2 class="vr-h2" id="vrInstall">{s.install.title}</h2>
+      <ol class="vr-steps" role="list">
+        <li class="vr-step" id="step-1">
+          <h3>{s.install.devMode.title}</h3>
+          <p>{s.install.devMode.text}</p>
+          <a class="text-link vr-ext" href={META_DEV_MODE} target="_blank" rel="noopener"><span>{s.install.devMode.guide}<span class="visually-hidden"> {s.newTab}</span>&nbsp;<Icon name="arrow-square-out" size={18} /></span></a>
+        </li>
+        <li class="vr-step">
+          <h3>{s.install.connect.title}</h3>
+          <p>{s.install.connect.text}</p>
+        </li>
+        <li class="vr-step">
+          <h3>{s.install.apk.title}</h3>
+          <p>{s.install.apk.text}</p>
+          <div class="vr-cmd">
+            <code id="vrAdb" translate="no">{adb}</code>
+            <button class="vr-copy" type="button" data-copy={adb} data-copy-target="vrAdb" data-done={s.copy.done} aria-label={s.copy.command} hidden>
+              <span class="vr-copy__state" data-copy-idle><Icon name="copy" size={18} />{s.copy.idle}</span>
+              <span class="vr-copy__state" data-copy-done aria-hidden="true"><Icon name="check" size={18} />{s.copy.done}</span>
+            </button>
+          </div>
+        </li>
+        <li class="vr-step">
+          <h3>{s.install.open.title}</h3>
+          <p>{s.install.open.text}</p>
+        </li>
+      </ol>
+    </section>
+
+    {build && (
+      <details class="vr-verify">
+        <summary><span>{s.verify.summary}</span><Icon name="caret-down" size={20} /></summary>
+        <p>{s.verify.text}</p>
+        <dl class="vr-verify__list">
+          {verify.map((v, i) => (
+            <div>
+              <dt>{v.os}</dt>
+              <dd class="vr-cmd">
+                <code id={`vrVerify${i}`} translate="no">{v.cmd}</code>
+                <button class="vr-copy" type="button" data-copy={v.cmd} data-copy-target={`vrVerify${i}`} data-done={s.copy.done} aria-label={`${s.copy.command} (${v.os})`} hidden>
+                  <span class="vr-copy__state" data-copy-idle><Icon name="copy" size={18} />{s.copy.idle}</span>
+                  <span class="vr-copy__state" data-copy-done aria-hidden="true"><Icon name="check" size={18} />{s.copy.done}</span>
+                </button>
+              </dd>
+            </div>
+          ))}
+        </dl>
+      </details>
+    )}
+
+    <section class="vr-section" aria-labelledby="vrPair">
+      <h2 class="vr-h2" id="vrPair">{s.pair.title}</h2>
+      <p>{pairBefore}{PAIR_UI.map((label, i) => <>{i > 0 && ', '}<b lang="en">{label}</b></>)}{pairAfter} {s.pair.code(PAIR_CODE_MINUTES)}</p>
+      <p>{s.pair.look}</p>
+      <p>{s.pair.revoke}</p>
+      <a class="text-link" href={p.primary.href}>{ui.hero.app}</a>
+    </section>
+
+    <p class="vr-notice">{s.notice}</p>
+  </div>
+
+  <p class="visually-hidden" aria-live="polite" data-vr-status></p>
+</div>
+<script type="application/ld+json" set:html={JSON.stringify(ld).replace(/</g, '\\u003c')} />
+<script>import '../scripts/vr-page.ts';</script>
+
+<style>
+  /* Anything carrying `hidden` stays hidden even where a rule below sets display. */
+  .vr [hidden]{display:none!important}
+
+  .vr{display:grid;grid-template-columns:minmax(0,1fr);gap:56px;padding-block:clamp(20px,3vw,48px) clamp(64px,6vw,112px)}
+  .vr__card,.vr__steps{display:grid;align-content:start;gap:28px;min-width:0}
+  .vr__steps{gap:48px}
+  @media (min-width:1024px){
+    .vr{grid-template-columns:minmax(0,5fr) minmax(0,7fr);gap:clamp(48px,5vw,104px);align-items:start}
+    /* Sticky under the nav. When the card is taller than the viewport (narrow desktop, long
+       ES/PT strings) a plain `top` would leave the download button below the fold for the
+       whole scroll; vr-page.ts writes --vr-card-h so the card sticks by its BOTTOM instead.
+       Without JS the first `top` applies. */
+    .vr__card{position:sticky;top:calc(var(--nav-h) + 24px);top:min(calc(var(--nav-h) + 24px), calc(100svh - var(--vr-card-h, 0px) - 24px))}
+    .vr__steps{padding-top:4px}
+  }
+
+  /* --- head */
+  .vr-media{aspect-ratio:16/9}
+  .vr-media img{width:100%;height:100%;object-fit:cover}
+  .vr-head__title{margin-top:28px;font-family:var(--display);font-weight:700;font-size:clamp(2.25rem,1.7rem + 2.2vw,3.5rem);line-height:1;letter-spacing:-.03em;text-wrap:balance}
+  .vr-head__lead{margin-top:14px;font-size:var(--fs-18);line-height:1.6;color:var(--muted);text-wrap:pretty}
+
+  /* --- facts: spacing, not a hairline per row (a spec-table tell) */
+  .vr-facts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:18px 24px;margin:0}
+  .vr-facts__row{min-width:0}
+  .vr-facts__row--wide{grid-column:1 / -1}
+  .vr-facts dt{font-size:var(--fs-14);line-height:1.5;color:var(--muted)}
+  .vr-facts dd{margin:2px 0 0;font-size:var(--fs-16);line-height:1.55;color:var(--text);text-wrap:pretty}
+  .vr-facts .ip-mono{font-size:var(--fs-16)}
+  .vr-facts data{text-decoration:underline dotted var(--border);text-underline-offset:4px;cursor:help}
+  .vr-facts__no{display:block;color:var(--muted)}
+  /* 64 hex digits as 4 x 16, two per line: readable against a terminal's output and never
+     a bare 64-character run that a phone would split anywhere. The spans carry no spaces,
+     so a hand selection still copies the unbroken digest. */
+  .vr-sha{display:flex;flex-wrap:wrap;align-items:center;gap:10px 16px}
+  .sha{display:grid;grid-template-columns:repeat(2,max-content);column-gap:1ch;font-family:var(--mono);font-size:var(--fs-14);line-height:1.6;color:var(--text);font-variant-numeric:tabular-nums}
+  .sha span{white-space:nowrap}
+  @media (max-width:339px){.sha{grid-template-columns:max-content}}
+
+  /* --- download */
+  .vr-get{display:grid;gap:10px;justify-items:start}
+  .vr .vr-get .vr-get__button{max-width:100%}
+  .vr-get__button :global(svg){flex:none}
+  .vr-get__phone,.vr-get__note{display:none}
+  .vr-get__note{font-size:var(--fs-14);line-height:1.5;color:var(--muted)}
+  /* Plain status text, not a pill: a filled box in the button's slot read as a disabled
+     button that did nothing when tapped. */
+  .vr-get__soon{font-size:var(--fs-18);line-height:1.5;color:var(--text);text-wrap:pretty}
+
+  /* --- copy buttons: label crossfade on success, the button never changes size */
+  .vr-copy{display:inline-grid;align-items:center;min-height:44px;min-width:44px;padding:0 14px;border:1px solid var(--border);border-radius:var(--radius-sm);background:var(--surface);color:var(--text);font:inherit;font-size:var(--fs-14);font-weight:550;line-height:1;cursor:pointer;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+  .vr-copy__state{grid-area:1 / 1;display:inline-flex;align-items:center;gap:8px;transition:opacity var(--dur-hover) var(--ease-out)}
+  .vr-copy__state[data-copy-done]{opacity:0}
+  [data-state=done]>.vr-copy__state[data-copy-idle]{opacity:0}
+  [data-state=done]>.vr-copy__state[data-copy-done]{opacity:1}
+  .vr-copy :global(svg){flex:none}
+  .vr-copy:active{transform:scale(.97);transition:transform var(--dur-press) var(--ease-out)}
+  @media (hover:hover) and (pointer:fine){.vr-copy:hover{border-color:var(--accent)}}
+
+  /* --- the phone panel: only where a phone is the device in hand */
+  .vr-phone{display:none;padding:20px 16px;border-radius:var(--radius);background:var(--bg-elev)}
+  .vr-phone__title{font-size:var(--fs-22);line-height:1.2;letter-spacing:-.02em;font-weight:600}
+  .vr-phone__text{margin-top:8px;font-size:var(--fs-16);line-height:1.55;color:var(--text)}
+  .vr-phone__actions{display:grid;gap:8px;margin-top:16px}
+  .vr .vr-phone__action{display:flex;align-items:center;gap:12px;width:100%;min-height:52px;padding:0 16px;border:0;border-radius:var(--radius-sm);background:var(--surface);box-shadow:inset 0 0 0 1px var(--hair);color:var(--text);font:inherit;font-size:var(--fs-16);font-weight:550;text-align:left;text-decoration:none;cursor:pointer;touch-action:manipulation}
+  .vr .vr-phone__action.vr-copy--row{display:grid;justify-items:start}
+  .vr-copy--row .vr-copy__state{gap:12px}
+  .vr-phone__action :global(svg){flex:none;color:var(--accent)}
+  .vr-phone__action:active{transform:scale(.98);transition:transform var(--dur-press) var(--ease-out)}
+  /* -.025em: the bare host plus /vr just fits one line inside the panel at 390. */
+  .vr-phone__url{margin-top:16px;font-family:var(--mono);font-size:1.25rem;line-height:1.35;letter-spacing:-.025em;color:var(--text);overflow-wrap:anywhere}
+  .vr-phone__next{display:grid;justify-items:start;gap:4px;margin-top:20px}
+  .vr-phone__next p{font-size:var(--fs-16);line-height:1.55;color:var(--text)}
+  .vr-phone__next .button{margin-top:6px}
+  @media (pointer:coarse) and (max-width:767px){
+    .vr-phone{display:block}
+    /* On a phone the APK is demoted to a secondary, explicit "anyway" action. vr-page.ts
+       also adds .button--secondary so the state is visible to tests, but the look is here
+       so it holds without JS. */
+    .vr .vr-get .vr-get__button{background:transparent;color:var(--text);border-color:var(--border);white-space:normal;text-align:left;justify-content:flex-start}
+    .vr-get__desk{display:none}
+    .vr-get__phone,.vr-get__note{display:inline}
+    .vr-get__phone{text-wrap:balance}
+  }
+
+  /* --- headset browser note */
+  .vr-quest{padding:14px 16px;border-radius:var(--radius);background:var(--wash);font-size:var(--fs-16);line-height:1.55;color:var(--text)}
+  .vr-quest__url{font-family:var(--mono);font-size:var(--fs-16);overflow-wrap:anywhere}
+
+  /* --- steps */
+  .vr-section{display:grid;gap:14px;justify-items:start}
+  .vr-section>p{font-size:var(--fs-16);line-height:1.6;color:var(--text);max-width:62ch;text-wrap:pretty}
+  .vr-section>p b{font-weight:600}
+  .vr-h2{font-size:var(--fs-22);line-height:1.15;letter-spacing:-.025em;font-weight:600;text-wrap:balance}
+  @media (min-width:1024px){.vr-h2{font-size:var(--fs-28)}}
+  .vr-steps{list-style:none;margin:10px 0 0;padding:0;display:grid;gap:32px;counter-reset:step;width:100%}
+  .vr-step{position:relative;padding-left:52px;counter-increment:step;min-width:0}
+  .vr-step::before{content:counter(step);position:absolute;left:0;top:-4px;width:36px;height:36px;display:grid;place-items:center;border-radius:50%;background:var(--wash);color:var(--accent);font-family:var(--mono);font-size:var(--fs-14);font-weight:600}
+  .vr-step h3{font-size:var(--fs-18);line-height:1.3;letter-spacing:-.01em;font-weight:600}
+  .vr-step p{margin-top:6px;font-size:var(--fs-16);line-height:1.6;color:var(--text);max-width:60ch;text-wrap:pretty}
+  .vr-step .text-link{margin-top:4px}
+  /* One inline run, so a wrapped label keeps its icon after the last word, not at the edge. */
+  .vr-ext :global(svg){display:inline;vertical-align:-3px}
+
+  .vr-cmd{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;margin-top:12px;min-width:0}
+  .vr-cmd code{flex:1 1 15rem;min-width:0;padding:10px 12px;border-radius:var(--radius-sm);background:var(--bg-elev);box-shadow:inset 0 0 0 1px var(--hair);font-family:var(--mono);font-size:var(--fs-14);line-height:1.5;color:var(--text);overflow-wrap:anywhere}
+
+  /* --- check the file */
+  .vr-verify{border-radius:var(--radius);background:var(--bg-elev)}
+  .vr-verify summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:56px;padding:0 18px;font-size:var(--fs-16);font-weight:600;cursor:pointer;list-style:none;border-radius:var(--radius)}
+  .vr-verify summary::-webkit-details-marker{display:none}
+  .vr-verify summary :global(svg){flex:none;transition:transform var(--dur-state) var(--ease-out)}
+  .vr-verify[open] summary :global(svg){transform:rotate(180deg)}
+  .vr-verify>p{padding:0 18px;font-size:var(--fs-16);line-height:1.6;color:var(--text);max-width:62ch}
+  .vr-verify__list{display:grid;gap:16px;margin:16px 0 0;padding:0 18px 20px}
+  .vr-verify__list dt{font-size:var(--fs-14);color:var(--muted)}
+  .vr-verify__list .vr-cmd{margin:4px 0 0}
+  .vr-verify__list .vr-cmd code{background:var(--surface)}
+
+  .vr-notice{font-size:var(--fs-14);line-height:1.6;color:var(--muted)}
+</style>

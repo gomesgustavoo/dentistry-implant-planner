@@ -1,0 +1,206 @@
+---
+/* dialog#film: the chaptered film player, the page's one deliberate dark surface.
+ *
+ * Rendered once, after </main>, and opened by player.ts from any a[data-film-open] on the
+ * page (hero CTA, chapter rows, film card, film index). Nothing here loads until it opens:
+ * preload="none", the poster is the only image, and the GSAP morph chunk is fetched only on
+ * desktop pointer intent. Without JS (or without showModal) the dialog never shows and every
+ * trigger is a plain link to the H.264 file.
+ *
+ * Layout: phones and coarse pointers get a full-viewport sheet (full-bleed 16:9 video, a
+ * sticky header with the close button, then Full screen, chapters, transcript); at
+ * >= 1024 px the chapters and transcript move to a side column, and with a fine pointer the
+ * sheet becomes a centred panel over a dimmed page with a segmented chapter bar under the
+ * video. Contrast on #0b0d12: text #e9edf3 16.5:1, muted #a3adbf 8.6:1, accent #a78bfa 7.1:1
+ * (5.9:1 on the active chapter row); focus rings use the accent.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { LOCALE_META, localePath } from '@dicomsegvr/landing-ui/i18n';
+import Icon from './Icon.astro';
+import { clock, media, sourceType } from '../lib/media';
+import { film, transcript } from '../content/film';
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const locale = p.locale;
+const s = film[locale];
+const lang = LOCALE_META[locale].html;
+const f = media.film;
+const length = clock(f.duration);
+if (f.chapters.length !== s.chapters.length) {
+  throw new Error(`media.json has ${f.chapters.length} chapters but content/film.ts names ${s.chapters.length}`);
+}
+const chapters = s.chapters.map((title, i) => {
+  const t = f.chapters[i];
+  const end = f.chapters[i + 1] ?? f.duration;
+  return { title, t, span: Math.max(0, end - t) };
+});
+// mediaCapabilities wants the stream's bitrate; the manifest has bytes and seconds.
+const bitrate = (a: { bytes: number; duration?: number }) => Math.round((a.bytes * 8) / (a.duration || f.duration)) || undefined;
+const timeOf = (entry: (typeof transcript)[number]) => (entry.kind === 'chapter' ? f.chapters[entry.chapter] : entry.t);
+---
+<dialog id="film" class="player" aria-labelledby="filmTitle" data-duration={f.duration}>
+  <div class="player__layout">
+    <div class="player__head" data-flip-extra>
+      <h2 id="filmTitle" class="player__title" tabindex="-1">{s.title(length)}</h2>
+      <button type="button" class="player__close" aria-label={s.close} data-film-close><Icon name="x" size={22} /></button>
+    </div>
+    <div class="player__main">
+      <div class="player__frame">
+        <video class="player__video" aria-labelledby="filmTitle" controls playsinline muted preload="none" poster={f.poster.webp.src} width={f.h264.width} height={f.h264.height}>
+          <source src={f.av1.src} type={sourceType(f.av1)} data-codec="av1" data-bitrate={bitrate(f.av1)} />
+          <source src={f.h264.src} type={sourceType(f.h264)} data-codec="h264" />
+          <track kind="chapters" srclang={lang} label={s.chaptersLabel} src={localePath(locale, '/film/chapters.vtt')} default />
+        </video>
+      </div>
+      <div class="chapter-bar" aria-hidden="true" data-flip-extra>
+        {chapters.map(c => (
+          <span class="chapter-bar__seg" style={`flex-grow:${c.span}`} data-t={c.t} title={c.title}><span class="chapter-bar__track"><span class="chapter-bar__fill"></span></span></span>
+        ))}
+      </div>
+      <div class="player__tools" data-flip-extra>
+        <button type="button" class="player__fs" disabled><span class="player__fs-icon" aria-hidden="true"><Icon name="corners-out" size={20} /></span>{s.fullscreen}</button>
+      </div>
+      <p class="player__error" role="alert" data-film-error hidden>{s.error} <a href={f.h264.src}>{s.errorLink}</a></p>
+    </div>
+    <div class="player__side" data-flip-extra>
+      <nav class="player__chapters chapters" aria-label={s.chaptersLabel}>
+        <ol>
+          {chapters.map((c, i) => (
+            <li>
+              <button type="button" data-t={c.t} aria-current={i === 0 ? 'true' : undefined}>
+                <span class="player__chapter-time ip-mono">{clock(c.t)}</span><span class="player__chapter-title">{c.title}</span>
+              </button>
+            </li>
+          ))}
+        </ol>
+      </nav>
+      <details class="transcript">
+        <summary><span>{s.transcriptSummary}</span><span class="transcript__caret" aria-hidden="true"><Icon name="caret-right" size={18} /></span></summary>
+        <p class="transcript__note">{s.transcriptNote}</p>
+        <ol class="transcript__list" lang="en">
+          {transcript.map(entry => (
+            <li class:list={['transcript__row', { 'transcript__row--chapter': entry.kind === 'chapter', 'transcript__row--card': entry.kind === 'card' }]}>
+              <button type="button" class="transcript__seek ip-mono" data-t={timeOf(entry)} lang={lang} aria-label={s.seekFrom(clock(timeOf(entry)))}>{clock(timeOf(entry))}</button>
+              {entry.kind === 'card' ? (
+                <div><p class="transcript__label" lang={lang}>{s.endCardLabel}</p>{entry.lines.map(line => <p>{line}</p>)}</div>
+              ) : (
+                <p>{entry.kind === 'chapter' ? film.en.chapters[entry.chapter] : entry.text}</p>
+              )}
+            </li>
+          ))}
+        </ol>
+      </details>
+    </div>
+  </div>
+</dialog>
+
+<script>import '../scripts/player';</script>
+
+<style>
+  /* The page behind the open dialog: no scroll, and no layout shift where a classic
+     scrollbar would have disappeared. */
+  :global(html.is-modal){overflow:hidden;scrollbar-gutter:stable}
+
+  .player{
+    --p-bg:#0b0d12; --p-text:#e9edf3; --p-muted:#a3adbf; --p-accent:#a78bfa;
+    --p-hair:rgb(233 237 243 / .12);
+    --p-pad-l:max(16px, env(safe-area-inset-left)); --p-pad-r:max(16px, env(safe-area-inset-right));
+    color-scheme:dark;
+    /* Phones and coarse pointers (the default): a full-viewport sheet. */
+    position:fixed; inset:0;
+    width:100%; max-width:none; height:100vh; height:100dvh; max-height:none;
+    margin:0; padding:0; border:0; border-radius:0;
+    background:var(--p-bg); color:var(--p-text);
+    font-family:var(--ds-font-sans); font-size:var(--fs-16); line-height:1.5;
+    overflow-x:hidden; overflow-y:auto; overscroll-behavior:contain;
+  }
+  .player::backdrop{background:rgb(5 7 11 / .76)}
+  /* flip.ts: the frame travels outside the panel's box; clip-path does the clipping. */
+  .player.is-morphing{overflow:visible}
+  .player :focus-visible{outline:2px solid var(--p-accent);outline-offset:2px}
+
+  .player__layout{display:grid;grid-template-columns:minmax(0,1fr);align-content:start;row-gap:16px;padding-bottom:max(24px, env(safe-area-inset-bottom))}
+  .player__head{position:sticky;top:0;z-index:2;display:flex;align-items:center;justify-content:space-between;gap:16px;padding:max(8px, env(safe-area-inset-top)) var(--p-pad-r) 8px var(--p-pad-l);background:var(--p-bg)}
+  .player__title{margin:0;font-size:var(--fs-16);line-height:1.35;font-weight:600;letter-spacing:-.01em;color:var(--p-text);text-wrap:balance}
+  .player__title:focus{outline:none}
+  .player__title:focus-visible{outline:2px solid var(--p-accent);outline-offset:4px;border-radius:4px}
+  .player__close{flex:none;display:grid;place-items:center;width:44px;height:44px;padding:0;border:1px solid var(--p-hair);border-radius:999px;background:transparent;color:var(--p-text);cursor:pointer}
+
+  .player__main{display:grid;row-gap:12px;min-width:0}
+  .player__frame{position:relative;width:100%;aspect-ratio:16 / 9;background:#000;overflow:hidden}
+  .player__video{display:block;width:100%;height:100%;max-width:none;object-fit:contain;background:#000}
+  .player__frame:fullscreen{width:100%;height:100%;aspect-ratio:auto;border-radius:0}
+
+  .chapter-bar{display:none}
+  .player__tools{display:flex;padding-inline:var(--p-pad-l) var(--p-pad-r)}
+  .player__fs{display:inline-flex;align-items:center;gap:8px;min-height:44px;padding:0 14px;border:1px solid var(--p-hair);border-radius:8px;background:transparent;color:var(--p-text);font-size:var(--fs-15);font-weight:550;cursor:pointer}
+  .player__fs:disabled{color:var(--p-muted);cursor:default}
+  .player__fs-icon{display:inline-flex}
+  .player__error{margin:0;padding-inline:var(--p-pad-l) var(--p-pad-r);max-width:none;font-size:var(--fs-15);color:var(--p-text)}
+  .player__error a{color:var(--p-accent);text-decoration:underline;text-underline-offset:4px}
+
+  .player__side{display:grid;row-gap:20px;align-content:start;min-width:0;padding-inline:var(--p-pad-l) var(--p-pad-r)}
+  .player__chapters ol{list-style:none;margin:0;padding:0;display:grid;row-gap:2px}
+  .player__chapters button{display:grid;grid-template-columns:3.25rem minmax(0,1fr);align-items:center;column-gap:10px;width:100%;min-height:48px;padding:6px 10px;border:0;border-radius:8px;background:transparent;color:var(--p-text);font-size:var(--fs-15);line-height:1.35;text-align:left;cursor:pointer;transition:background-color var(--dur-state) ease}
+  .player__chapter-time{font-size:var(--fs-14);color:var(--p-muted)}
+  .player__chapters button[aria-current='true']{background:rgb(167 139 250 / .14);box-shadow:inset 2px 0 0 var(--p-accent)}
+  .player__chapters button[aria-current='true'] .player__chapter-time{color:var(--p-accent)}
+  @media (hover:hover) and (pointer:fine){
+    .player__close{transition:background-color var(--dur-hover) ease}
+    .player__close:hover,.player__fs:not(:disabled):hover{background:rgb(233 237 243 / .08)}
+    .player__chapters button:hover{background:rgb(233 237 243 / .06)}
+    .player__chapters button[aria-current='true']:hover{background:rgb(167 139 250 / .18)}
+  }
+
+  /* Transcript: the film's English text, each time a seek button in the page's language. */
+  .transcript summary{display:flex;align-items:center;justify-content:space-between;gap:16px;min-height:48px;padding-inline:10px;border-top:1px solid var(--p-hair);list-style:none;font-size:var(--fs-15);font-weight:600;color:var(--p-text);cursor:pointer}
+  .transcript summary::-webkit-details-marker{display:none}
+  .transcript__caret{display:inline-flex;color:var(--p-muted);transition:transform var(--dur-state) var(--ease-out)}
+  .transcript[open] .transcript__caret{transform:rotate(90deg)}
+  .transcript__note{margin:4px 10px 12px;max-width:none;font-size:var(--fs-14);line-height:1.6;color:var(--p-muted)}
+  .transcript__list{list-style:none;margin:0;padding:0 0 8px;display:grid;row-gap:4px}
+  .transcript__row{display:grid;grid-template-columns:3.75rem minmax(0,1fr);column-gap:8px;align-items:start;font-size:var(--fs-15);line-height:1.5;color:var(--p-text)}
+  .transcript__row p{margin:0;max-width:none;padding-block:10px 0}
+  .transcript__row--chapter p{font-weight:650}
+  .transcript__row--card div{display:grid;row-gap:2px}
+  .transcript__row--card div p + p{padding-top:2px}
+  .transcript__label{color:var(--p-muted);font-size:var(--fs-14)}
+  .transcript__seek{min-width:44px;min-height:44px;padding:0 10px;border:0;border-radius:6px;background:transparent;color:var(--p-muted);font-size:var(--fs-14);text-align:left;cursor:pointer}
+  @media (hover:hover) and (pointer:fine){.transcript__seek:hover{color:var(--p-accent)}}
+
+  /* >= 1024: side column, whatever the pointer (an iPad in landscape keeps the sheet). */
+  @media (min-width:1024px){
+    .player__layout{grid-template-columns:minmax(0,1fr) minmax(280px,320px);grid-template-areas:"head head" "main side";column-gap:28px;padding-inline:var(--p-pad-l) var(--p-pad-r)}
+    .player__head{grid-area:head;padding-inline:0}
+    .player__main{grid-area:main}
+    .player__side{grid-area:side;padding-inline:0}
+    .player__tools,.player__error{padding-inline:0}
+    /* The frame is capped by the viewport height; the bar and tools line up under it. */
+    .player__main{justify-items:start;--frame-w:min(100%, calc((100vh - 220px) * 16 / 9))}
+    @supports (height:1dvh){.player__main{--frame-w:min(100%, calc((100dvh - 220px) * 16 / 9))}}
+    .player__frame,.chapter-bar,.player__tools{width:var(--frame-w)}
+    .player__frame{border-radius:10px}
+  }
+  /* Desktop with a fine pointer: a centred panel, and the segmented bar. */
+  @media (min-width:1024px) and (pointer:fine){
+    .player{inset:0;margin:auto;width:min(1400px, calc(100vw - 48px));height:fit-content;max-height:calc(100vh - 48px);max-height:calc(100dvh - 48px);border-radius:14px;box-shadow:0 0 0 1px var(--p-hair), 0 40px 120px -40px rgb(0 0 0 / .7)}
+    .player__layout{padding:16px 24px 24px}
+    .player__head{position:static;padding:0}
+    .player__main{--frame-w:min(100%, calc((100vh - 248px) * 16 / 9))}
+    @supports (height:1dvh){.player__main{--frame-w:min(100%, calc((100dvh - 248px) * 16 / 9))}}
+    .chapter-bar{display:flex;gap:3px;margin-top:-4px}
+    .chapter-bar__seg{flex:1 1 0;display:flex;align-items:center;height:20px;cursor:pointer}
+    .chapter-bar__track{flex:1;height:6px;border-radius:3px;background:rgb(233 237 243 / .16);overflow:hidden}
+    .chapter-bar__fill{display:block;height:100%;background:var(--p-accent);transform:scaleX(0);transform-origin:0 50%;transition:transform 250ms linear}
+  }
+  /* Phone on its side: the video takes the height, chapters a narrow column beside it. */
+  @media (orientation:landscape) and (max-height:500px){
+    .player__layout{grid-template-columns:minmax(0,1fr) minmax(170px, 32%);grid-template-areas:"main head" "main side";column-gap:16px;row-gap:8px;padding-inline:var(--p-pad-l) var(--p-pad-r)}
+    .player__head{grid-area:head;position:static;padding:max(8px, env(safe-area-inset-top)) 0 0}
+    .player__main{grid-area:main;align-content:start;padding-top:max(8px, env(safe-area-inset-top))}
+    .player__side{grid-area:side;padding-inline:0}
+    .player__tools,.player__error{padding-inline:0}
+    .player__frame{width:min(100%, calc((100vh - 76px) * 16 / 9));width:min(100%, calc((100dvh - 76px) * 16 / 9));border-radius:8px}
+    .player__chapter-title{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  }
+</style>

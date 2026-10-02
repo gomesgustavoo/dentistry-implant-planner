@@ -1,0 +1,148 @@
+---
+/* The first screen continues the LinkedIn post: its sentence, in its face (Archivo 700), over
+ * the clean VR footage it was cut from, with the verdict the footage shows written in HTML
+ * underneath (the floating labels in the capture are ~7 px tall on a phone and swap sides of
+ * the jaw every second or so, so the footage cannot carry the number by itself).
+ *
+ * DOM order is the reading order on a phone and puts the primary action in the thumb zone
+ * with no CSS reordering: h1, figure, actions, sub, meta. On a desktop the sub moves above the
+ * actions in the aside; neither is focusable, so the tab order still follows what is seen.
+ *
+ * PHONE FIT. The loop's height is clamp(240px, 100svh - var(--intro-chrome), 448px), where
+ * --intro-chrome is everything else on the first screen down to the bottom of the CTA row,
+ * plus a 12 px margin. It is per locale because the heading is (EN mirrors the post on 2
+ * lines; ES and PT balance onto 3). The sums are in the <style> below; they were measured in
+ * Chrome against the real fonts at 360x640, 375x553, 390x664 and 390x750. If a string in
+ * content/intro.ts changes length, re-measure.
+ *
+ * The heading's phone size is bounded by the column, not the viewport: "Plan a dental implant"
+ * measures 9.21 em in Archivo 700 with -0.03 em tracking, so (column / 9.6) keeps it on one
+ * line down to a 320 px column with 4% to spare, and 2.25 rem caps it above that.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { decimal, localePath, t } from '@dicomsegvr/landing-ui/i18n';
+import LoopFrame from './LoopFrame.astro';
+import { clock, media } from '../lib/media';
+import { intro, fill, LOOP_CANAL_MM } from '../content/intro';
+import { apk } from '../lib/apk';
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const locale = p.locale;
+const s = intro[locale];
+const shared = t(locale);
+const clearance = fill(s.loop.clearance, { mm: decimal(locale, LOOP_CANAL_MM) });
+---
+<section class="intro" aria-labelledby="intro-title">
+  <div class="container intro__grid">
+    <h1 id="intro-title" class:list={['intro__title', 'intro__enter', { 'intro__title--split': s.title.split }]} style="--i:0">
+      <span class="l">{s.title.lines[0]}</span>{' '}<span class="l">{s.title.lines[1]}{' '}<span class="intro__accent">{s.title.accent}</span></span>
+    </h1>
+    <LoopFrame locale={locale} captionClass="intro__caption">
+      {`${s.loop.recorded} ${clearance} `}<span class="chip" data-state="clear">{shared.hero3d.clear}</span>
+    </LoopFrame>
+    <div class="hero__actions intro__actions intro__enter" style="--i:1">
+      <a class="button" href={media.film.h264.src} type={media.film.h264.type} data-film-open>{`${s.film} `}<span class="ip-mono intro__time">{clock(media.film.duration)}</span></a>
+      <a class="text-link" href={localePath(locale, '/vr/')}><span><span class="intro__verb">{`${apk.available ? s.vr.verb : s.vr.verbSoon} `}</span>{s.vr.name}</span></a>
+    </div>
+    <p class="intro__sub intro__enter" style="--i:2">{s.sub}</p>
+    <p class="intro__meta intro__enter" style="--i:3">
+      <a class="intro__byline" href="#creator">{shared.hero.author} <strong>Gustavo Formento</strong></a>
+      <span class="intro__disclaimer">{s.disclaimer}</span>
+    </p>
+  </div>
+</section>
+
+<style>
+  /* PHONE FIT (<768). --intro-chrome = nav + top padding + heading + its margin, plus the
+     caption and the CTA row under the loop, plus 12 px so the CTA never sits on the edge.
+     Measured in Chrome with the real fonts (Archivo Display subset, Geist), at 390 px where
+     the heading is largest (36 px):
+       EN  64 + 14 + 73.4 (2 lines) + 12 | 8 + 45 (caption, 2 lines) | 12 + 48 (CTA) | 12 = 288.4
+       ES  64 + 14 + 110.2 (3 lines) + 12 | 8 + 45 | 12 + 48 | 12 = 325.2   (PT is the same)
+     At 375x553 the 240 px floor binds for ES/PT and the CTA still ends 3 px inside; every
+     other phone viewport in the matrix has 12 px or more. Narrower phones have a smaller
+     heading (it scales with the column), so 390 is the worst case for this sum. */
+  /* --svh is 1svh where supported (the viewport with the browser's toolbars shown, which is
+     the one the first screen has to fit) and 1vh elsewhere; custom properties cannot fall
+     back by declaration order, so the unit is chosen once here. */
+  .intro{--svh:1vh;--intro-chrome:289px;--enter-y:6px;padding-block:14px 48px}
+  @supports (height:1svh){.intro{--svh:1svh}}
+  .intro:lang(es), .intro:lang(pt){--intro-chrome:326px}
+  .intro__grid{display:grid;grid-template-columns:minmax(0, 1fr);align-items:start;
+    --loop-h:clamp(240px, calc(100 * var(--svh) - var(--intro-chrome)), 448px);
+    --loop-ar:4 / 5;--loop-cap-gap:8px}
+
+  .intro__title{
+    margin:0 0 12px;
+    font-family:var(--display);font-weight:700;font-stretch:100%;
+    font-size:min(2.25rem, calc((100vw - 2 * var(--gutter-safe)) / 9.6));
+    line-height:1.02;letter-spacing:-.03em;color:var(--text);
+    text-wrap:balance;max-width:none;
+  }
+  .intro__title--split .l{display:block}
+  .intro__accent{color:var(--accent)}
+
+  /* One row at 360 px in every locale: "Watch the film 2:27" + "ImplantPlan VR" is 309 px for
+     a 320 px column (ES 289, PT 284). The verb comes back where the row has room. */
+  .intro__actions{display:flex;flex-wrap:wrap;align-items:center;gap:8px 16px;margin-top:12px}
+  .intro__actions .button{gap:10px;padding-inline:16px}
+  .intro__time{font-size:var(--fs-14);font-weight:500}
+  /* .text-link is inline-flex (shared), so its label is one span: the verb and the name stay
+     one run of text instead of two flex items with a .7rem gap between them. */
+  .intro__verb{display:none}
+
+  .intro__sub{margin-top:18px;font-size:var(--fs-16);line-height:1.55;color:var(--muted);max-width:40ch;text-wrap:pretty}
+  .intro__meta{display:flex;flex-direction:column;align-items:flex-start;gap:2px;margin-top:10px;font-size:var(--fs-14);line-height:1.5;color:var(--muted);max-width:none}
+  .intro__byline{display:inline-flex;align-items:center;gap:.35em;min-height:44px;color:var(--muted);text-decoration:underline;text-decoration-color:var(--hair);text-underline-offset:4px}
+  .intro__byline strong{font-weight:600;color:var(--text)}
+  @media (hover:hover) and (pointer:fine){
+    .intro__byline{transition:text-decoration-color var(--dur-hover) ease}
+    .intro__byline:hover{text-decoration-color:currentColor}
+  }
+
+  /* Arrival: four text elements rise 6-8 px and fade in, 40 ms apart, from the first paint
+     (CSS, so a late script can neither restart nor delay it). Never the figure: it holds the
+     LCP image, and a moving box under a still poster reads as a layout shift. */
+  @media (prefers-reduced-motion:no-preference){
+    .intro__enter{animation:ip-intro-enter calc(500ms * var(--dur-scale, 1)) var(--ease-out-expo) both;animation-delay:calc(var(--i, 0) * 40ms)}
+  }
+  @keyframes ip-intro-enter{from{opacity:0;translate:0 var(--enter-y)}}
+
+  /* 768-1023: one column, the 16:9 loop at full width. */
+  @media (min-width:768px){
+    .intro{--enter-y:8px;padding-block:28px 56px}
+    .intro__grid{--loop-h:auto;--loop-ar:16 / 9;--loop-cap-gap:12px}
+    .intro__title{font-size:clamp(2.75rem, .9rem + 3.6vw, 4.25rem);margin-bottom:24px}
+    .intro__actions{gap:8px 24px;margin-top:20px}
+    .intro__verb{display:inline}
+    .intro__sub{font-size:var(--fs-18);margin-top:20px}
+  }
+
+  /* >=1024: editorial grid. Heading across columns 1-10; the loop in 1-8, sized from the
+     viewport height so the first screen ends with the next section's heading peeking in at
+     1440x900; sub, actions and meta in 9-12, level with the top of the figure, so the primary
+     action sits beside the heading instead of under a 270 px void. */
+  @media (min-width:1024px){
+    .intro{padding-block:clamp(20px, calc(3 * var(--svh)), 40px) 32px}
+    .intro__grid{grid-template-columns:repeat(12, minmax(0, 1fr));grid-template-rows:auto auto auto auto 1fr;column-gap:24px;
+      --loop-w:min(100%, calc((100 * var(--svh) - 340px) * 16 / 9))}
+    .intro__title{grid-column:1 / span 10;grid-row:1;margin-bottom:20px}
+    .intro__grid > :global(.loop){grid-column:1 / span 8;grid-row:2 / span 4}
+    .intro__sub{grid-column:9 / span 4;grid-row:2;margin-top:0}
+    .intro__actions{grid-column:9 / span 4;grid-row:3;margin-top:22px}
+    .intro__meta{grid-column:9 / span 4;grid-row:4;margin-top:8px}
+  }
+
+  /* Phone landscape: heading and actions beside a loop as tall as the screen allows. */
+  @media (orientation:landscape) and (max-height:500px){
+    .intro{padding-block:12px 32px}
+    .intro__grid{grid-template-columns:minmax(0, 45fr) minmax(0, 55fr);grid-template-rows:auto auto auto 1fr;column-gap:24px;
+      --loop-w:100%;--loop-h:calc(100 * var(--svh) - var(--nav-h) - 96px);--loop-ar:auto}
+    .intro__title{grid-column:1;grid-row:1;margin-bottom:0;
+      font-size:min(2.25rem, calc((100vw - 2 * var(--gutter-safe) - 24px) * .45 / 9.6))}
+    .intro__grid > :global(.loop){grid-column:2;grid-row:1 / span 4}
+    .intro__actions{grid-column:1;grid-row:2}
+    .intro__sub{grid-column:1;grid-row:3;margin-top:14px}
+    .intro__meta{grid-column:1;grid-row:4}
+  }
+</style>

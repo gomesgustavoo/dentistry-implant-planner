@@ -1,0 +1,78 @@
+---
+/* The DicomSegVR television clip, click-to-play.
+ *
+ * SHARED CONTRACT, KEPT EXACTLY (vendor/landing-ui/src/interactions.ts, check-browser.mjs):
+ * `.media__screen[data-video-id][data-video-start][data-video-title]` whose first button
+ * swaps the screen for a youtube-nocookie iframe on click (that handler is shared and is not
+ * reimplemented here), exactly one `.media__play` on the page, no iframe before the click, and
+ * a visible `a[href="https://www.youtube.com/watch?v=<id>"]` for readers who never press play.
+ * Base.astro's <noscript> hides `.media__play`, so without JavaScript the link is the way in.
+ *
+ * What changed from the shared Media.astro, and why. The 1920 px `maxresdefault` becomes the
+ * 640 x 480 `sddefault` (about 27 KB); it is letterboxed 4:3, and `object-fit:cover` in a 16:9
+ * box crops exactly its two 60 px bars (measured: picture rows 60-419). The badge and the
+ * button's caption are gone from the picture, because the broadcast frame carries its own
+ * burned-in headline and the two collided; the only thing on the image is a 56 px play disc,
+ * and every word moved to the figcaption under it.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { clock, t } from '@dicomsegvr/landing-ui/i18n';
+import { parts, sections } from '../content/sections';
+import Icon from './Icon.astro';
+
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const m = p.media;
+const s = sections[p.locale].tv;
+const at = clock(m.start);
+const watch = `https://www.youtube.com/watch?v=${m.videoId}`;
+---
+<figure class="tv">
+  <div class="media__screen tv__screen" data-video-id={m.videoId} data-video-start={m.start} data-video-title={m.title}>
+    <img src={`https://i.ytimg.com/vi_webp/${m.videoId}/sddefault.webp`} alt={m.alt} width="640" height="480" loading="lazy" decoding="async" />
+    <button class="media__play tv__play" type="button" aria-label={t(p.locale).media.play(m.title, at)}>
+      <span class="tv__disc"><Icon name="play" weight="fill" size={22} /></span>
+    </button>
+  </div>
+  <figcaption class="tv__caption">
+    <p class="tv__meta">{parts(s.meta, { language: m.language, at }).map(part => part.key === 'at' ? <span class="ip-mono">{part.text}</span> : part.text)}</p>
+    <p class="tv__text"><strong lang="pt-BR">{m.title}</strong> {m.caption}</p>
+    <a class="text-link tv__link" href={watch} target="_blank" rel="noopener noreferrer">{s.watch}<span class="visually-hidden"> {s.newTab}</span><Icon name="arrow-up-right" size={16} /></a>
+  </figcaption>
+</figure>
+
+<style>
+  .tv{margin:0;min-width:0}
+  /* One class + scope attribute outranks the shared `.media__screen` / `.media__play` rules,
+     including their ungated hover zoom and the 650 px padding override. The frame repeats the
+     `.ip-frame` look from its tokens instead of taking the class, whose light ground outranks
+     a scoped rule; this one wants a dark ground, which is what shows while the iframe loads. */
+  .tv__screen{position:relative;aspect-ratio:16 / 9;overflow:hidden;border:0;border-radius:10px;background:#15171c;box-shadow:var(--frame-shadow)}
+  /* 1.012 hides the resampled edge of the letterbox bars at fractional sizes. */
+  .tv__screen > img{width:100%;height:100%;object-fit:cover;transform:scale(1.012);transition:none}
+
+  .tv__play{position:absolute;inset:0;display:grid;place-items:center;padding:0;border:0;background:transparent;color:var(--text);cursor:pointer;touch-action:manipulation}
+  .tv__disc{display:grid;place-items:center;width:56px;height:56px;border-radius:50%;background:rgb(251 251 253 / .94);box-shadow:0 0 0 1px rgb(15 21 32 / .08), 0 10px 24px -10px rgb(15 21 32 / .55)}
+  /* The triangle's optical centre sits left of its box; nudge it so the disc reads centred. */
+  .tv__disc :global(svg){translate:1.5px 0}
+  /* overflow:hidden would clip an outside ring, so focus draws inside the frame and on the disc. */
+  .tv__play:focus-visible{outline:3px solid var(--accent-gfx);outline-offset:-3px}
+  .tv__play:focus-visible .tv__disc{box-shadow:0 0 0 3px var(--accent-gfx), 0 10px 24px -10px rgb(15 21 32 / .55)}
+
+  @media (prefers-reduced-motion:no-preference){
+    .tv__disc{transition:transform var(--dur-press) var(--ease-out)}
+    .tv__play:active .tv__disc{transform:scale(.94)}
+  }
+  @media (hover:hover) and (pointer:fine) and (prefers-reduced-motion:no-preference){
+    .tv__screen > img{transition:transform var(--dur-overlay) var(--ease-out)}
+    .tv__screen:hover > img{transform:scale(1.04)}
+    .tv__disc{transition:transform var(--dur-hover) var(--ease-out)}
+    .tv__play:hover .tv__disc{transform:scale(1.06)}
+  }
+
+  .tv__caption{margin-top:16px;display:grid;gap:6px;justify-items:start}
+  .tv__meta{margin:0;font-size:var(--fs-14);line-height:1.5;color:var(--muted)}
+  .tv__text{margin:0;max-width:60ch;font-size:var(--fs-15);line-height:1.6;color:var(--muted)}
+  .tv__text strong{font-weight:600;color:var(--text)}
+  .tv__link{margin-top:2px}
+</style>

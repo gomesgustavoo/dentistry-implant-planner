@@ -1,0 +1,33 @@
+---
+/* /vr/, /es/vr/, /pt-br/vr/: ImplantPlan VR for Meta Quest. The shared Base/Nav/Footer
+   around the local VrDownload, like the landing, so dicomsegvr.com is untouched. No video,
+   no three.js and no GSAP load here; the only script is src/scripts/vr-page.ts.
+   The page joins the landing's root crossfade (implantplan.css @view-transition) and names
+   no element, so nothing swoops in from off-screen (critic P1-6). */
+import Base from '@dicomsegvr/landing-ui/Base.astro';
+import Nav from '@dicomsegvr/landing-ui/Nav.astro';
+import Footer from '@dicomsegvr/landing-ui/Footer.astro';
+import { localeStaticPaths } from '@dicomsegvr/landing-ui/i18n';
+import type { Locale } from '@dicomsegvr/landing-ui/types';
+import { projects } from '../../../content';
+import { vrpage } from '../../../content/vrpage';
+import { apk } from '../../../lib/apk';
+import '../../../styles/chrome.css';
+import '../../../styles/implantplan.css';
+import displayFont from '../../../assets/archivo-display.woff2?url';
+import VrDownload from '../../../components/VrDownload.astro';
+export const getStaticPaths = localeStaticPaths;
+interface Props { locale: Locale }
+const { locale } = Astro.props;
+const p = projects[locale];
+const s = vrpage[locale];
+// The description may only promise version, size and SHA-256 when the page shows them.
+const description = apk.available ? s.description.available : s.description.soon;
+---
+<Base project={p} path="/vr/" title={s.title} description={description} preloadFonts={['/assets/fonts/Geist-latin.woff2', displayFont]} viewportFit="cover">
+  <Nav project={p} path="/vr/" />
+  <main id="main">
+    <VrDownload project={p} />
+  </main>
+  <Footer project={p} />
+</Base>

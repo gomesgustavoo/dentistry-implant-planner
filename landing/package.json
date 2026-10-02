@@ -6,18 +6,22 @@
   "scripts": {
     "prepare:static": "node scripts/prepare-static.mjs",
     "dev": "npm run prepare:static && astro dev --host 0.0.0.0",
-    "check": "astro check",
+    "check": "npm run prepare:static && astro check",
     "build": "npm run prepare:static && astro build",
     "preview": "astro preview --host 0.0.0.0",
-    "check:browser": "node scripts/check-browser.mjs"
+    "check:browser": "node scripts/check-browser.mjs && node scripts/check-implantplan.mjs",
+    "check:media": "node scripts/check-media.mjs"
   },
   "dependencies": {
     "@dicomsegvr/landing-ui": "file:vendor/landing-ui",
-    "astro": "7.3.3"
+    "@phosphor-icons/core": "2.1.1",
+    "astro": "7.3.3",
+    "gsap": "3.15.0"
   },
   "devDependencies": {
     "@astrojs/check": "0.9.10",
-    "typescript": "5.9.3",
-    "@playwright/test": "1.58.2"
+    "@playwright/test": "1.58.2",
+    "@types/node": "22.20.5",
+    "typescript": "5.9.3"
   }
 }

@@ -10,3 +10,7 @@ artifacts/
 !/assets/vendor/
 !/assets/vendor/three/
 !/assets/vendor/three/**
+# The ImplantPlan VR APK is dropped here by hand and shipped hashed under /download/.
+/download/*
+!/download/.gitkeep
+/.media-work/

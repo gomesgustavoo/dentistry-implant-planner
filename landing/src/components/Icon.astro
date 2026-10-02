@@ -1,0 +1,12 @@
+---
+/* Phosphor icons (regular weight unless asked), inlined at build time. One family, one
+   stroke weight across the page; never Unicode glyphs as icons. Decorative by default. */
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+interface Props { name: string; size?: number; weight?: 'regular' | 'bold' | 'fill'; label?: string; class?: string }
+const { name, size = 20, weight = 'regular', label, class: cls } = Astro.props;
+const file = path.join(process.cwd(), 'node_modules/@phosphor-icons/core/assets', weight, `${name}${weight === 'regular' ? '' : '-' + weight}.svg`);
+const svg = readFileSync(file, 'utf8')
+  .replace('<svg ', `<svg width="${size}" height="${size}" ${label ? `role="img" aria-label="${label}"` : 'aria-hidden="true" focusable="false"'} ${cls ? `class="${cls}"` : ''} `);
+---
+<Fragment set:html={svg} />

@@ -1,0 +1,66 @@
+{
+ "version": 1,
+ "fps": 30,
+ "hashLen": 8,
+ "kb": "budgets are bytes, decimal (450000 = 450 KB)",
+ "sources": {
+  "raw2": "marketing/video/implantplanVR-videos/raw/vr_demo_2_welcome_environment_plan-creation-chosing-gap_solid-structures-cutcbct-showcase.mp4",
+  "raw3": "marketing/video/implantplanVR-videos/raw/vr_demo_3_main-video_implant-manipulation+angle+tight+breach_cbct-cut-good-showcase_hidepanels-ending.mp4",
+  "film": "marketing/video/implantplanVR-videos/implantplan-vr-film-web.mp4",
+  "thumb": "marketing/video/implantplanVR-videos/implantplan-vr-linkedin-16x9-thumb.jpg",
+  "heroPng": "landing/assets/hero-implant.png"
+ },
+ "matrix": { "raw2": "bt601", "raw3": "bt601", "film": "bt709" },
+ "hero": "hands",
+ "loops": [
+  {
+   "id": "hands",
+   "src": "raw3",
+   "pick": "A",
+   "candidates": {
+    "A": { "in": 214.0, "len": 3.3, "xfade": 0.3 },
+    "B": { "in": 212.5, "len": 5.0, "xfade": 0.3 }
+   },
+   "label": "7.77 mm canal CLEAR",
+   "crops": {
+    "16x9": { "rect": [0, 0, 1920, 1080], "out": [1280, 720] },
+    "4x5": { "rect": [600, 0, 864, 1080], "out": [720, 900] }
+   },
+   "av1": { "preset": 4, "crf": 38, "g": 60 },
+   "h264": { "preset": "slow", "crf": 26, "g": 60, "keyintMin": 30, "bf": 2 },
+   "poster": { "crf": 18, "webpQuality": 80 },
+   "budget": {
+    "16x9": { "av1": 700000, "h264": 700000, "avif": 55000, "webp": 77000 },
+    "4x5": { "av1": 450000, "h264": 450000, "avif": 40000, "webp": 56000 }
+   },
+   "hardCap": 1500000,
+   "sky": [642, 30, 192, 60]
+  }
+ ],
+ "stills": [
+  { "id": "place", "src": "raw2", "t": 102.4, "shows": "a placed implant, '3.54 mm canal CLEAR' beside the right controller" },
+  { "id": "inspect", "src": "raw3", "t": 97.5, "shows": "implant panel header BREACH at 6.0 x 8.0 mm" },
+  { "id": "cut", "src": "raw3", "t": 187.5, "shows": "CBCT slice on a sagittal cut with segmentation outlines, labels CLEAR" },
+  { "id": "film", "src": "raw2", "t": 35.8, "asked": 36.0, "shows": "per-tooth coloured jaw model between both controllers", "why": "36.000 is a one-frame streaming glitch (dithered model, stray blue panel; motion 11.4 in and out); 35.8 is the calmest clean frame within 0.5 s" },
+  { "id": "welcome", "src": "raw2", "t": 0.5, "shows": "ImplantPlan VR Welcome panel, 'Signed in.' with no email or name" }
+ ],
+ "stillOut": [[1280, 720], [640, 360]],
+ "still": { "crf": 26, "webpQuality": 72 },
+ "stillBudget": {
+  "1280": { "avif": 60000, "webp": 84000 },
+  "640": { "avif": 25000, "webp": 35000 }
+ },
+ "film": {
+  "src": "film",
+  "out": [1280, 720],
+  "chapters": [0, 22.0, 33.0, 45.5, 66.0, 103.0, 126.0],
+  "links": [68.0, 95.0, 112.0],
+  "posterT": 3.5,
+  "av1": { "preset": 6, "crf": 42, "g": 60 },
+  "h264": { "preset": "slow", "crf": 28, "g": 60, "keyintMin": 15, "bf": 2 },
+  "poster": { "crf": 18, "webpQuality": 80 },
+  "budget": { "av1": 15500000, "h264": 18500000, "avif": 60000, "webp": 84000 }
+ },
+ "og": { "src": "thumb", "crop": [0, 36, 1920, 1008], "out": [1200, 630], "q": 3, "budget": 200000 },
+ "heroFallback": { "src": "heroPng", "quality": 80, "budget": 45000 }
+}

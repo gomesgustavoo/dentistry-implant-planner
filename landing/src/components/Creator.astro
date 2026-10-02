@@ -1,0 +1,67 @@
+---
+/* Who built it, then the other project. The heading, intro line and link labels are the
+ * shared strings (already translated for both sites); the "personal project" line and the
+ * DicomSegVR framing are local. "Also by Gustavo" says what the old "A related project"
+ * eyebrow implied, as a heading instead of a kicker.
+ *
+ * `.creator` is avoided as a class: the shared sheet lays it out as a two-column grid with
+ * an 80 px gap. `.creator__intro` is kept, because the shared contrast sweep reads it.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import { t } from '@dicomsegvr/landing-ui/i18n';
+import { fill, sections } from '../content/sections';
+import Icon from './Icon.astro';
+import TvClip from './TvClip.astro';
+
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const shared = t(p.locale).landing;
+const s = sections[p.locale].creator;
+---
+<section id="creator" class="maker ip-section ip-section--tint" aria-labelledby="creator-title">
+  <div class="container">
+    <div class="maker__grid">
+      <h2 class="ip-h2 maker__title" id="creator-title">{shared.builtBy.join(' ')}</h2>
+      <div class="maker__body">
+        <p class="creator__intro">{shared.intro}</p>
+        <p class="maker__bio">{p.creatorBio}</p>
+        <p class="ip-note maker__personal">{s.personal}</p>
+        <div class="maker__links">
+          <a class="button" href="https://www.linkedin.com/in/gustavoogomesss/">{shared.linkedin}<Icon name="arrow-up-right" size={16} /></a>
+          <a class="text-link" href="https://github.com/gomesgustavoo">{shared.github}<Icon name="arrow-up-right" size={16} /></a>
+        </div>
+      </div>
+    </div>
+    <div class="maker__grid maker__sibling">
+      <div class="maker__sibling-copy">
+        <h3 class="maker__h3">{fill(s.alsoBy, { name: p.sibling.label })}</h3>
+        {p.related?.text && <p class="maker__bio">{p.related.text}</p>}
+        <a class="text-link" href={p.sibling.href}>{shared.explore(p.sibling.label)}<Icon name="arrow-up-right" size={16} /></a>
+      </div>
+      <div class="maker__clip"><TvClip project={p} /></div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .maker__grid{display:grid;grid-template-columns:minmax(0,1fr);gap:24px}
+  .maker__title{margin:0}
+  .creator__intro{margin:0;max-width:30ch;font-size:var(--fs-22);line-height:1.45;letter-spacing:-.02em;color:var(--text);text-wrap:pretty}
+  .maker__bio{margin:16px 0 0;max-width:60ch;font-size:var(--fs-16);line-height:1.65;color:var(--muted);text-wrap:pretty}
+  .maker__personal{margin-top:12px}
+  .maker__links{display:flex;flex-wrap:wrap;align-items:center;gap:12px 28px;margin-top:28px}
+
+  .maker__sibling{margin-top:clamp(56px, 5vw + 24px, 96px);padding-top:clamp(40px, 3vw + 24px, 64px);border-top:1px solid var(--hair);row-gap:28px}
+  .maker__h3{margin:0;font-size:var(--fs-22);line-height:1.25;font-weight:600;letter-spacing:-.02em;text-wrap:balance}
+  .maker__sibling-copy .text-link{margin-top:12px}
+  .maker__sibling-copy .maker__bio{margin-top:12px}
+
+  /* 1024 and up: both blocks share one split, heading or copy in columns 1-5 and the body or
+     the clip in 7-12, so the clip lines up under the text it belongs to. */
+  @media (min-width:1024px){
+    .maker__grid{grid-template-columns:repeat(12,minmax(0,1fr));column-gap:24px}
+    .maker__title,.maker__sibling-copy{grid-column:1 / 6}
+    .maker__body,.maker__clip{grid-column:7 / 13}
+    .maker__sibling-copy{align-self:start}
+  }
+</style>

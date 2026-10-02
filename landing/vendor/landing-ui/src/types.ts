@@ -69,4 +69,8 @@ export interface Project {
   engineeringIntro: string;
   license?: { text: string; name: string; href: string; credits: Link };
   media: Media;
+  /** Navigation links; '#id' resolves to the home page, '/path/' to the page in this locale. */
+  nav?: Link[];
+  /** schema.org operatingSystem, when it differs from the default for this project. */
+  operatingSystem?: string;
 }

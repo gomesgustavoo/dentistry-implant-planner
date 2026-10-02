@@ -1,10 +1,43 @@
 ---
-import Landing from '@dicomsegvr/landing-ui/Landing.astro';
+/* The ImplantPlan landing composes the shared Base/Nav/Footer with its own sections instead of
+   the shared <Landing>, so dicomsegvr.com is untouched. Section order: the post continued
+   (Intro) -> seat one yourself (Instrument) -> the headset (VrSection) -> the measurements
+   (Ledger) -> Pricing -> Faq -> Creator; the film dialog sits after the footer. */
+import Base from '@dicomsegvr/landing-ui/Base.astro';
+import Nav from '@dicomsegvr/landing-ui/Nav.astro';
+import Footer from '@dicomsegvr/landing-ui/Footer.astro';
 import { localeStaticPaths } from '@dicomsegvr/landing-ui/i18n';
 import type { Locale } from '@dicomsegvr/landing-ui/types';
 import { projects } from '../../content';
+import '../../styles/chrome.css';
+import '../../styles/implantplan.css';
+import displayFont from '../../assets/archivo-display.woff2?url';
+import LandingHead from '../../components/LandingHead.astro';
+import Intro from '../../components/Intro.astro';
+import Instrument from '../../components/Instrument.astro';
+import VrSection from '../../components/VrSection.astro';
+import Ledger from '../../components/Ledger.astro';
+import Pricing from '../../components/Pricing.astro';
+import Faq from '../../components/Faq.astro';
+import Creator from '../../components/Creator.astro';
+import FilmDialog from '../../components/FilmDialog.astro';
 export const getStaticPaths = localeStaticPaths;
 interface Props { locale: Locale }
 const { locale } = Astro.props;
+const p = projects[locale];
 ---
-<Landing project={projects[locale]} />
+<Base project={p} preloadFonts={['/assets/fonts/Geist-latin.woff2', displayFont]} viewportFit="cover">
+  <LandingHead slot="head" project={p} />
+  <Nav project={p} />
+  <main id="main">
+    <Intro project={p} />
+    <Instrument project={p} />
+    <VrSection project={p} />
+    <Ledger project={p} />
+    <Pricing project={p} />
+    <Faq project={p} />
+    <Creator project={p} />
+  </main>
+  <Footer project={p} />
+  <FilmDialog project={p} />
+</Base>

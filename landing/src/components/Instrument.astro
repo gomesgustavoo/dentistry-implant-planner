@@ -1,0 +1,179 @@
+---
+/* "Now seat one yourself.": the live three.js clearance stage, forked from the shared Hero.astro
+ * scene markup with every hook hero3d.js and the shared checks rely on kept as is:
+ * [data-filmstage] > .stage-pin, .scene, .filmstage__bg, canvas#heroCanvas, .filmstage__poster,
+ * and the shared <Readout> (its [data-hero-*] nodes, .hero__live/.hero__fallback, #hero-strings)
+ * unchanged. What it drops is the old hero's copy column, eyebrow, status dot, scroll cue and
+ * skills rail; the depth gauge replaces the scroll cue with the quantity the grade depends on.
+ *
+ * NOTHING ABOVE [data-filmstage] MAY BE POSITIONED, TRANSFORMED OR CLIP ITS OVERFLOW. That is a
+ * contract, not a style: interactions.ts sizes the sticky pin from offsets, hero3d.js reads
+ * progress from the stage's rect, and the shared check (check-browser.mjs) scrolls to
+ * `stage.offsetTop + travel * p`. offsetTop is measured from the nearest POSITIONED ancestor,
+ * so a `position:relative` section here (the shared .section class has one) puts every sample
+ * ~750 px short and the sweep only ever reads CLEAR. Hence no .section class, `position:static`
+ * stated outright, and the #how-it-works anchor on the h2 itself rather than an absolutely
+ * positioned alias. overflow:hidden would also kill position:sticky. If a future layout ever
+ * needs clipping, html{overflow-x:clip} is the only safe place for it.
+ *
+ * The numbers in the sub are read out of hero3d.js at build time, from the same constants the
+ * scene measures with, so the copy cannot drift from the fixture on screen.
+ */
+import type { Project } from '@dicomsegvr/landing-ui/types';
+import Readout from '@dicomsegvr/landing-ui/Readout.astro';
+import { decimal } from '@dicomsegvr/landing-ui/i18n';
+import heroSource from '../../assets/hero3d.js?raw';
+import DepthGauge from './DepthGauge.astro';
+import { media } from '../lib/media';
+import { intro, fill } from '../content/intro';
+interface Props { project: Project }
+const { project: p } = Astro.props;
+const locale = p.locale;
+const s = intro[locale].instrument;
+
+/** `export const NAME = 4.8;` in hero3d.js -> 4.8. A missing constant fails the build: the
+ *  alternative is a page that quietly describes a fixture the scene no longer draws. */
+const constant = (name: string): number => {
+  const match = heroSource.match(new RegExp(`^export const ${name} = (\\d+(?:\\.\\d+)?);`, 'm'));
+  if (!match) throw new Error(`assets/hero3d.js no longer exports ${name}; Instrument.astro reads it from there`);
+  return Number(match[1]);
+};
+const fdi = constant('SITE_FDI');
+const diameter = constant('DIAMETER_MM');
+const length = constant('LENGTH_MM');
+const depthMax = constant('DEPTH_MAX_MM');
+const sub = fill(s.sub, {
+  d: decimal(locale, diameter, 1),
+  l: decimal(locale, length, Number.isInteger(length) ? 0 : 1),
+  fdi: String(fdi),
+});
+const poster = media.heroFallback;
+---
+<section id="measure" class="instrument">
+  <div class="container instrument__head">
+    <h2 id="how-it-works" class="ip-h2 instrument__title">{s.title}</h2>
+    <p class="ip-lead instrument__lead">{sub}</p>
+  </div>
+  <div class="filmstage instrument__stage" data-filmstage>
+    <div class="stage-pin">
+      <div class="container instrument__pin">
+        <div class="scene instrument__scene">
+          <div class="filmstage__bg">
+            <canvas class="filmstage__canvas" id="heroCanvas" role="img" aria-label={p.sceneDetail}></canvas>
+            <img class="filmstage__poster" src={poster.src} width={poster.width} height={poster.height} alt={s.posterAlt} loading="lazy" fetchpriority="low" decoding="async" />
+          </div>
+        </div>
+        <div class="instrument__panel">
+          <Readout locale={locale} />
+          <DepthGauge locale={locale} max={depthMax} />
+          <p class="instrument__note">{s.note}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<script is:inline>document.querySelector('[data-filmstage]')?.setAttribute('data-js', '');</script>
+<!-- async: a non-async module script joins the deferred queue in document order, so the three.js
+     graph behind this one held back player.ts, the menu and the reveals until it had downloaded,
+     and an early tap on "Watch the film" fell through to the raw mp4. Everything hero3d.js reads
+     is above this tag, so it may run whenever it arrives. -->
+<script is:inline type="module" async src="/assets/hero3d.js?v=vr-1"></script>
+
+<style>
+  .instrument{--svh:1vh;position:static;padding-block-start:clamp(56px, 5vw + 24px, 104px);border-block-start:1px solid var(--hair)}
+  @supports (height:1svh){.instrument{--svh:1svh}}
+  .instrument__head{margin-block-end:clamp(20px, 3vw, 40px)}
+  /* html already pads anchor scrolls by the sticky nav + 24 px; this only adds breathing room. */
+  .instrument__title{scroll-margin-top:12px}
+  .instrument__lead{margin-top:12px}
+
+  /* --- the pin ---------------------------------------------------------------------------
+     Phones: canvas, readout, gauge and note in one column that must fit under the 64 px nav,
+     or sizePin() sets a negative --pin-top and the canvas top sits under the nav for the
+     whole scrub. The canvas asks for clamp(280px, 44svh, 400px) and is the one thing allowed
+     to give: the column is capped at the viewport and the canvas shrinks (down to 180 px) by
+     exactly what the readout, gauge and note need in this locale at this width. In the test
+     matrix that happens only at 360x640 in ES (267 px instead of 282) and at 375x553, which
+     is shorter than any stack of these four can be at full size; a fixed per-locale number
+     would be wrong again at the next font or copy change.
+     The cap needs JavaScript (the inline line after the stage sets data-js): without it the
+     shared noscript sheet unpins the stage and forces the scene to 340 px, and a capped
+     column would then overflow into the next section. An attribute, not the `scripting`
+     media feature, which Safari has only from 17.
+     The shared .filmstage height rule (pin + 90svh) is kept as is: it is the scroll travel
+     that carries the seat through CLEAR, TIGHT and BREACH. */
+  .instrument__pin{display:flex;flex-direction:column;gap:8px;padding-block:4px}
+  .instrument .instrument__scene{flex:0 1 clamp(280px, calc(44 * var(--svh)), 400px);block-size:auto;min-block-size:180px}
+  @media (max-width:1023px){
+    .instrument [data-js] .instrument__pin{max-block-size:calc(100 * var(--svh) - var(--nav-h))}
+  }
+  .instrument__panel{display:flex;flex-direction:column;gap:8px;min-width:0;flex:none}
+  .instrument__note{font-size:var(--fs-14);line-height:1.45;color:var(--muted);max-width:60ch;text-wrap:pretty}
+
+  /* The poster stays up until the canvas is live, instead of the shared opacity:0 that waits
+     for a class only a successful boot adds: a slow boot, no WebGL, or an asset failure then
+     shows a picture, never a blank box. Fades out once the scene has painted. */
+  .instrument .filmstage:not(.filmstage--live) .filmstage__poster{opacity:1}
+  .filmstage__poster{transition:opacity var(--dur-state) linear, visibility 0s linear var(--dur-state)}
+  /* Live: the poster has faded out, so take its alt text out of the accessibility tree too, or a
+     screen reader hears two images for one scene. The fallback modes never get --live. */
+  .instrument :global(.filmstage--live) .filmstage__poster{visibility:hidden}
+
+  /* --- the readout (shared markup, local layout) -------------------------------------------
+     Nothing under 14 px (the shared sizes go down to 8). At 14 px the shared one-line header
+     wraps ("Distancia al conducto dentario inferior" beside the chip is 330 px in a 296 px
+     card), so each card becomes a grid: chip and value on the first line, the label under
+     them, then the arithmetic. The prose lines are set in Geist rather than mono, which keeps
+     the EN arithmetic to two lines at 360 px; the figures that matter stay mono in the value.
+     NO SHIFT ON BOOT. The live and fallback cards share one grid cell and swap by visibility
+     instead of display, so the area is always as tall as the taller of the two, in this
+     locale, at this width: the boot (fallback -> live) cannot move the pin, or anything below
+     the stage, by a pixel. A fixed min-height would have to be re-tuned per locale and
+     breakpoint and would still be wrong after the next copy change. Without JavaScript the
+     shared noscript sheet's display rules win (they are !important) and only the fallback
+     shows. */
+  .instrument :global(.readout-area){display:grid}
+  .instrument :global(.readout-area > .readout){grid-area:1 / 1;display:grid;grid-template-columns:auto minmax(0, 1fr);align-content:start;align-items:center;padding:10px 12px}
+  .instrument :global(.hero__live),
+  .instrument :global(.filmstage--live .hero__fallback){visibility:hidden}
+  .instrument :global(.filmstage--live .hero__live){visibility:visible}
+  .instrument :global(.readout__row){display:contents}
+  /* A margin, not column-gap: it also separates chip and label in the noscript block layout. */
+  .instrument :global(.readout__chip){grid-area:1 / 1;margin-inline-end:10px;padding:1px 6px;line-height:1.5}
+  .instrument :global(.readout__value){grid-area:1 / 2;margin:0;font-size:1.5rem;line-height:1.15}
+  .instrument :global(.readout__row > span:not(.readout__chip)){grid-column:1 / -1;grid-row:2;margin-top:4px;font-family:var(--ds-font-sans)}
+  .instrument :global(:is(.readout__sub, .readout__depth)){grid-column:1 / -1;margin-top:2px;font-family:var(--ds-font-sans);line-height:1.45;max-width:none}
+  .instrument :global(:is(.readout__row, .readout__sub, .readout__depth, .readout__unit)){font-size:var(--fs-14)}
+
+  /* The gauge's own label repeats the readout's depth line right above it on a phone. */
+  @media (max-width:767px){
+    .instrument :global(.gauge__label){position:absolute;inline-size:1px;block-size:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+  }
+
+  /* 768-1023: same column, more room. */
+  @media (min-width:768px){
+    .instrument .instrument__scene{flex-basis:clamp(320px, calc(46 * var(--svh)), 460px)}
+    .instrument__pin{gap:12px}
+    .instrument__panel{gap:12px}
+    .instrument :global(.readout-area > .readout){padding:14px 16px}
+    .instrument :global(.readout__value){font-size:1.75rem}
+  }
+
+  /* >=1024: readout, gauge and note in columns 1-4; the canvas in 5-12. */
+  @media (min-width:1024px){
+    /* Tighter than a section break: at 1440x900 this heading has to show above the fold,
+       directly under the loop, so the first screen ends on the invitation to scroll. */
+    .instrument{padding-block-start:40px}
+    .instrument__pin{display:grid;grid-template-columns:repeat(12, minmax(0, 1fr));column-gap:24px;align-items:center;padding-block:16px}
+    .instrument .instrument__scene{grid-column:5 / span 8;grid-row:1;block-size:min(calc(70 * var(--svh)), 640px)}
+    .instrument__panel{grid-column:1 / span 4;grid-row:1;gap:18px}
+    .instrument :global(.readout__value){font-size:1.85rem}
+  }
+
+  /* Phone landscape: a 390 px tall viewport cannot stack a canvas over anything. */
+  @media (orientation:landscape) and (max-height:500px){
+    .instrument__pin{display:grid;grid-template-columns:minmax(0, 1fr) minmax(0, 1fr);column-gap:20px;align-items:center}
+    .instrument .instrument__scene{grid-column:1;grid-row:1;block-size:calc(100 * var(--svh) - var(--nav-h) - 16px);min-block-size:0}
+    .instrument__panel{grid-column:2;grid-row:1}
+  }
+</style>
