@@ -201,7 +201,10 @@ function wireJobFilter() {
 async function loadExamples() {
   try {
     const { examples } = await api('/examples');
-    if (!examples.length) return;
+    // The panel is laid out from the first paint, with its row reserved, so the models
+    // section below it does not jump ~300 px when the examples arrive. Only a deployment
+    // that has none hides it -- once, at the end.
+    if (!examples.length) { $('examplesPanel').hidden = true; return; }
     const el = $('examples');
     el.innerHTML = examples.map((j) => {
       const q = (j.reports && j.reports.quality) || {};
@@ -217,7 +220,10 @@ async function loadExamples() {
     }).join('');
     el.querySelectorAll('[data-open]').forEach((b) => b.onclick = () => navigate('#/case/' + b.dataset.open));
     $('examplesPanel').hidden = false;
-  } catch (_) { /* examples are a nicety; never block the app on them */ }
+  } catch (_) {
+    // Examples are a nicety; never block the app on them.
+    $('examplesPanel').hidden = true;
+  }
 }
 
 async function refreshSystem() {

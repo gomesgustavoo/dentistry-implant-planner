@@ -349,7 +349,7 @@ main#settings { max-width: var(--page-narrow); }
 .hero > .hero-copy { grid-row: 1 / span 6; align-self: start; padding-top: .4rem; }
 .hero > .drop, .hero > .notice, .hero > .uploadplan, .hero > .uploadplan-link,
 .hero > .shared-note { grid-column: 2; }
-.hero > .uploadplan { margin-top: .75rem; }
+.hero > .uploadplan { margin-top: .75rem; min-height: 2.9em; }  /* two lines, filled after /models */
 .hero h1 { margin: 0 0 .55rem; font: 700 1.9rem/1.08 var(--display); letter-spacing: -.02em; }
 .lede { margin: 0 0 1rem; color: var(--muted); font-size: .9rem; }
 .hero-facts { list-style: none; margin: 0; padding: 0; display: flex; gap: 1.4rem; }
@@ -403,6 +403,9 @@ main#settings { max-width: var(--page-narrow); }
 .notice.ok { color: var(--ok); } .notice.err { color: var(--bad); }
 
 .examples { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: .7rem; }
+/* Reserved while the list loads (see loadExamples): one row of cards, as a quiet skeleton. */
+.examples:empty { min-height: 132px; border-radius: var(--radius-sm);
+  background: linear-gradient(90deg, var(--surface-2), var(--surface), var(--surface-2)); }
 #jobsPanel, #examplesPanel, #modelsPanel { background: transparent; border: 0; box-shadow: none;
   padding: .4rem 0 0; border-top: 1px solid var(--border); border-radius: 0; }
 .ex {
@@ -779,7 +782,7 @@ main#settings { max-width: var(--page-narrow); }
 }
 /* How many structures the group has. Present count, not filtered -- see renderStructures
    for why a heading that read "Upper teeth 2" under a filter would be a lie. */
-.gcount { font: 500 .66rem var(--mono); color: var(--muted); opacity: .75;
+.gcount { font: 500 .66rem var(--mono); color: var(--muted);
   letter-spacing: 0; text-transform: none; }
 .slist { display: grid; gap: 1px; }
 .srow {
@@ -1913,8 +1916,9 @@ ul.why { margin: .25rem 0 0; padding-left: 1rem; color: var(--muted); line-heigh
 /* A model that offers ONE mode is not a choice, so it is not drawn as a control. */
 .modelfixed { font: 500 11px/1.6 var(--mono); color: var(--muted); padding: .1rem .5rem;
   border: 1px solid var(--border); border-radius: 999px; background: var(--surface-2); }
-.modelcard.is-off { opacity: .72; }
-.modelcard.unavail { opacity: .6; }
+.modelcard.is-off, .modelcard.unavail { background: var(--surface-2); box-shadow: none; }
+/* Dimmed by colour, never by opacity: a translucent card took every line of it below AA. */
+.modelcard.unavail > header b { color: var(--muted); }
 .modelcard > header { display: flex; align-items: baseline; gap: .5rem; flex-wrap: wrap; }
 .modelbadge {
   font: 600 10px/1.6 var(--mono); text-transform: uppercase; letter-spacing: .04em;

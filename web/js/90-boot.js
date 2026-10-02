@@ -23,6 +23,10 @@ async function boot() {
   wireAccountMenu();
   wireSettings();
   window.addEventListener('hashchange', () => route());
+  // Paint the catalogue's shell now rather than after the account round-trips below:
+  // it is static markup, and waiting on /me and /tenants to reveal it was most of the
+  // catalogue's measured LCP. route() still decides everything at the end.
+  if (parseRoute().view === 'cases') $('home').hidden = false;
 
   try {
     state.catalog = await api('/structures');

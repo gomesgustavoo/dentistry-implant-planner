@@ -189,3 +189,38 @@ Frames from `marketing/video/implantplan-plan.mp4` were used for the implant-pla
 2. Fix H3, H4 and H7. They make the catalogue a single obvious path: drop a scan, see your cases.
 3. Fix H5 and H8. They make the plan tab show its first action and name its controls.
 4. Fix H6, H9 and H10 in the visual pass.
+
+---
+
+# Web quality audit (web-quality-audit, Lighthouse 13.5.0)
+
+**Conditions.** Local stack: `scripts/tour_server.mjs` serving `web/` with **no gzip**, and the API on loopback. Lighthouse lab runs, mobile (simulated 4G, 4× CPU) and desktop presets, on the catalogue and on case `25ab2735…`. These are lab numbers on an uncompressed server, not field data; production nginx gzips JS, CSS and JSON.
+
+| Signal | Before | After | Notes |
+|---|---|---|---|
+| Accessibility, catalogue | 96 | **100** | |
+| Accessibility, workspace | 96 | 96 → fixed both findings, not re-scored | Two findings: `.gcount` contrast and no main landmark. Both fixed. |
+| CLS, catalogue (desktop) | 0.268 | **0.031** | Playwright trace: 0.0305 |
+| CLS, catalogue (mobile) | 0.189 | **0.013** | |
+| LCP, catalogue (desktop) | 5.7 s | 4.6 s | See P2-1 |
+| TBT, catalogue (desktop) | 70 ms | 80 ms | |
+| Best practices | 96 | 96 | The one finding is a 402 from the local test API, which runs without `DENT_LEGACY_PLAN`. It is not a product defect; the compose stack answers 200. |
+| SEO | 83 | 66 | The drop is intentional: the app is now `noindex`, with a `robots.txt` that disallows everything. The landing page is the indexable surface. |
+
+## Fixed (P0/P1)
+- **CLS: the examples row reserved from first paint.** `#examplesPanel` used to appear only after `/v1/examples` returned and push the models section about 300 px. It is now laid out at once with a skeleton row, and hidden only when a deployment has no examples.
+- **CLS: the upload summary line reserved.** `.hero > .uploadplan` gets `min-height: 2.9em`, so the hero no longer grows when `/models` fills it.
+- **LCP: the catalogue shell painted before the account round-trips.** `boot()` reveals `#home` before awaiting `/me` and `/tenants`. `route()` still decides everything at the end, and the golden network order is unchanged.
+- **Contrast: unavailable and off model cards are dimmed by colour, not opacity.** At 2.55:1 on every line they were failing AA.
+- **Contrast: the group counts in the structure list** (`.gcount`) are no longer translucent.
+- **Landmark:** the case workspace has `role="main"`.
+- **SEO/hygiene:** a meta description, `robots: noindex`, `web/robots.txt`, and `theme-color` matching the light ground.
+
+## Recorded, not fixed (P2)
+1. **The 4.2 MB viewer bundle (`web/viewer.js`, about 1 MB gzipped) parses before the app on every page,** including the catalogue, where it only drives the small model preview. That is most of the lab LCP and TBT.
+   - Fix: load it `async` behind a `viewerReady` promise that `mountModelSchematic`/`mountVolume` await.
+   - Every `window.DentistryViewer` call site has to be guarded; there are 24. A separate change, with the golden master and `check-equivalence.mjs` around it.
+2. **`GET /v1/examples` returns the full report of each example (705 KB uncompressed)** when the catalogue reads one number from it (`quality.teeth_found`). Fix: a summary projection in `api/routes/jobs.py`.
+3. **The model preview loads about 1.3 MB of meshes on catalogue load.** Fix: defer it until the models section scrolls into view (an IntersectionObserver).
+4. **Unminified CSS and JS (~280 KB)** because there is no build step by design. With gzip in production the saving is small; leave as is.
+5. **`llms.txt` and `ai-catalog.json`** (agentic-browsing category) do not apply to an authenticated application.

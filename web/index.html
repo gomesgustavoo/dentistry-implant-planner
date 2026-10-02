@@ -12,7 +12,10 @@
 <link rel="icon" type="image/png" sizes="32x32" href="assets/brand/favicon-32.png?v=dev">
 <link rel="icon" type="image/png" sizes="16x16" href="assets/brand/favicon-16.png?v=dev">
 <link rel="apple-touch-icon" href="assets/brand/apple-touch-icon.png?v=dev">
-<meta name="theme-color" content="#0a0e13">
+<meta name="theme-color" content="#fbfbfd">
+<meta name="description" content="ImplantPlan: segment a dental cone-beam CT and plan implants with measured clearances to the canals, sinuses and teeth. Research preview, not a medical device.">
+<!-- The application, not the product page: the landing page is what search should show. -->
+<meta name="robots" content="noindex">
 <!-- `?v=` is stamped with the image tag at build time (see Dockerfile.web).
      nginx.conf asks for `no-cache` on css/js and Cloudflare overrides it with its
      own 4-hour Browser Cache TTL, so a redeploy served new HTML against old CSS --
@@ -241,7 +244,7 @@
       <div class="jobs" id="jobs"><p class="empty">No cases yet.</p></div>
     </section>
 
-    <section class="panel" id="examplesPanel" hidden>
+    <section class="panel" id="examplesPanel">
       <div class="panel-head">
         <h2>Example cases</h2>
         <span class="hint">already segmented &mdash; open one to place an implant</span>
@@ -474,7 +477,7 @@
   </main>
 
   <!-- =================================================== view: workspace -->
-  <div class="workspace" id="workspace" hidden>
+  <div role="main" class="workspace" id="workspace" hidden>
     <aside class="rail">
       <!-- The dental chart: the one control that is native to this domain. -->
       <div class="card chart-card">
